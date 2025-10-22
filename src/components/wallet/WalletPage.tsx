@@ -61,18 +61,22 @@ export const WalletPage: React.FC = () => {
             <span className="text-black font-bold text-sm">H</span>
           </button>
           <div className="flex flex-col gap-1">
-            <span className="text-gray-300 text-xs font-normal ">@Hezekiah</span>
-            <span className="text-gray-100 text-sm font-medium">Welcome back!</span>
+            <span className="text-gray-300 text-xs font-normal ">
+              @Hezekiah
+            </span>
+            <span className="text-gray-100 text-sm font-medium">
+              Welcome back!
+            </span>
           </div>
         </div>
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={handleNotificationsClick}
-                className="w-12 h-12 bg-[#2a2a2a] rounded-full flex items-center justify-center hover:bg-[#3a3a3a] transition-colors cursor-pointer"
-              >
-                <Bell size={20} color="#86B3F7" />
-              </button>
-            </div>
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={handleNotificationsClick}
+            className="w-12 h-12 bg-[#2a2a2a] rounded-full flex items-center justify-center hover:bg-[#3a3a3a] transition-colors cursor-pointer"
+          >
+            <Bell size={20} color="#86B3F7" />
+          </button>
+        </div>
       </div>
 
       {/* Wallet Balance */}
@@ -83,46 +87,43 @@ export const WalletPage: React.FC = () => {
         <h1 className="text-4xl font-semibold text-gray-300 mb-2">
           {walletData.balance.toLocaleString()} {walletData.currency}
         </h1>
-        <p className="text-white/70 text-lg">
-          ≈ {walletData.fiatCurrency}
-          {walletData.fiatValue}
-        </p>
+        <p className="text-white/70 text-lg">≈{walletData.fiatValue}</p>
       </div>
 
-          {/* Action Buttons */}
-          <div className="flex items-center justify-around px-6 py-6">
-            <button 
-              onClick={handleDepositClick}
-              className="flex flex-col items-center justify-center space-y-2 w-20 h-20 bg-[#2a2a2a] rounded-xl"
-            >
-              <Send size={16} color="#C7EF6B" />
-              <span className="text-gray-300 text-xs">Deposit</span>
-            </button>
+      {/* Action Buttons */}
+      <div className="flex items-center justify-around px-6 py-6">
+        <button
+          onClick={handleDepositClick}
+          className="flex flex-col items-center justify-center space-y-2 w-20 h-20 bg-[#2a2a2a] rounded-xl"
+        >
+          <Send size={16} color="#C7EF6B" />
+          <span className="text-gray-300 text-xs">Deposit</span>
+        </button>
 
-            <button
-              onClick={handleStakeClick}
-              className="flex flex-col items-center justify-center space-y-2 w-20 h-20 bg-[#2a2a2a] rounded-xl"
-            >
-              <ChartSpline size={16} color="#C7EF6B" />
-              <span className="text-gray-300 text-xs">Stake</span>
-            </button>
+        <button
+          onClick={handleStakeClick}
+          className="flex flex-col items-center justify-center space-y-2 w-20 h-20 bg-[#2a2a2a] rounded-xl"
+        >
+          <ChartSpline size={16} color="#C7EF6B" />
+          <span className="text-gray-300 text-xs">Stake</span>
+        </button>
 
-            <button 
-              onClick={handlePortfolioClick}
-              className="flex flex-col items-center justify-center space-y-2 w-20 h-20 bg-[#2a2a2a] rounded-xl"
-            >
-              <ChartPie size={16} color="#C7EF6B" />
-              <span className="text-gray-300 text-xs">Portfolio</span>
-            </button>
+        <button
+          onClick={handlePortfolioClick}
+          className="flex flex-col items-center justify-center space-y-2 w-20 h-20 bg-[#2a2a2a] rounded-xl"
+        >
+          <ChartPie size={16} color="#C7EF6B" />
+          <span className="text-gray-300 text-xs">Portfolio</span>
+        </button>
 
-            <button 
-              onClick={handleHistoryClick}
-              className="flex flex-col items-center justify-center space-y-2 w-20 h-20 bg-[#2a2a2a] rounded-xl"
-            >
-              <History size={16} color="#C7EF6B" />
-              <span className="text-gray-300 text-xs">History</span>
-            </button>
-          </div>
+        <button
+          onClick={handleHistoryClick}
+          className="flex flex-col items-center justify-center space-y-2 w-20 h-20 bg-[#2a2a2a] rounded-xl"
+        >
+          <History size={16} color="#C7EF6B" />
+          <span className="text-gray-300 text-xs">History</span>
+        </button>
+      </div>
 
       {/* Search Bar */}
       <div className="px-6 py-4">

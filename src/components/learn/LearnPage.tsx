@@ -172,8 +172,8 @@ export const LearnPage: React.FC = () => {
               {/* Content Info */}
               <div className="p-4">
                 <h3 className="text-white font-medium text-lg mb-2">
-                  {content.title}
-                </h3>
+                    {content.title}
+                  </h3>
 
                 <p className="text-gray-500 text-xs leading-relaxed">
                   {content.brief}
