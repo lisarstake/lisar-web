@@ -28,3 +28,6 @@ export const apiService = createApiService();
 // Export types for use in components
 export * from './types';
 export * from './api';
+
+// Export auth services
+export * from './auth';

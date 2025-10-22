@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface LoginFormData {
   email: string;
@@ -7,6 +8,9 @@ interface LoginFormData {
 }
 
 export const LoginForm: React.FC = () => {
+  const navigate = useNavigate();
+  const { login, state } = useAuth();
+  
   const [formData, setFormData] = useState<LoginFormData>({
     email: "",
     password: "",
@@ -14,6 +18,7 @@ export const LoginForm: React.FC = () => {
 
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -23,9 +28,28 @@ export const LoginForm: React.FC = () => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement login logic
+    
+    if (!isFormValid || isSubmitting) return;
+    
+    setIsSubmitting(true);
+    
+    try {
+      const response = await login(formData.email, formData.password);
+      
+      if (response.success) {
+        // Navigate to dashboard
+        navigate('/dashboard');
+      } else {
+        // Error will be handled by the auth context
+        console.error('Login failed:', response.message);
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const isFormValid = formData.email && formData.password;
@@ -140,17 +164,24 @@ export const LoginForm: React.FC = () => {
             </Link>
           </div>
 
+          {/* Error Message */}
+          {state.error && (
+            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+              <p className="text-red-400 text-sm">{state.error}</p>
+            </div>
+          )}
+
           {/* Sign In Button */}
           <button
             type="submit"
-            disabled={!isFormValid}
+            disabled={!isFormValid || isSubmitting}
             className={`w-full py-3 px-6 rounded-lg font-semibold text-lg transition-colors ${
-              isFormValid
+              isFormValid && !isSubmitting
                 ? "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
                 : "bg-[#636363] text-white cursor-not-allowed"
             }`}
           >
-            Sign in
+            {isSubmitting ? "Signing in..." : "Sign in"}
           </button>
 
           {/* Divider */}

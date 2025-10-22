@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface SignupFormData {
   fullName: string;
@@ -8,6 +9,9 @@ interface SignupFormData {
 }
 
 export const SignupForm: React.FC = () => {
+  const navigate = useNavigate();
+  const { signup, state } = useAuth();
+  
   const [formData, setFormData] = useState<SignupFormData>({
     fullName: "",
     email: "",
@@ -15,6 +19,7 @@ export const SignupForm: React.FC = () => {
   });
 
   const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -24,9 +29,28 @@ export const SignupForm: React.FC = () => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement signup logic
+    
+    if (!isFormValid || isSubmitting) return;
+    
+    setIsSubmitting(true);
+    
+    try {
+      const response = await signup(formData.email, formData.password, formData.fullName);
+      
+      if (response.success) {
+        // Navigate to dashboard or onboarding
+        navigate('/dashboard');
+      } else {
+        // Error will be handled by the auth context
+        console.error('Signup failed:', response.message);
+      }
+    } catch (error) {
+      console.error('Signup error:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const isFormValid =
@@ -158,17 +182,24 @@ export const SignupForm: React.FC = () => {
             )}
           </div>
 
+          {/* Error Message */}
+          {state.error && (
+            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+              <p className="text-red-400 text-sm">{state.error}</p>
+            </div>
+          )}
+
           {/* Create Account Button */}
           <button
             type="submit"
-            disabled={!isFormValid}
+            disabled={!isFormValid || isSubmitting}
             className={`w-full py-3 px-6 rounded-lg font-semibold text-lg transition-colors ${
-              isFormValid
+              isFormValid && !isSubmitting
                 ? "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
                 : "bg-[#636363] text-white cursor-not-allowed"
             }`}
           >
-            Create account
+            {isSubmitting ? "Creating account..." : "Create account"}
           </button>
 
           {/* Divider */}
