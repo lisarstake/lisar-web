@@ -9,7 +9,7 @@ import {LisarLines} from "./lisar-lines";
 
 export const UseCasesSection = () => {
   return (
-    <section className="w-full md:py-20 py-12 px-4 flex flex-col items-center justify-center relative overflow-hidden">
+    <section className="w-full md:py-20 py-12 px-8 flex flex-col items-center justify-center relative overflow-hidden">
       {/* Lisar Lines Decorations */}
       <LisarLines position="top-right" />
       <div className="hidden md:block">

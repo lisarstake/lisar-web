@@ -29,10 +29,10 @@ export const WithdrawalSuccessDrawer: React.FC<WithdrawalSuccessDrawerProps> = (
     <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DrawerContent>
         <DrawerHeader>
-          <DrawerTitle className="text-center text-4xl font-bold text-white">
+          <DrawerTitle className="text-center text-2xl font-semibold text-white">
             Success!
           </DrawerTitle>
-          <DrawerDescription className="text-center text-white text-lg">
+          <DrawerDescription className="text-center text-gray-300 text-base">
             Your withdrawal has been processed successfully
           </DrawerDescription>
         </DrawerHeader>

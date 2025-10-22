@@ -26,7 +26,6 @@ export const LoginForm: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // TODO: Implement login logic
-    console.log("Login data:", formData);
   };
 
   const isFormValid = formData.email && formData.password;

@@ -22,7 +22,7 @@ export const EarnPage: React.FC = () => {
       description: "Earn inviting your friend to Lisar",
       image: "/earn1.jpeg",
       buttonText: "Coming soon",
-      isComingSoon: true
+      isComingSoon: true,
     },
     {
       id: "2",
@@ -30,8 +30,8 @@ export const EarnPage: React.FC = () => {
       description: "Get paid creating content for Lisar",
       image: "/earn2.jpeg",
       buttonText: "Coming soon",
-      isComingSoon: true
-    }
+      isComingSoon: true,
+    },
   ];
 
   const handleHelpClick = () => {
@@ -41,19 +41,16 @@ export const EarnPage: React.FC = () => {
   const handleCardClick = (card: EarnCard) => {
     if (!card.isComingSoon) {
       // Handle card action when it's not coming soon
-      console.log("Card clicked:", card.title);
     }
   };
 
   return (
     <div className="h-screen bg-[#050505] text-white flex flex-col">
       {/* Content - Scrollable */}
-      <div className="flex-1 overflow-y-auto px-6 pb-20">
+      <div className="flex-1 overflow-y-auto px-6 pb-20 scrollbar-hide">
         {/* Header - Scrollable */}
         <div className="flex items-center justify-between py-8">
           <h1 className="text-lg font-medium text-white">Earn on Lisar</h1>
-          
-         
         </div>
 
         {/* Earn Cards */}
@@ -71,16 +68,16 @@ export const EarnPage: React.FC = () => {
                   className="w-full h-full object-cover"
                 />
               </div>
-              
+
               {/* Card Content */}
               <div className="p-4">
-                <h3 className="text-white font-semibold text-xl mb-2">
+                <h3 className="text-white font-semibold text-large mb-2">
                   {card.title}
                 </h3>
                 <p className="text-gray-400 text-sm mb-2 leading-relaxed">
                   {card.description}
                 </p>
-                
+
                 {/* Action Button */}
                 <button
                   onClick={() => handleCardClick(card)}
@@ -103,10 +100,11 @@ export const EarnPage: React.FC = () => {
       <HelpDrawer
         isOpen={showHelpDrawer}
         onClose={() => setShowHelpDrawer(false)}
-        title="About Lisar"
-        subtitle="A quick guide on how to earn on Lisar"
+        title="Earning Guide"
         content={[
-          "Lorem ipsum dolor sit amet consectetur. Quam sed dictum amet eu convallis eu. Ac sit ultricies leo cras. Convallis lectus diam purus interdum habitant. Sit vestibulum in orci ut non sit. Blandit lectus id sed pulvinar risus purus adipiscing placerat."
+          "Earn money through staking, liquidity mining, or yield farming with your crypto.",
+          "Staking is the safest option for beginners, while advanced users can explore other strategies.",
+          "Choose the earning method that matches your risk tolerance and experience level."
         ]}
       />
 

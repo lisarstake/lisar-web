@@ -30,8 +30,8 @@ export const WalletPage: React.FC = () => {
   };
 
   const handleDepositClick = () => {
-    // Navigate directly to stake page with payment options (using default validator ID)
-    navigate("/stake/1");
+    // Navigate directly to stake page with payment options (using default validator)
+    navigate("/stake/giga-kubica-eth?deposit=true");
   };
 
   const handlePortfolioClick = () => {
@@ -93,7 +93,7 @@ export const WalletPage: React.FC = () => {
           <div className="flex items-center justify-around px-6 py-6">
             <button 
               onClick={handleDepositClick}
-              className="flex flex-col items-center justify-center space-y-2 w-18 h-18 bg-[#2a2a2a] rounded-xl"
+              className="flex flex-col items-center justify-center space-y-2 w-20 h-20 bg-[#2a2a2a] rounded-xl"
             >
               <Send size={16} color="#C7EF6B" />
               <span className="text-gray-300 text-xs">Deposit</span>
@@ -101,7 +101,7 @@ export const WalletPage: React.FC = () => {
 
             <button
               onClick={handleStakeClick}
-              className="flex flex-col items-center justify-center space-y-2 w-18 h-18 bg-[#2a2a2a] rounded-xl"
+              className="flex flex-col items-center justify-center space-y-2 w-20 h-20 bg-[#2a2a2a] rounded-xl"
             >
               <ChartSpline size={16} color="#C7EF6B" />
               <span className="text-gray-300 text-xs">Stake</span>
@@ -109,7 +109,7 @@ export const WalletPage: React.FC = () => {
 
             <button 
               onClick={handlePortfolioClick}
-              className="flex flex-col items-center justify-center space-y-2 w-18 h-18 bg-[#2a2a2a] rounded-xl"
+              className="flex flex-col items-center justify-center space-y-2 w-20 h-20 bg-[#2a2a2a] rounded-xl"
             >
               <ChartPie size={16} color="#C7EF6B" />
               <span className="text-gray-300 text-xs">Portfolio</span>
@@ -117,7 +117,7 @@ export const WalletPage: React.FC = () => {
 
             <button 
               onClick={handleHistoryClick}
-              className="flex flex-col items-center justify-center space-y-2 w-18 h-18 bg-[#2a2a2a] rounded-xl"
+              className="flex flex-col items-center justify-center space-y-2 w-20 h-20 bg-[#2a2a2a] rounded-xl"
             >
               <History size={16} color="#C7EF6B" />
               <span className="text-gray-300 text-xs">History</span>
@@ -128,7 +128,7 @@ export const WalletPage: React.FC = () => {
       <div className="px-6 py-4">
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search color="#636363" />
+            <Search size={20} color="#636363" />
           </div>
           <input
             type="text"
@@ -141,7 +141,7 @@ export const WalletPage: React.FC = () => {
       </div>
 
       {/* Orchestrator List - Scrollable */}
-      <div className="flex-1 overflow-y-auto px-6 pb-20">
+      <div className="flex-1 overflow-y-auto px-6 pb-28 scrollbar-hide">
         <div className="space-y-3">
           {filteredOrchestrators.map((orchestrator) => (
             <OrchestratorItem

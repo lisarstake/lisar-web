@@ -3,16 +3,22 @@ import { useNavigate, useParams } from "react-router-dom";
 import { ChevronLeft, CircleQuestionMark, ArrowLeftRight } from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
+import { orchestrators } from "@/data/orchestrators";
+import { getValidatorDisplayName } from "@/utils/routing";
 
 export const UnstakeAmountPage: React.FC = () => {
   const navigate = useNavigate();
   const { validatorId } = useParams<{ validatorId: string }>();
   const [fiatAmount, setFiatAmount] = useState("100,000");
-  const [lptAmount, setLptAmount] = useState("5,000");
+  const [lptAmount, setLptAmount] = useState("1,000");
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
 
+  // Get validator data
+  const validatorName = getValidatorDisplayName(validatorId);
+  const currentValidator = orchestrators.find(o => o.name === validatorName) || orchestrators[0];
+
   const handleBackClick = () => {
-    navigate(`/validator-details/${validatorId}`);
+    navigate(`/validator-details/${currentValidator.slug}`);
   };
 
   const handleAmountSelect = (amount: string) => {
@@ -23,7 +29,7 @@ export const UnstakeAmountPage: React.FC = () => {
   };
 
   const handleProceed = () => {
-    navigate(`/confirm-unstake/${validatorId}?amount=${lptAmount}`);
+    navigate(`/confirm-unstake/${currentValidator.slug}?amount=${lptAmount}`);
   };
 
   const handleHelpClick = () => {
@@ -65,7 +71,11 @@ export const UnstakeAmountPage: React.FC = () => {
 
         {/* Conversion Arrow */}
         <div className="flex justify-center">
-          <ArrowLeftRight size={20} color="#C7EF6B" className="font-extrabold" />
+          <ArrowLeftRight
+            size={20}
+            color="#C7EF6B"
+            className="font-extrabold"
+          />
         </div>
 
         {/* LPT Amount */}
@@ -99,7 +109,7 @@ export const UnstakeAmountPage: React.FC = () => {
       </div>
 
       {/* Proceed Button */}
-      <div className="flex-1 flex items-end px-6 pb-6">
+      <div className="flex-1 flex items-end px-6 pb-24">
         <button
           onClick={handleProceed}
           className="w-full py-4 rounded-xl font-semibold text-lg bg-[#C7EF6B] text-black hover:bg-[#B8E55A] transition-colors"
@@ -112,10 +122,11 @@ export const UnstakeAmountPage: React.FC = () => {
       <HelpDrawer
         isOpen={showHelpDrawer}
         onClose={() => setShowHelpDrawer(false)}
-        title="About Lisar"
-        subtitle="A quick guide on how to use the unstaking feature"
+        title="Unstaking Guide"
         content={[
-          "Lorem ipsum dolor sit amet consectetur. Quam sed dictum amet eu convallis eu. Ac sit ultricies leo cras. Convallis lectus diam purus interdum habitant. Sit vestibulum in orci ut non sit. Blandit lectus id sed pulvinar risus purus adipiscing placerat."
+          "Choose how much you want to unstake from this validator.",
+          "You can unstake part or all of your stake. You won't earn rewards during the unbonding period.",
+          "Your funds will be available after the unbonding period ends."
         ]}
       />
 

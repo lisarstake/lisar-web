@@ -1,13 +1,19 @@
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ChevronLeft, CircleQuestionMark } from "lucide-react";
+import { orchestrators } from "@/data/orchestrators";
+import { getValidatorDisplayName } from "@/utils/routing";
 
 export const WithdrawalSuccessPage: React.FC = () => {
   const navigate = useNavigate();
   const { validatorId } = useParams<{ validatorId: string }>();
 
+  // Get validator data
+  const validatorName = getValidatorDisplayName(validatorId);
+  const currentValidator = orchestrators.find(o => o.name === validatorName) || orchestrators[0];
+
   const handleBackClick = () => {
-    navigate(`/validator-details/${validatorId}`);
+    navigate(`/validator-details/${currentValidator.slug}`);
   };
 
   const handleGoToHome = () => {

@@ -42,7 +42,7 @@ export const ValidatorPage: React.FC = () => {
           onClick={handleBackClick}
           className="w-8 h-8 flex items-center justify-center"
         >
-          <ChevronLeft color="#C7EF6B"/>
+          <ChevronLeft color="#C7EF6B" />
         </button>
 
         <h1 className="text-lg font-medium text-white">Stake</h1>
@@ -56,7 +56,7 @@ export const ValidatorPage: React.FC = () => {
       </div>
 
       {/* Filter Tabs - Separated */}
-      <div className="flex items-center justify-start px-6 py-4 space-x-2">
+      <div className="flex items-center justify-start px-6 pb-4 space-x-2">
         <button
           onClick={() => setActiveFilter("apy")}
           className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
@@ -90,7 +90,7 @@ export const ValidatorPage: React.FC = () => {
       </div>
 
       {/* Orchestrator List - Scrollable */}
-      <div className="flex-1 overflow-y-auto px-6 pb-6">
+      <div className="flex-1 overflow-y-auto px-6 pb-28 scrollbar-hide">
         <div className="space-y-3">
           {sortedOrchestrators.map((orchestrator) => (
             <OrchestratorItem
@@ -105,12 +105,11 @@ export const ValidatorPage: React.FC = () => {
       <HelpDrawer
         isOpen={showHelpDrawer}
         onClose={() => setShowHelpDrawer(false)}
-        title="About Lisar"
-        subtitle="A quick guide on how to use the validator selection"
+        title="Validator Guide"
         content={[
-          "Lorem ipsum dolor sit amet consectetur. Quam sed dictum amet eu convallis eu. Ac sit ultricies leo cras. Convallis lectus diam purus interdum habitant. Sit vestibulum in orci ut non sit. Blandit lectus id sed pulvinar risus purus adipiscing placerat.",
-          "Lorem ipsum dolor sit amet consectetur. Quam sed dictum amet eu convallis eu. Ac sit ultricies leo cras. Convallis lectus diam purus interdum habitant. Sit vestibulum in orci ut non sit. Blandit lectus id sed pulvinar risus purus adipiscing placerat.",
-          "Lorem ipsum dolor sit amet consectetur. Quam sed dictum amet eu convallis eu. Ac sit ultricies leo cras. Convallis lectus diam purus interdum habitant. Sit vestibulum in orci ut non sit. Blandit lectus id sed pulvinar risus purus adipiscing placerat."
+          "Choose a validator to stake with based on APY, total stake, and active time.",
+          "Higher APY means more rewards. More total stake means more community trust.",
+          "Use filter buttons to sort validators and click any validator to see details."
         ]}
       />
 

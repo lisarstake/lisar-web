@@ -1,6 +1,6 @@
 export interface Transaction {
   id: string;
-  type: 'fund-wallet' | 'withdraw-stake' | 'orchestrator-stake' | 'unstake' | 'withdrawal';
+  type: 'fund-wallet' | 'withdraw-stake' | 'stake' | 'unstake' | 'withdrawal';
   title: string;
   amount: number;
   currency: string;

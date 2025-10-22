@@ -11,6 +11,8 @@ import {
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { ShareDrawer } from "@/components/general/ShareDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
+import { orchestrators } from "@/data/orchestrators";
+import { getValidatorDisplayName } from "@/utils/routing";
 
 export const ValidatorDetailsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -18,23 +20,13 @@ export const ValidatorDetailsPage: React.FC = () => {
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
   const [showShareDrawer, setShowShareDrawer] = useState(false);
 
-  // Validator data mapping
-  const validatorData: { [key: string]: { name: string; icon: string } } = {
-    "1": { name: "streamplace.eth", icon: "🧊" },
-    "2": { name: "neuralstream.eth", icon: "🧠" },
-    "3": { name: "ipt.moudi.eth", icon: "🔵" },
-    "4": { name: "coef120.eth", icon: "🐙" },
-    "5": { name: "streamplace.eth", icon: "🧊" },
-    "6": { name: "neuralstream.eth", icon: "🧠" }
-  };
-
-  const currentValidator = validatorData[validatorId || "1"] || validatorData["1"];
+  // Get validator data from orchestrators using slug
+  const validatorName = getValidatorDisplayName(validatorId);
+  const currentValidator = orchestrators.find(o => o.name === validatorName) || orchestrators[0];
 
   const handleBackClick = () => {
-    // Always return to portfolio when coming from portfolio stakes
-    // Check if the validator ID matches portfolio stake IDs (1-6)
-    const portfolioStakeIds = ["1", "2", "3", "4", "5", "6"];
-    if (validatorId && portfolioStakeIds.includes(validatorId)) {
+    // Check if we came from portfolio or validator page
+    if (document.referrer.includes("/portfolio")) {
       navigate("/portfolio");
     } else {
       navigate("/validator");
@@ -42,15 +34,15 @@ export const ValidatorDetailsPage: React.FC = () => {
   };
 
   const handleStakeClick = () => {
-    navigate(`/stake/${validatorId}`);
+    navigate(`/stake/${currentValidator.slug}`);
   };
 
   const handleWithdrawClick = () => {
-    navigate(`/withdraw-network/${validatorId}`);
+    navigate(`/withdraw-network/${currentValidator.slug}`);
   };
 
   const handleUnstakeClick = () => {
-    navigate(`/unstake-amount/${validatorId}`);
+    navigate(`/unstake-amount/${currentValidator.slug}`);
   };
 
   const handleShareClick = () => {
@@ -72,7 +64,9 @@ export const ValidatorDetailsPage: React.FC = () => {
           <ChevronLeft color="#C7EF6B" />
         </button>
 
-        <h1 className="text-lg font-medium text-white">{currentValidator.name}</h1>
+        <h1 className="text-lg font-medium text-white">
+          {currentValidator.name}
+        </h1>
 
         <button
           onClick={handleHelpClick}
@@ -194,8 +188,21 @@ export const ValidatorDetailsPage: React.FC = () => {
       </div>
 
       {/* About Section */}
-      <div className="flex-1 overflow-y-auto px-6 pb-6">
-        <h3 className="text-lg font-semibold text-white mb-4">About</h3>
+      <div
+        className="flex-1 overflow-y-auto px-6 pb-24 scrollbar-hide"
+        style={{
+          scrollbarWidth: "none",
+          msOverflowStyle: "none",
+        }}
+      >
+        <style>
+          {`
+            .scrollbar-hide::-webkit-scrollbar {
+              display: none;
+            }
+          `}
+        </style>
+        <h3 className="text-lg font-semibold text-white mb-2">About</h3>
 
         <div className="space-y-4">
           <p className="text-gray-300 text-xs leading-relaxed">
@@ -204,7 +211,7 @@ export const ValidatorDetailsPage: React.FC = () => {
             ultra-efficient, high-performance video transcoding.
           </p>
 
-          <div className="space-y-3">
+          <div className="space-y-2">
             <div className="flex items-start space-x-3">
               <div className="w-2 h-2 bg-[#C7EF6B] rounded-full mt-2 flex-shrink-0"></div>
               <p className="text-gray-300 text-sm">
@@ -249,20 +256,21 @@ export const ValidatorDetailsPage: React.FC = () => {
       <HelpDrawer
         isOpen={showHelpDrawer}
         onClose={() => setShowHelpDrawer(false)}
-        title="About Lisar"
-        subtitle="A quick guide on how to use the validator details"
+        title="Validator Guide"
         content={[
-          "Lorem ipsum dolor sit amet consectetur. Quam sed dictum amet eu convallis eu. Ac sit ultricies leo cras. Convallis lectus diam purus interdum habitant. Sit vestibulum in orci ut non sit. Blandit lectus id sed pulvinar risus purus adipiscing placerat.",
+          "Review this validator's performance, APY, total stake, and fees before staking.",
+          "APY shows your potential earnings, total stake shows community trust, and fees show the validator's charge.",
+          "Click 'Stake' to start earning or 'Unstake' to remove your current stake."
         ]}
       />
 
-          {/* Share Drawer */}
-          <ShareDrawer
-            isOpen={showShareDrawer}
-            onClose={() => setShowShareDrawer(false)}
-            validatorName={currentValidator.name}
-            validatorId={validatorId || ""}
-          />
+      {/* Share Drawer */}
+      <ShareDrawer
+        isOpen={showShareDrawer}
+        onClose={() => setShowShareDrawer(false)}
+        validatorName={currentValidator.name}
+        validatorId={validatorId || ""}
+      />
 
       {/* Bottom Navigation */}
       <BottomNavigation currentPath="/validator" />

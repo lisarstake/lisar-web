@@ -5,85 +5,141 @@ export const transactions: Transaction[] = [
     id: "1",
     type: "fund-wallet",
     title: "Fund wallet",
-    amount: 0.036,
+    amount: 1000,
     currency: "LPT",
     date: new Date(),
     status: "succeeded",
     to: "Your wallet",
     from: "External wallet",
     network: "Arbitrum One",
-    fee: 0.001,
+    fee: 0.5,
     description: "Deposited funds to your wallet"
   },
   {
     id: "2",
-    type: "withdraw-stake",
-    title: "Withdrew stake",
-    amount: 0.036,
+    type: "stake",
+    title: "Stake",
+    amount: 500,
     currency: "LPT",
-    date: new Date(),
+    date: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
     status: "succeeded",
-    to: "Alex wallet 0x6f71...a980",
-    from: "neuralstream.eth",
+    to: "streamplace.eth",
+    from: "Your wallet",
     network: "Arbitrum One",
-    fee: 0.001,
-    description: "Withdrew stake from validator"
+    fee: 0.1,
+    description: "Staked with validator"
   },
   {
     id: "3",
-    type: "orchestrator-stake",
-    title: "Orchestrator stake",
-    amount: 0.036,
+    type: "unstake",
+    title: "Unstake",
+    amount: 200,
     currency: "LPT",
-    date: new Date(),
+    date: new Date(Date.now() - 4 * 60 * 60 * 1000), // 4 hours ago
     status: "succeeded",
-    to: "neuralstream.eth",
-    from: "Your wallet",
+    to: "Your wallet",
+    from: "neuralstream.eth",
     network: "Arbitrum One",
-    fee: 0.001,
-    description: "Staked with orchestrator"
+    fee: 0.1,
+    description: "Unstaked from validator"
   },
   {
     id: "4",
+    type: "withdraw-stake",
+    title: "Withdraw stake",
+    amount: 150,
+    currency: "LPT",
+    date: new Date(Date.now() - 6 * 60 * 60 * 1000), // 6 hours ago
+    status: "succeeded",
+    to: "Your wallet",
+    from: "coef120.eth",
+    network: "Arbitrum One",
+    fee: 0.1,
+    description: "Withdrew staked funds"
+  },
+  {
+    id: "5",
+    type: "withdrawal",
+    title: "External withdrawal",
+    amount: 50,
+    currency: "USDC",
+    date: new Date(Date.now() - 8 * 60 * 60 * 1000), // 8 hours ago
+    status: "succeeded",
+    to: "0x6f71...a98o",
+    from: "Your wallet",
+    network: "Arbitrum One",
+    fee: 0.5,
+    description: "Withdrew to external wallet"
+  },
+  {
+    id: "6",
     type: "fund-wallet",
     title: "Fund wallet",
-    amount: 0.036,
+    amount: 2000,
     currency: "LPT",
-    date: new Date(2025, 10, 11), // Nov 11, 2025
+    date: new Date(2025, 0, 15), // Jan 15, 2025
     status: "succeeded",
     to: "Your wallet",
     from: "External wallet",
     network: "Arbitrum One",
-    fee: 0.001,
+    fee: 1.0,
     description: "Deposited funds to your wallet"
   },
   {
-    id: "5",
-    type: "withdraw-stake",
-    title: "Withdrew stake",
-    amount: 0.036,
+    id: "7",
+    type: "stake",
+    title: "Stake",
+    amount: 800,
     currency: "LPT",
-    date: new Date(2025, 10, 11), // Nov 11, 2025
+    date: new Date(2025, 0, 14), // Jan 14, 2025
     status: "succeeded",
-    to: "Alex wallet 0x6f71...a980",
-    from: "neuralstream.eth",
-    network: "Arbitrum One",
-    fee: 0.001,
-    description: "Withdrew stake from validator"
-  },
-  {
-    id: "6",
-    type: "orchestrator-stake",
-    title: "Orchestrator stake",
-    amount: 0.036,
-    currency: "LPT",
-    date: new Date(2025, 10, 11), // Nov 11, 2025
-    status: "succeeded",
-    to: "neuralstream.eth",
+    to: "ipt.moudi.eth",
     from: "Your wallet",
     network: "Arbitrum One",
-    fee: 0.001,
-    description: "Staked with orchestrator"
+    fee: 0.2,
+    description: "Staked with validator"
+  },
+  {
+    id: "8",
+    type: "withdrawal",
+    title: "External withdrawal",
+    amount: 0.5,
+    currency: "SOL",
+    date: new Date(2025, 0, 13), // Jan 13, 2025
+    status: "succeeded",
+    to: "0x6f71...a98o",
+    from: "Your wallet",
+    network: "Solana",
+    fee: 0.1,
+    description: "Withdrew to Solana network"
+  },
+  {
+    id: "9",
+    type: "unstake",
+    title: "Unstake",
+    amount: 300,
+    currency: "LPT",
+    date: new Date(2025, 0, 12), // Jan 12, 2025
+    status: "succeeded",
+    to: "Your wallet",
+    from: "streamplace.eth",
+    network: "Arbitrum One",
+    fee: 0.15,
+    description: "Unstaked from validator"
+  },
+  {
+    id: "10",
+    type: "withdraw-stake",
+    title: "Withdraw stake",
+    amount: 100,
+    currency: "LPT",
+    date: new Date(2025, 0, 11), // Jan 11, 2025
+    status: "succeeded",
+    to: "Your wallet",
+    from: "ipt.moudi.eth",
+    network: "Arbitrum One",
+    fee: 0.05,
+    description: "Withdrew staked funds"
   }
 ];
 

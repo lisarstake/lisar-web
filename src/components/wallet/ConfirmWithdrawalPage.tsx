@@ -4,6 +4,8 @@ import { ChevronLeft, CircleQuestionMark } from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { WithdrawalSuccessDrawer } from "./WithdrawalSuccessDrawer";
+import { orchestrators } from "@/data/orchestrators";
+import { getValidatorDisplayName } from "@/utils/routing";
 
 export const ConfirmWithdrawalPage: React.FC = () => {
   const navigate = useNavigate();
@@ -13,13 +15,39 @@ export const ConfirmWithdrawalPage: React.FC = () => {
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
   const [showSuccessDrawer, setShowSuccessDrawer] = useState(false);
 
-  const selectedNetwork = searchParams.get('network') || 'arbitrum';
-  const networkName = selectedNetwork === 'solana' ? 'Solana' : 
-                     selectedNetwork === 'base' ? 'Base' : 
-                     selectedNetwork === 'lisk' ? 'Lisk' : 'Arbitrum One';
+  // Get validator data
+  const validatorName = getValidatorDisplayName(validatorId);
+  const currentValidator = orchestrators.find(o => o.name === validatorName) || orchestrators[0];
+
+  const selectedNetwork = searchParams.get("network") || "arbitrum";
+
+  // Get token name and network name based on selected network
+  const getTokenInfo = () => {
+    switch (selectedNetwork) {
+      case "solana":
+        return { token: "SOL", network: "Solana" };
+      case "livepeer":
+        return { token: "LPT", network: "Arbitrum One" };
+      case "usdc":
+        return { token: "USDC", network: "Arbitrum One" };
+      case "lisk":
+        return { token: "LSK", network: "Arbitrum One" };
+      case "base":
+        return { token: "LPT", network: "Base" };
+      default:
+        return { token: "LPT", network: "Arbitrum One" };
+    }
+  };
+
+  const { token, network: networkName } = getTokenInfo();
+
+  // Determine if this is a cross-chain withdrawal (conversion)
+  const isCrossChain = selectedNetwork !== "livepeer";
+  const conversionFee = isCrossChain ? "0.5%" : "0%";
+  const networkFee = isCrossChain ? "0.5 LPT" : "0 LPT";
 
   const handleBackClick = () => {
-    navigate(`/withdraw-network/${validatorId}`);
+    navigate(`/withdraw-network/${currentValidator.slug}`);
   };
 
   const handleProceed = () => {
@@ -58,7 +86,7 @@ export const ConfirmWithdrawalPage: React.FC = () => {
 
       {/* Withdrawal Amount */}
       <div className="text-center px-6 py-8">
-        <h2 className="text-4xl font-bold text-white">800,000 LPT</h2>
+        <h2 className="text-4xl font-bold text-white">8000 LPT</h2>
       </div>
 
       {/* Confirmation Details Card */}
@@ -66,25 +94,40 @@ export const ConfirmWithdrawalPage: React.FC = () => {
         <div className="bg-[#1a1a1a] rounded-xl p-6">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-gray-400">To</span>
-              <span className="text-white font-medium">Alex wallet 0x6f71...a98o</span>
+              <span className="text-gray-400">Token</span>
+              <span className="text-white font-medium">{token}</span>
             </div>
-            
+
+            <div className="flex items-center justify-between">
+              <span className="text-gray-400">To</span>
+              <span className="text-white font-medium">0x6f71...a98o</span>
+            </div>
+
             <div className="flex items-center justify-between">
               <span className="text-gray-400">Network</span>
               <span className="text-white font-medium">{networkName}</span>
             </div>
-            
+
             <div className="flex items-center justify-between">
               <span className="text-gray-400">Network fee</span>
-              <span className="text-white font-medium">1,200LPT</span>
+              <span className="text-white font-medium">{conversionFee}</span>
+            </div>
+
+            <div className="border-t border-[#2a2a2a] pt-4">
+              <div className="text-gray-400 text-sm">
+                {isCrossChain
+                  ? "You are withdrawing your staking rewards to another network. We will swap your LPT to " +
+                    token +
+                    " at a 0.5% processing fee."
+                  : "You are withdrawing your staking rewards on the same network (Livepeer). No fee applies."}
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Proceed Button */}
-      <div className="px-6 pb-6">
+      <div className="px-6 pb-24">
         <button
           onClick={handleProceed}
           disabled={isProcessing}
@@ -102,12 +145,11 @@ export const ConfirmWithdrawalPage: React.FC = () => {
       <HelpDrawer
         isOpen={showHelpDrawer}
         onClose={() => setShowHelpDrawer(false)}
-        title="About Lisar"
-        subtitle="A quick guide on how to use the withdrawal feature"
+        title="Withdrawal Guide"
         content={[
-          "Lorem ipsum dolor sit amet consectetur. Quam sed dictum amet eu convallis eu. Ac sit ultricies leo cras. Convallis lectus diam purus interdum habitant. Sit vestibulum in orci ut non sit. Blandit lectus id sed pulvinar risus purus adipiscing placerat.",
-          "Lorem ipsum dolor sit amet consectetur. Quam sed dictum amet eu convallis eu. Ac sit ultricies leo cras. Convallis lectus diam purus interdum habitant. Sit vestibulum in orci ut non sit. Blandit lectus id sed pulvinar risus purus adipiscing placerat.",
-          "Lorem ipsum dolor sit amet consectetur. Quam sed dictum amet eu convallis eu. Ac sit ultricies leo cras. Convallis lectus diam purus interdum habitant. Sit vestibulum in orci ut non sit. Blandit lectus id sed pulvinar risus purus adipiscing placerat."
+          "Review your withdrawal details including token, amount, network, and fees before confirming.",
+          "Conversion fees apply when converting between different tokens, network fees cover transaction processing.",
+          "Check the summary to see exactly what you'll receive after all fees."
         ]}
       />
 

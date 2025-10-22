@@ -1,6 +1,7 @@
 export interface Orchestrator {
   id: string;
   name: string;
+  slug: string;
   icon: string;
   totalStaked: number;
   apy: number;

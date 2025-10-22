@@ -11,7 +11,7 @@ export const TransactionDetailPage: React.FC = () => {
   const { transactionId } = useParams<{ transactionId: string }>();
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
 
-  const transaction = transactions.find(t => t.id === transactionId);
+  const transaction = transactions.find((t) => t.id === transactionId);
 
   if (!transaction) {
     return (
@@ -32,10 +32,11 @@ export const TransactionDetailPage: React.FC = () => {
   const getAmountColor = (type: string) => {
     switch (type) {
       case "fund-wallet":
-      case "orchestrator-stake":
+      case "stake":
         return "text-[#C7EF6B]";
       case "withdraw-stake":
       case "withdrawal":
+      case "unstake":
         return "text-[#FF6B6B]";
       default:
         return "text-[#C7EF6B]";
@@ -45,10 +46,11 @@ export const TransactionDetailPage: React.FC = () => {
   const getAmountPrefix = (type: string) => {
     switch (type) {
       case "fund-wallet":
-      case "orchestrator-stake":
+      case "stake":
         return "+";
       case "withdraw-stake":
       case "withdrawal":
+      case "unstake":
         return "-";
       default:
         return "+";
@@ -56,13 +58,13 @@ export const TransactionDetailPage: React.FC = () => {
   };
 
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
     });
   };
 
@@ -77,7 +79,7 @@ export const TransactionDetailPage: React.FC = () => {
           <ChevronLeft color="#C7EF6B" />
         </button>
 
-        <h1 className="text-lg font-medium text-white">Confirm Withdrawal</h1>
+        <h1 className="text-lg font-medium text-white">{transaction.title}</h1>
 
         <button
           onClick={handleHelpClick}
@@ -89,8 +91,11 @@ export const TransactionDetailPage: React.FC = () => {
 
       {/* Transaction Amount */}
       <div className="text-center px-6 py-8">
-        <h2 className={`text-4xl font-bold ${getAmountColor(transaction.type)}`}>
-          {getAmountPrefix(transaction.type)}{transaction.amount} {transaction.currency}
+        <h2
+          className={`text-4xl font-bold ${getAmountColor(transaction.type)}`}
+        >
+          {getAmountPrefix(transaction.type)}
+          {transaction.amount} {transaction.currency}
         </h2>
       </div>
 
@@ -100,39 +105,49 @@ export const TransactionDetailPage: React.FC = () => {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-gray-400">Date</span>
-              <span className="text-white font-medium">{formatDate(transaction.date)}</span>
+              <span className="text-white font-medium">
+                {formatDate(transaction.date)}
+              </span>
             </div>
-            
+
             <div className="flex items-center justify-between">
               <span className="text-gray-400">Status</span>
-              <span className="text-white font-medium capitalize">{transaction.status}</span>
+              <span className="text-white font-medium capitalize">
+                {transaction.status}
+              </span>
             </div>
-            
+
             {transaction.to && (
               <div className="flex items-center justify-between">
                 <span className="text-gray-400">To</span>
                 <span className="text-white font-medium">{transaction.to}</span>
               </div>
             )}
-            
+
             {transaction.from && (
               <div className="flex items-center justify-between">
                 <span className="text-gray-400">From</span>
-                <span className="text-white font-medium">{transaction.from}</span>
+                <span className="text-white font-medium">
+                  {transaction.from}
+                </span>
               </div>
             )}
-            
+
             {transaction.network && (
               <div className="flex items-center justify-between">
                 <span className="text-gray-400">Network</span>
-                <span className="text-white font-medium">{transaction.network}</span>
+                <span className="text-white font-medium">
+                  {transaction.network}
+                </span>
               </div>
             )}
-            
+
             {transaction.fee && (
               <div className="flex items-center justify-between">
                 <span className="text-gray-400">Network fee</span>
-                <span className="text-white font-medium">{transaction.fee} {transaction.currency}</span>
+                <span className="text-white font-medium">
+                  {transaction.fee} {transaction.currency}
+                </span>
               </div>
             )}
           </div>
@@ -143,10 +158,11 @@ export const TransactionDetailPage: React.FC = () => {
       <HelpDrawer
         isOpen={showHelpDrawer}
         onClose={() => setShowHelpDrawer(false)}
-        title="About Lisar"
-        subtitle="A quick guide on how to view transaction details"
+        title="Transaction Guide"
         content={[
-          "Lorem ipsum dolor sit amet consectetur. Quam sed dictum amet eu convallis eu. Ac sit ultricies leo cras. Convallis lectus diam purus interdum habitant. Sit vestibulum in orci ut non sit. Blandit lectus id sed pulvinar risus purus adipiscing placerat."
+          "View detailed information about your transaction including amount, date, status, and fees.",
+          "Status shows if your transaction succeeded, failed, or is pending.",
+          "All transactions are recorded on the blockchain for transparency."
         ]}
       />
 

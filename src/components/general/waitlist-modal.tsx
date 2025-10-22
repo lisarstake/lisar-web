@@ -72,7 +72,7 @@ const WaitlistModal: React.FC<WaitlistModalProps> = ({ isOpen, onClose }) => {
               <X className="h-5 w-5" />
             </button>
           </div>
-          <DialogDescription className="text-gray-600">
+          <DialogDescription className="text-gray-600 text-start">
             Be the first to know when Lisar goes live!
           </DialogDescription>
         </DialogHeader>

@@ -4,6 +4,8 @@ import { ChevronLeft, CircleQuestionMark } from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { UnstakeSuccessDrawer } from "./UnstakeSuccessDrawer";
+import { orchestrators } from "@/data/orchestrators";
+import { getValidatorDisplayName } from "@/utils/routing";
 
 export const ConfirmUnstakePage: React.FC = () => {
   const navigate = useNavigate();
@@ -13,11 +15,17 @@ export const ConfirmUnstakePage: React.FC = () => {
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
   const [showSuccessDrawer, setShowSuccessDrawer] = useState(false);
 
-  const unstakeAmount = searchParams.get('amount') || '5,000';
-  const fiatAmount = (parseInt(unstakeAmount.replace(/,/g, "")) * 20).toLocaleString();
+  // Get validator data
+  const validatorName = getValidatorDisplayName(validatorId);
+  const currentValidator = orchestrators.find(o => o.name === validatorName) || orchestrators[0];
+
+  const unstakeAmount = searchParams.get("amount") || "5,000";
+  const fiatAmount = (
+    parseInt(unstakeAmount.replace(/,/g, "")) * 20
+  ).toLocaleString();
 
   const handleBackClick = () => {
-    navigate(`/unstake-amount/${validatorId}`);
+    navigate(`/unstake-amount/${currentValidator.slug}`);
   };
 
   const handleProceed = () => {
@@ -68,20 +76,22 @@ export const ConfirmUnstakePage: React.FC = () => {
               <span className="text-gray-400">From</span>
               <span className="text-white font-medium">neuralstream.eth</span>
             </div>
-            
+
             <div className="flex items-center justify-between">
               <span className="text-gray-400">To</span>
               <span className="text-white font-medium">Your wallet</span>
             </div>
-            
+
             <div className="flex items-center justify-between">
               <span className="text-gray-400">Network fee</span>
               <span className="text-white font-medium">50 LPT</span>
             </div>
-            
+
             <div className="flex items-center justify-between">
               <span className="text-gray-400">You will receive</span>
-              <span className="text-[#C7EF6B] font-medium">{parseInt(unstakeAmount.replace(/,/g, "")) - 50} LPT</span>
+              <span className="text-[#C7EF6B] font-medium">
+                {parseInt(unstakeAmount.replace(/,/g, "")) - 50} LPT
+              </span>
             </div>
           </div>
         </div>
@@ -106,10 +116,11 @@ export const ConfirmUnstakePage: React.FC = () => {
       <HelpDrawer
         isOpen={showHelpDrawer}
         onClose={() => setShowHelpDrawer(false)}
-        title="About Lisar"
-        subtitle="A quick guide on how to confirm your unstaking"
+        title="Unstaking Guide"
         content={[
-          "Lorem ipsum dolor sit amet consectetur. Quam sed dictum amet eu convallis eu. Ac sit ultricies leo cras. Convallis lectus diam purus interdum habitant. Sit vestibulum in orci ut non sit. Blandit lectus id sed pulvinar risus purus adipiscing placerat."
+          "Review your unstaking details including validator, amount, and unbonding period before confirming.",
+          "You won't earn rewards during the unbonding period, and there's a small network fee.",
+          "Your funds will be available after the unbonding period ends."
         ]}
       />
 

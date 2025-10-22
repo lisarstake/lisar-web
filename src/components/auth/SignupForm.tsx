@@ -27,7 +27,6 @@ export const SignupForm: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // TODO: Implement signup logic
-    console.log("Signup data:", formData);
   };
 
   const isFormValid =

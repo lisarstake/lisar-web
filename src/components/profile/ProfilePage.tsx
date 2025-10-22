@@ -31,23 +31,20 @@ export const ProfilePage: React.FC = () => {
 
   const handleSaveChanges = () => {
     // Handle save logic here
-    console.log("Saving profile changes:", formData);
     // You could show a success message or navigate back
   };
 
   const handleSignOut = () => {
     // Handle sign out logic here
-    console.log("Signing out...");
     navigate("/");
   };
 
   const handleUploadPhoto = () => {
     // Handle photo upload logic here
-    console.log("Uploading photo...");
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white flex flex-col">
+    <div className="min-h-screen bg-[#050505] text-gray-100 flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-8">
         <button
@@ -57,14 +54,14 @@ export const ProfilePage: React.FC = () => {
           <ChevronLeft color="#C7EF6B" />
         </button>
         <div className="text-center">
-          <h1 className="text-lg font-bold text-white">User Profile</h1>
+          <h1 className="text-lg font-bold text-gray-100">User Profile</h1>
           
         </div>
         <div className="w-8"></div> {/* Spacer for centering */}
       </div>
 
       {/* Content - Scrollable */}
-      <div className="flex-1 overflow-y-auto px-6 pb-20">
+      <div className="flex-1 overflow-y-auto px-6 pb-20 scrollbar-hide">
         {/* Profile Picture Section */}
         <div className="flex flex-col items-center mb-8">
           <div className="w-24 h-24 bg-[#1a1a1a] rounded-full border-2 border-[#2a2a2a] flex items-center justify-center mb-4 overflow-hidden">
@@ -88,33 +85,33 @@ export const ProfilePage: React.FC = () => {
         <div className="space-y-6">
           {/* Username */}
           <div>
-            <label className="block text-white text-sm font-medium mb-2">
+            <label className="block text-gray-100 text-sm font-medium mb-2">
               Username
             </label>
             <input
               type="text"
               value={formData.username}
               onChange={(e) => handleInputChange("username", e.target.value)}
-              className="w-full px-4 py-3 bg-[#121212] border border-[#121212] rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-[#C7EF6B] transition-colors"
+              className="w-full px-4 py-3 bg-[#121212] border border-[#121212] rounded-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:border-[#C7EF6B] transition-colors"
             />
           </div>
 
           {/* Full Name */}
           <div>
-            <label className="block text-white text-sm font-medium mb-2">
+            <label className="block text-gray-100 text-sm font-medium mb-2">
               Full Name
             </label>
             <input
               type="text"
               value={formData.fullName}
               onChange={(e) => handleInputChange("fullName", e.target.value)}
-              className="w-full px-4 py-3 bg-[#121212] border border-[#121212] rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-[#C7EF6B] transition-colors"
+              className="w-full px-4 py-3 bg-[#121212] border border-[#121212] rounded-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:border-[#C7EF6B] transition-colors"
             />
           </div>
 
           {/* Deposit Address */}
           <div>
-            <label className="block text-white text-sm font-medium mb-2">
+            <label className="block text-gray-100 text-sm font-medium mb-2">
               Deposit Address
             </label>
             <input
@@ -123,13 +120,13 @@ export const ProfilePage: React.FC = () => {
               onChange={(e) =>
                 handleInputChange("depositAddress", e.target.value)
               }
-              className="w-full px-4 py-3 bg-[#121212] border border-[#121212] rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-[#C7EF6B] transition-colors"
+              className="w-full px-4 py-3 bg-[#121212] border border-[#121212] rounded-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:border-[#C7EF6B] transition-colors"
             />
           </div>
 
           {/* Preferred Currency */}
           <div>
-            <label className="block text-white text-sm font-medium mb-2">
+            <label className="block text-gray-100 text-sm font-medium mb-2">
               Preferred Currency
             </label>
             <div className="relative">
@@ -138,18 +135,18 @@ export const ProfilePage: React.FC = () => {
                 onChange={(e) =>
                   handleInputChange("preferredCurrency", e.target.value)
                 }
-                className="w-full px-4 py-3 bg-[#121212] border border-[#121212] rounded-lg text-white focus:outline-none focus:border-[#C7EF6B] transition-colors appearance-none"
+                className="w-full px-4 py-3 bg-[#121212] border border-[#121212] rounded-lg text-gray-100 focus:outline-none focus:border-[#C7EF6B] transition-colors appearance-none"
               >
-                <option value="Naira (₦)" className="text-white bg-[#121212]">
+                <option value="Naira (₦)" className="text-gray-100 bg-[#121212]">
                   Naira (₦)
                 </option>
-                <option value="USD ($)" className="text-white bg-[#121212]">
+                <option value="USD ($)" className="text-gray-100 bg-[#121212]">
                   USD ($)
                 </option>
-                <option value="EUR (€)" className="text-white bg-[#121212]">
+                <option value="EUR (€)" className="text-gray-100 bg-[#121212]">
                   EUR (€)
                 </option>
-                <option value="GBP (£)" className="text-white bg-[#121212]">
+                <option value="GBP (£)" className="text-gray-100 bg-[#121212]">
                   GBP (£)
                 </option>
               </select>

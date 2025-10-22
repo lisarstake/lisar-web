@@ -2,7 +2,6 @@ import React from "react";
 import {
   Drawer,
   DrawerContent,
-  DrawerDescription,
   DrawerFooter,
   DrawerHeader,
   DrawerTitle,
@@ -12,7 +11,6 @@ interface HelpDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   title: string;
-  subtitle: string;
   content: string[];
 }
 
@@ -20,25 +18,21 @@ export const HelpDrawer: React.FC<HelpDrawerProps> = ({
   isOpen,
   onClose,
   title,
-  subtitle,
   content,
 }) => {
   return (
     <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DrawerContent>
         <DrawerHeader>
-          <DrawerTitle className="text-center text-2xl font-bold text-white">
+          <DrawerTitle className="text-center text-xl font-semibold text-white">
             {title}
           </DrawerTitle>
-          <DrawerDescription className="text-center text-white/70 text-base">
-            {subtitle}
-          </DrawerDescription>
         </DrawerHeader>
 
-        <div className="px-6 py-4 space-y-6">
+        <div className="p-4 space-y-2.5">
           {content.map((section, index) => (
             <div key={index}>
-              <p className="text-white text-sm leading-relaxed">{section}</p>
+              <p className="text-gray-300 text-sm leading-relaxed">{section}</p>
             </div>
           ))}
         </div>
