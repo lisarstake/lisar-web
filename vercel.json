@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/((?!assets/|android/|ios/|windows11/|.*\\.(png|jpg|jpeg|gif|svg|ico|css|js|json|txt|xml|webp)).*)",
+      "destination": "/index.html"
+    }
+  ]
+} 
