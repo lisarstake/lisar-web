@@ -26,7 +26,6 @@ export const ValidatorPage: React.FC = () => {
         setError(null);
         const response = await delegationService.getOrchestrators(); // Fetch all orchestrators
 
-        console.log(response, error);
 
         if (response.success) {
           setOrchestrators(response.data);

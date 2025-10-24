@@ -74,24 +74,27 @@ export interface ResetPasswordResponse {
 
 // User Profile Types 
 export interface User {
-  id: string;
+  user_id: string;
   email: string;
-  email_confirmed_at: string | null;
-  user_metadata: UserMetadata;
-  created_at: string;
-  updated_at: string;
-  last_sign_in_at: string | null;
-}
-
-export interface UserMetadata {
   full_name: string;
   wallet_address: string;
+  wallet_id: string;
+  chain_type: string;
+  privy_user_id: string;
   img?: string;
   DOB?: string;
   country?: string;
   state?: string;
   fiat_type?: string;
+  fiat_balance: number;
+  lpt_balance: number;
+  is_suspended: boolean;
+  suspended_at?: string;
+  suspension_reason?: string;
+  created_date: string;
+  updated_at: string;
 }
+
 
 export interface Wallet {
   id: string;
