@@ -294,10 +294,34 @@ export class AuthService implements IAuthApiService {
   }
 
   async updateProfile(request: UpdateProfileRequest): Promise<AuthApiResponse<User>> {
-    return this.makeRequest<User>('/users/me', {
-      method: 'PUT',
-      body: JSON.stringify(request),
-    });
+    // Get the current user ID from the stored token or make a request to get it
+    const token = this.getStoredToken();
+    if (!token) {
+      return {
+        success: false,
+        message: 'No authentication token found',
+        data: null as unknown as User,
+        error: 'Authentication required',
+      };
+    }
+
+    // Decode the token to get user ID
+    try {
+      const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+      const userId = tokenPayload.sub;
+      
+      return this.makeRequest<User>(`/users/profile/${userId}`, {
+        method: 'PATCH',
+        body: JSON.stringify(request),
+      });
+    } catch (error) {
+      return {
+        success: false,
+        message: 'Failed to decode authentication token',
+        data: null as unknown as User,
+        error: error instanceof Error ? error.message : 'Token decode error',
+      };
+    }
   }
 
   async deleteAccount(password: string): Promise<AuthApiResponse<{ message: string }>> {

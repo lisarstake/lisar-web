@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { OrchestratorItem } from "./OrchestratorItem";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
-import { orchestrators, walletData } from "@/data/orchestrators";
+import { delegationService } from "@/services";
+import { OrchestratorResponse } from "@/services/delegation/types";
 import {
   ChartSpline,
   Plus,
@@ -16,9 +17,43 @@ import {
 export const WalletPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
+  const [orchestrators, setOrchestrators] = useState<OrchestratorResponse[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Mock wallet data for now
+  const walletData = {
+    balance: 5000,
+    currency: 'LPT',
+    fiatValue: '$100,000',
+    fiatCurrency: 'USD'
+  };
+
+  // Fetch orchestrators on component mount
+  useEffect(() => {
+    const fetchOrchestrators = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const response = await delegationService.getOrchestrators();
+        
+        if (response.success) {
+          setOrchestrators(response.data);
+        } else {
+          setError(response.message || 'Failed to fetch orchestrators');
+        }
+      } catch (err) {
+        setError('An error occurred while fetching orchestrators');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchOrchestrators();
+  }, []);
 
   const filteredOrchestrators = orchestrators.filter((orch) =>
-    orch.name.toLowerCase().includes(searchQuery.toLowerCase())
+    orch.ensName?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleStakeClick = () => {
@@ -143,14 +178,31 @@ export const WalletPage: React.FC = () => {
 
       {/* Orchestrator List - Scrollable */}
       <div className="flex-1 overflow-y-auto px-6 pb-28 scrollbar-hide">
-        <div className="space-y-3">
-          {filteredOrchestrators.map((orchestrator) => (
-            <OrchestratorItem
-              key={orchestrator.id}
-              orchestrator={orchestrator}
-            />
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C7EF6B]"></div>
+            <span className="ml-3 text-gray-400">Loading validators...</span>
+          </div>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center py-12">
+            <p className="text-red-400 text-center mb-4">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-[#C7EF6B] text-black rounded-lg font-medium hover:bg-[#B8E55A] transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {filteredOrchestrators.map((orchestrator) => (
+              <OrchestratorItem
+                key={orchestrator.address}
+                orchestrator={orchestrator}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Bottom Navigation */}

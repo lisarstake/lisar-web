@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { OrchestratorItem } from "./OrchestratorItem";
-import { orchestrators } from "@/data/orchestrators";
+import { delegationService } from "@/services";
+import { OrchestratorResponse } from "@/services/delegation/types";
 import { FilterType } from "@/types/wallet";
 import { ChevronLeft, CircleQuestionMark } from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
@@ -11,6 +12,36 @@ export const ValidatorPage: React.FC = () => {
   const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState<FilterType>("apy");
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
+  const [orchestrators, setOrchestrators] = useState<OrchestratorResponse[]>(
+    []
+  );
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch orchestrators on component mount
+  useEffect(() => {
+    const fetchOrchestrators = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const response = await delegationService.getOrchestrators(); // Fetch all orchestrators
+
+        console.log(response, error);
+
+        if (response.success) {
+          setOrchestrators(response.data);
+        } else {
+          setError(response.message || "Failed to fetch orchestrators");
+        }
+      } catch (err) {
+        setError("An error occurred while fetching orchestrators");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchOrchestrators();
+  }, []);
 
   const handleBackClick = () => {
     navigate("/wallet");
@@ -23,12 +54,12 @@ export const ValidatorPage: React.FC = () => {
   const sortedOrchestrators = [...orchestrators].sort((a, b) => {
     switch (activeFilter) {
       case "apy":
-        return b.apy - a.apy;
+        return parseFloat(b.apy) - parseFloat(a.apy);
       case "total-stake":
-        return b.totalStaked - a.totalStaked;
+        return parseFloat(b.totalStake) - parseFloat(a.totalStake);
       case "active-time":
         // For demo purposes, we'll use a simple sort by name
-        return a.name.localeCompare(b.name);
+        return a.ensName.localeCompare(b.ensName);
       default:
         return 0;
     }
@@ -91,14 +122,31 @@ export const ValidatorPage: React.FC = () => {
 
       {/* Orchestrator List - Scrollable */}
       <div className="flex-1 overflow-y-auto px-6 pb-28 scrollbar-hide">
-        <div className="space-y-3">
-          {sortedOrchestrators.map((orchestrator) => (
-            <OrchestratorItem
-              key={orchestrator.id}
-              orchestrator={orchestrator}
-            />
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C7EF6B]"></div>
+            <span className="ml-3 text-gray-400">Loading validators...</span>
+          </div>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center py-12">
+            <p className="text-red-400 text-center mb-4">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-[#C7EF6B] text-black rounded-lg font-medium hover:bg-[#B8E55A] transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {sortedOrchestrators.map((orchestrator, index) => (
+              <OrchestratorItem
+                key={orchestrator.address}
+                orchestrator={orchestrator}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Help Drawer */}
@@ -109,7 +157,7 @@ export const ValidatorPage: React.FC = () => {
         content={[
           "Choose a validator to stake with based on APY, total stake, and active time.",
           "Higher APY means more rewards. More total stake means more community trust.",
-          "Use filter buttons to sort validators and click any validator to see details."
+          "Use filter buttons to sort validators and click any validator to see details.",
         ]}
       />
 

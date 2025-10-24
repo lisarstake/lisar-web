@@ -35,7 +35,15 @@ interface AuthContextType {
   logout: () => Promise<void>;
   forgotPassword: (email: string) => Promise<AuthApiResponse<any>>;
   resetPassword: (accessToken: string, newPassword: string) => Promise<AuthApiResponse<any>>;
-  updateProfile: (data: { full_name?: string; email?: string }) => Promise<AuthApiResponse<User>>;
+  updateProfile: (data: { 
+    full_name?: string; 
+    email?: string;
+    img?: string;
+    DOB?: string;
+    country?: string;
+    state?: string;
+    fiat_type?: string;
+  }) => Promise<AuthApiResponse<User>>;
   clearError: () => void;
   refreshUser: () => Promise<void>;
 }
@@ -365,7 +373,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const updateProfile = async (data: { full_name?: string; email?: string }): Promise<AuthApiResponse<User>> => {
+  const updateProfile = async (data: { 
+    full_name?: string; 
+    email?: string;
+    img?: string;
+    DOB?: string;
+    country?: string;
+    state?: string;
+    fiat_type?: string;
+  }): Promise<AuthApiResponse<User>> => {
     try {
       const response = await authService.updateProfile(data);
       if (response.success && response.data) {
