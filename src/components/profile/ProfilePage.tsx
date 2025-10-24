@@ -13,37 +13,63 @@ import { useAuth } from "@/contexts/AuthContext";
 export const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const { state, logout, updateProfile, refreshUser } = useAuth();
-  
+
   const [formData, setFormData] = useState({
     username: "",
     fullName: "",
     depositAddress: "",
-    preferredCurrency: "USD ($)",
+    preferredCurrency: "USD",
+    profileImage: "",
+    dateOfBirth: "",
+    country: "",
+    state: "",
   });
-  
+
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
   // Load user data on component mount
   useEffect(() => {
     const loadUserData = async () => {
-      if (state.user) {
-        setFormData({
-          username: state.user.email.split('@')[0], // Use email prefix as username
-          fullName: state.user.user_metadata.full_name,
-          depositAddress: state.user.user_metadata.wallet_address,
-          preferredCurrency: 'USD ($)', // Default currency
-        });
-        setIsLoading(false);
-      } else {
-        // If no user data, try to refresh
-        await refreshUser();
+      try {
+        if (state.isLoading) {
+          // Wait for auth to finish loading
+          return;
+        }
+
+        if (state.user) {
+          setFormData({
+            username: state.user.email ? state.user.email.split("@")[0] : "", // Use email prefix as username
+            fullName: state.user.user_metadata?.full_name || "",
+            depositAddress: state.user.user_metadata?.wallet_address || "",
+            preferredCurrency: state.user.user_metadata?.fiat_type || "USD",
+            profileImage: state.user.user_metadata?.img || "",
+            dateOfBirth: state.user.user_metadata?.DOB || "",
+            country: state.user.user_metadata?.country || "",
+            state: state.user.user_metadata?.state || "",
+          });
+          setIsLoading(false);
+        } else if (state.isAuthenticated) {
+          // If authenticated but no user data, try to refresh
+          await refreshUser();
+          setIsLoading(false);
+        } else {
+          // Not authenticated, redirect to login
+          navigate("/login");
+        }
+      } catch (error) {
         setIsLoading(false);
       }
     };
 
     loadUserData();
-  }, [state.user, refreshUser]);
+  }, [
+    state.user,
+    state.isAuthenticated,
+    state.isLoading,
+    refreshUser,
+    navigate,
+  ]);
 
   const handleBackClick = () => {
     navigate("/wallet");
@@ -58,22 +84,27 @@ export const ProfilePage: React.FC = () => {
 
   const handleSaveChanges = async () => {
     if (isSaving) return;
-    
+
     setIsSaving(true);
-    
+
     try {
       const response = await updateProfile({
         full_name: formData.fullName,
+        img: formData.profileImage,
+        DOB: formData.dateOfBirth,
+        country: formData.country,
+        state: formData.state,
+        fiat_type: formData.preferredCurrency,
       });
-      
+
       if (response.success) {
+        // Refresh user data to get updated information
+        await refreshUser();
         // Show success message or navigate back
-        navigate('/wallet');
-      } else {
-        console.error('Failed to update profile:', response.message);
+        navigate("/wallet");
       }
     } catch (error) {
-      console.error('Error updating profile:', error);
+      // Handle error silently or show user-friendly message
     } finally {
       setIsSaving(false);
     }
@@ -82,16 +113,25 @@ export const ProfilePage: React.FC = () => {
   const handleSignOut = async () => {
     try {
       await logout();
-      navigate('/');
+      navigate("/");
     } catch (error) {
-      console.error('Error signing out:', error);
       // Still navigate to home even if logout fails
-      navigate('/');
+      navigate("/");
     }
   };
 
   const handleUploadPhoto = () => {
-    // Handle photo upload logic here
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        const imageUrl = URL.createObjectURL(file);
+        handleInputChange("profileImage", imageUrl);
+      }
+    };
+    input.click();
   };
 
   if (isLoading) {
@@ -117,19 +157,36 @@ export const ProfilePage: React.FC = () => {
         </button>
         <div className="text-center">
           <h1 className="text-lg font-bold text-gray-100">User Profile</h1>
-          
         </div>
         <div className="w-8"></div> {/* Spacer for centering */}
       </div>
 
       {/* Content - Scrollable */}
-      <div className="flex-1 overflow-y-auto px-6 pb-20 scrollbar-hide">
+      <div className="flex-1 overflow-y-auto px-6 pb-6 scrollbar-hide">
         {/* Profile Picture Section */}
         <div className="flex flex-col items-center mb-8">
           <div className="w-24 h-24 bg-[#1a1a1a] rounded-full border-2 border-[#2a2a2a] flex items-center justify-center mb-4 overflow-hidden">
-            <div className="w-full h-full bg-gradient-to-br from-[#C7EF6B] to-[#B8E55A] flex items-center justify-center">
+            {formData.profileImage ? (
+              <img
+                src={formData.profileImage}
+                alt="Profile"
+                className="w-full h-full object-cover rounded-full"
+                onError={(e) => {
+                  // Fallback to initials if image fails to load
+                  e.currentTarget.style.display = "none";
+                  e.currentTarget.nextElementSibling?.classList.remove(
+                    "hidden"
+                  );
+                }}
+              />
+            ) : null}
+            <div
+              className={`w-full h-full bg-gradient-to-br from-[#C7EF6B] to-[#B8E55A] flex items-center justify-center ${formData.profileImage ? "hidden" : ""}`}
+            >
               <span className="text-black text-4xl font-bold">
-                {formData.fullName ? formData.fullName.charAt(0).toUpperCase() : formData.username.charAt(0).toUpperCase()}
+                {formData.fullName
+                  ? formData.fullName.charAt(0).toUpperCase()
+                  : formData.username.charAt(0).toUpperCase()}
               </span>
             </div>
           </div>
@@ -171,10 +228,51 @@ export const ProfilePage: React.FC = () => {
             />
           </div>
 
+          {/* Date of Birth */}
+          <div>
+            <label className="block text-gray-100 text-sm font-medium mb-2">
+              Date of Birth
+            </label>
+            <input
+              type="date"
+              value={formData.dateOfBirth}
+              onChange={(e) => handleInputChange("dateOfBirth", e.target.value)}
+              className="w-full px-4 py-3 bg-[#121212] border border-[#121212] rounded-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:border-[#C7EF6B] transition-colors"
+            />
+          </div>
+
+          {/* Country */}
+          <div>
+            <label className="block text-gray-100 text-sm font-medium mb-2">
+              Country
+            </label>
+            <input
+              type="text"
+              value={formData.country}
+              onChange={(e) => handleInputChange("country", e.target.value)}
+              placeholder="e.g., USA, Nigeria, UK"
+              className="w-full px-4 py-3 bg-[#121212] border border-[#121212] rounded-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:border-[#C7EF6B] transition-colors"
+            />
+          </div>
+
+          {/* State */}
+          <div>
+            <label className="block text-gray-100 text-sm font-medium mb-2">
+              State/Province
+            </label>
+            <input
+              type="text"
+              value={formData.state}
+              onChange={(e) => handleInputChange("state", e.target.value)}
+              placeholder="e.g., California, Lagos, London"
+              className="w-full px-4 py-3 bg-[#121212] border border-[#121212] rounded-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:border-[#C7EF6B] transition-colors"
+            />
+          </div>
+
           {/* Deposit Address */}
           <div>
             <label className="block text-gray-100 text-sm font-medium mb-2">
-              Wallet Address
+              Deposit Address
             </label>
             <input
               type="text"
@@ -182,7 +280,6 @@ export const ProfilePage: React.FC = () => {
               readOnly
               className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#2a2a2a] rounded-lg text-gray-400 cursor-not-allowed"
             />
-            <p className="text-xs text-gray-500 mt-1">This is your wallet address from registration</p>
           </div>
 
           {/* Preferred Currency */}
@@ -198,16 +295,16 @@ export const ProfilePage: React.FC = () => {
                 }
                 className="w-full px-4 py-3 bg-[#121212] border border-[#121212] rounded-lg text-gray-100 focus:outline-none focus:border-[#C7EF6B] transition-colors appearance-none"
               >
-                <option value="Naira (₦)" className="text-gray-100 bg-[#121212]">
+                <option value="NGN" className="text-gray-100 bg-[#121212]">
                   Naira (₦)
                 </option>
-                <option value="USD ($)" className="text-gray-100 bg-[#121212]">
+                <option value="USD" className="text-gray-100 bg-[#121212]">
                   USD ($)
                 </option>
-                <option value="EUR (€)" className="text-gray-100 bg-[#121212]">
+                <option value="EUR" className="text-gray-100 bg-[#121212]">
                   EUR (€)
                 </option>
-                <option value="GBP (£)" className="text-gray-100 bg-[#121212]">
+                <option value="GBP" className="text-gray-100 bg-[#121212]">
                   GBP (£)
                 </option>
               </select>
@@ -233,17 +330,17 @@ export const ProfilePage: React.FC = () => {
             {isSaving ? "Saving..." : "Save Changes"}
           </button>
         </div>
-      </div>
 
-      {/* Fixed Sign Out Button at Bottom */}
-      <div className="fixed bottom-0 left-0 right-0 bg-[#050505] border-t border-[#2a2a2a] px-6 py-4">
-        <button
-          onClick={handleSignOut}
-          className="w-full text-red-500 flex items-center justify-center space-x-2 hover:text-red-400 transition-colors py-2"
-        >
-          <ArrowRight size={16} />
-          <span>Sign Out</span>
-        </button>
+        {/* Sign Out Button */}
+        <div className="mt-6">
+          <button
+            onClick={handleSignOut}
+            className="w-full text-red-500 flex items-center justify-center space-x-2 hover:text-red-400 transition-colors py-2 border-t pt-6 border-gray-800"
+          >
+            <ArrowRight size={16} />
+            <span>Sign Out</span>
+          </button>
+        </div>
       </div>
     </div>
   );

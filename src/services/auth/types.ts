@@ -86,6 +86,11 @@ export interface User {
 export interface UserMetadata {
   full_name: string;
   wallet_address: string;
+  img?: string;
+  DOB?: string;
+  country?: string;
+  state?: string;
+  fiat_type?: string;
 }
 
 export interface Wallet {
@@ -105,6 +110,11 @@ export interface Session {
 export interface UpdateProfileRequest {
   full_name?: string;
   email?: string;
+  img?: string;
+  DOB?: string;
+  country?: string;
+  state?: string;
+  fiat_type?: string;
 }
 
 export interface ChangePasswordRequest {

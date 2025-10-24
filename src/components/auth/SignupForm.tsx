@@ -85,7 +85,6 @@ export const SignupForm: React.FC = () => {
 
   const handleEmailConfirmationClose = () => {
     setShowEmailConfirmation(false);
-    // Navigate to login page after closing
     navigate("/login");
   };
 
