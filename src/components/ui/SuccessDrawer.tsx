@@ -48,24 +48,11 @@ export const SuccessDrawer: React.FC<SuccessDrawerProps> = ({
           <DrawerDescription className="text-gray-400 text-base">
             {message}
           </DrawerDescription>
-          {details && (
-            <div className="mt-4 p-3 bg-[#C7EF6B]/10 border border-[#C7EF6B]/20 rounded-lg">
-              <p className="text-[#C7EF6B] text-sm font-mono text-left">
-                {details}
-              </p>
-            </div>
-          )}
+         
         </DrawerHeader> 
         
         <DrawerFooter className="space-y-3">
-          {onAction && (
-            <button
-              onClick={onAction}
-              className="w-full py-3 px-6 rounded-lg font-semibold text-lg bg-[#C7EF6B] text-black hover:bg-[#B8E55A] transition-colors"
-            >
-              {actionText}
-            </button>
-          )}
+         
           <button
             onClick={onClose}
             className="w-full py-3 px-6 rounded-lg font-semibold text-lg border-2 border-[#C7EF6B] bg-transparent text-[#C7EF6B] hover:bg-[#C7EF6B] hover:text-black transition-colors"

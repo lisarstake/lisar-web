@@ -133,11 +133,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           dispatch({ type: 'AUTH_START' });
           const response = await authService.getCurrentUser();
           if (response.success && response.data) {
-            // Get wallet info from user metadata
+            // Get wallet info from user data (new structure)
             const wallet: Wallet = {
-              id: 'wallet_id',
-              address: response.data.user_metadata.wallet_address,
-              chain_type: 'ethereum',
+              id: response.data.wallet_id || 'wallet_id',
+              address: response.data.wallet_address,
+              chain_type: response.data.chain_type || 'ethereum',
             };
             
             // Create session from stored tokens
@@ -227,11 +227,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const userResponse = await authService.getCurrentUser();
         
         if (userResponse && userResponse.success && userResponse.data) {
-          // Create wallet info from user metadata
+          // Create wallet info from user data (new structure)
           const wallet: Wallet = {
-            id: 'wallet_id',
-            address: userResponse.data.user_metadata?.wallet_address || '',
-            chain_type: 'ethereum',
+            id: userResponse.data.wallet_id || 'wallet_id',
+            address: userResponse.data.wallet_address,
+            chain_type: userResponse.data.chain_type || 'ethereum',
           };
           
           // Create session info
@@ -283,21 +283,43 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             storage.setItem('auth_expiry', response.data.session.expires_at.toString());
           }
           
-          // Get wallet info from user metadata
-          const wallet: Wallet = {
-            id: 'wallet_id',
-            address: response.data.user.user_metadata.wallet_address,
-            chain_type: 'ethereum',
-          };
+          // Get fresh user data from the profile endpoint
+          const userResponse = await authService.getCurrentUser();
           
-          dispatch({ 
-            type: 'AUTH_SUCCESS', 
-            payload: { 
-              user: response.data.user, 
-              wallet, 
-              session: response.data.session 
-            } 
-          });
+          if (userResponse && userResponse.success && userResponse.data) {
+            // Get wallet info from user data (new structure)
+            const wallet: Wallet = {
+              id: userResponse.data.wallet_id || 'wallet_id',
+              address: userResponse.data.wallet_address,
+              chain_type: userResponse.data.chain_type || 'ethereum',
+            };
+            
+            dispatch({ 
+              type: 'AUTH_SUCCESS', 
+              payload: { 
+                user: userResponse.data, 
+                wallet, 
+                session: response.data.session 
+              } 
+            });
+          } else {
+            // Fallback to using login response data if getCurrentUser fails
+            // Note: This uses the old login response structure
+            const wallet: Wallet = {
+              id: 'wallet_id',
+              address: (response.data.user as any).user_metadata?.wallet_address || '',
+              chain_type: 'ethereum',
+            };
+            
+            dispatch({ 
+              type: 'AUTH_SUCCESS', 
+              payload: { 
+                user: response.data.user, 
+                wallet, 
+                session: response.data.session 
+              } 
+            });
+          }
         } else {
           dispatch({ type: 'AUTH_FAILURE', payload: response.message || 'Signin failed' });
         }

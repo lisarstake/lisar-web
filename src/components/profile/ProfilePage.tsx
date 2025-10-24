@@ -8,7 +8,10 @@ import {
   LogOut,
 } from "lucide-react";
 import { Button } from "../ui/button";
+import { SuccessDrawer } from "../ui/SuccessDrawer";
+import { ErrorDrawer } from "../ui/ErrorDrawer";
 import { useAuth } from "@/contexts/AuthContext";
+import { authService } from "@/services/auth";
 
 export const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
@@ -27,26 +30,29 @@ export const ProfilePage: React.FC = () => {
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [showSuccessDrawer, setShowSuccessDrawer] = useState(false);
+  const [showErrorDrawer, setShowErrorDrawer] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   // Load user data on component mount
   useEffect(() => {
     const loadUserData = async () => {
       try {
         if (state.isLoading) {
-          // Wait for auth to finish loading
           return;
         }
 
         if (state.user) {
           setFormData({
             username: state.user.email ? state.user.email.split("@")[0] : "", // Use email prefix as username
-            fullName: state.user.user_metadata?.full_name || "",
-            depositAddress: state.user.user_metadata?.wallet_address || "",
-            preferredCurrency: state.user.user_metadata?.fiat_type || "USD",
-            profileImage: state.user.user_metadata?.img || "",
-            dateOfBirth: state.user.user_metadata?.DOB || "",
-            country: state.user.user_metadata?.country || "",
-            state: state.user.user_metadata?.state || "",
+            fullName: state.user.full_name || "",
+            depositAddress: state.user.wallet_address || "",
+            preferredCurrency: state.user.fiat_type || "USD",
+            profileImage: state.user.img || "",
+            dateOfBirth: state.user.DOB || "",
+            country: state.user.country || "",
+            state: state.user.state || "",
           });
           setIsLoading(false);
         } else if (state.isAuthenticated) {
@@ -98,13 +104,21 @@ export const ProfilePage: React.FC = () => {
       });
 
       if (response.success) {
-        // Refresh user data to get updated information
+        setShowSuccessDrawer(true);
         await refreshUser();
-        // Show success message or navigate back
-        navigate("/wallet");
+      } else {
+        setErrorMessage(
+          response.message || "Failed to update profile. Please try again."
+        );
+        setShowErrorDrawer(true);
       }
     } catch (error) {
-      // Handle error silently or show user-friendly message
+      const errorMsg =
+        error instanceof Error
+          ? error.message
+          : "An unexpected error occurred. Please try again.";
+      setErrorMessage(errorMsg);
+      setShowErrorDrawer(true);
     } finally {
       setIsSaving(false);
     }
@@ -120,15 +134,30 @@ export const ProfilePage: React.FC = () => {
     }
   };
 
-  const handleUploadPhoto = () => {
+  const handleUploadPhoto = async () => {
     const input = document.createElement("input");
     input.type = "file";
     input.accept = "image/*";
-    input.onchange = (e) => {
+    input.onchange = async (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (file) {
-        const imageUrl = URL.createObjectURL(file);
-        handleInputChange("profileImage", imageUrl);
+        try {
+          setIsUploadingImage(true);
+          const response = await authService.uploadProfileImage(file);
+          
+          if (response.success && response.data) {
+            handleInputChange("profileImage", response.data.imageUrl);
+          } else {
+            setErrorMessage(response.message || "Failed to upload image");
+            setShowErrorDrawer(true);
+          }
+        } catch (error) {
+          const errorMsg = error instanceof Error ? error.message : "An unexpected error occurred";
+          setErrorMessage(errorMsg);
+          setShowErrorDrawer(true);
+        } finally {
+          setIsUploadingImage(false);
+        }
       }
     };
     input.click();
@@ -193,10 +222,13 @@ export const ProfilePage: React.FC = () => {
 
           <button
             onClick={handleUploadPhoto}
-            className="bg-[#C7EF6B] text-black px-3 py-1.5 rounded-full font-medium flex items-center space-x-2 hover:bg-[#B8E55A] transition-colors"
+            disabled={isUploadingImage}
+            className={`bg-[#C7EF6B] text-black px-3 py-1.5 rounded-full font-medium flex items-center space-x-2 hover:bg-[#B8E55A] transition-colors ${
+              isUploadingImage ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
           >
             <Camera size={16} />
-            <span>Upload</span>
+            <span>{isUploadingImage ? 'Uploading...' : 'Upload'}</span>
           </button>
         </div>
 
@@ -342,6 +374,25 @@ export const ProfilePage: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Success Drawer */}
+      <SuccessDrawer
+        isOpen={showSuccessDrawer}
+        onClose={() => setShowSuccessDrawer(false)}
+        title="Profile Updated!"
+        message="Your profile has been successfully updated."
+        onAction={() => setShowSuccessDrawer(false)}
+        actionText="Continue"
+      />
+
+      {/* Error Drawer */}
+      <ErrorDrawer
+        isOpen={showErrorDrawer}
+        onClose={() => setShowErrorDrawer(false)}
+        title="Update Failed"
+        message={errorMessage}
+        details="Please check your connection and try again. If the problem persists, contact support."
+      />
     </div>
   );
 };
