@@ -3,13 +3,16 @@
  * Real implementation for Lisar API v1
  */
 
+import { IAuthApiService } from './api';
 import {
-  IAuthApiService,
   AuthApiResponse,
+  CreateWalletRequest,
+  CreateWalletResponse,
   SignupRequest,
   SignupResponse,
   LoginRequest,
   LoginResponse,
+  GoogleOAuthResponse,
   ForgotPasswordRequest,
   ForgotPasswordResponse,
   ResetPasswordRequest,
@@ -42,7 +45,7 @@ export class AuthService implements IAuthApiService {
   ): Promise<AuthApiResponse<T>> {
     const url = `${this.baseUrl}${endpoint}`;
     
-    const defaultHeaders = {
+    const defaultHeaders: Record<string, string> = {
       'Content-Type': 'application/json',
     };
 
@@ -91,49 +94,153 @@ export class AuthService implements IAuthApiService {
 
   // Token management helpers
   private getStoredToken(): string | null {
-    return localStorage.getItem('auth_token');
+    // Check localStorage first (remembered sessions)
+    let token = localStorage.getItem('auth_token');
+    
+    // Check if token has expired (if rememberMe was used)
+    const expiry = localStorage.getItem('auth_expiry');
+    if (token && expiry) {
+      const expiryTime = parseInt(expiry) * 1000; // Convert to milliseconds
+      if (Date.now() > expiryTime) {
+        // Token expired, clear it
+        this.removeStoredTokens();
+        return null;
+      }
+    }
+    
+    // If not in localStorage, check sessionStorage
+    if (!token) {
+      token = sessionStorage.getItem('auth_token');
+    }
+    
+    return token;
   }
 
   private setStoredToken(token: string): void {
     localStorage.setItem('auth_token', token);
   }
 
-  private removeStoredToken(): void {
+  private getStoredRefreshToken(): string | null {
+    // Check localStorage first
+    let refreshToken = localStorage.getItem('refresh_token');
+    
+    // If not in localStorage, check sessionStorage
+    if (!refreshToken) {
+      refreshToken = sessionStorage.getItem('refresh_token');
+    }
+    
+    return refreshToken;
+  }
+
+  private setStoredRefreshToken(token: string): void {
+    localStorage.setItem('refresh_token', token);
+  }
+
+  private removeStoredTokens(): void {
+    // Clear from both storages
     localStorage.removeItem('auth_token');
+    localStorage.removeItem('refresh_token');
+    localStorage.removeItem('auth_expiry');
+    sessionStorage.removeItem('auth_token');
+    sessionStorage.removeItem('refresh_token');
   }
 
   // Authentication Methods
-  async signup(request: SignupRequest): Promise<AuthApiResponse<SignupResponse>> {
-    return this.makeRequest<SignupResponse>('/users/create-with-wallet', {
+  async createWallet(request: CreateWalletRequest): Promise<AuthApiResponse<CreateWalletResponse>> {
+    return this.makeRequest<CreateWalletResponse>('/users/create-with-wallet', {
       method: 'POST',
       body: JSON.stringify(request),
     });
   }
 
-  async login(request: LoginRequest): Promise<AuthApiResponse<LoginResponse>> {
-    // Note: This endpoint might need to be confirmed with the API documentation
-    return this.makeRequest<LoginResponse>('/auth/login', {
+  async signup(request: SignupRequest): Promise<AuthApiResponse<SignupResponse>> {
+    return this.makeRequest<SignupResponse>('/auth/signup', {
       method: 'POST',
       body: JSON.stringify(request),
     });
+  }
+
+  async signin(request: LoginRequest): Promise<AuthApiResponse<LoginResponse>> {
+    return this.makeRequest<LoginResponse>('/auth/signin', {
+      method: 'POST',
+      body: JSON.stringify(request),
+    });
+  }
+
+  // Google OAuth Methods
+  async initiateGoogleAuth(): Promise<AuthApiResponse<{ url: string }>> {
+    try {
+      const response = await this.makeRequest<{ url: string }>('/auth/google', {
+        method: 'GET',
+      });
+      
+      if (response.success && response.data?.url) {
+        // Redirect to the Google OAuth URL
+        window.location.href = response.data.url;
+      }
+      
+      return response;
+    } catch (error) {
+      return {
+        success: false,
+        message: 'Failed to initiate Google OAuth',
+        data: null as unknown as { url: string },
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  }
+
+  async handleGoogleCallback(): Promise<AuthApiResponse<GoogleOAuthResponse>> {
+    try {
+      // Extract the callback URL from the current page URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const code = urlParams.get('code');
+      const state = urlParams.get('state');
+      
+      if (!code) {
+        return {
+          success: false,
+          message: 'No authorization code found in callback URL',
+          data: null as unknown as GoogleOAuthResponse,
+          error: 'Missing authorization code',
+        };
+      }
+
+      // Make request to callback endpoint with the authorization code as a query parameter
+      return this.makeRequest<GoogleOAuthResponse>(`/auth/google/callback?code=${code}&state=${state || ''}`, {
+        method: 'GET',
+      });
+    } catch (error) {
+      return {
+        success: false,
+        message: 'Failed to handle Google OAuth callback',
+        data: null as unknown as GoogleOAuthResponse,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
   }
 
   async logout(request?: LogoutRequest): Promise<AuthApiResponse<LogoutResponse>> {
-    this.removeStoredToken();
-    
-    // If there's a logout endpoint, call it
-    if (request?.refreshToken) {
-      return this.makeRequest<LogoutResponse>('/auth/logout', {
+    try {
+      // Call the signout endpoint
+      const response = await this.makeRequest<LogoutResponse>('/auth/signout', {
         method: 'POST',
-        body: JSON.stringify(request),
+        body: JSON.stringify(request || {}),
       });
+      
+      // Always remove tokens locally regardless of API response
+      this.removeStoredTokens();
+      
+      return response;
+    } catch (error) {
+      // Even if API call fails, remove tokens locally
+      this.removeStoredTokens();
+      return {
+        success: true,
+        message: 'Logged out successfully',
+        data: { message: 'Logged out successfully', success: true },
+      };
     }
-
-    return {
-      success: true,
-      message: 'Logged out successfully',
-      data: { message: 'Logged out successfully', success: true },
-    };
   }
 
   // Password Management
@@ -158,13 +265,6 @@ export class AuthService implements IAuthApiService {
     });
   }
 
-  // Email Verification
-  async verifyEmail(request: { token: string }): Promise<AuthApiResponse<{ message: string; success: boolean }>> {
-    return this.makeRequest<{ message: string; success: boolean }>('/auth/verify-email', {
-      method: 'POST',
-      body: JSON.stringify(request),
-    });
-  }
 
   async resendVerificationEmail(email: string): Promise<AuthApiResponse<{ message: string }>> {
     return this.makeRequest<{ message: string }>('/auth/resend-verification', {
@@ -190,7 +290,7 @@ export class AuthService implements IAuthApiService {
 
   // User Profile
   async getCurrentUser(): Promise<AuthApiResponse<User>> {
-    return this.makeRequest<User>('/users/me');
+    return this.makeRequest<User>('/auth/me');
   }
 
   async updateProfile(request: UpdateProfileRequest): Promise<AuthApiResponse<User>> {
@@ -214,7 +314,7 @@ export class AuthService implements IAuthApiService {
       return {
         success: false,
         message: 'Failed to get session info',
-        data: null as SessionInfo,
+        data: null as unknown as SessionInfo,
         error: userResponse.error,
       };
     }

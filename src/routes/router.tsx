@@ -8,6 +8,7 @@ const OnboardingPage = lazy(() => import('@/screens/onboarding-page'))
 const SignupPage = lazy(() => import('@/screens/signup-page'))
 const LoginPage = lazy(() => import('@/screens/login-page'))
 const ForgotPasswordPage = lazy(() => import('@/screens/forgot-password-page'))
+const ResetPasswordPage = lazy(() => import('@/screens/reset-password-page'))
 const WalletPage = lazy(() => import('@/screens/wallet-page'))
 const ValidatorPage = lazy(() => import('@/screens/validator-page'))
 const ValidatorDetailsPage = lazy(() => import('@/screens/validator-details-page'))
@@ -49,6 +50,7 @@ export const router = createBrowserRouter([
       { path: 'signup', element: withSuspense(<SignupPage />) },
       { path: 'login', element: withSuspense(<LoginPage />) },
       { path: 'forgot-password', element: withSuspense(<ForgotPasswordPage />) },
+      { path: 'reset-password', element: withSuspense(<ResetPasswordPage />) },
       { path: 'wallet', element: withSuspense(<WalletPage />) },
       { path: 'validator', element: withSuspense(<ValidatorPage />) },
       { path: 'validator-details/:validatorId', element: withSuspense(<ValidatorDetailsPage />) },

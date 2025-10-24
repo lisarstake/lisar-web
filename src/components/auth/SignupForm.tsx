@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { ErrorDrawer } from "@/components/ui/ErrorDrawer";
+import { EmailConfirmationDrawer } from "@/components/ui/EmailConfirmationDrawer";
 
 interface SignupFormData {
   fullName: string;
@@ -10,8 +12,8 @@ interface SignupFormData {
 
 export const SignupForm: React.FC = () => {
   const navigate = useNavigate();
-  const { signup, state } = useAuth();
-  
+  const { createWallet, signinWithGoogle, state } = useAuth();
+
   const [formData, setFormData] = useState<SignupFormData>({
     fullName: "",
     email: "",
@@ -20,6 +22,13 @@ export const SignupForm: React.FC = () => {
 
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorDrawer, setErrorDrawer] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    details: "",
+  });
+  const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -31,26 +40,53 @@ export const SignupForm: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!isFormValid || isSubmitting) return;
-    
+
     setIsSubmitting(true);
-    
+
     try {
-      const response = await signup(formData.email, formData.password, formData.fullName);
-      
-      if (response.success) {
-        // Navigate to dashboard or onboarding
-        navigate('/dashboard');
+      // Create wallet (which also creates the user account)
+      const walletResponse = await createWallet(
+        formData.email,
+        formData.password,
+        formData.fullName
+      );
+
+      if (walletResponse.success && walletResponse.data) {
+        // Show email confirmation drawer
+        setShowEmailConfirmation(true);
       } else {
-        // Error will be handled by the auth context
-        console.error('Signup failed:', response.message);
+        // Show error in drawer
+        setErrorDrawer({
+          isOpen: true,
+          title: "Signup Failed",
+          message: walletResponse.message || "Failed to create account",
+          details: walletResponse.error || "",
+        });
       }
     } catch (error) {
-      console.error('Signup error:', error);
+      // Show error in drawer
+      setErrorDrawer({
+        isOpen: true,
+        title: "Network Error",
+        message:
+          "Unable to connect to the server. Please check your internet connection and try again.",
+        details: error instanceof Error ? error.message : "Unknown error",
+      });
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleGoogleSignup = () => {
+    signinWithGoogle();
+  };
+
+  const handleEmailConfirmationClose = () => {
+    setShowEmailConfirmation(false);
+    // Navigate to login page after closing
+    navigate("/login");
   };
 
   const isFormValid =
@@ -182,13 +218,6 @@ export const SignupForm: React.FC = () => {
             )}
           </div>
 
-          {/* Error Message */}
-          {state.error && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
-              <p className="text-red-400 text-sm">{state.error}</p>
-            </div>
-          )}
-
           {/* Create Account Button */}
           <button
             type="submit"
@@ -215,6 +244,7 @@ export const SignupForm: React.FC = () => {
           {/* Google Signup Button */}
           <button
             type="button"
+            onClick={handleGoogleSignup}
             className="w-full py-3 px-6 rounded-lg font-semibold text-lg border-2 border-[#C7EF6B] bg-black text-white hover:bg-gray-800 transition-colors flex items-center justify-center"
           >
             <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
@@ -249,6 +279,26 @@ export const SignupForm: React.FC = () => {
           </p>
         </div>
       </div>
+
+      {/* Error Drawer */}
+      <ErrorDrawer
+        isOpen={errorDrawer.isOpen}
+        onClose={() => setErrorDrawer({ ...errorDrawer, isOpen: false })}
+        title={errorDrawer.title}
+        message={errorDrawer.message}
+        details={errorDrawer.details}
+        onRetry={() => {
+          setErrorDrawer({ ...errorDrawer, isOpen: false });
+          // User can manually retry by clicking submit again
+        }}
+      />
+
+      {/* Email Confirmation Drawer */}
+      <EmailConfirmationDrawer
+        isOpen={showEmailConfirmation}
+        onClose={handleEmailConfirmationClose}
+        email={formData.email}
+      />
     </div>
   );
 };

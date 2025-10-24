@@ -1,6 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { ErrorDrawer } from "@/components/ui/ErrorDrawer";
+import { SuccessDrawer } from "@/components/ui/SuccessDrawer";
+import {
+  extractTokensFromHash,
+  clearHashFromURL,
+} from "@/utils/tokenExtractor";
 
 interface LoginFormData {
   email: string;
@@ -9,8 +15,8 @@ interface LoginFormData {
 
 export const LoginForm: React.FC = () => {
   const navigate = useNavigate();
-  const { login, state } = useAuth();
-  
+  const { signin, signinWithGoogle, state } = useAuth();
+
   const [formData, setFormData] = useState<LoginFormData>({
     email: "",
     password: "",
@@ -19,6 +25,100 @@ export const LoginForm: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorDrawer, setErrorDrawer] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    details: "",
+  });
+  const [successDrawer, setSuccessDrawer] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    details: "",
+  });
+
+  useEffect(() => {
+    const tokens = extractTokensFromHash();
+    if (tokens) {
+      // Clear the hash from URL
+      clearHashFromURL();
+
+      // Check if this is a Google OAuth token (has provider_token)
+      if (tokens.provider_token) {
+        handleGoogleOAuthLogin(tokens);
+      } else {
+        localStorage.setItem(
+          "pending_confirmation_tokens",
+          JSON.stringify(tokens)
+        );
+
+        // Show success message that email is confirmed
+        setSuccessDrawer({
+          isOpen: true,
+          title: "Email Confirmed!",
+          message: "Your email has been successfully confirmed.",
+          details: "",
+        });
+      }
+    }
+  }, []);
+
+  const handleGoogleOAuthLogin = async (tokens: any) => {
+    try {
+      setIsSubmitting(true);
+
+      // Store tokens in localStorage (Google OAuth users are remembered by default)
+      localStorage.setItem("auth_token", tokens.access_token);
+      localStorage.setItem("refresh_token", tokens.refresh_token);
+
+      if (tokens.expires_at) {
+        localStorage.setItem("auth_expiry", tokens.expires_at.toString());
+      }
+
+      // Get user info from the token (decode JWT)
+      const userInfo = JSON.parse(atob(tokens.access_token.split(".")[1]));
+
+      // Create wallet info from user metadata
+      const wallet = {
+        id: userInfo.user_metadata?.id || "",
+        address: userInfo.user_metadata?.wallet_address || "",
+        chain_type: "ethereum",
+      };
+
+      // Create session
+      const session = {
+        access_token: tokens.access_token,
+        refresh_token: tokens.refresh_token,
+        expires_in: tokens.expires_in,
+        expires_at: tokens.expires_at,
+        token_type: tokens.token_type,
+      };
+
+      // Create user object
+      const user = {
+        id: userInfo.sub,
+        email: userInfo.email,
+        email_confirmed_at: userInfo.email_confirmed_at,
+        user_metadata: userInfo.user_metadata,
+        created_at: userInfo.created_at,
+        updated_at: userInfo.updated_at,
+        last_sign_in_at: userInfo.last_sign_in_at,
+      };
+
+      navigate("/wallet");
+    } catch (error) {
+      // Show error drawer
+      setErrorDrawer({
+        isOpen: true,
+        title: "Google Sign-in Failed",
+        message: "Failed to process Google sign-in. Please try again.",
+        details: error instanceof Error ? error.message : "Unknown error",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -30,26 +130,46 @@ export const LoginForm: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!isFormValid || isSubmitting) return;
-    
+
     setIsSubmitting(true);
-    
+
     try {
-      const response = await login(formData.email, formData.password);
-      
+      const response = await signin(
+        formData.email,
+        formData.password,
+        rememberMe
+      );
+
       if (response.success) {
-        // Navigate to dashboard
-        navigate('/dashboard');
+        // Navigate to wallet page
+        navigate("/wallet");
       } else {
-        // Error will be handled by the auth context
-        console.error('Login failed:', response.message);
+        // Show error in drawer
+        setErrorDrawer({
+          isOpen: true,
+          title: "Login Failed",
+          message: response.message || "Invalid email or password",
+          details: response.error || "",
+        });
       }
     } catch (error) {
-      console.error('Login error:', error);
+      // Show error in drawer
+      setErrorDrawer({
+        isOpen: true,
+        title: "Network Error",
+        message:
+          "Unable to connect to the server. Please check your internet connection and try again.",
+        details: error instanceof Error ? error.message : "Unknown error",
+      });
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleGoogleLogin = () => {
+    signinWithGoogle();
   };
 
   const isFormValid = formData.email && formData.password;
@@ -100,7 +220,7 @@ export const LoginForm: React.FC = () => {
               htmlFor="password"
               className="block text-white text-sm font-medium mb-2"
             >
-              Set Your Password
+              Enter Your Password
             </label>
             <div className="relative">
               <input
@@ -164,13 +284,6 @@ export const LoginForm: React.FC = () => {
             </Link>
           </div>
 
-          {/* Error Message */}
-          {state.error && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
-              <p className="text-red-400 text-sm">{state.error}</p>
-            </div>
-          )}
-
           {/* Sign In Button */}
           <button
             type="submit"
@@ -197,6 +310,7 @@ export const LoginForm: React.FC = () => {
           {/* Google Sign In Button */}
           <button
             type="button"
+            onClick={handleGoogleLogin}
             className="w-full py-3 px-6 rounded-lg font-semibold text-lg border-2 border-[#C7EF6B] bg-black text-white hover:bg-gray-800 transition-colors flex items-center justify-center"
           >
             <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
@@ -231,6 +345,28 @@ export const LoginForm: React.FC = () => {
           </p>
         </div>
       </div>
+
+      {/* Error Drawer */}
+      <ErrorDrawer
+        isOpen={errorDrawer.isOpen}
+        onClose={() => setErrorDrawer({ ...errorDrawer, isOpen: false })}
+        title={errorDrawer.title}
+        message={errorDrawer.message}
+        details={errorDrawer.details}
+        onRetry={() => {
+          setErrorDrawer({ ...errorDrawer, isOpen: false });
+          // User can manually retry by clicking submit again
+        }}
+      />
+
+      {/* Success Drawer */}
+      <SuccessDrawer
+        isOpen={successDrawer.isOpen}
+        onClose={() => setSuccessDrawer({ ...successDrawer, isOpen: false })}
+        title={successDrawer.title}
+        message={successDrawer.message}
+        details={successDrawer.details}
+      />
     </div>
   );
 };

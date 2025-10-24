@@ -1,7 +1,5 @@
 /**
  * Authentication API Types
- * Defines interfaces for auth-related API requests and responses
- * Based on Lisar API v1: https://api.lisar.io/v1
  */
 
 // Base API Response
@@ -13,16 +11,29 @@ export interface AuthApiResponse<T> {
 }
 
 // User Authentication Types
-export interface SignupRequest {
+export interface CreateWalletRequest {
   email: string;
   password: string;
   full_name: string;
 }
 
-export interface SignupResponse {
+export interface CreateWalletResponse {
   user: User;
   privy_user_id: string;
   wallet: Wallet;
+}
+
+export interface SignupRequest {
+  email: string;
+  password: string;
+  full_name: string;
+  wallet_address: string;
+}
+
+export interface SignupResponse {
+  user: User;
+  session: Session;
+  note?: string;
 }
 
 export interface LoginRequest {
@@ -33,9 +44,13 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   user: User;
-  privy_user_id: string;
-  wallet: Wallet;
-  token?: string; // If JWT is returned
+  session: Session;
+}
+
+// Google OAuth Types
+export interface GoogleOAuthResponse {
+  user: User;
+  session: Session;
 }
 
 export interface ForgotPasswordRequest {
@@ -44,13 +59,12 @@ export interface ForgotPasswordRequest {
 
 export interface ForgotPasswordResponse {
   message: string;
-  resetToken?: string;
+  success: boolean;
 }
 
 export interface ResetPasswordRequest {
-  token: string;
-  password: string;
-  confirmPassword: string;
+  accessToken: string;
+  newPassword: string;
 }
 
 export interface ResetPasswordResponse {
@@ -58,7 +72,7 @@ export interface ResetPasswordResponse {
   success: boolean;
 }
 
-// User Profile Types (based on API response)
+// User Profile Types 
 export interface User {
   id: string;
   email: string;
@@ -78,6 +92,14 @@ export interface Wallet {
   id: string;
   address: string;
   chain_type: string;
+}
+
+export interface Session {
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+  expires_at: number;
+  token_type: string;
 }
 
 export interface UpdateProfileRequest {
@@ -139,7 +161,7 @@ export interface AuthConfig {
 
 // Constants
 export const AUTH_CONFIG: AuthConfig = {
-  baseUrl: 'https://api.lisar.io/v1',
+  baseUrl: 'https://lisar-api-1.onrender.com/api/v1',
   timeout: 10000,
   retryAttempts: 3
 };

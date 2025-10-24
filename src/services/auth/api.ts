@@ -5,16 +5,19 @@
 
 import {
   AuthApiResponse,
+  CreateWalletRequest,
+  CreateWalletResponse,
   LoginRequest,
   LoginResponse,
   SignupRequest,
   SignupResponse,
+  GoogleOAuthResponse,
   ForgotPasswordRequest,
   ForgotPasswordResponse,
   ResetPasswordRequest,
   ResetPasswordResponse,
-  VerifyEmailRequest,
-  VerifyEmailResponse,
+  // VerifyEmailRequest, // Removed: not exported by './types'
+  // VerifyEmailResponse, // Removed: not exported by './types'
   User,
   UpdateProfileRequest,
   ChangePasswordRequest,
@@ -28,9 +31,14 @@ import {
 
 export interface IAuthApiService {
   // Authentication
-  login(request: LoginRequest): Promise<AuthApiResponse<LoginResponse>>;
+  createWallet(request: CreateWalletRequest): Promise<AuthApiResponse<CreateWalletResponse>>;
   signup(request: SignupRequest): Promise<AuthApiResponse<SignupResponse>>;
+  signin(request: LoginRequest): Promise<AuthApiResponse<LoginResponse>>;
   logout(request?: LogoutRequest): Promise<AuthApiResponse<LogoutResponse>>;
+  
+  // Google OAuth
+  initiateGoogleAuth(): void;
+  handleGoogleCallback(): Promise<AuthApiResponse<GoogleOAuthResponse>>;
   
   // Password Management
   forgotPassword(request: ForgotPasswordRequest): Promise<AuthApiResponse<ForgotPasswordResponse>>;
@@ -38,7 +46,6 @@ export interface IAuthApiService {
   changePassword(request: ChangePasswordRequest): Promise<AuthApiResponse<ChangePasswordResponse>>;
   
   // Email Verification
-  verifyEmail(request: VerifyEmailRequest): Promise<AuthApiResponse<VerifyEmailResponse>>;
   resendVerificationEmail(email: string): Promise<AuthApiResponse<{ message: string }>>;
   
   // Token Management

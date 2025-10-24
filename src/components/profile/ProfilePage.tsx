@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ChevronLeft,
@@ -8,15 +8,42 @@ import {
   LogOut,
 } from "lucide-react";
 import { Button } from "../ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 
 export const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
+  const { state, logout, updateProfile, refreshUser } = useAuth();
+  
   const [formData, setFormData] = useState({
-    username: "winnernwakaku123",
-    fullName: "winnernwakaku123",
-    depositAddress: "0x2E5F9807E033b669dDd4BObE1F1A3F959C02",
-    preferredCurrency: "Naira (₦)",
+    username: "",
+    fullName: "",
+    depositAddress: "",
+    preferredCurrency: "USD ($)",
   });
+  
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Load user data on component mount
+  useEffect(() => {
+    const loadUserData = async () => {
+      if (state.user) {
+        setFormData({
+          username: state.user.email.split('@')[0], // Use email prefix as username
+          fullName: state.user.user_metadata.full_name,
+          depositAddress: state.user.user_metadata.wallet_address,
+          preferredCurrency: 'USD ($)', // Default currency
+        });
+        setIsLoading(false);
+      } else {
+        // If no user data, try to refresh
+        await refreshUser();
+        setIsLoading(false);
+      }
+    };
+
+    loadUserData();
+  }, [state.user, refreshUser]);
 
   const handleBackClick = () => {
     navigate("/wallet");
@@ -29,19 +56,54 @@ export const ProfilePage: React.FC = () => {
     }));
   };
 
-  const handleSaveChanges = () => {
-    // Handle save logic here
-    // You could show a success message or navigate back
+  const handleSaveChanges = async () => {
+    if (isSaving) return;
+    
+    setIsSaving(true);
+    
+    try {
+      const response = await updateProfile({
+        full_name: formData.fullName,
+      });
+      
+      if (response.success) {
+        // Show success message or navigate back
+        navigate('/wallet');
+      } else {
+        console.error('Failed to update profile:', response.message);
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleSignOut = () => {
-    // Handle sign out logic here
-    navigate("/");
+  const handleSignOut = async () => {
+    try {
+      await logout();
+      navigate('/');
+    } catch (error) {
+      console.error('Error signing out:', error);
+      // Still navigate to home even if logout fails
+      navigate('/');
+    }
   };
 
   const handleUploadPhoto = () => {
     // Handle photo upload logic here
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C7EF6B] mx-auto mb-4"></div>
+          <p className="text-white">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#050505] text-gray-100 flex flex-col">
@@ -67,7 +129,7 @@ export const ProfilePage: React.FC = () => {
           <div className="w-24 h-24 bg-[#1a1a1a] rounded-full border-2 border-[#2a2a2a] flex items-center justify-center mb-4 overflow-hidden">
             <div className="w-full h-full bg-gradient-to-br from-[#C7EF6B] to-[#B8E55A] flex items-center justify-center">
               <span className="text-black text-4xl font-bold">
-                {formData.username.charAt(0).toUpperCase()}
+                {formData.fullName ? formData.fullName.charAt(0).toUpperCase() : formData.username.charAt(0).toUpperCase()}
               </span>
             </div>
           </div>
@@ -112,16 +174,15 @@ export const ProfilePage: React.FC = () => {
           {/* Deposit Address */}
           <div>
             <label className="block text-gray-100 text-sm font-medium mb-2">
-              Deposit Address
+              Wallet Address
             </label>
             <input
               type="text"
               value={formData.depositAddress}
-              onChange={(e) =>
-                handleInputChange("depositAddress", e.target.value)
-              }
-              className="w-full px-4 py-3 bg-[#121212] border border-[#121212] rounded-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:border-[#C7EF6B] transition-colors"
+              readOnly
+              className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#2a2a2a] rounded-lg text-gray-400 cursor-not-allowed"
             />
+            <p className="text-xs text-gray-500 mt-1">This is your wallet address from registration</p>
           </div>
 
           {/* Preferred Currency */}
@@ -162,9 +223,14 @@ export const ProfilePage: React.FC = () => {
         <div className="mt-8">
           <button
             onClick={handleSaveChanges}
-            className="w-full bg-[#C7EF6B] text-black py-3 px-6 rounded-lg font-semibold text-lg hover:bg-[#B8E55A] transition-colors"
+            disabled={isSaving}
+            className={`w-full py-3 px-6 rounded-lg font-semibold text-lg transition-colors ${
+              isSaving
+                ? "bg-[#636363] text-white cursor-not-allowed"
+                : "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
+            }`}
           >
-            Save Changes
+            {isSaving ? "Saving..." : "Save Changes"}
           </button>
         </div>
       </div>

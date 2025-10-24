@@ -4,13 +4,14 @@
  */
 
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
-import { User, Wallet, AuthApiResponse } from '@/services/auth/types';
+import { User, Wallet, Session, AuthApiResponse } from '@/services/auth/types';
 import { authService } from '@/services/auth';
 
 // Auth State
 interface AuthState {
   user: User | null;
   wallet: Wallet | null;
+  session: Session | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
@@ -19,7 +20,7 @@ interface AuthState {
 // Auth Actions
 type AuthAction =
   | { type: 'AUTH_START' }
-  | { type: 'AUTH_SUCCESS'; payload: { user: User; wallet: Wallet } }
+  | { type: 'AUTH_SUCCESS'; payload: { user: User; wallet: Wallet; session: Session } }
   | { type: 'AUTH_FAILURE'; payload: string }
   | { type: 'AUTH_LOGOUT' }
   | { type: 'AUTH_CLEAR_ERROR' }
@@ -28,9 +29,12 @@ type AuthAction =
 // Auth Context Type
 interface AuthContextType {
   state: AuthState;
-  login: (email: string, password: string) => Promise<AuthApiResponse<any>>;
-  signup: (email: string, password: string, fullName: string) => Promise<AuthApiResponse<any>>;
+  createWallet: (email: string, password: string, fullName: string) => Promise<AuthApiResponse<any>>;
+  signin: (email: string, password: string, rememberMe?: boolean) => Promise<AuthApiResponse<any>>;
+  signinWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
+  forgotPassword: (email: string) => Promise<AuthApiResponse<any>>;
+  resetPassword: (accessToken: string, newPassword: string) => Promise<AuthApiResponse<any>>;
   updateProfile: (data: { full_name?: string; email?: string }) => Promise<AuthApiResponse<User>>;
   clearError: () => void;
   refreshUser: () => Promise<void>;
@@ -40,6 +44,7 @@ interface AuthContextType {
 const initialState: AuthState = {
   user: null,
   wallet: null,
+  session: null,
   isAuthenticated: false,
   isLoading: true,
   error: null,
@@ -59,6 +64,7 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
         ...state,
         user: action.payload.user,
         wallet: action.payload.wallet,
+        session: action.payload.session,
         isAuthenticated: true,
         isLoading: false,
         error: null,
@@ -77,6 +83,7 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
         ...state,
         user: null,
         wallet: null,
+        session: null,
         isAuthenticated: false,
         isLoading: false,
         error: null,
@@ -111,6 +118,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     const initializeAuth = async () => {
       const token = localStorage.getItem('auth_token');
+      const refreshToken = localStorage.getItem('refresh_token');
+      
       if (token) {
         try {
           dispatch({ type: 'AUTH_START' });
@@ -122,17 +131,32 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               address: response.data.user_metadata.wallet_address,
               chain_type: 'ethereum',
             };
-            dispatch({ type: 'AUTH_SUCCESS', payload: { user: response.data, wallet } });
+            
+            // Create session from stored tokens
+            const session: Session = {
+              access_token: token,
+              refresh_token: refreshToken || '',
+              expires_in: 3600,
+              expires_at: Date.now() + 3600000, // 1 hour from now
+              token_type: 'bearer',
+            };
+            
+            dispatch({ type: 'AUTH_SUCCESS', payload: { user: response.data, wallet, session } });
           } else {
-            dispatch({ type: 'AUTH_FAILURE', payload: 'Failed to authenticate' });
+            // Token is invalid, clear it and set as not authenticated
             localStorage.removeItem('auth_token');
+            localStorage.removeItem('refresh_token');
+            dispatch({ type: 'AUTH_LOGOUT' });
           }
         } catch (error) {
-          dispatch({ type: 'AUTH_FAILURE', payload: 'Authentication failed' });
+          // Token validation failed, clear it and set as not authenticated
           localStorage.removeItem('auth_token');
+          localStorage.removeItem('refresh_token');
+          dispatch({ type: 'AUTH_LOGOUT' });
         }
       } else {
-        dispatch({ type: 'AUTH_FAILURE', payload: 'No token found' });
+        // No token found - this is normal for new users, just set as not authenticated
+        dispatch({ type: 'AUTH_LOGOUT' });
       }
     };
 
@@ -140,30 +164,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   // Auth Methods
-  const login = async (email: string, password: string): Promise<AuthApiResponse<any>> => {
+  const createWallet = async (email: string, password: string, fullName: string): Promise<AuthApiResponse<any>> => {
     dispatch({ type: 'AUTH_START' });
     
     try {
-      const response = await authService.login({ email, password });
+      const response = await authService.createWallet({ email, password, full_name: fullName });
       if (response.success && response.data) {
-        // Store token if provided
-        if (response.data.token) {
-          localStorage.setItem('auth_token', response.data.token);
-        }
-        
-        dispatch({ 
-          type: 'AUTH_SUCCESS', 
-          payload: { 
-            user: response.data.user, 
-            wallet: response.data.wallet 
-          } 
-        });
+        // Return the wallet data for the next step
+        return response;
       } else {
-        dispatch({ type: 'AUTH_FAILURE', payload: response.message || 'Login failed' });
+        dispatch({ type: 'AUTH_FAILURE', payload: response.message || 'Wallet creation failed' });
+        return response;
       }
-      return response;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Login failed';
+      const errorMessage = error instanceof Error ? error.message : 'Wallet creation failed';
       dispatch({ type: 'AUTH_FAILURE', payload: errorMessage });
       return {
         success: false,
@@ -174,30 +188,115 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const signup = async (email: string, password: string, fullName: string): Promise<AuthApiResponse<any>> => {
+
+  const signin = async (email: string, password: string, rememberMe: boolean = false): Promise<AuthApiResponse<any>> => {
     dispatch({ type: 'AUTH_START' });
     
     try {
-      const response = await authService.signup({ email, password, full_name: fullName });
-      if (response.success && response.data) {
-        // Store token if provided
-        if (response.data.token) {
-          localStorage.setItem('auth_token', response.data.token);
+      // Check if there are pending confirmation tokens
+      const pendingTokens = localStorage.getItem('pending_confirmation_tokens');
+      
+      if (pendingTokens) {
+        // Use the stored confirmation tokens instead of making API call
+        const tokens = JSON.parse(pendingTokens);
+        
+        // Choose storage based on rememberMe
+        const storage = rememberMe ? localStorage : sessionStorage;
+        
+        // Store tokens
+        storage.setItem('auth_token', tokens.access_token);
+        storage.setItem('refresh_token', tokens.refresh_token);
+        
+        // Store expiration if rememberMe is true
+        if (rememberMe && tokens.expires_at) {
+          storage.setItem('auth_expiry', tokens.expires_at.toString());
         }
         
-        dispatch({ 
-          type: 'AUTH_SUCCESS', 
-          payload: { 
-            user: response.data.user, 
-            wallet: response.data.wallet 
-          } 
-        });
+        // Clear pending tokens
+        localStorage.removeItem('pending_confirmation_tokens');
+        
+        // Get user info from token
+        const userResponse = await authService.getCurrentUser();
+        
+        if (userResponse && userResponse.success && userResponse.data) {
+          // Create wallet info from user metadata
+          const wallet: Wallet = {
+            id: 'wallet_id',
+            address: userResponse.data.user_metadata?.wallet_address || '',
+            chain_type: 'ethereum',
+          };
+          
+          // Create session info
+          const session: Session = {
+            access_token: tokens.access_token,
+            refresh_token: tokens.refresh_token,
+            expires_in: tokens.expires_in,
+            expires_at: tokens.expires_at,
+            token_type: tokens.token_type || 'bearer'
+          };
+          
+          dispatch({ 
+            type: 'AUTH_SUCCESS', 
+            payload: { 
+              user: userResponse.data, 
+              wallet, 
+              session 
+            } 
+          });
+          
+          return {
+            success: true,
+            message: 'Login successful',
+            data: { user: userResponse.data, session },
+            error: undefined
+          };
+        } else {
+          dispatch({ type: 'AUTH_FAILURE', payload: 'Invalid email or password' });
+          return {
+            success: false,
+            message: 'Invalid email or password',
+            data: null,
+            error: 'Invalid email or password'
+          };
+        }
       } else {
-        dispatch({ type: 'AUTH_FAILURE', payload: response.message || 'Signup failed' });
+        // Normal login flow (no pending confirmation tokens)
+        const response = await authService.signin({ email, password });
+        if (response.success && response.data) {
+          // Choose storage based on rememberMe
+          const storage = rememberMe ? localStorage : sessionStorage;
+          
+          // Store tokens
+          storage.setItem('auth_token', response.data.session.access_token);
+          storage.setItem('refresh_token', response.data.session.refresh_token);
+          
+          // Store expiration if rememberMe is true
+          if (rememberMe && response.data.session.expires_at) {
+            storage.setItem('auth_expiry', response.data.session.expires_at.toString());
+          }
+          
+          // Get wallet info from user metadata
+          const wallet: Wallet = {
+            id: 'wallet_id',
+            address: response.data.user.user_metadata.wallet_address,
+            chain_type: 'ethereum',
+          };
+          
+          dispatch({ 
+            type: 'AUTH_SUCCESS', 
+            payload: { 
+              user: response.data.user, 
+              wallet, 
+              session: response.data.session 
+            } 
+          });
+        } else {
+          dispatch({ type: 'AUTH_FAILURE', payload: response.message || 'Signin failed' });
+        }
+        return response;
       }
-      return response;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Signup failed';
+      const errorMessage = error instanceof Error ? error.message : 'Signin failed';
       dispatch({ type: 'AUTH_FAILURE', payload: errorMessage });
       return {
         success: false,
@@ -207,6 +306,52 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       };
     }
   };
+
+  const signinWithGoogle = async (): Promise<void> => {
+    try {
+      const response = await authService.initiateGoogleAuth();
+      if (!response.success) {
+        dispatch({ type: 'AUTH_FAILURE', payload: response.message || 'Google OAuth failed' });
+      }
+      // If successful, the user will be redirected to Google OAuth
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Google OAuth failed';
+      dispatch({ type: 'AUTH_FAILURE', payload: errorMessage });
+    }
+  };
+
+
+
+  const forgotPassword = async (email: string): Promise<AuthApiResponse<any>> => {
+    try {
+      const response = await authService.forgotPassword({ email });
+      return response;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to send reset email';
+      return {
+        success: false,
+        message: errorMessage,
+        data: null,
+        error: errorMessage,
+      };
+    }
+  };
+
+  const resetPassword = async (accessToken: string, newPassword: string): Promise<AuthApiResponse<any>> => {
+    try {
+      const response = await authService.resetPassword({ accessToken, newPassword });
+      return response;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to reset password';
+      return {
+        success: false,
+        message: errorMessage,
+        data: null,
+        error: errorMessage,
+      };
+    }
+  };
+
 
   const logout = async (): Promise<void> => {
     try {
@@ -215,6 +360,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Continue with logout even if API call fails
     } finally {
       localStorage.removeItem('auth_token');
+      localStorage.removeItem('refresh_token');
       dispatch({ type: 'AUTH_LOGOUT' });
     }
   };
@@ -231,7 +377,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return {
         success: false,
         message: errorMessage,
-        data: null as User,
+        data: null as unknown as User,
         error: errorMessage,
       };
     }
@@ -254,9 +400,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const value: AuthContextType = {
     state,
-    login,
-    signup,
+    createWallet,
+    signin,
+    signinWithGoogle,
     logout,
+    forgotPassword,
+    resetPassword,
     updateProfile,
     clearError,
     refreshUser,
