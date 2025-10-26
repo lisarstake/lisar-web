@@ -128,6 +128,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const token = localStorage.getItem('auth_token');
       const refreshToken = localStorage.getItem('refresh_token');
       
+      // Log current authenticated user token for API testing
+      console.log('🔑 Current Auth Token:', token);
+      console.log('🔄 Refresh Token:', refreshToken);
+      
       if (token) {
         try {
           dispatch({ type: 'AUTH_START' });

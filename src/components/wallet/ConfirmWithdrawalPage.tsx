@@ -19,7 +19,13 @@ export const ConfirmWithdrawalPage: React.FC = () => {
   const validatorName = getValidatorDisplayName(validatorId);
   const currentValidator = orchestrators.find(o => o.name === validatorName) || orchestrators[0];
 
-  const selectedNetwork = searchParams.get("network") || "arbitrum";
+  const selectedNetwork = searchParams.get("network") || "livepeer";
+  const withdrawalAmount = searchParams.get("amount") || "0";
+  const validatorDisplayName = searchParams.get("validatorName") || "Unknown Validator";
+  const locksData = searchParams.get("locks");
+
+  // Parse locks data if available
+  const locks = locksData ? JSON.parse(locksData) : [];
 
   // Get token name and network name based on selected network
   const getTokenInfo = () => {
@@ -47,7 +53,7 @@ export const ConfirmWithdrawalPage: React.FC = () => {
   const networkFee = isCrossChain ? "0.5 LPT" : "0 LPT";
 
   const handleBackClick = () => {
-    navigate(`/withdraw-network/${currentValidator.slug}`);
+    navigate(`/withdraw-network/${validatorId}`);
   };
 
   const handleProceed = () => {
@@ -86,7 +92,9 @@ export const ConfirmWithdrawalPage: React.FC = () => {
 
       {/* Withdrawal Amount */}
       <div className="text-center px-6 py-8">
-        <h2 className="text-4xl font-bold text-white">8000 LPT</h2>
+        <h2 className="text-4xl font-bold text-white">
+          {parseFloat(withdrawalAmount).toFixed(2)} LPT
+        </h2>
       </div>
 
       {/* Confirmation Details Card */}
@@ -106,6 +114,11 @@ export const ConfirmWithdrawalPage: React.FC = () => {
             <div className="flex items-center justify-between">
               <span className="text-gray-400">Network</span>
               <span className="text-white font-medium">{networkName}</span>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <span className="text-gray-400">From Validator</span>
+              <span className="text-white font-medium">{validatorDisplayName}</span>
             </div>
 
             <div className="flex items-center justify-between">

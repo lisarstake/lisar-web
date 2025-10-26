@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { OrchestratorItem } from "./OrchestratorItem";
+import { OrchestratorList } from "./OrchestratorList";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
-import { delegationService } from "@/services";
-import { OrchestratorResponse } from "@/services/delegation/types";
+import { useOrchestrators } from "@/contexts/OrchestratorContext";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   ChartSpline,
   Plus,
@@ -17,9 +17,8 @@ import {
 export const WalletPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
-  const [orchestrators, setOrchestrators] = useState<OrchestratorResponse[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { orchestrators, isLoading, error, refetch } = useOrchestrators();
+  const { state } = useAuth();
 
   // Mock wallet data for now
   const walletData = {
@@ -29,30 +28,24 @@ export const WalletPage: React.FC = () => {
     fiatCurrency: 'USD'
   };
 
-  // Fetch orchestrators on component mount
-  useEffect(() => {
-    const fetchOrchestrators = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const response = await delegationService.getOrchestrators();
-        
-        if (response.success) {
-          setOrchestrators(response.data);
-        } else {
-          setError(response.message || 'Failed to fetch orchestrators');
-        }
-      } catch (err) {
-        setError('An error occurred while fetching orchestrators');
-      } finally {
-        setIsLoading(false);
-      }
-    };
 
-    fetchOrchestrators();
-  }, []);
-
-  const filteredOrchestrators = orchestrators.filter((orch) =>
+  // Ensure orchestrators is always an array
+  const safeOrchestrators = Array.isArray(orchestrators) ? orchestrators : [];
+  
+  // Filter out crypto addresses (0x...) and keep only proper ENS names
+  const validOrchestrators = safeOrchestrators.filter((orch) => {
+    const ensName = orch.ensName || '';
+    // Keep only ENS names that don't start with '0x' and have proper format
+    return !ensName.startsWith('0x') && ensName.includes('.') && ensName.length > 0;
+  });
+  
+  // Sort by total stake (descending) and take top 30
+  const topOrchestrators = validOrchestrators
+    .sort((a, b) => parseFloat(b.totalStake) - parseFloat(a.totalStake))
+    .slice(0, 30);
+  
+  // Filter by search query
+  const filteredOrchestrators = topOrchestrators.filter((orch) =>
     orch.ensName?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -84,6 +77,10 @@ export const WalletPage: React.FC = () => {
     navigate("/notifications");
   };
 
+  const handleRetry = () => {
+    refetch();
+  };
+
   return (
     <div className="h-screen bg-[#050505] text-white flex flex-col">
       {/* Header */}
@@ -93,11 +90,21 @@ export const WalletPage: React.FC = () => {
             onClick={handleProfileClick}
             className="w-10 h-10 bg-[#86B3F7] rounded-full flex items-center justify-center hover:bg-[#96C3F7] transition-colors cursor-pointer"
           >
-            <span className="text-black font-bold text-sm">H</span>
+            {state.user?.img ? (
+              <img
+                src={state.user.img}
+                alt="Profile"
+                className="w-10 h-10 rounded-full object-cover"
+              />
+            ) : (
+              <span className="text-black font-bold text-sm">
+                {state.user?.full_name?.charAt(0) || state.user?.email?.charAt(0) || "U"}
+              </span>
+            )}
           </button>
           <div className="flex flex-col gap-1">
-            <span className="text-gray-300 text-xs font-normal ">
-              @Hezekiah
+            <span className="text-gray-300 text-sm font-normal">
+              @{state.user?.email?.split("@")[0] || "User"}
             </span>
             <span className="text-gray-100 text-sm font-medium">
               Welcome back!
@@ -115,7 +122,7 @@ export const WalletPage: React.FC = () => {
       </div>
 
       {/* Wallet Balance */}
-      <div className="text-center px-6 py-6">
+      <div className="text-center px-6 py-4">
         <div className="flex items-center justify-center space-x-2 mb-2">
           <span className="text-white/70 text-sm">Wallet balance</span>
         </div>
@@ -161,7 +168,7 @@ export const WalletPage: React.FC = () => {
       </div>
 
       {/* Search Bar */}
-      <div className="px-6 py-4">
+      <div className="px-6 pt-2 pb-4">
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <Search size={20} color="#636363" />
@@ -178,31 +185,13 @@ export const WalletPage: React.FC = () => {
 
       {/* Orchestrator List - Scrollable */}
       <div className="flex-1 overflow-y-auto px-6 pb-28 scrollbar-hide">
-        {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C7EF6B]"></div>
-            <span className="ml-3 text-gray-400">Loading validators...</span>
-          </div>
-        ) : error ? (
-          <div className="flex flex-col items-center justify-center py-12">
-            <p className="text-red-400 text-center mb-4">{error}</p>
-            <button
-              onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-[#C7EF6B] text-black rounded-lg font-medium hover:bg-[#B8E55A] transition-colors"
-            >
-              Retry
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {filteredOrchestrators.map((orchestrator) => (
-              <OrchestratorItem
-                key={orchestrator.address}
-                orchestrator={orchestrator}
-              />
-            ))}
-          </div>
-        )}
+        <OrchestratorList
+          orchestrators={filteredOrchestrators}
+          isLoading={isLoading}
+          error={error}
+          onRetry={handleRetry}
+          skeletonCount={5}
+        />
       </div>
 
       {/* Bottom Navigation */}

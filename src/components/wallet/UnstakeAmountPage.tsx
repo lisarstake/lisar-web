@@ -1,35 +1,59 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ChevronLeft, CircleQuestionMark, ArrowLeftRight } from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
-import { orchestrators } from "@/data/orchestrators";
-import { getValidatorDisplayName } from "@/utils/routing";
+import { useOrchestrators } from "@/contexts/OrchestratorContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { usePrices } from "@/hooks/usePrices";
+import { priceService } from "@/lib/priceService";
 
 export const UnstakeAmountPage: React.FC = () => {
   const navigate = useNavigate();
   const { validatorId } = useParams<{ validatorId: string }>();
-  const [fiatAmount, setFiatAmount] = useState("100,000");
-  const [lptAmount, setLptAmount] = useState("1,000");
+  const [fiatAmount, setFiatAmount] = useState("0");
+  const [lptAmount, setLptAmount] = useState("0");
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
+  const { orchestrators, userDelegation } = useOrchestrators();
+  const { state } = useAuth();
+  const { prices } = usePrices();
 
-  // Get validator data
-  const validatorName = getValidatorDisplayName(validatorId);
-  const currentValidator = orchestrators.find(o => o.name === validatorName) || orchestrators[0];
+  // Find the orchestrator by address (validatorId is the address)
+  const currentValidator = orchestrators.find(
+    (orch) => orch.address === validatorId
+  );
+
+  // Get user's current stake with this validator
+  const hasStakeWithValidator =
+    userDelegation &&
+    userDelegation.delegate.id === validatorId &&
+    parseFloat(userDelegation.bondedAmount) > 0;
+
+  const currentStake = hasStakeWithValidator
+    ? parseFloat(userDelegation.bondedAmount)
+    : 0;
+  const userCurrency = state.user?.fiat_type || "NGN";
+  const currencySymbol = priceService.getCurrencySymbol(userCurrency);
+
 
   const handleBackClick = () => {
-    navigate(`/validator-details/${currentValidator.slug}`);
+    navigate(`/validator-details/${currentValidator?.address}`);
   };
 
   const handleAmountSelect = (amount: string) => {
-    setLptAmount(amount);
-    // Convert to fiat (mock conversion)
     const numericAmount = parseInt(amount.replace(/,/g, ""));
-    setFiatAmount((numericAmount * 20).toLocaleString());
+    setLptAmount(amount);
+    const fiatValue = priceService.convertLptToFiat(
+      numericAmount,
+      userCurrency
+    );
+    setFiatAmount(Math.round(fiatValue).toString());
   };
 
   const handleProceed = () => {
-    navigate(`/confirm-unstake/${currentValidator.slug}?amount=${lptAmount}`);
+    navigate(
+      `/confirm-unstake/${currentValidator?.address}?amount=${lptAmount}`
+    );
   };
 
   const handleHelpClick = () => {
@@ -59,12 +83,20 @@ export const UnstakeAmountPage: React.FC = () => {
 
       {/* Amount Input Fields */}
       <div className="px-6 py-6 space-y-2">
-        {/* Fiat Amount */}
         <div className="bg-[#1a1a1a] rounded-xl p-4">
           <input
             type="text"
-            value={`₦ ${fiatAmount} NGN`}
-            readOnly
+            value={`${lptAmount} LPT`}
+            onChange={(e) => {
+              const value = e.target.value.replace(/[^0-9]/g, "");
+              setLptAmount(value);
+              const numericAmount = parseInt(value) || 0;
+              const fiatValue = priceService.convertLptToFiat(
+                numericAmount,
+                userCurrency
+              );
+              setFiatAmount(Math.round(fiatValue).toString());
+            }}
             className="w-full bg-transparent text-white text-lg font-medium focus:outline-none"
           />
         </div>
@@ -78,12 +110,13 @@ export const UnstakeAmountPage: React.FC = () => {
           />
         </div>
 
-        {/* LPT Amount */}
+        {/* Fiat Amount */}
         <div className="bg-[#1a1a1a] rounded-xl p-4">
           <input
             type="text"
-            value={`${lptAmount} LPT`}
+            value={`${currencySymbol} ${fiatAmount}`}
             readOnly
+            tabIndex={-1}
             className="w-full bg-transparent text-white text-lg font-medium focus:outline-none"
           />
         </div>
@@ -92,7 +125,7 @@ export const UnstakeAmountPage: React.FC = () => {
       {/* Predefined LPT Amounts */}
       <div className="px-6 py-4">
         <div className="flex space-x-3">
-          {["1,000", "5,000", "10,000"].map((amount) => (
+          {["1000", "5000", "10000"].map((amount) => (
             <button
               key={amount}
               onClick={() => handleAmountSelect(amount)}
@@ -108,11 +141,36 @@ export const UnstakeAmountPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Current Stake Display */}
+      {hasStakeWithValidator && (
+        <div className="px-6 py-3">
+          <div className="bg-[#1a1a1a] rounded-lg px-4 py-4.5">
+            <div className="flex justify-between items-center">
+              <span className="text-gray-400 text-base">Staked</span>
+              <span className="text-[#C7EF6B] font-medium">
+                {Math.round(currentStake).toLocaleString()} LPT
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Proceed Button */}
       <div className="flex-1 flex items-end px-6 pb-24">
         <button
           onClick={handleProceed}
-          className="w-full py-4 rounded-xl font-semibold text-lg bg-[#C7EF6B] text-black hover:bg-[#B8E55A] transition-colors"
+          disabled={
+            !lptAmount ||
+            parseInt(lptAmount) > currentStake ||
+            parseInt(lptAmount) <= 0
+          }
+          className={`w-full py-4 rounded-xl font-semibold text-lg transition-colors ${
+            lptAmount &&
+            parseInt(lptAmount) <= currentStake &&
+            parseInt(lptAmount) > 0
+              ? "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
+              : "bg-[#636363] text-white cursor-not-allowed"
+          }`}
         >
           Proceed to Unstake
         </button>
@@ -126,7 +184,7 @@ export const UnstakeAmountPage: React.FC = () => {
         content={[
           "Choose how much you want to unstake from this validator.",
           "You can unstake part or all of your stake. You won't earn rewards during the unbonding period.",
-          "Your funds will be available after the unbonding period ends."
+          "Your funds will be available after the unbonding period ends.",
         ]}
       />
 

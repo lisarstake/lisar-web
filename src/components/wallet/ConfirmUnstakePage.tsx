@@ -4,8 +4,9 @@ import { ChevronLeft, CircleQuestionMark } from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { UnstakeSuccessDrawer } from "./UnstakeSuccessDrawer";
-import { orchestrators } from "@/data/orchestrators";
-import { getValidatorDisplayName } from "@/utils/routing";
+import { useOrchestrators } from "@/contexts/OrchestratorContext";
+import { delegationService } from "@/services";
+import { UnbondRequest } from "@/services/delegation/types";
 
 export const ConfirmUnstakePage: React.FC = () => {
   const navigate = useNavigate();
@@ -14,10 +15,10 @@ export const ConfirmUnstakePage: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
   const [showSuccessDrawer, setShowSuccessDrawer] = useState(false);
+  const { orchestrators } = useOrchestrators();
 
-  // Get validator data
-  const validatorName = getValidatorDisplayName(validatorId);
-  const currentValidator = orchestrators.find(o => o.name === validatorName) || orchestrators[0];
+  // Find the orchestrator by address (validatorId is the address)
+  const currentValidator = orchestrators.find(orch => orch.address === validatorId);
 
   const unstakeAmount = searchParams.get("amount") || "5,000";
   const fiatAmount = (
@@ -25,16 +26,35 @@ export const ConfirmUnstakePage: React.FC = () => {
   ).toLocaleString();
 
   const handleBackClick = () => {
-    navigate(`/unstake-amount/${currentValidator.slug}`);
+    navigate(`/unstake-amount/${currentValidator?.address}`);
   };
 
-  const handleProceed = () => {
+  const handleProceed = async () => {
+    if (!currentValidator) return;
+
     setIsProcessing(true);
-    // Simulate processing time
-    setTimeout(() => {
+    try {
+      const unbondRequest: UnbondRequest = {
+        walletId: "0x1234567890abcdef", // This should come from user's wallet
+        walletAddress: "0x1234567890abcdef", // This should come from user's wallet
+        amount: unstakeAmount.replace(/,/g, ""), // Remove commas from amount
+      };
+
+      const response = await delegationService.unbond(unbondRequest);
+      
+      if (response.success) {
+        console.log("Unbonding successful:", response.txHash);
+        setShowSuccessDrawer(true);
+      } else {
+        console.error("Unbonding failed");
+        // Show error message
+      }
+    } catch (error) {
+      console.error("Unbonding error:", error);
+      // Show error message
+    } finally {
       setIsProcessing(false);
-      setShowSuccessDrawer(true);
-    }, 2000);
+    }
   };
 
   const handleHelpClick = () => {

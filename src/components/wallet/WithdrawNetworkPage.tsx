@@ -1,10 +1,15 @@
 import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ChevronLeft, CircleQuestionMark, ChevronRight } from "lucide-react";
+import {
+  ChevronLeft,
+  CircleQuestionMark,
+  ChevronRight,
+  Clock,
+  CheckCircle,
+} from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
-import { orchestrators } from "@/data/orchestrators";
-import { getValidatorDisplayName } from "@/utils/routing";
+import { useOrchestrators } from "@/contexts/OrchestratorContext";
 
 interface Network {
   id: string;
@@ -19,10 +24,43 @@ export const WithdrawNetworkPage: React.FC = () => {
   const { validatorId } = useParams<{ validatorId: string }>();
   const [selectedNetwork, setSelectedNetwork] = useState<string | null>(null);
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
+  const { orchestrators, userDelegation } = useOrchestrators();
 
   // Get validator data
-  const validatorName = getValidatorDisplayName(validatorId);
-  const currentValidator = orchestrators.find(o => o.name === validatorName) || orchestrators[0];
+  const currentValidator = orchestrators.find(
+    (orch) => orch.address === validatorId
+  );
+
+  // Check for unbonding locks for this validator
+  const unbondingLocksForValidator =
+    userDelegation?.unbondingLocks?.filter(
+      (lock) => lock.delegate.id === validatorId
+    ) || [];
+
+  // Calculate if withdraw is available (7 days = ~8 rounds for safety, each round is 22h 40min)
+  const currentRound = userDelegation?.lastClaimRound?.id
+    ? parseInt(userDelegation.lastClaimRound.id)
+    : 0;
+  const UNBONDING_ROUNDS = 8; // 8 rounds for safety (7+ days)
+
+  const withdrawableLocks = unbondingLocksForValidator.filter((lock) => {
+    const withdrawRound = parseInt(lock.withdrawRound);
+    return currentRound >= withdrawRound + UNBONDING_ROUNDS;
+  });
+
+  const pendingUnbondingLocks = unbondingLocksForValidator.filter((lock) => {
+    const withdrawRound = parseInt(lock.withdrawRound);
+    return currentRound < withdrawRound + UNBONDING_ROUNDS;
+  });
+
+  const totalWithdrawableAmount = withdrawableLocks.reduce(
+    (total, lock) => total + parseFloat(lock.amount),
+    0
+  );
+  const totalPendingAmount = pendingUnbondingLocks.reduce(
+    (total, lock) => total + parseFloat(lock.amount),
+    0
+  );
 
   const networks: Network[] = [
     {
@@ -52,7 +90,7 @@ export const WithdrawNetworkPage: React.FC = () => {
   const handleBackClick = () => {
     // Check if we came from validator details or home page
     if (document.referrer.includes("/validator-details/")) {
-      navigate(`/validator-details/${currentValidator.slug}`);
+      navigate(`/validator-details/${currentValidator?.address}`);
     } else {
       navigate("/wallet");
     }
@@ -63,8 +101,32 @@ export const WithdrawNetworkPage: React.FC = () => {
   };
 
   const handleProceed = () => {
-    if (selectedNetwork) {
-      navigate(`/confirm-withdrawal/${currentValidator.slug}?network=${selectedNetwork}`);
+    if (selectedNetwork && currentValidator && totalWithdrawableAmount > 0) {
+      // Get the withdrawable locks for this validator
+      const withdrawableLocksForValidator = withdrawableLocks;
+      
+      // Calculate total amount and create withdrawal details
+      const withdrawalDetails = {
+        validatorAddress: currentValidator.address,
+        validatorName: currentValidator.ensName || "Unknown Validator",
+        network: selectedNetwork,
+        amount: totalWithdrawableAmount,
+        locks: withdrawableLocksForValidator.map(lock => ({
+          id: lock.id,
+          amount: parseFloat(lock.amount),
+          withdrawRound: lock.withdrawRound
+        }))
+      };
+      
+      // Encode the withdrawal details as URL parameters
+      const params = new URLSearchParams({
+        network: selectedNetwork,
+        amount: totalWithdrawableAmount.toString(),
+        validatorName: currentValidator.ensName || "Unknown Validator",
+        locks: JSON.stringify(withdrawalDetails.locks)
+      });
+      
+      navigate(`/confirm-withdrawal/${currentValidator.address}?${params.toString()}`);
     }
   };
 
@@ -95,9 +157,25 @@ export const WithdrawNetworkPage: React.FC = () => {
 
       {/* Withdrawal Amount */}
       <div className="px-6 py-4">
-        <div className="bg-[#1a1a1a] rounded-xl p-4 flex items-center space-x-3">
-          <span className="text-white text-lg font-medium">800 LPT</span>
+        <div className="bg-[#1a1a1a] rounded-xl p-4">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-gray-400 text-sm">Withdrawable Amount</span>
+          </div>
+          <div className="text-white text-lg font-medium">
+            {totalWithdrawableAmount.toFixed(2)} LPT
+          </div>
         </div>
+
+        {totalPendingAmount > 0 && (
+          <div className="bg-[#1a1a1a] rounded-xl p-4 ">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-gray-400 text-sm">Pending Unbonding</span>
+            </div>
+            <div className="text-white text-lg font-medium">
+              {totalPendingAmount.toFixed(2)} LPT
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Select Withdrawal Network */}
@@ -165,14 +243,16 @@ export const WithdrawNetworkPage: React.FC = () => {
       <div className="px-6 pb-24">
         <button
           onClick={handleProceed}
-          disabled={!selectedNetwork}
+          disabled={!selectedNetwork || totalWithdrawableAmount <= 0}
           className={`w-full py-4 rounded-xl font-semibold text-lg transition-colors ${
-            selectedNetwork
+            selectedNetwork && totalWithdrawableAmount > 0
               ? "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
               : "bg-[#636363] text-white cursor-not-allowed"
           }`}
         >
-          Proceed to withdrawal
+          {totalWithdrawableAmount <= 0
+            ? "No funds available"
+            : "Proceed to withdrawal"}
         </button>
       </div>
 
@@ -184,7 +264,7 @@ export const WithdrawNetworkPage: React.FC = () => {
         content={[
           "Choose which network to withdraw your funds to. Livepeer is free, others have 0.5% conversion fees.",
           "USDC converts to stablecoin, SOL and LSK convert to their respective tokens.",
-          "Networks marked 'Coming Soon' are not available yet."
+          "Networks marked 'Coming Soon' are not available yet.",
         ]}
       />
 
