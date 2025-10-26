@@ -175,6 +175,6 @@ export interface AuthConfig {
 // Constants
 export const AUTH_CONFIG: AuthConfig = {
   baseUrl: 'https://lisar-api-1.onrender.com/api/v1',
-  timeout: 10000,
+  timeout: 30000,
   retryAttempts: 3
 };

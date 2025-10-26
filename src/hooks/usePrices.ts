@@ -17,6 +17,9 @@ export const usePrices = (refreshInterval: number = 30000): UsePricesReturn => {
     sol: 0,
     lpt: 0,
     usdc: 1,
+    ngn: 1500,
+    eur: 0.85,
+    gbp: 0.75,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
