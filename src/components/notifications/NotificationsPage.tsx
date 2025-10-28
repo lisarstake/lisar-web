@@ -6,7 +6,7 @@ export const NotificationsPage: React.FC = () => {
   const navigate = useNavigate();
 
   const handleBackClick = () => {
-    navigate("/wallet");
+    navigate(-1);
   };
 
   return (

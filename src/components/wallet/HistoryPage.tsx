@@ -3,80 +3,28 @@ import { useNavigate } from "react-router-dom";
 import {
   ChevronLeft,
   CircleQuestionMark,
-  ArrowUp,
-  ArrowDown,
-  TrendingUp,
-  SquareMinus,
-  ChartSpline,
-  Send,
 } from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
-import { getTransactionGroups } from "@/data/transactions";
-import { Transaction } from "@/types/transaction";
+import { TransactionList } from "@/components/wallet/TransactionList";
+import { useTransactions } from "@/contexts/TransactionContext";
+import { TransactionData } from "@/services/transactions/types";
 
 export const HistoryPage: React.FC = () => {
   const navigate = useNavigate();
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
-  const transactionGroups = getTransactionGroups();
+  const { transactions, isLoading, error, refetch } = useTransactions();
 
   const handleBackClick = () => {
-    navigate("/wallet");
+    navigate(-1);
   };
 
-  const handleTransactionClick = (transaction: Transaction) => {
+  const handleTransactionClick = (transaction: TransactionData) => {
     navigate(`/transaction-detail/${transaction.id}`);
   };
 
   const handleHelpClick = () => {
     setShowHelpDrawer(true);
-  };
-
-  const getTransactionIcon = (type: string) => {
-    switch (type) {
-      case "fund-wallet":
-        return <ArrowUp size={20} color="#C7EF6B" />;
-      case "withdraw-stake":
-        return <ArrowDown size={20} color="#FF6B6B" />;
-      case "withdrawal":
-        return <Send size={20} color="#FF6B6B" />;
-      case "stake":
-     
-        return <ChartSpline size={20} color="#C7EF6B" />;
-      case "unstake":
-        return <SquareMinus size={20} color="#86B3F7" />;
-      default:
-        return <ChartSpline size={20} color="#C7EF6B" />;
-    }
-  };
-
-  const getAmountColor = (type: string) => {
-    switch (type) {
-      case "fund-wallet":
-      case "stake":
-        return "text-[#C7EF6B]";
-      case "withdraw-stake":
-      case "withdrawal":
-     
-        return "text-[#FF6B6B]";
-      default:
-        return "text-[#86B3F7]";
-    }
-  };
-
-  const getAmountPrefix = (type: string) => {
-    switch (type) {
-      case "fund-wallet":
-      case "stake":
-      case "orchestrator-stake":
-        return "+";
-      case "withdraw-stake":
-      case "withdrawal":
-      case "unstake":
-        return "-";
-      default:
-        return "+";
-    }
   };
 
   return (
@@ -102,44 +50,14 @@ export const HistoryPage: React.FC = () => {
 
       {/* Transaction List */}
       <div className="flex-1 overflow-y-auto px-6 pb-20 scrollbar-hide">
-        {transactionGroups.map((group, groupIndex) => (
-          <div key={groupIndex} className="mb-6">
-            <h2 className="text-gray-400 text-sm font-medium mb-3">
-              {group.date}
-            </h2>
-            <div className="space-y-3">
-              {group.transactions.map((transaction) => (
-                <div
-                  key={transaction.id}
-                  onClick={() => handleTransactionClick(transaction)}
-                  className="flex items-center justify-between p-4 bg-[#1a1a1a] rounded-xl border border-[#2a2a2a] hover:border-[#C7EF6B]/30 transition-colors cursor-pointer"
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-[#2a2a2a] rounded-full flex items-center justify-center">
-                      {getTransactionIcon(transaction.type)}
-                    </div>
-                    <div>
-                      <p className="text-white font-medium">
-                        {transaction.title}
-                      </p>
-                      <p className="text-gray-400 text-sm">
-                        {transaction.status}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p
-                      className={`font-semibold ${getAmountColor(transaction.type)}`}
-                    >
-                      {getAmountPrefix(transaction.type)}
-                      {transaction.amount} {transaction.currency}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
+        <TransactionList
+          transactions={transactions}
+          isLoading={isLoading}
+          error={error}
+          onRetry={refetch}
+          onTransactionClick={handleTransactionClick}
+          skeletonCount={5}
+        />
       </div>
 
       {/* Help Drawer */}
@@ -150,7 +68,7 @@ export const HistoryPage: React.FC = () => {
         content={[
           "View all your staking activities and transactions in one place.",
           "Green arrows show money coming in, red arrows show money going out.",
-          "Click any transaction to see details like date, amount, and status."
+          "Click any transaction to see details like date, amount, and status.",
         ]}
       />
 

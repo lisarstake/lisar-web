@@ -14,7 +14,7 @@ export const ValidatorPage: React.FC = () => {
   const { orchestrators, isLoading, error, refetch } = useOrchestrators();
 
   const handleBackClick = () => {
-    navigate("/wallet");
+    navigate(-1);
   };
 
   const handleHelpClick = () => {

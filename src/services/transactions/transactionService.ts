@@ -1,28 +1,28 @@
 /**
- * Delegation API Service
- * Real implementation for delegation operations
+ * Transaction API Service
+ * Real implementation for transaction operations
  */
 
-import { IDelegationApiService } from "./api";
+import { ITransactionApiService } from "./api";
 import {
-  DelegationApiResponse,
-  OrchestratorResponse,
-  StakeRequest,
-  StakeResponse,
-  UnbondRequest,
-  UnbondResponse,
-  DelegationResponse,
-  DELEGATION_CONFIG,
+  TransactionApiResponse,
+  TransactionData,
+  TransactionType,
+  CreateTransactionRequest,
+  CreateTransactionResponse,
+  UpdateTransactionStatusRequest,
+  UpdateTransactionStatusResponse,
+  TRANSACTION_CONFIG,
 } from "./types";
 import { http } from "@/lib/http";
 
-export class DelegationService implements IDelegationApiService {
+export class TransactionService implements ITransactionApiService {
   private baseUrl: string;
   private timeout: number;
 
   constructor() {
-    this.baseUrl = DELEGATION_CONFIG.baseUrl;
-    this.timeout = DELEGATION_CONFIG.timeout;
+    this.baseUrl = TRANSACTION_CONFIG.baseUrl;
+    this.timeout = TRANSACTION_CONFIG.timeout;
   }
 
   // Token management helpers
@@ -46,10 +46,6 @@ export class DelegationService implements IDelegationApiService {
       token = sessionStorage.getItem("auth_token");
     }
 
-    // Log token for API testing
-    console.log("🔑 Delegation Service Token:", token);
-    
-
     return token;
   }
 
@@ -63,7 +59,7 @@ export class DelegationService implements IDelegationApiService {
   private async makeRequest<T>(
     endpoint: string,
     config: any = {}
-  ): Promise<DelegationApiResponse<T>> {
+  ): Promise<TransactionApiResponse<T>> {
     try {
       // Add authorization header if token exists
       const token = this.getStoredToken();
@@ -84,6 +80,7 @@ export class DelegationService implements IDelegationApiService {
         success: true,
         data: response.data.data || response.data,
         message: response.data.message || "Success",
+        count: response.data.count,
       };
     } catch (error: any) {
       return {
@@ -91,21 +88,37 @@ export class DelegationService implements IDelegationApiService {
         data: null as T,
         message: error.response?.data?.message || "An error occurred",
         error: error.response?.data?.error || error.message || "Unknown error",
+        count: 0,
       };
     }
   }
 
-  // Orchestrators
-  async getOrchestrators(): Promise<
-    DelegationApiResponse<OrchestratorResponse[]>
-  > {
-    return this.makeRequest<OrchestratorResponse[]>("/orchestrator", {
+  // Get all transactions for a user
+  async getUserTransactions(userId: string): Promise<TransactionApiResponse<TransactionData[]>> {
+    return this.makeRequest<TransactionData[]>(`/transactions/user/${userId}`, {
       method: "GET",
     });
   }
 
-  // Stake tokens to an orchestrator
-  async stake(request: StakeRequest): Promise<StakeResponse> {
+  // Get a specific transaction by ID
+  async getTransactionById(transactionId: string): Promise<TransactionApiResponse<TransactionData>> {
+    return this.makeRequest<TransactionData>(`/transactions/${transactionId}`, {
+      method: "GET",
+    });
+  }
+
+  // Get user transactions by type
+  async getUserTransactionsByType(
+    userId: string, 
+    type: TransactionType
+  ): Promise<TransactionApiResponse<TransactionData[]>> {
+    return this.makeRequest<TransactionData[]>(`/transactions/user/${userId}/type/${type}`, {
+      method: "GET",
+    });
+  }
+
+  // Create a new transaction
+  async createTransaction(request: CreateTransactionRequest): Promise<CreateTransactionResponse> {
     try {
       const token = this.getStoredToken();
       const headers = {
@@ -114,7 +127,7 @@ export class DelegationService implements IDelegationApiService {
       };
 
       const response = await http.request({
-        url: `${this.baseUrl}/delegation/stake`,
+        url: `${this.baseUrl}/transactions`,
         method: "POST",
         headers,
         data: request,
@@ -123,21 +136,35 @@ export class DelegationService implements IDelegationApiService {
 
       return {
         success: true,
-        data: response.data.data,
+        data: response.data.data || response.data,
       };
     } catch (error: any) {
       return {
         success: false,
         data: {
-          transactionHash: "",
-          blockNumber: "",
+          id: "",
+          user_id: request.user_id,
+          transaction_hash: request.transaction_hash,
+          transaction_type: request.transaction_type,
+          amount: request.amount,
+          token_address: request.token_address,
+          token_symbol: request.token_symbol,
+          wallet_address: request.wallet_address,
+          wallet_id: request.wallet_id,
+          status: request.status,
+          source: request.source,
+          svix_id: "",
+          created_at: new Date().toISOString(),
         },
       };
     }
   }
 
-  // Unbond tokens from an orchestrator
-  async unbond(request: UnbondRequest): Promise<UnbondResponse> {
+  // Update transaction status
+  async updateTransactionStatus(
+    transactionId: string, 
+    request: UpdateTransactionStatusRequest
+  ): Promise<UpdateTransactionStatusResponse> {
     try {
       const token = this.getStoredToken();
       const headers = {
@@ -146,8 +173,8 @@ export class DelegationService implements IDelegationApiService {
       };
 
       const response = await http.request({
-        url: `${this.baseUrl}/delegation/unbond`,
-        method: "POST",
+        url: `${this.baseUrl}/transactions/${transactionId}/status`,
+        method: "PATCH",
         headers,
         data: request,
         timeout: this.timeout,
@@ -155,58 +182,25 @@ export class DelegationService implements IDelegationApiService {
 
       return {
         success: true,
-        txHash: response.data.txHash,
-      };
-    } catch (error: any) {
-      return {
-        success: false,
-        txHash: "",
-      };
-    }
-  }
-
-  // Get delegations for a delegator
-  async getDelegations(delegatorAddress: string): Promise<DelegationResponse> {
-    try {
-      const token = this.getStoredToken();
-      const headers = {
-        "Content-Type": "application/json",
-        ...(token && { Authorization: `Bearer ${token}` }),
-      };
-
-      const response = await http.request({
-        url: `${this.baseUrl}/delegation/${delegatorAddress}`,
-        method: "GET",
-        headers,
-        timeout: this.timeout,
-      });
-
-      return {
-        success: true,
-        data: response.data.data,
+        data: response.data.data || response.data,
       };
     } catch (error: any) {
       return {
         success: false,
         data: {
-          bondedAmount: "0",
-          delegate: {
-            active: false,
-            feeShare: "0",
-            id: "",
-            rewardCut: "0",
-            status: "Not Registered",
-            totalStake: "0",
-          },
-          delegatedAmount: "0",
-          fees: "0",
-          id: delegatorAddress,
-          lastClaimRound: { id: "0" },
-          principal: "0",
-          startRound: "0",
-          unbonded: "0",
-          unbondingLocks: [],
-          withdrawnFees: "0",
+          id: transactionId,
+          user_id: "",
+          transaction_hash: "",
+          transaction_type: "deposit",
+          amount: "0",
+          token_address: "",
+          token_symbol: "",
+          wallet_address: "",
+          wallet_id: "",
+          status: request.status,
+          source: "",
+          svix_id: "",
+          created_at: new Date().toISOString(),
         },
       };
     }

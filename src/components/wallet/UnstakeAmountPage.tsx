@@ -37,7 +37,7 @@ export const UnstakeAmountPage: React.FC = () => {
 
 
   const handleBackClick = () => {
-    navigate(`/validator-details/${currentValidator?.address}`);
+    navigate(-1);
   };
 
   const handleAmountSelect = (amount: string) => {
