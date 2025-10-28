@@ -8,3 +8,6 @@ export * from './delegation';
 
 // Export auth services
 export * from './auth';
+
+// Export wallet services
+export * from './wallet';

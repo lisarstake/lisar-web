@@ -13,7 +13,7 @@ export const WithdrawalSuccessPage: React.FC = () => {
   const currentValidator = orchestrators.find(o => o.name === validatorName) || orchestrators[0];
 
   const handleBackClick = () => {
-    navigate(`/validator-details/${currentValidator.slug}`);
+    navigate(-1);
   };
 
   const handleGoToHome = () => {

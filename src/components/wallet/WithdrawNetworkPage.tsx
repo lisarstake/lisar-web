@@ -88,12 +88,7 @@ export const WithdrawNetworkPage: React.FC = () => {
   ];
 
   const handleBackClick = () => {
-    // Check if we came from validator details or home page
-    if (document.referrer.includes("/validator-details/")) {
-      navigate(`/validator-details/${currentValidator?.address}`);
-    } else {
-      navigate("/wallet");
-    }
+    navigate(-1);
   };
 
   const handleNetworkSelect = (networkId: string) => {

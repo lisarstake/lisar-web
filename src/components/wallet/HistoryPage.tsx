@@ -21,7 +21,7 @@ export const HistoryPage: React.FC = () => {
   const transactionGroups = getTransactionGroups();
 
   const handleBackClick = () => {
-    navigate("/wallet");
+    navigate(-1);
   };
 
   const handleTransactionClick = (transaction: Transaction) => {

@@ -90,10 +90,10 @@ export const OrchestratorProvider: React.FC<OrchestratorProviderProps> = ({
       //     const delegationResponse = await delegationService.getDelegations('0x9427535629358a43e240b03bf2e2df0ecc644720');
       //     if (delegationResponse.success) {
       //       setUserDelegation(delegationResponse.data);
-      //       console.log('📊 User Delegation Data:', delegationResponse.data);
+      //      
       //     }
       //   } catch (delegationError) {
-      //     console.log('No delegation data found for user');
+      //   
       //     setUserDelegation(null);
       //   }
       // }
@@ -119,10 +119,12 @@ export const OrchestratorProvider: React.FC<OrchestratorProviderProps> = ({
     await fetchOrchestrators();
   };
 
-  // Fetch orchestrators on mount
+  // Fetch orchestrators when user is authenticated
   useEffect(() => {
-    fetchOrchestrators();
-  }, []);
+    if (state.user?.wallet_id) {
+      fetchOrchestrators();
+    }
+  }, [state.user?.wallet_id]);
 
   const value: OrchestratorContextType = {
     orchestrators,

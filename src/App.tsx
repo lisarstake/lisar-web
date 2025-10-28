@@ -1,6 +1,7 @@
 import { Outlet, useLocation } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { OrchestratorProvider } from "@/contexts/OrchestratorContext";
+import { WalletProvider } from "@/contexts/WalletContext";
 
 export default function App() {
   const location = useLocation();
@@ -33,6 +34,7 @@ export default function App() {
   return (
     <AuthProvider>
       <OrchestratorProvider>
+        <WalletProvider>
         <div className="min-h-screen bg-white">
           {isLandingPage ? (
             <main className="app-main">
@@ -62,6 +64,7 @@ export default function App() {
             </>
           )}
         </div>
+        </WalletProvider>
       </OrchestratorProvider>
     </AuthProvider>
   );
