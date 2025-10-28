@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { OrchestratorList } from "./OrchestratorList";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { useOrchestrators } from "@/contexts/OrchestratorContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useWallet } from "@/contexts/WalletContext";
 import {
   ChartSpline,
   Plus,
@@ -19,31 +20,27 @@ export const WalletPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const { orchestrators, isLoading, error, refetch } = useOrchestrators();
   const { state } = useAuth();
+  const { wallet, isLoading: walletLoading } = useWallet();
 
-  // Mock wallet data for now
-  const walletData = {
-    balance: 5000,
-    currency: 'LPT',
-    fiatValue: '$100,000',
-    fiatCurrency: 'USD'
-  };
-
+  // Wallet data comes from WalletContext and persists across navigation
 
   // Ensure orchestrators is always an array
   const safeOrchestrators = Array.isArray(orchestrators) ? orchestrators : [];
-  
+
   // Filter out crypto addresses (0x...) and keep only proper ENS names
   const validOrchestrators = safeOrchestrators.filter((orch) => {
-    const ensName = orch.ensName || '';
+    const ensName = orch.ensName || "";
     // Keep only ENS names that don't start with '0x' and have proper format
-    return !ensName.startsWith('0x') && ensName.includes('.') && ensName.length > 0;
+    return (
+      !ensName.startsWith("0x") && ensName.includes(".") && ensName.length > 0
+    );
   });
-  
+
   // Sort by total stake (descending) and take top 30
   const topOrchestrators = validOrchestrators
     .sort((a, b) => parseFloat(b.totalStake) - parseFloat(a.totalStake))
     .slice(0, 30);
-  
+
   // Filter by search query
   const filteredOrchestrators = topOrchestrators.filter((orch) =>
     orch.ensName?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -58,22 +55,19 @@ export const WalletPage: React.FC = () => {
   };
 
   const handleDepositClick = () => {
-    // Navigate directly to stake page with payment options (using default validator)
-    navigate("/stake/giga-kubica-eth?deposit=true");
+    const defaultValidator = validOrchestrators[0];
+    navigate(`/stake/${defaultValidator.ensName}?deposit=true`);
   };
 
   const handlePortfolioClick = () => {
-    // Navigate to portfolio page
     navigate("/portfolio");
   };
 
   const handleProfileClick = () => {
-    // Navigate to profile page
     navigate("/profile");
   };
 
   const handleNotificationsClick = () => {
-    // Navigate to notifications page
     navigate("/notifications");
   };
 
@@ -98,7 +92,9 @@ export const WalletPage: React.FC = () => {
               />
             ) : (
               <span className="text-black font-bold text-sm">
-                {state.user?.full_name?.charAt(0) || state.user?.email?.charAt(0) || "U"}
+                {state.user?.full_name?.charAt(0) ||
+                  state.user?.email?.charAt(0) ||
+                  "U"}
               </span>
             )}
           </button>
@@ -126,10 +122,22 @@ export const WalletPage: React.FC = () => {
         <div className="flex items-center justify-center space-x-2 mb-2">
           <span className="text-white/70 text-sm">Wallet balance</span>
         </div>
-        <h1 className="text-4xl font-semibold text-gray-300 mb-2">
-          {walletData.balance.toLocaleString()} {walletData.currency}
-        </h1>
-        <p className="text-white/70 text-lg">≈{walletData.fiatValue}</p>
+        {walletLoading ? (
+          <div className="space-y-2">
+            <div className="h-12 bg-[#2a2a2a] rounded-lg animate-pulse w-38 mx-auto"></div>
+            <div className="h-6 bg-[#2a2a2a] rounded-lg animate-pulse w-28 mx-auto"></div>
+          </div>
+        ) : (
+          <>
+            <h1 className="text-4xl font-semibold text-gray-300 mb-2">
+              {wallet?.balanceLpt.toLocaleString() || 0} LPT
+            </h1>
+            <p className="text-white/70 text-lg">
+              ≈{wallet?.fiatSymbol}
+              {(wallet ? wallet.fiatValue : 0).toLocaleString()}
+            </p>
+          </>
+        )}
       </div>
 
       {/* Action Buttons */}

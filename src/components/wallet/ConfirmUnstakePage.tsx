@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ChevronLeft, CircleQuestionMark } from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { UnstakeSuccessDrawer } from "./UnstakeSuccessDrawer";
 import { useOrchestrators } from "@/contexts/OrchestratorContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { priceService } from "@/lib/priceService";
 import { delegationService } from "@/services";
 import { UnbondRequest } from "@/services/delegation/types";
 
@@ -16,34 +18,50 @@ export const ConfirmUnstakePage: React.FC = () => {
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
   const [showSuccessDrawer, setShowSuccessDrawer] = useState(false);
   const { orchestrators } = useOrchestrators();
+  const { state } = useAuth();
 
   // Find the orchestrator by address (validatorId is the address)
-  const currentValidator = orchestrators.find(orch => orch.address === validatorId);
+  const currentValidator = orchestrators.find(
+    (orch) => orch.address === validatorId
+  );
 
-  const unstakeAmount = searchParams.get("amount") || "5,000";
-  const fiatAmount = (
-    parseInt(unstakeAmount.replace(/,/g, "")) * 20
-  ).toLocaleString();
+  const unstakeAmount = searchParams.get("amount") || "0";
+  const unstakeAmountNum = useMemo(
+    () => parseFloat(unstakeAmount.replace(/,/g, "")) || 0,
+    [unstakeAmount]
+  );
+  const fiatCurrency = state.user?.fiat_type || "USD";
+  const fiatSymbol = priceService.getCurrencySymbol(fiatCurrency);
+  const fiatAmountNum = priceService.convertLptToFiat(
+    unstakeAmountNum,
+    fiatCurrency
+  );
+  const fiatAmount = useMemo(
+    () => fiatAmountNum.toLocaleString(),
+    [fiatAmountNum]
+  );
 
   const handleBackClick = () => {
-    navigate(`/unstake-amount/${currentValidator?.address}`);
+    navigate(-1);
   };
 
   const handleProceed = async () => {
     if (!currentValidator) return;
+    const walletId = state.user?.wallet_id;
+    const walletAddress = state.user?.wallet_address;
+    if (!walletId || !walletAddress) return;
 
     setIsProcessing(true);
     try {
       const unbondRequest: UnbondRequest = {
-        walletId: "0x1234567890abcdef", // This should come from user's wallet
-        walletAddress: "0x1234567890abcdef", // This should come from user's wallet
-        amount: unstakeAmount.replace(/,/g, ""), // Remove commas from amount
+        walletId,
+        walletAddress,
+        amount: unstakeAmount.replace(/,/g, ""),
       };
 
       const response = await delegationService.unbond(unbondRequest);
-      
+
       if (response.success) {
-        console.log("Unbonding successful:", response.txHash);
         setShowSuccessDrawer(true);
       } else {
         console.error("Unbonding failed");
@@ -85,7 +103,10 @@ export const ConfirmUnstakePage: React.FC = () => {
       {/* Unstake Amount */}
       <div className="text-center px-6 py-8">
         <h2 className="text-4xl font-bold text-white">{unstakeAmount} LPT</h2>
-        <p className="text-white/70 text-lg mt-2">≈ ₦{fiatAmount} NGN</p>
+        <p className="text-white/70 text-lg mt-2">
+          ≈ {fiatSymbol}
+          {fiatAmount} {fiatCurrency}
+        </p>
       </div>
 
       {/* Confirmation Details Card */}
@@ -94,23 +115,32 @@ export const ConfirmUnstakePage: React.FC = () => {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-gray-400">From</span>
-              <span className="text-white font-medium">neuralstream.eth</span>
+              <span className="text-white font-medium">
+                {currentValidator?.ensName ||
+                  (currentValidator?.address
+                    ? `${currentValidator.address.substring(0, 6)}...${currentValidator.address.substring(currentValidator.address.length - 4)}`
+                    : "-")}
+              </span>
             </div>
 
             <div className="flex items-center justify-between">
               <span className="text-gray-400">To</span>
-              <span className="text-white font-medium">Your wallet</span>
+              <span className="text-white font-medium">
+                {state.user?.wallet_address
+                  ? `${state.user.wallet_address.substring(0, 6)}...${state.user.wallet_address.substring(state.user.wallet_address.length - 4)}`
+                  : "Your wallet"}
+              </span>
             </div>
 
             <div className="flex items-center justify-between">
               <span className="text-gray-400">Network fee</span>
-              <span className="text-white font-medium">50 LPT</span>
+              <span className="text-white font-medium">0 LPT</span>
             </div>
 
             <div className="flex items-center justify-between">
               <span className="text-gray-400">You will receive</span>
               <span className="text-[#C7EF6B] font-medium">
-                {parseInt(unstakeAmount.replace(/,/g, "")) - 50} LPT
+                {unstakeAmountNum.toLocaleString()} LPT
               </span>
             </div>
           </div>
@@ -118,7 +148,7 @@ export const ConfirmUnstakePage: React.FC = () => {
       </div>
 
       {/* Proceed Button */}
-      <div className="px-6 pb-6">
+      <div className="px-6 pb-24">
         <button
           onClick={handleProceed}
           disabled={isProcessing}
@@ -140,7 +170,7 @@ export const ConfirmUnstakePage: React.FC = () => {
         content={[
           "Review your unstaking details including validator, amount, and unbonding period before confirming.",
           "You won't earn rewards during the unbonding period, and there's a small network fee.",
-          "Your funds will be available after the unbonding period ends."
+          "Your funds will be available after the unbonding period ends.",
         ]}
       />
 

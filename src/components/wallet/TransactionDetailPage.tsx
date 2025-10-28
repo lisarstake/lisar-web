@@ -22,7 +22,7 @@ export const TransactionDetailPage: React.FC = () => {
   }
 
   const handleBackClick = () => {
-    navigate("/history");
+    navigate(-1);
   };
 
   const handleHelpClick = () => {

@@ -1,35 +1,57 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { ChevronDown, CircleQuestionMark } from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
+import { useOrchestrators } from "@/contexts/OrchestratorContext";
 
-interface Orchestrator {
+type ForecastOrchestrator = {
   id: string;
   name: string;
-  apy: number;
-}
+  apy: number; // normalized numeric APY
+};
 
 export const ForecastPage: React.FC = () => {
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
   const [selectedOrchestrator, setSelectedOrchestrator] =
-    useState<Orchestrator>({
-      id: "1",
-      name: "streamplace.eth",
-      apy: 65.6,
-    });
+    useState<ForecastOrchestrator | null>(null);
   const [delegationAmount, setDelegationAmount] = useState("0");
+  const { orchestrators, isLoading, error } = useOrchestrators();
 
-  const orchestrators: Orchestrator[] = [
-    { id: "1", name: "streamplace.eth", apy: 65.6 },
-    { id: "2", name: "neuralstream.eth", apy: 68.3 },
-    { id: "3", name: "livepeer.org", apy: 65.1 },
-  ];
+  // Build list from real orchestrators
+  const options: ForecastOrchestrator[] = useMemo(() => {
+    const list = Array.isArray(orchestrators) ? orchestrators : [];
+    const valid = list.filter((o: any) => {
+      const ens = o.ensName || o.name || "";
+      return ens && !ens.startsWith("0x") && ens.includes(".");
+    });
+    return valid
+      .map((o: any) => {
+        const rawApy = o.apy ?? o.apyPercentage ?? o.APY ?? 0;
+        const apyNum = typeof rawApy === "string"
+          ? parseFloat(rawApy.replace("%", ""))
+          : Number(rawApy) || 0;
+        return {
+          id: o.address || o.id || (o.ensName ?? o.name),
+          name: o.ensName || o.name,
+          apy: apyNum,
+        } as ForecastOrchestrator;
+      })
+      .sort((a, b) => b.apy - a.apy)
+      .slice(0, 30);
+  }, [orchestrators]);
+
+  // Initialize default selection when data loads
+  useEffect(() => {
+    if (!selectedOrchestrator && options.length > 0) {
+      setSelectedOrchestrator(options[0]);
+    }
+  }, [options, selectedOrchestrator]);
 
   const handleHelpClick = () => {
     setShowHelpDrawer(true);
   };
 
-  const handleOrchestratorSelect = (orchestrator: Orchestrator) => {
+  const handleOrchestratorSelect = (orchestrator: ForecastOrchestrator) => {
     setSelectedOrchestrator(orchestrator);
   };
 
@@ -39,9 +61,10 @@ export const ForecastPage: React.FC = () => {
 
   // Calculate returns based on delegation amount and APY
   const numericAmount = parseFloat(delegationAmount.replace(/,/g, "")) || 0;
-  const dailyReturn = (numericAmount * selectedOrchestrator.apy) / 100 / 365;
+  const apy = selectedOrchestrator?.apy || 0;
+  const dailyReturn = (numericAmount * apy) / 100 / 365;
   const monthlyReturn = dailyReturn * 30;
-  const yearlyReturn = (numericAmount * selectedOrchestrator.apy) / 100;
+  const yearlyReturn = (numericAmount * apy) / 100;
   const totalValue = numericAmount + yearlyReturn;
 
   return (
@@ -59,22 +82,28 @@ export const ForecastPage: React.FC = () => {
             Select Validator
           </label>
           <div className="relative">
-            <select
-              value={selectedOrchestrator.id}
-              onChange={(e) => {
-                const selected = orchestrators.find(
-                  (o) => o.id === e.target.value
-                );
-                if (selected) handleOrchestratorSelect(selected);
-              }}
-              className="w-full p-4 bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl text-white appearance-none focus:border-[#C7EF6B] focus:outline-none"
-            >
-              {orchestrators.map((orchestrator) => (
-                <option key={orchestrator.id} value={orchestrator.id}>
-                  {orchestrator.name} - APY: {orchestrator.apy}%
-                </option>
-              ))}
-            </select>
+            {isLoading ? (
+              <div className="h-12 bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl animate-pulse" />
+            ) : error ? (
+              <div className="p-4 bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl text-sm text-red-400">
+                Failed to load validators. Please try again later.
+              </div>
+            ) : (
+              <select
+                value={selectedOrchestrator?.id || ""}
+                onChange={(e) => {
+                  const selected = options.find((o) => o.id === e.target.value);
+                  if (selected) handleOrchestratorSelect(selected);
+                }}
+                className="w-full p-4 bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl text-white appearance-none focus:border-[#C7EF6B] focus:outline-none"
+              >
+                {options.map((o) => (
+                  <option key={o.id} value={o.id}>
+                    {o.name.length > 14 ? `${o.name.substring(0, 20)}..` : o.name} - APY: {o.apy}%
+                  </option>
+                ))}
+              </select>
+            )}
             <ChevronDown
               size={20}
               color="#C7EF6B"
@@ -107,7 +136,7 @@ export const ForecastPage: React.FC = () => {
               {yearlyReturn.toFixed(2)} USDC
             </div>
             <div className="text-[#C7EF6B] text-sm">
-              = {selectedOrchestrator.apy}% APY
+              = {apy}% APY
             </div>
           </div>
         </div>

@@ -53,7 +53,7 @@ export const ConfirmWithdrawalPage: React.FC = () => {
   const networkFee = isCrossChain ? "0.5 LPT" : "0 LPT";
 
   const handleBackClick = () => {
-    navigate(`/withdraw-network/${validatorId}`);
+    navigate(-1);
   };
 
   const handleProceed = () => {

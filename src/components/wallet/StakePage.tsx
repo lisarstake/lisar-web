@@ -65,12 +65,7 @@ export const StakePage: React.FC = () => {
   }, [prices.lpt, userCurrency]);
 
   const handleBackClick = () => {
-   
-    if (document.referrer.includes("/validator-details/")) {
-      navigate(`/validator-details/${currentValidator?.address}`);
-    } else {
-      navigate("/wallet");
-    }
+    navigate(-1);
   };
 
   const handleAmountSelect = async (amount: string) => {
@@ -108,8 +103,8 @@ export const StakePage: React.FC = () => {
       const response = await delegationService.stake(stakeRequest);
       
       if (response.success) {
-        console.log("Staking successful:", response.data);
-        navigate("/wallet"); // Navigate back to wallet on success
+     
+        navigate("/wallet"); 
       } else {
         console.error("Staking failed");
       }
