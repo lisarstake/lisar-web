@@ -1,25 +1,43 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ChevronLeft, CircleQuestionMark } from "lucide-react";
+import { ChevronLeft, CircleQuestionMark, AlertCircle, RefreshCw } from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
-import { transactions } from "@/data/transactions";
-import { Transaction } from "@/types/transaction";
+import { transactionService } from "@/services";
+import { TransactionData, TransactionType } from "@/services/transactions/types";
 
 export const TransactionDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const { transactionId } = useParams<{ transactionId: string }>();
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
+  const [transaction, setTransaction] = useState<TransactionData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const transaction = transactions.find((t) => t.id === transactionId);
+  useEffect(() => {
+    const fetchTransaction = async () => {
+      if (!transactionId) return;
+      
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        const response = await transactionService.getTransactionById(transactionId);
+        
+        if (response.success && response.data) {
+          setTransaction(response.data);
+        } else {
+          setError(response.message || "Failed to fetch transaction");
+        }
+      } catch (err) {
+        setError("An error occurred while fetching transaction");
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  if (!transaction) {
-    return (
-      <div className="h-screen bg-[#050505] text-white flex items-center justify-center">
-        <p>Transaction not found</p>
-      </div>
-    );
-  }
+    fetchTransaction();
+  }, [transactionId]);
 
   const handleBackClick = () => {
     navigate("/history");
@@ -29,35 +47,49 @@ export const TransactionDetailPage: React.FC = () => {
     setShowHelpDrawer(true);
   };
 
-  const getAmountColor = (type: string) => {
+  const getAmountColor = (type: TransactionType) => {
     switch (type) {
-      case "fund-wallet":
-      case "stake":
+      case "deposit":
+      case "delegation":
         return "text-[#C7EF6B]";
-      case "withdraw-stake":
       case "withdrawal":
-      case "unstake":
+      case "undelegation":
         return "text-[#FF6B6B]";
       default:
         return "text-[#C7EF6B]";
     }
   };
 
-  const getAmountPrefix = (type: string) => {
+  const getAmountPrefix = (type: TransactionType) => {
     switch (type) {
-      case "fund-wallet":
-      case "stake":
+      case "deposit":
+      case "delegation":
         return "+";
-      case "withdraw-stake":
       case "withdrawal":
-      case "unstake":
+      case "undelegation":
         return "-";
       default:
         return "+";
     }
   };
 
-  const formatDate = (date: Date) => {
+  const getTransactionTitle = (type: TransactionType) => {
+    switch (type) {
+      case "deposit":
+        return "Deposit";
+      case "withdrawal":
+        return "Withdrawal";
+      case "delegation":
+        return "Stake";
+      case "undelegation":
+        return "Unstake";
+      default:
+        return "Transaction";
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
@@ -67,6 +99,81 @@ export const TransactionDetailPage: React.FC = () => {
       hour12: true,
     });
   };
+
+  const handleRetry = async () => {
+    if (!transactionId) return;
+    
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const response = await transactionService.getTransactionById(transactionId);
+      
+      if (response.success && response.data) {
+        setTransaction(response.data);
+      } else {
+        setError(response.message || "Failed to fetch transaction");
+      }
+    } catch (err) {
+      setError("An error occurred while fetching transaction");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="h-screen bg-[#050505] text-white flex flex-col">
+        <div className="flex items-center justify-between px-6 py-8">
+          <button
+            onClick={handleBackClick}
+            className="w-8 h-8 flex items-center justify-center"
+          >
+            <ChevronLeft color="#C7EF6B" />
+          </button>
+          <h1 className="text-lg font-medium text-white">Transaction Details</h1>
+          <div className="w-8 h-8"></div>
+        </div>
+        <div className="flex flex-col items-center justify-center flex-1">
+          <div className="w-8 h-8 border-2 border-[#C7EF6B] border-t-transparent rounded-full animate-spin mb-4"></div>
+          <p className="text-gray-400">Loading transaction...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !transaction) {
+    return (
+      <div className="h-screen bg-[#050505] text-white flex flex-col">
+        <div className="flex items-center justify-between px-6 py-8">
+          <button
+            onClick={handleBackClick}
+            className="w-8 h-8 flex items-center justify-center"
+          >
+            <ChevronLeft color="#C7EF6B" />
+          </button>
+          <h1 className="text-lg font-medium text-white">Transaction Details</h1>
+          <div className="w-8 h-8"></div>
+        </div>
+        <div className="flex flex-col items-center justify-center flex-1 px-6">
+          <div className="w-16 h-16 bg-gray-100/10 rounded-full flex items-center justify-center mb-6">
+            <AlertCircle className="w-8 h-8 text-gray-400" />
+          </div>
+          <h3 className="text-xl font-semibold text-white mb-2">Error</h3>
+          <p className="text-gray-400 text-center mb-6 max-w-sm">
+            {error || "Transaction not found"}
+          </p>
+          <button
+            onClick={handleRetry}
+            className="flex items-center text-sm space-x-2 px-4 py-2 bg-gray-300 text-black rounded-lg font-normal hover:bg-[#B8E55A] transition-colors"
+          >
+            <RefreshCw className="w-4 h-4" />
+            <span>Retry</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen bg-[#050505] text-white flex flex-col">
@@ -79,7 +186,7 @@ export const TransactionDetailPage: React.FC = () => {
           <ChevronLeft color="#C7EF6B" />
         </button>
 
-        <h1 className="text-lg font-medium text-white">{transaction.title}</h1>
+        <h1 className="text-lg font-medium text-white">{getTransactionTitle(transaction.transaction_type)}</h1>
 
         <button
           onClick={handleHelpClick}
@@ -92,10 +199,10 @@ export const TransactionDetailPage: React.FC = () => {
       {/* Transaction Amount */}
       <div className="text-center px-6 py-8">
         <h2
-          className={`text-4xl font-bold ${getAmountColor(transaction.type)}`}
+          className={`text-4xl font-bold ${getAmountColor(transaction.transaction_type)}`}
         >
-          {getAmountPrefix(transaction.type)}
-          {transaction.amount} {transaction.currency}
+          {getAmountPrefix(transaction.transaction_type)}
+          {parseFloat(transaction.amount).toFixed(4)} {transaction.token_symbol}
         </h2>
       </div>
 
@@ -106,7 +213,7 @@ export const TransactionDetailPage: React.FC = () => {
             <div className="flex items-center justify-between">
               <span className="text-gray-400">Date</span>
               <span className="text-white font-medium">
-                {formatDate(transaction.date)}
+                {formatDate(transaction.created_at)}
               </span>
             </div>
 
@@ -117,39 +224,33 @@ export const TransactionDetailPage: React.FC = () => {
               </span>
             </div>
 
-            {transaction.to && (
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">To</span>
-                <span className="text-white font-medium">{transaction.to}</span>
-              </div>
-            )}
+            <div className="flex items-center justify-between">
+              <span className="text-gray-400">Transaction Hash</span>
+              <span className="text-white font-medium text-xs">
+                {transaction.transaction_hash.slice(0, 8)}...{transaction.transaction_hash.slice(-8)}
+              </span>
+            </div>
 
-            {transaction.from && (
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">From</span>
-                <span className="text-white font-medium">
-                  {transaction.from}
-                </span>
-              </div>
-            )}
+            <div className="flex items-center justify-between">
+              <span className="text-gray-400">Wallet Address</span>
+              <span className="text-white font-medium text-xs">
+                {transaction.wallet_address.slice(0, 8)}...{transaction.wallet_address.slice(-8)}
+              </span>
+            </div>
 
-            {transaction.network && (
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">Network</span>
-                <span className="text-white font-medium">
-                  {transaction.network}
-                </span>
-              </div>
-            )}
+            <div className="flex items-center justify-between">
+              <span className="text-gray-400">Token Address</span>
+              <span className="text-white font-medium text-xs">
+                {transaction.token_address.slice(0, 8)}...{transaction.token_address.slice(-8)}
+              </span>
+            </div>
 
-            {transaction.fee && (
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">Network fee</span>
-                <span className="text-white font-medium">
-                  {transaction.fee} {transaction.currency}
-                </span>
-              </div>
-            )}
+            <div className="flex items-center justify-between">
+              <span className="text-gray-400">Source</span>
+              <span className="text-white font-medium capitalize">
+                {transaction.source}
+              </span>
+            </div>
           </div>
         </div>
       </div>
