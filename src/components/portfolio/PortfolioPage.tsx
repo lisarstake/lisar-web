@@ -81,7 +81,7 @@ export const PortfolioPage: React.FC = () => {
 
 
   const handleBackClick = () => {
-    navigate("/wallet");
+    navigate(-1);
   };
 
   const handleTrophyClick = () => {

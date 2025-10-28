@@ -1,37 +1,30 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { ChevronLeft, CircleQuestionMark, Copy, Check } from "lucide-react";
 import QRCode from "qrcode";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
-import { orchestrators } from "@/data/orchestrators";
-import { getValidatorDisplayName } from "@/utils/routing";
+import { useAuth } from "@/contexts/AuthContext";
 
 export const DepositPage: React.FC = () => {
   const navigate = useNavigate();
-  const { validatorId } = useParams<{ validatorId: string }>();
   const [copied, setCopied] = useState(false);
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const { state } = useAuth();
 
-  // Get validator data
-  const validatorName = getValidatorDisplayName(validatorId);
-  const currentValidator = orchestrators.find(o => o.name === validatorName) || orchestrators[0];
-
-  // Check if this is a deposit flow to preserve the parameter
-  const urlParams = new URLSearchParams(window.location.search);
-  const isDepositFlow = urlParams.get("deposit") === "true";
-
-  const walletAddress = "0x6f71...a98o";
-  const fullWalletAddress = "0x6f71a98o1234567890abcdef1234567890abcdef";
+  const fullWalletAddress = state.user?.wallet_address || "";
+  const walletAddress = fullWalletAddress
+    ? `${fullWalletAddress.slice(0, 6)}...${fullWalletAddress.slice(-4)}`
+    : "";
 
   useEffect(() => {
-    if (canvasRef.current) {
+    if (canvasRef.current && fullWalletAddress) {
       QRCode.toCanvas(
         canvasRef.current,
         fullWalletAddress,
         {
-          width: 192, // 48 * 4 for high resolution
+          width: 192,
           margin: 2,
           color: {
             dark: "#000000",
@@ -46,12 +39,11 @@ export const DepositPage: React.FC = () => {
   }, [fullWalletAddress]);
 
   const handleBackClick = () => {
-    // Preserve deposit parameter when navigating back
-    const depositParam = isDepositFlow ? "?deposit=true" : "";
-    navigate(`/stake/${currentValidator.slug}${depositParam}`);
+    navigate(-1);
   };
 
   const handleCopyClick = () => {
+    if (!fullWalletAddress) return;
     navigator.clipboard.writeText(fullWalletAddress);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -97,7 +89,9 @@ export const DepositPage: React.FC = () => {
 
         {/* Wallet Address */}
         <div className="text-center mb-2">
-          <p className="text-white text-lg font-medium">{walletAddress}</p>
+          <p className="text-white text-lg font-medium">
+            {walletAddress || "No address"}
+          </p>
         </div>
 
         {/* Network Information */}
@@ -119,6 +113,7 @@ export const DepositPage: React.FC = () => {
         <button
           onClick={handleCopyClick}
           className="w-full py-4 rounded-xl font-semibold text-lg bg-[#C7EF6B] text-black hover:bg-[#B8E55A] transition-colors flex items-center justify-center space-x-2"
+          disabled={!fullWalletAddress}
         >
           {copied ? (
             <>
@@ -128,7 +123,7 @@ export const DepositPage: React.FC = () => {
           ) : (
             <>
               <Copy size={20} />
-              <span>Copy</span>
+              <span>{fullWalletAddress ? "Copy" : "No address"}</span>
             </>
           )}
         </button>
@@ -142,7 +137,7 @@ export const DepositPage: React.FC = () => {
         content={[
           "Send LPT tokens to this address to add funds to your Lisar wallet.",
           "Copy the address or scan the QR code with your mobile wallet to send tokens.",
-          "Only send LPT tokens to this address to avoid losing funds."
+          "Only send LPT tokens to this address to avoid losing funds.",
         ]}
       />
 

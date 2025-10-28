@@ -16,7 +16,7 @@ export const HistoryPage: React.FC = () => {
   const { transactions, isLoading, error, refetch } = useTransactions();
 
   const handleBackClick = () => {
-    navigate("/wallet");
+    navigate(-1);
   };
 
   const handleTransactionClick = (transaction: TransactionData) => {

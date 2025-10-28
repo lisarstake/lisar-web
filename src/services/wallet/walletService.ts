@@ -1,28 +1,25 @@
 /**
- * Delegation API Service
- * Real implementation for delegation operations
+ * Wallet API Service
+ * Real implementation for wallet operations
  */
 
-import { IDelegationApiService } from "./api";
+import { IWalletApiService } from "./api";
 import {
-  DelegationApiResponse,
-  OrchestratorResponse,
-  StakeRequest,
-  StakeResponse,
-  UnbondRequest,
-  UnbondResponse,
-  DelegationResponse,
-  DELEGATION_CONFIG,
+  WalletApiResponse,
+  WalletData,
+  BalanceResponse,
+  ExportResponse,
+  WALLET_CONFIG,
 } from "./types";
 import { http } from "@/lib/http";
 
-export class DelegationService implements IDelegationApiService {
+export class WalletService implements IWalletApiService {
   private baseUrl: string;
   private timeout: number;
 
   constructor() {
-    this.baseUrl = DELEGATION_CONFIG.baseUrl;
-    this.timeout = DELEGATION_CONFIG.timeout;
+    this.baseUrl = WALLET_CONFIG.baseUrl;
+    this.timeout = WALLET_CONFIG.timeout;
   }
 
   // Token management helpers
@@ -46,10 +43,6 @@ export class DelegationService implements IDelegationApiService {
       token = sessionStorage.getItem("auth_token");
     }
 
-    // Log token for API testing
-    console.log("🔑 Delegation Service Token:", token);
-    
-
     return token;
   }
 
@@ -63,7 +56,7 @@ export class DelegationService implements IDelegationApiService {
   private async makeRequest<T>(
     endpoint: string,
     config: any = {}
-  ): Promise<DelegationApiResponse<T>> {
+  ): Promise<WalletApiResponse<T>> {
     try {
       // Add authorization header if token exists
       const token = this.getStoredToken();
@@ -82,7 +75,7 @@ export class DelegationService implements IDelegationApiService {
 
       return {
         success: true,
-        data: response.data.data || response.data,
+        data: response.data.wallet || response.data.data || response.data,
         message: response.data.message || "Success",
       };
     } catch (error: any) {
@@ -95,87 +88,24 @@ export class DelegationService implements IDelegationApiService {
     }
   }
 
-  // Orchestrators
-  async getOrchestrators(): Promise<
-    DelegationApiResponse<OrchestratorResponse[]>
-  > {
-    return this.makeRequest<OrchestratorResponse[]>("/orchestrator", {
+  // Get wallet by ID
+  async getWallet(walletId: string): Promise<WalletApiResponse<WalletData>> {
+    return this.makeRequest<WalletData>(`/wallet/${walletId}`, {
       method: "GET",
     });
   }
 
-  // Stake tokens to an orchestrator
-  async stake(request: StakeRequest): Promise<StakeResponse> {
+  // Get wallet balance
+  async getBalance(walletAddress: string, token: 'ETH' | 'LPT'): Promise<BalanceResponse> {
     try {
-      const token = this.getStoredToken();
+      const token_auth = this.getStoredToken();
       const headers = {
         "Content-Type": "application/json",
-        ...(token && { Authorization: `Bearer ${token}` }),
+        ...(token_auth && { Authorization: `Bearer ${token_auth}` }),
       };
 
       const response = await http.request({
-        url: `${this.baseUrl}/delegation/stake`,
-        method: "POST",
-        headers,
-        data: request,
-        timeout: this.timeout,
-      });
-
-      return {
-        success: true,
-        data: response.data.data,
-      };
-    } catch (error: any) {
-      return {
-        success: false,
-        data: {
-          transactionHash: "",
-          blockNumber: "",
-        },
-      };
-    }
-  }
-
-  // Unbond tokens from an orchestrator
-  async unbond(request: UnbondRequest): Promise<UnbondResponse> {
-    try {
-      const token = this.getStoredToken();
-      const headers = {
-        "Content-Type": "application/json",
-        ...(token && { Authorization: `Bearer ${token}` }),
-      };
-
-      const response = await http.request({
-        url: `${this.baseUrl}/delegation/unbond`,
-        method: "POST",
-        headers,
-        data: request,
-        timeout: this.timeout,
-      });
-
-      return {
-        success: true,
-        txHash: response.data.txHash,
-      };
-    } catch (error: any) {
-      return {
-        success: false,
-        txHash: "",
-      };
-    }
-  }
-
-  // Get delegations for a delegator
-  async getDelegations(delegatorAddress: string): Promise<DelegationResponse> {
-    try {
-      const token = this.getStoredToken();
-      const headers = {
-        "Content-Type": "application/json",
-        ...(token && { Authorization: `Bearer ${token}` }),
-      };
-
-      const response = await http.request({
-        url: `${this.baseUrl}/delegation/${delegatorAddress}`,
+        url: `${this.baseUrl}/wallet/balance?walletAddress=${walletAddress}&token=${token}`,
         method: "GET",
         headers,
         timeout: this.timeout,
@@ -183,31 +113,40 @@ export class DelegationService implements IDelegationApiService {
 
       return {
         success: true,
-        data: response.data.data,
+        balance: response.data.balance || "0",
       };
     } catch (error: any) {
       return {
         success: false,
-        data: {
-          bondedAmount: "0",
-          delegate: {
-            active: false,
-            feeShare: "0",
-            id: "",
-            rewardCut: "0",
-            status: "Not Registered",
-            totalStake: "0",
-          },
-          delegatedAmount: "0",
-          fees: "0",
-          id: delegatorAddress,
-          lastClaimRound: { id: "0" },
-          principal: "0",
-          startRound: "0",
-          unbonded: "0",
-          unbondingLocks: [],
-          withdrawnFees: "0",
-        },
+        balance: "0",
+      };
+    }
+  }
+
+  // Export wallet private key
+  async exportWallet(walletId: string): Promise<ExportResponse> {
+    try {
+      const token = this.getStoredToken();
+      const headers = {
+        "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
+      };
+
+      const response = await http.request({
+        url: `${this.baseUrl}/wallet/${walletId}/export`,
+        method: "GET",
+        headers,
+        timeout: this.timeout,
+      });
+
+      return {
+        success: true,
+        privateKey: response.data.privateKey || "",
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        privateKey: "",
       };
     }
   }

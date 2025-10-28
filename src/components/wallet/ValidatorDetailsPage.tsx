@@ -65,12 +65,7 @@ export const ValidatorDetailsPage: React.FC = () => {
   }
 
   const handleBackClick = () => {
-    // Check if we came from portfolio or validator page
-    if (document.referrer.includes("/portfolio")) {
-      navigate("/portfolio");
-    } else {
-      navigate("/validator");
-    }
+    navigate(-1);
   };
 
   const handleStakeClick = () => {
