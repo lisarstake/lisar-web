@@ -3,9 +3,11 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ChevronLeft, CircleQuestionMark } from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
-import { WithdrawalSuccessDrawer } from "./WithdrawalSuccessDrawer";
-import { orchestrators } from "@/data/orchestrators";
-import { getValidatorDisplayName } from "@/utils/routing";
+import { SuccessDrawer } from "@/components/ui/SuccessDrawer";
+import { ErrorDrawer } from "@/components/ui/ErrorDrawer";
+import { useOrchestrators } from "@/contexts/OrchestratorContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { delegationService } from "@/services";
 
 export const ConfirmWithdrawalPage: React.FC = () => {
   const navigate = useNavigate();
@@ -14,12 +16,35 @@ export const ConfirmWithdrawalPage: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
   const [showSuccessDrawer, setShowSuccessDrawer] = useState(false);
+  const [showErrorDrawer, setShowErrorDrawer] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string>("");
+  const [errorMessage, setErrorMessage] = useState<string>("");
+  const [txHash, setTxHash] = useState<string | undefined>(undefined);
+  const { orchestrators } = useOrchestrators();
+  const { state } = useAuth();
 
   // Get validator data
-  const validatorName = getValidatorDisplayName(validatorId);
-  const currentValidator = orchestrators.find(o => o.name === validatorName) || orchestrators[0];
+  const currentValidator = orchestrators.find(
+    (orch) => orch.address === validatorId
+  );
 
-  const selectedNetwork = searchParams.get("network") || "arbitrum";
+  const selectedNetwork = searchParams.get("network") || "livepeer";
+  const withdrawalAmount = searchParams.get("amount") || "0";
+  const validatorDisplayName =
+    searchParams.get("validatorName") ||
+    currentValidator?.ensName ||
+    "Unknown Validator";
+  const unbondingLockIdsParam = searchParams.get("unbondingLockIds");
+
+  // Parse unbondingLockIds
+  const unbondingLockIds: number[] = unbondingLockIdsParam
+    ? JSON.parse(unbondingLockIdsParam)
+    : [];
+
+  // Get wallet data
+  const walletId = state.user?.wallet_id || "";
+  const walletAddress = state.user?.wallet_address || "";
 
   // Get token name and network name based on selected network
   const getTokenInfo = () => {
@@ -47,16 +72,56 @@ export const ConfirmWithdrawalPage: React.FC = () => {
   const networkFee = isCrossChain ? "0.5 LPT" : "0 LPT";
 
   const handleBackClick = () => {
-    navigate(`/withdraw-network/${currentValidator.slug}`);
+    navigate(-1);
   };
 
-  const handleProceed = () => {
+  const handleProceed = async () => {
+    if (!walletId || !walletAddress || unbondingLockIds.length === 0) {
+      const errorMsg = "Missing wallet information or unbonding lock ID";
+      setError(errorMsg);
+      setErrorMessage(errorMsg);
+      setShowErrorDrawer(true);
+      return;
+    }
+
+    // Prepare withdrawal request params
+    const unbondingLockId = unbondingLockIds[0];
+    const withdrawalParams = {
+      walletId,
+      walletAddress,
+      unbondingLockId,
+    };
+
     setIsProcessing(true);
-    // Simulate processing time
-    setTimeout(() => {
+    setError(null);
+    setShowErrorDrawer(false);
+    setShowSuccessDrawer(false);
+
+    try {
+      const response = await delegationService.withdrawStake(withdrawalParams);
+
+      if (response.success) {
+        const successMsg =
+          response.message || "Your withdrawal has been processed successfully";
+        setSuccessMessage(successMsg);
+        setTxHash(response.txHash);
+        setShowSuccessDrawer(true);
+        setIsProcessing(false);
+      } else {
+        const errorMsg =
+          response.error || response.message || "Failed to withdraw stake";
+        setError(errorMsg);
+        setErrorMessage(errorMsg);
+        setShowErrorDrawer(true);
+        setIsProcessing(false);
+      }
+    } catch (err: any) {
+      const errorMsg = err.message || "An error occurred during withdrawal";
+      setError(errorMsg);
+      setErrorMessage(errorMsg);
+      setShowErrorDrawer(true);
       setIsProcessing(false);
-      setShowSuccessDrawer(true);
-    }, 2000);
+    }
   };
 
   const handleHelpClick = () => {
@@ -86,7 +151,9 @@ export const ConfirmWithdrawalPage: React.FC = () => {
 
       {/* Withdrawal Amount */}
       <div className="text-center px-6 py-8">
-        <h2 className="text-4xl font-bold text-white">8000 LPT</h2>
+        <h2 className="text-4xl font-bold text-white">
+          {parseFloat(withdrawalAmount).toFixed(2)} LPT
+        </h2>
       </div>
 
       {/* Confirmation Details Card */}
@@ -100,7 +167,11 @@ export const ConfirmWithdrawalPage: React.FC = () => {
 
             <div className="flex items-center justify-between">
               <span className="text-gray-400">To</span>
-              <span className="text-white font-medium">0x6f71...a98o</span>
+              <span className="text-white font-medium">
+                {walletAddress
+                  ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`
+                  : "0x6f71...a98o"}
+              </span>
             </div>
 
             <div className="flex items-center justify-between">
@@ -109,12 +180,19 @@ export const ConfirmWithdrawalPage: React.FC = () => {
             </div>
 
             <div className="flex items-center justify-between">
+              <span className="text-gray-400">From Validator</span>
+              <span className="text-white font-medium">
+                {validatorDisplayName}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between">
               <span className="text-gray-400">Network fee</span>
               <span className="text-white font-medium">{conversionFee}</span>
             </div>
 
             <div className="border-t border-[#2a2a2a] pt-4">
-              <div className="text-gray-400 text-sm">
+              <div className="text-gray-400 text-xs">
                 {isCrossChain
                   ? "You are withdrawing your staking rewards to another network. We will swap your LPT to " +
                     token +
@@ -130,9 +208,17 @@ export const ConfirmWithdrawalPage: React.FC = () => {
       <div className="px-6 pb-24">
         <button
           onClick={handleProceed}
-          disabled={isProcessing}
+          disabled={
+            isProcessing ||
+            !walletId ||
+            !walletAddress ||
+            unbondingLockIds.length === 0
+          }
           className={`w-full py-4 rounded-xl font-semibold text-lg transition-colors ${
-            isProcessing
+            isProcessing ||
+            !walletId ||
+            !walletAddress ||
+            unbondingLockIds.length === 0
               ? "bg-[#636363] text-white cursor-not-allowed"
               : "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
           }`}
@@ -149,14 +235,27 @@ export const ConfirmWithdrawalPage: React.FC = () => {
         content={[
           "Review your withdrawal details including token, amount, network, and fees before confirming.",
           "Conversion fees apply when converting between different tokens, network fees cover transaction processing.",
-          "Check the summary to see exactly what you'll receive after all fees."
+          "Check the summary to see exactly what you'll receive after all fees.",
         ]}
       />
 
       {/* Success Drawer */}
-      <WithdrawalSuccessDrawer
+      <SuccessDrawer
         isOpen={showSuccessDrawer}
-        onClose={() => setShowSuccessDrawer(false)}
+        onClose={() => {
+          setShowSuccessDrawer(false);
+          navigate("/wallet");
+        }}
+        title="Withdrawal Successful!"
+        message={successMessage}
+      />
+
+      {/* Error Drawer */}
+      <ErrorDrawer
+        isOpen={showErrorDrawer}
+        onClose={() => setShowErrorDrawer(false)}
+        title="Withdrawal Failed"
+        message={errorMessage}
       />
 
       {/* Bottom Navigation */}

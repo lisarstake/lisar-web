@@ -12,7 +12,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from './drawer';
-import { CheckCircle, X } from 'lucide-react';
+import { CheckCircle } from 'lucide-react';
 
 interface SuccessDrawerProps {
   isOpen: boolean;
@@ -42,7 +42,7 @@ export const SuccessDrawer: React.FC<SuccessDrawerProps> = ({
               <CheckCircle className="w-8 h-8 text-[#C7EF6B]" />
             </div>
           </div>
-          <DrawerTitle className="text-xl font-bold text-white">
+          <DrawerTitle className="text-xl font-bold text-white/90">
             {title}
           </DrawerTitle>
           <DrawerDescription className="text-gray-400 text-base">

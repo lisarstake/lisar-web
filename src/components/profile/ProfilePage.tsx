@@ -5,11 +5,11 @@ import {
   Camera,
   ChevronDown,
   ArrowRight,
-  LogOut,
+  CircleArrowOutUpRight,
 } from "lucide-react";
-import { Button } from "../ui/button";
 import { SuccessDrawer } from "../ui/SuccessDrawer";
 import { ErrorDrawer } from "../ui/ErrorDrawer";
+import { ExportWalletDrawer } from "../general/ExportWalletDrawer";
 import { useAuth } from "@/contexts/AuthContext";
 import { authService } from "@/services/auth";
 
@@ -34,6 +34,7 @@ export const ProfilePage: React.FC = () => {
   const [showSuccessDrawer, setShowSuccessDrawer] = useState(false);
   const [showErrorDrawer, setShowErrorDrawer] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [showExportDrawer, setShowExportDrawer] = useState(false);
 
   // Load user data on component mount
   useEffect(() => {
@@ -78,7 +79,7 @@ export const ProfilePage: React.FC = () => {
   ]);
 
   const handleBackClick = () => {
-    navigate("/wallet");
+    navigate(-1);
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -144,7 +145,7 @@ export const ProfilePage: React.FC = () => {
         try {
           setIsUploadingImage(true);
           const response = await authService.uploadProfileImage(file);
-          
+
           if (response.success && response.data) {
             handleInputChange("profileImage", response.data.imageUrl);
           } else {
@@ -152,7 +153,10 @@ export const ProfilePage: React.FC = () => {
             setShowErrorDrawer(true);
           }
         } catch (error) {
-          const errorMsg = error instanceof Error ? error.message : "An unexpected error occurred";
+          const errorMsg =
+            error instanceof Error
+              ? error.message
+              : "An unexpected error occurred";
           setErrorMessage(errorMsg);
           setShowErrorDrawer(true);
         } finally {
@@ -187,7 +191,13 @@ export const ProfilePage: React.FC = () => {
         <div className="text-center">
           <h1 className="text-lg font-bold text-gray-100">User Profile</h1>
         </div>
-        <div className="w-8"></div> {/* Spacer for centering */}
+        <button
+          onClick={() => setShowExportDrawer(true)}
+          className="w-8 h-8 bg-[#2a2a2a] rounded-full flex items-center justify-center"
+          aria-label="Help & Export"
+        >
+          <CircleArrowOutUpRight color="#86B3F7" size={16} />
+        </button>
       </div>
 
       {/* Content - Scrollable */}
@@ -224,11 +234,11 @@ export const ProfilePage: React.FC = () => {
             onClick={handleUploadPhoto}
             disabled={isUploadingImage}
             className={`bg-[#C7EF6B] text-black px-3 py-1.5 rounded-full font-medium flex items-center space-x-2 hover:bg-[#B8E55A] transition-colors ${
-              isUploadingImage ? 'opacity-50 cursor-not-allowed' : ''
+              isUploadingImage ? "opacity-50 cursor-not-allowed" : ""
             }`}
           >
             <Camera size={16} />
-            <span>{isUploadingImage ? 'Uploading...' : 'Upload'}</span>
+            <span>{isUploadingImage ? "Uploading..." : "Upload"}</span>
           </button>
         </div>
 
@@ -392,6 +402,12 @@ export const ProfilePage: React.FC = () => {
         title="Update Failed"
         message={errorMessage}
         details="Please check your connection and try again. If the problem persists, contact support."
+      />
+
+      {/* Export Wallet Drawer */}
+      <ExportWalletDrawer
+        isOpen={showExportDrawer}
+        onClose={() => setShowExportDrawer(false)}
       />
     </div>
   );

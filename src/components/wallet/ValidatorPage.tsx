@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { OrchestratorItem } from "./OrchestratorItem";
-import { delegationService } from "@/services";
-import { OrchestratorResponse } from "@/services/delegation/types";
+import { OrchestratorList } from "./OrchestratorList";
+import { useOrchestrators } from "@/contexts/OrchestratorContext";
 import { FilterType } from "@/types/wallet";
 import { ChevronLeft, CircleQuestionMark } from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
@@ -12,57 +11,36 @@ export const ValidatorPage: React.FC = () => {
   const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState<FilterType>("apy");
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
-  const [orchestrators, setOrchestrators] = useState<OrchestratorResponse[]>(
-    []
-  );
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { orchestrators, isLoading, error, refetch } = useOrchestrators();
 
-  // Fetch orchestrators on component mount
-  useEffect(() => {
-    const fetchOrchestrators = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const response = await delegationService.getOrchestrators(); // Fetch all orchestrators
-
-
-        if (response.success) {
-          setOrchestrators(response.data);
-        } else {
-          setError(response.message || "Failed to fetch orchestrators");
-        }
-      } catch (err) {
-        setError("An error occurred while fetching orchestrators");
-      } finally {
-        setIsLoading(false);
+  // Sort orchestrators client-side based on active filter
+  const sortedOrchestrators = useMemo(() => {
+    const sorted = [...orchestrators].sort((a, b) => {
+      switch (activeFilter) {
+        case "apy":
+          return parseFloat(b.apy) - parseFloat(a.apy);
+        case "total-stake":
+          return parseFloat(b.totalStake) - parseFloat(a.totalStake);
+        case "active-time":
+          return parseInt(b.activeSince) - parseInt(a.activeSince);
+        default:
+          return 0;
       }
-    };
-
-    fetchOrchestrators();
-  }, []);
+    });
+    return sorted;
+  }, [orchestrators, activeFilter]);
 
   const handleBackClick = () => {
-    navigate("/wallet");
+    navigate(-1);
   };
 
   const handleHelpClick = () => {
     setShowHelpDrawer(true);
   };
 
-  const sortedOrchestrators = [...orchestrators].sort((a, b) => {
-    switch (activeFilter) {
-      case "apy":
-        return parseFloat(b.apy) - parseFloat(a.apy);
-      case "total-stake":
-        return parseFloat(b.totalStake) - parseFloat(a.totalStake);
-      case "active-time":
-        // For demo purposes, we'll use a simple sort by name
-        return a.ensName.localeCompare(b.ensName);
-      default:
-        return 0;
-    }
-  });
+  const handleRetry = () => {
+    refetch();
+  };
 
   return (
     <div className="h-screen bg-black text-white flex flex-col">
@@ -121,31 +99,13 @@ export const ValidatorPage: React.FC = () => {
 
       {/* Orchestrator List - Scrollable */}
       <div className="flex-1 overflow-y-auto px-6 pb-28 scrollbar-hide">
-        {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C7EF6B]"></div>
-            <span className="ml-3 text-gray-400">Loading validators...</span>
-          </div>
-        ) : error ? (
-          <div className="flex flex-col items-center justify-center py-12">
-            <p className="text-red-400 text-center mb-4">{error}</p>
-            <button
-              onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-[#C7EF6B] text-black rounded-lg font-medium hover:bg-[#B8E55A] transition-colors"
-            >
-              Retry
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {sortedOrchestrators.map((orchestrator, index) => (
-              <OrchestratorItem
-                key={orchestrator.address}
-                orchestrator={orchestrator}
-              />
-            ))}
-          </div>
-        )}
+        <OrchestratorList
+          orchestrators={sortedOrchestrators}
+          isLoading={isLoading}
+          error={error}
+          onRetry={handleRetry}
+          skeletonCount={10}
+        />
       </div>
 
       {/* Help Drawer */}

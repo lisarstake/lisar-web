@@ -54,7 +54,7 @@ export const LeaderboardPage: React.FC = () => {
   ];
 
   const handleBackClick = () => {
-    navigate("/portfolio");
+    navigate(-1);
   };
 
   const handlePeriodChange = (period: string) => {

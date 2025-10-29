@@ -1,12 +1,13 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, Info } from "lucide-react";
+import { EmptyState } from "@/components/general/EmptyState";
 
 export const NotificationsPage: React.FC = () => {
   const navigate = useNavigate();
 
   const handleBackClick = () => {
-    navigate("/wallet");
+    navigate(-1);
   };
 
   return (
@@ -27,21 +28,13 @@ export const NotificationsPage: React.FC = () => {
 
       {/* Content - Centered */}
       <div className="flex-1 flex flex-col items-center justify-center px-6 mb-32">
-        {/* Info Icon */}
-        <div className="w-16 h-16 bg-[#2a2a2a] rounded-full flex items-center justify-center mb-6">
-          <Info size={24} color="#86B3F7" />
-        </div>
-
-        {/* No Notifications Message */}
-        <div className="text-center">
-          <h2 className="text-xl font-bold text-white mb-3">
-            No notifications yet.
-          </h2>
-          <p className="text-gray-400 text-sm leading-relaxed max-w-sm">
-            You'll see notifications here when you have activity on your
-            account.
-          </p>
-        </div>
+        <EmptyState
+          icon={Info}
+          iconColor="#86B3F7"
+          iconBgColor="#2a2a2a"
+          title="No notifications yet."
+          description="You'll see notifications here when you have activity on your account."
+        />
       </div>
     </div>
   );

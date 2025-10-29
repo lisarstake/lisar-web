@@ -186,6 +186,22 @@
     }
   }
 
+  /* App main container */
+  .app-main {
+    min-height: 100vh;
+  }
+
+  /* Pages with bottom navigation */
+  .app-main.with-bottom-nav {
+    padding-bottom: 65px; /* Space for fixed bottom navigation */
+  }
+
+  @media (min-width: 768px) {
+    .app-main.with-bottom-nav {
+      padding-bottom: 65; /* Keep same padding on desktop */
+    }
+  }
+
   /* Custom slider styles */
   .slider {
     -webkit-appearance: none;
