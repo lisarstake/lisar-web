@@ -4,10 +4,12 @@ import {
   ArrowUp,
   ArrowDown,
   SquareMinus,
-  ChartSpline,
+  Info,
   AlertCircle,
   RefreshCw,
+  ChartSpline,
 } from "lucide-react";
+import { EmptyState } from "@/components/general/EmptyState";
 
 interface TransactionListProps {
   transactions: TransactionData[];
@@ -132,18 +134,13 @@ export const TransactionList: React.FC<TransactionListProps> = ({
 
   if (transactionGroups.length === 0 && !isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center h-full px-6 pb-12">
-        <div className="w-16 h-16 bg-gray-100/10 rounded-full flex items-center justify-center mb-6">
-          <ChartSpline className="w-8 h-8 text-gray-400" />
-        </div>
-        <h3 className="text-xl font-semibold text-white mb-2">
-          No Transactions
-        </h3>
-        <p className="text-gray-400 text-center max-w-sm">
-          You haven't made any transactions yet. Start by staking to a
-          validator!
-        </p>
-      </div>
+      <EmptyState
+        icon={Info}
+        iconColor="#86B3F7"
+        iconBgColor="#2a2a2a"
+        title="No Transactions"
+        description="You haven't made any transactions yet."
+      />
     );
   }
 

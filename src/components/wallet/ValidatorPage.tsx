@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { OrchestratorList } from "./OrchestratorList";
 import { useOrchestrators } from "@/contexts/OrchestratorContext";
@@ -13,6 +13,23 @@ export const ValidatorPage: React.FC = () => {
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
   const { orchestrators, isLoading, error, refetch } = useOrchestrators();
 
+  // Sort orchestrators client-side based on active filter
+  const sortedOrchestrators = useMemo(() => {
+    const sorted = [...orchestrators].sort((a, b) => {
+      switch (activeFilter) {
+        case "apy":
+          return parseFloat(b.apy) - parseFloat(a.apy);
+        case "total-stake":
+          return parseFloat(b.totalStake) - parseFloat(a.totalStake);
+        case "active-time":
+          return parseInt(b.activeSince) - parseInt(a.activeSince);
+        default:
+          return 0;
+      }
+    });
+    return sorted;
+  }, [orchestrators, activeFilter]);
+
   const handleBackClick = () => {
     navigate(-1);
   };
@@ -24,34 +41,6 @@ export const ValidatorPage: React.FC = () => {
   const handleRetry = () => {
     refetch();
   };
-
-  const safeOrchestrators = Array.isArray(orchestrators) ? orchestrators : [];
-
-  const validOrchestrators = safeOrchestrators.filter((orch) => {
-    const ensName = orch.ensName || "";
-    // Keep only ENS names that don't start with '0x' and have proper format
-    return (
-      !ensName.startsWith("0x") && ensName.includes(".") && ensName.length > 0
-    );
-  });
-
-  // Get top 30 by total stake
-  const topOrchestrators = validOrchestrators
-    .sort((a, b) => parseFloat(b.totalStake) - parseFloat(a.totalStake))
-    .slice(0, 30);
-
-  const sortedOrchestrators = [...topOrchestrators].sort((a, b) => {
-    switch (activeFilter) {
-      case "apy":
-        return parseFloat(b.apy) - parseFloat(a.apy);
-      case "total-stake":
-        return parseFloat(b.totalStake) - parseFloat(a.totalStake);
-      case "active-time":
-        return a.ensName.localeCompare(b.ensName);
-      default:
-        return 0;
-    }
-  });
 
   return (
     <div className="h-screen bg-black text-white flex flex-col">

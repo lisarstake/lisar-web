@@ -10,6 +10,7 @@ import {
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { useOrchestrators } from "@/contexts/OrchestratorContext";
+import { useDelegation } from "@/contexts/DelegationContext";
 
 interface Network {
   id: string;
@@ -24,41 +25,33 @@ export const WithdrawNetworkPage: React.FC = () => {
   const { validatorId } = useParams<{ validatorId: string }>();
   const [selectedNetwork, setSelectedNetwork] = useState<string | null>(null);
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
-  const { orchestrators, userDelegation } = useOrchestrators();
+  const { orchestrators } = useOrchestrators();
+  const { delegatorTransactions } = useDelegation();
 
   // Get validator data
   const currentValidator = orchestrators.find(
     (orch) => orch.address === validatorId
   );
 
-  // Check for unbonding locks for this validator
-  const unbondingLocksForValidator =
-    userDelegation?.unbondingLocks?.filter(
-      (lock) => lock.delegate.id === validatorId
-    ) || [];
+  // Get completed (withdrawable) and pending transactions for this validator
+  const withdrawableTransactions = delegatorTransactions
+    ? delegatorTransactions.completedStakeTransactions.filter(
+        (tx) => tx.delegate.id === validatorId
+      )
+    : [];
 
-  // Calculate if withdraw is available (7 days = ~8 rounds for safety, each round is 22h 40min)
-  const currentRound = userDelegation?.lastClaimRound?.id
-    ? parseInt(userDelegation.lastClaimRound.id)
-    : 0;
-  const UNBONDING_ROUNDS = 8; // 8 rounds for safety (7+ days)
+  const pendingTransactions = delegatorTransactions
+    ? delegatorTransactions.pendingStakeTransactions.filter(
+        (tx) => tx.delegate.id === validatorId
+      )
+    : [];
 
-  const withdrawableLocks = unbondingLocksForValidator.filter((lock) => {
-    const withdrawRound = parseInt(lock.withdrawRound);
-    return currentRound >= withdrawRound + UNBONDING_ROUNDS;
-  });
-
-  const pendingUnbondingLocks = unbondingLocksForValidator.filter((lock) => {
-    const withdrawRound = parseInt(lock.withdrawRound);
-    return currentRound < withdrawRound + UNBONDING_ROUNDS;
-  });
-
-  const totalWithdrawableAmount = withdrawableLocks.reduce(
-    (total, lock) => total + parseFloat(lock.amount),
+  const totalWithdrawableAmount = withdrawableTransactions.reduce(
+    (total, tx) => total + parseFloat(tx.amount),
     0
   );
-  const totalPendingAmount = pendingUnbondingLocks.reduce(
-    (total, lock) => total + parseFloat(lock.amount),
+  const totalPendingAmount = pendingTransactions.reduce(
+    (total, tx) => total + parseFloat(tx.amount),
     0
   );
 
@@ -69,7 +62,13 @@ export const WithdrawNetworkPage: React.FC = () => {
       address: "0x6f71...a98o",
       logo: "/livepeer.webp",
     },
-    { id: "usdc", name: "USDC", address: "0x6f71...a98o", logo: "/usdc.svg" },
+    {
+      id: "usdc",
+      name: "USDC",
+      address: "0x6f71...a98o",
+      logo: "/usdc.svg",
+      isComingSoon: true,
+    },
     {
       id: "solana",
       name: "Solana",
@@ -97,31 +96,36 @@ export const WithdrawNetworkPage: React.FC = () => {
 
   const handleProceed = () => {
     if (selectedNetwork && currentValidator && totalWithdrawableAmount > 0) {
-      // Get the withdrawable locks for this validator
-      const withdrawableLocksForValidator = withdrawableLocks;
-      
+      // Get all unbondingLockIds from withdrawable transactions
+      const unbondingLockIds = withdrawableTransactions
+        .map((tx) => tx.unbondingLockId)
+        .filter((id): id is number => id !== undefined);
+
       // Calculate total amount and create withdrawal details
       const withdrawalDetails = {
         validatorAddress: currentValidator.address,
         validatorName: currentValidator.ensName || "Unknown Validator",
         network: selectedNetwork,
         amount: totalWithdrawableAmount,
-        locks: withdrawableLocksForValidator.map(lock => ({
-          id: lock.id,
-          amount: parseFloat(lock.amount),
-          withdrawRound: lock.withdrawRound
-        }))
+        unbondingLockIds: unbondingLockIds,
+        transactions: withdrawableTransactions.map((tx) => ({
+          id: tx.id,
+          amount: parseFloat(tx.amount),
+          unbondingLockId: tx.unbondingLockId,
+        })),
       };
-      
+
       // Encode the withdrawal details as URL parameters
       const params = new URLSearchParams({
         network: selectedNetwork,
         amount: totalWithdrawableAmount.toString(),
         validatorName: currentValidator.ensName || "Unknown Validator",
-        locks: JSON.stringify(withdrawalDetails.locks)
+        unbondingLockIds: JSON.stringify(unbondingLockIds),
       });
-      
-      navigate(`/confirm-withdrawal/${currentValidator.address}?${params.toString()}`);
+
+      navigate(
+        `/confirm-withdrawal/${currentValidator.address}?${params.toString()}`
+      );
     }
   };
 

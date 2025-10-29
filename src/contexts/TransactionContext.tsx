@@ -5,7 +5,10 @@ import React, {
   useEffect,
   ReactNode,
 } from "react";
-import { TransactionData, TransactionType } from "@/services/transactions/types";
+import {
+  TransactionData,
+  TransactionType,
+} from "@/services/transactions/types";
 import { transactionService } from "@/services";
 import { useAuth } from "./AuthContext";
 
@@ -34,7 +37,7 @@ export const TransactionProvider: React.FC<TransactionProviderProps> = ({
   const { state } = useAuth();
 
   const fetchTransactions = async () => {
-    if (!state.user?.id) {
+    if (!state.user?.user_id) {
       setTransactions([]);
       setIsLoading(false);
       return;
@@ -43,13 +46,16 @@ export const TransactionProvider: React.FC<TransactionProviderProps> = ({
     try {
       setIsLoading(true);
       setError(null);
-      
-      const response = await transactionService.getUserTransactions(state.user.id);
+
+      const response = await transactionService.getUserTransactions(
+        state.user.user_id
+      );
 
       if (response.success && response.data) {
         // Sort transactions by created_at (newest first)
-        const sortedTransactions = response.data.sort((a, b) => 
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        const sortedTransactions = response.data.sort(
+          (a, b) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         );
         setTransactions(sortedTransactions);
       } else {
@@ -67,13 +73,15 @@ export const TransactionProvider: React.FC<TransactionProviderProps> = ({
   };
 
   const getTransactionsByType = (type: TransactionType): TransactionData[] => {
-    return transactions.filter(transaction => transaction.transaction_type === type);
+    return transactions.filter(
+      (transaction) => transaction.transaction_type === type
+    );
   };
 
   // Fetch transactions on mount and when user changes
   useEffect(() => {
     fetchTransactions();
-  }, [state.user?.id]);
+  }, [state.user?.user_id]);
 
   const value: TransactionContextType = {
     transactions,
@@ -93,7 +101,9 @@ export const TransactionProvider: React.FC<TransactionProviderProps> = ({
 export const useTransactions = () => {
   const context = useContext(TransactionContext);
   if (context === undefined) {
-    throw new Error("useTransactions must be used within a TransactionProvider");
+    throw new Error(
+      "useTransactions must be used within a TransactionProvider"
+    );
   }
   return context;
 };

@@ -87,32 +87,32 @@ export const ShareDrawer: React.FC<ShareDrawerProps> = ({
               onClick={handleTwitterShare}
               className="flex items-center justify-center space-x-3 p-4 bg-[#1a1a1a] rounded-xl border border-[#2a2a2a] hover:border-[#1DA1F2] transition-colors"
             >
-              <Twitter size={24} color="#1DA1F2" />
-              <span className="text-white font-medium">Twitter</span>
+              <Twitter size={18} color="#1DA1F2" />
+              <span className="text-white/90 font-normal">Twitter</span>
             </button>
 
             <button
               onClick={handleFacebookShare}
               className="flex items-center justify-center space-x-3 p-4 bg-[#1a1a1a] rounded-xl border border-[#2a2a2a] hover:border-[#1877F2] transition-colors"
             >
-              <Facebook size={24} color="#1877F2" />
-              <span className="text-white font-medium">Facebook</span>
+              <Facebook size={18} color="#1877F2" />
+              <span className="text-white/90 font-normal">Facebook</span>
             </button>
 
             <button
               onClick={handleLinkedInShare}
               className="flex items-center justify-center space-x-3 p-4 bg-[#1a1a1a] rounded-xl border border-[#2a2a2a] hover:border-[#0077B5] transition-colors"
             >
-              <Linkedin size={24} color="#0077B5" />
-              <span className="text-white font-medium">LinkedIn</span>
+              <Linkedin size={18} color="#0077B5" />
+              <span className="text-white/90 font-normal">LinkedIn</span>
             </button>
 
             <button
               onClick={handleWhatsAppShare}
               className="flex items-center justify-center space-x-3 p-4 bg-[#1a1a1a] rounded-xl border border-[#2a2a2a] hover:border-[#25D366] transition-colors"
             >
-              <MessageCircle size={24} color="#25D366" />
-              <span className="text-white font-medium">WhatsApp</span>
+              <MessageCircle size={18} color="#25D366" />
+              <span className="text-white/90 font-normal">WhatsApp</span>
             </button>
           </div>
         </div>

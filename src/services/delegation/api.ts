@@ -5,10 +5,36 @@
 
 import {
   DelegationApiResponse,
-  OrchestratorResponse
+  OrchestratorResponse,
+  DelegationData,
+  DelegatorTransactionsResponse,
+  DelegatorRewardsResponse,
+  DelegatorStakeProfileResponse,
+  WithdrawStakeRequest,
+  WithdrawStakeResponse,
+  OrchestratorQueryParams,
+  ProtocolStatusResponse
 } from './types';
 
 export interface IDelegationApiService {
   // Orchestrators
-  getOrchestrators(): Promise<DelegationApiResponse<OrchestratorResponse[]>>;
+  getOrchestrators(params?: OrchestratorQueryParams): Promise<DelegationApiResponse<OrchestratorResponse[]>>;
+  
+  // Delegations
+  getDelegations(delegator: string): Promise<DelegationApiResponse<DelegationData>>;
+  
+  // Delegator Transactions
+  getDelegatorTransactions(delegator: string): Promise<DelegatorTransactionsResponse>;
+  
+  // Delegator Rewards
+  getDelegatorRewards(delegator: string): Promise<DelegatorRewardsResponse>;
+  
+  // Delegator Stake Profile
+  getDelegatorStakeProfile(delegator: string): Promise<DelegatorStakeProfileResponse>;
+  
+  // Withdraw Stake
+  withdrawStake(request: WithdrawStakeRequest): Promise<WithdrawStakeResponse>;
+
+  // Protocol Status
+  getProtocolStatus(): Promise<ProtocolStatusResponse>;
 }
