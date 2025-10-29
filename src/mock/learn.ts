@@ -59,7 +59,7 @@ export const mockLearnContent: LearnContent[] = [
     id: "5",
     title: "What is Lisar? (In-depth)",
     subtitle: "Deep dive into Lisar's mission and technology",
-    videoUrl: "https://vimeo.com/placeholder5",
+    videoUrl: "https://vimeo.com/1131343545?share=copy&fl=sv&fe=ci",
     brief:
       "Explore how Lisar makes crypto staking accessible and learn about the Livepeer network that powers your earnings.",
     fullContent:

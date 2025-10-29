@@ -7,17 +7,18 @@ import React, {
 } from "react";
 import {
   OrchestratorResponse,
-  DelegationData,
+  DelegatorRewardsData,
+  OrchestratorQueryParams,
 } from "@/services/delegation/types";
 import { delegationService } from "@/services";
 import { useAuth } from "./AuthContext";
 
 interface OrchestratorContextType {
   orchestrators: OrchestratorResponse[];
-  userDelegation: DelegationData | null;
+  orchestratorRewards: Record<string, DelegatorRewardsData>;
   isLoading: boolean;
   error: string | null;
-  refetch: () => Promise<void>;
+  refetch: (params?: OrchestratorQueryParams) => Promise<void>;
 }
 
 const OrchestratorContext = createContext<OrchestratorContextType | undefined>(
@@ -34,79 +35,73 @@ export const OrchestratorProvider: React.FC<OrchestratorProviderProps> = ({
   const [orchestrators, setOrchestrators] = useState<OrchestratorResponse[]>(
     []
   );
-  const [userDelegation, setUserDelegation] = useState<DelegationData | null>(
-    null
-  );
+  const [orchestratorRewards, setOrchestratorRewards] = useState<
+    Record<string, DelegatorRewardsData>
+  >({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { state } = useAuth();
 
-  const fetchOrchestrators = async () => {
+  const fetchOrchestrators = async (params?: OrchestratorQueryParams) => {
     try {
       setIsLoading(true);
       setError(null);
 
-      // Fetch orchestrators
-      const response = await delegationService.getOrchestrators();
+      const queryParams: OrchestratorQueryParams = params || {
+        page: 1,
+        limit: 100,
+        sortBy: "totalStake",
+        sortOrder: "desc",
+        active: true,
+      };
 
-      // Handle nested structure: response.data.data
-      const responseData = response.data as any;
-      const orchestratorData = responseData?.data;
+      const response = await delegationService.getOrchestrators(queryParams);
 
-      if (
-        response.success &&
-        orchestratorData &&
-        Array.isArray(orchestratorData)
-      ) {
-        // Ensure orchestrators is always an array
-        const safeOrchestrators = Array.isArray(orchestratorData)
-          ? orchestratorData
-          : [];
-
-        // Filter out crypto addresses (0x...) and keep only proper ENS names
-        const validOrchestrators = safeOrchestrators.filter((orch) => {
-          const ensName = orch.ensName || "";
-          return (
-            !ensName.startsWith("0x") &&
-            ensName.includes(".") &&
-            ensName.length > 0
-          );
-        });
-
-        // Sort by total stake (descending) and take top 30
-        const topOrchestrators = validOrchestrators
-          .sort((a, b) => parseFloat(b.totalStake) - parseFloat(a.totalStake))
-          .slice(0, 30);
-
-        setOrchestrators(topOrchestrators);
+      let fetchedOrchestrators: OrchestratorResponse[] = [];
+      if (response.success && response.data && Array.isArray(response.data)) {
+        fetchedOrchestrators = response.data;
+        setOrchestrators(fetchedOrchestrators);
       } else {
         console.error("Invalid response data:", response.data);
         setError(response.message || "Failed to fetch orchestrators");
       }
 
-      // Fetch user delegation data if user is authenticated
-      // if (state.user?.wallet_address) {
-      //   try {
-      //     const delegationResponse = await delegationService.getDelegations('0x9427535629358a43e240b03bf2e2df0ecc644720');
-      //     if (delegationResponse.success) {
-      //       setUserDelegation(delegationResponse.data);
-      //      
-      //     }
-      //   } catch (delegationError) {
-      //   
-      //     setUserDelegation(null);
-      //   }
-      // }
+      // Fetch rewards for all orchestrators
+      if (fetchedOrchestrators.length > 0) {
+        try {
+          const rewardsPromises = fetchedOrchestrators.map(
+            async (orchestrator) => {
+              try {
+                const rewardsResponse =
+                  await delegationService.getDelegatorRewards(
+                    orchestrator.address
+                  );
+                if (rewardsResponse.success) {
+                  return {
+                    address: orchestrator.address,
+                    rewards: rewardsResponse.data,
+                  };
+                }
+                return null;
+              } catch (error) {
+                return null;
+              }
+            }
+          );
 
-      try {
-        const delegationResponse = await delegationService.getDelegations(
-          "0x4b7339e599a599dbd7829a8eca0d233ed4f7ea09"
-        );
-        if (delegationResponse.success) {
-          setUserDelegation(delegationResponse.data);
+          const rewardsResults = await Promise.all(rewardsPromises);
+          const rewardsMap: Record<string, DelegatorRewardsData> = {};
+
+          rewardsResults.forEach((result) => {
+            if (result) {
+              rewardsMap[result.address] = result.rewards;
+            }
+          });
+
+          setOrchestratorRewards(rewardsMap);
+        } catch (rewardsError) {
+          setOrchestratorRewards({});
         }
-      } catch (delegationError) {
-        setUserDelegation(null);
       }
     } catch (err) {
       setError("An error occurred while fetching orchestrators");
@@ -115,8 +110,8 @@ export const OrchestratorProvider: React.FC<OrchestratorProviderProps> = ({
     }
   };
 
-  const refetch = async () => {
-    await fetchOrchestrators();
+  const refetch = async (params?: OrchestratorQueryParams) => {
+    await fetchOrchestrators(params);
   };
 
   // Fetch orchestrators when user is authenticated
@@ -128,7 +123,7 @@ export const OrchestratorProvider: React.FC<OrchestratorProviderProps> = ({
 
   const value: OrchestratorContextType = {
     orchestrators,
-    userDelegation,
+    orchestratorRewards,
     isLoading,
     error,
     refetch,

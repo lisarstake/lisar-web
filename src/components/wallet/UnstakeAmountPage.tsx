@@ -4,6 +4,7 @@ import { ChevronLeft, CircleQuestionMark, ArrowLeftRight } from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { useOrchestrators } from "@/contexts/OrchestratorContext";
+import { useDelegation } from "@/contexts/DelegationContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePrices } from "@/hooks/usePrices";
 import { priceService } from "@/lib/priceService";
@@ -14,7 +15,8 @@ export const UnstakeAmountPage: React.FC = () => {
   const [fiatAmount, setFiatAmount] = useState("0");
   const [lptAmount, setLptAmount] = useState("0");
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
-  const { orchestrators, userDelegation } = useOrchestrators();
+  const { orchestrators } = useOrchestrators();
+  const { userDelegation } = useDelegation();
   const { state } = useAuth();
   const { prices } = usePrices();
 
