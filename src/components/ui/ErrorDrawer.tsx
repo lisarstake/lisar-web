@@ -12,7 +12,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from './drawer';
-import { AlertCircle, X } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 
 interface ErrorDrawerProps {
   isOpen: boolean;
@@ -42,7 +42,7 @@ export const ErrorDrawer: React.FC<ErrorDrawerProps> = ({
               <AlertCircle className="w-8 h-8 text-red-500" />
             </div>
           </div>
-          <DrawerTitle className="text-xl font-bold text-white">
+          <DrawerTitle className="text-xl font-bold text-white/90">
             {title}
           </DrawerTitle>
           <DrawerDescription className="text-gray-400 text-base">

@@ -1,19 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { OrchestratorList } from "./OrchestratorList";
+import { WalletActionButtons } from "./WalletActionButtons";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { useOrchestrators } from "@/contexts/OrchestratorContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWallet } from "@/contexts/WalletContext";
-import {
-  ChartSpline,
-  Plus,
-  Send,
-  History,
-  Search,
-  ChartPie,
-  Bell,
-} from "lucide-react";
+import { Search, Bell } from "lucide-react";
 
 export const WalletPage: React.FC = () => {
   const navigate = useNavigate();
@@ -22,29 +15,14 @@ export const WalletPage: React.FC = () => {
   const { state } = useAuth();
   const { wallet, isLoading: walletLoading } = useWallet();
 
-  // Wallet data comes from WalletContext and persists across navigation
-
-  // Ensure orchestrators is always an array
-  const safeOrchestrators = Array.isArray(orchestrators) ? orchestrators : [];
-
-  // Filter out crypto addresses (0x...) and keep only proper ENS names
-  const validOrchestrators = safeOrchestrators.filter((orch) => {
-    const ensName = orch.ensName || "";
-    // Keep only ENS names that don't start with '0x' and have proper format
-    return (
-      !ensName.startsWith("0x") && ensName.includes(".") && ensName.length > 0
+  // Filter by search query, and limit to 25 if no search query
+  const filteredOrchestrators = useMemo(() => {
+    const filtered = orchestrators.filter((orch) =>
+      orch.ensName?.toLowerCase().includes(searchQuery.toLowerCase())
     );
-  });
-
-  // Sort by total stake (descending) and take top 30
-  const topOrchestrators = validOrchestrators
-    .sort((a, b) => parseFloat(b.totalStake) - parseFloat(a.totalStake))
-    .slice(0, 30);
-
-  // Filter by search query
-  const filteredOrchestrators = topOrchestrators.filter((orch) =>
-    orch.ensName?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+    // Show top 25 with lowest rewards if no search, otherwise show all matches
+    return searchQuery ? filtered : filtered.slice(0, 25);
+  }, [orchestrators, searchQuery]);
 
   const handleStakeClick = () => {
     navigate("/validator");
@@ -55,8 +33,10 @@ export const WalletPage: React.FC = () => {
   };
 
   const handleDepositClick = () => {
-    const defaultValidator = validOrchestrators[0];
-    navigate(`/stake/${defaultValidator.ensName}?deposit=true`);
+    const defaultValidator = orchestrators[0];
+    if (defaultValidator) {
+      navigate(`/stake/${defaultValidator.address}?deposit=true`);
+    }
   };
 
   const handlePortfolioClick = () => {
@@ -141,39 +121,12 @@ export const WalletPage: React.FC = () => {
       </div>
 
       {/* Action Buttons */}
-      <div className="flex items-center justify-around px-6 py-6">
-        <button
-          onClick={handleDepositClick}
-          className="flex flex-col items-center justify-center space-y-2 w-20 h-20 bg-[#2a2a2a] rounded-xl"
-        >
-          <Send size={16} color="#C7EF6B" />
-          <span className="text-gray-300 text-xs">Deposit</span>
-        </button>
-
-        <button
-          onClick={handleStakeClick}
-          className="flex flex-col items-center justify-center space-y-2 w-20 h-20 bg-[#2a2a2a] rounded-xl"
-        >
-          <ChartSpline size={16} color="#C7EF6B" />
-          <span className="text-gray-300 text-xs">Stake</span>
-        </button>
-
-        <button
-          onClick={handlePortfolioClick}
-          className="flex flex-col items-center justify-center space-y-2 w-20 h-20 bg-[#2a2a2a] rounded-xl"
-        >
-          <ChartPie size={16} color="#C7EF6B" />
-          <span className="text-gray-300 text-xs">Portfolio</span>
-        </button>
-
-        <button
-          onClick={handleHistoryClick}
-          className="flex flex-col items-center justify-center space-y-2 w-20 h-20 bg-[#2a2a2a] rounded-xl"
-        >
-          <History size={16} color="#C7EF6B" />
-          <span className="text-gray-300 text-xs">History</span>
-        </button>
-      </div>
+      <WalletActionButtons
+        onDepositClick={handleDepositClick}
+        onStakeClick={handleStakeClick}
+        onPortfolioClick={handlePortfolioClick}
+        onHistoryClick={handleHistoryClick}
+      />
 
       {/* Search Bar */}
       <div className="px-6 pt-2 pb-4">

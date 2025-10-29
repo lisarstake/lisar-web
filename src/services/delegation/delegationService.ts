@@ -11,7 +11,14 @@ import {
   StakeResponse,
   UnbondRequest,
   UnbondResponse,
+  WithdrawStakeRequest,
+  WithdrawStakeResponse,
   DelegationResponse,
+  DelegatorTransactionsResponse,
+  DelegatorRewardsResponse,
+  DelegatorStakeProfileResponse,
+  OrchestratorQueryParams,
+  ProtocolStatusResponse,
   DELEGATION_CONFIG,
 } from "./types";
 import { http } from "@/lib/http";
@@ -96,10 +103,26 @@ export class DelegationService implements IDelegationApiService {
   }
 
   // Orchestrators
-  async getOrchestrators(): Promise<
-    DelegationApiResponse<OrchestratorResponse[]>
-  > {
-    return this.makeRequest<OrchestratorResponse[]>("/orchestrator", {
+  async getOrchestrators(
+    params?: OrchestratorQueryParams
+  ): Promise<DelegationApiResponse<OrchestratorResponse[]>> {
+    let endpoint = "/orchestrator";
+    
+    if (params) {
+      const queryParams = new URLSearchParams();
+      if (params.page !== undefined) queryParams.append("page", params.page.toString());
+      if (params.limit !== undefined) queryParams.append("limit", params.limit.toString());
+      if (params.sortBy) queryParams.append("sortBy", params.sortBy);
+      if (params.sortOrder) queryParams.append("sortOrder", params.sortOrder);
+      if (params.active !== undefined) queryParams.append("active", params.active.toString());
+      
+      const queryString = queryParams.toString();
+      if (queryString) {
+        endpoint += `?${queryString}`;
+      }
+    }
+    
+    return this.makeRequest<OrchestratorResponse[]>(endpoint, {
       method: "GET",
     });
   }
@@ -165,6 +188,37 @@ export class DelegationService implements IDelegationApiService {
     }
   }
 
+  // Withdraw unbonded stake from Livepeer
+  async withdrawStake(request: WithdrawStakeRequest): Promise<WithdrawStakeResponse> {
+    try {
+      const token = this.getStoredToken();
+      const headers = {
+        "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
+      };
+
+      const response = await http.request({
+        url: `${this.baseUrl}/delegation/withdraw-stake`,
+        method: "POST",
+        headers,
+        data: request,
+        timeout: this.timeout,
+      });
+
+      return {
+        success: true,
+        txHash: response.data.txHash || response.data.data?.txHash,
+        message: response.data.message,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.response?.data?.error || error.message || "Unknown error",
+        message: error.response?.data?.message || "Failed to withdraw stake",
+      };
+    }
+  }
+
   // Get delegations for a delegator
   async getDelegations(delegatorAddress: string): Promise<DelegationResponse> {
     try {
@@ -208,6 +262,144 @@ export class DelegationService implements IDelegationApiService {
           unbondingLocks: [],
           withdrawnFees: "0",
         },
+      };
+    }
+  }
+
+  // Get delegator transactions 
+  async getDelegatorTransactions(delegatorAddress: string): Promise<DelegatorTransactionsResponse> {
+    try {
+      const token = this.getStoredToken();
+      const headers = {
+        "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
+      };
+
+      const response = await http.request({
+        url: `${this.baseUrl}/delegation/${delegatorAddress}/transactions`,
+        method: "GET",
+        headers,
+        timeout: this.timeout,
+      });
+
+      return {
+        success: true,
+        data: response.data.data,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        data: {
+          pendingStakeTransactions: [],
+          completedStakeTransactions: [],
+          currentRound: "0",
+        },
+      };
+    }
+  }
+
+  // Get delegator rewards over rounds
+  async getDelegatorRewards(delegatorAddress: string): Promise<DelegatorRewardsResponse> {
+    try {
+      const token = this.getStoredToken();
+      const headers = {
+        "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
+      };
+
+      const response = await http.request({
+        url: `${this.baseUrl}/delegation/${delegatorAddress}/rewards`,
+        method: "GET",
+        headers,
+        timeout: this.timeout,
+      });
+
+      return {
+        success: true,
+        data: response.data.data,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        data: {
+          rewards: [],
+        },
+      };
+    }
+  }
+
+  // Get delegator stake profile
+  async getDelegatorStakeProfile(delegatorAddress: string): Promise<DelegatorStakeProfileResponse> {
+    try {
+      const token = this.getStoredToken();
+      const headers = {
+        "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
+      };
+
+      const response = await http.request({
+        url: `${this.baseUrl}/delegation/stake-profile/${delegatorAddress}`,
+        method: "GET",
+        headers,
+        timeout: this.timeout,
+      });
+
+      return {
+        success: true,
+        data: response.data.data,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        data: {
+          delegator: delegatorAddress,
+          currentStake: "0",
+          lifetimeStaked: "0",
+          lifetimeUnbonded: "0",
+          lifetimeRewards: "0",
+        },
+      };
+    }
+  }
+
+  // Get protocol status
+  async getProtocolStatus(): Promise<ProtocolStatusResponse> {
+    try {
+      const token = this.getStoredToken();
+      const headers = {
+        "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
+      };
+
+      const response = await http.request({
+        url: `${this.baseUrl}/protocol/status`,
+        method: "GET",
+        headers,
+        timeout: this.timeout,
+      });
+
+      return {
+        success: true,
+        data: response.data.data || response.data,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        data: {
+          currentRound: 0,
+          currentL1Block: 0,
+          roundLength: 0,
+          blocksRemaining: 0,
+          estimatedNextRoundAt: 0,
+          startBlock: 0,
+          blocksIntoRound: 0,
+          initialized: false,
+          estimatedHours: 0,
+          estimatedHoursRounded: 0,
+          estimatedHoursHuman: "",
+        },
+        message: error.response?.data?.message || "Failed to fetch protocol status",
+        error: error.response?.data?.error || error.message || "Unknown error",
       };
     }
   }
