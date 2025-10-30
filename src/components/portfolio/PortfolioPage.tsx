@@ -244,10 +244,11 @@ export const PortfolioPage: React.FC = () => {
             style={{ flex: "4" }}
           >
             <p className="text-gray-400 text-sm font-medium mb-3 flex gap-1 items-center">
-              Next payout in{" "}
+             
               <span>
                 <CircleDollarSign size={16} />
               </span>
+              Next payout in{" "}
             </p>
             <div className="flex items-center space-x-3">
               <div className="flex-1 bg-[#2a2a2a] rounded-full h-3">

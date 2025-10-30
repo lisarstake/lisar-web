@@ -4,6 +4,7 @@ import { OrchestratorProvider } from "@/contexts/OrchestratorContext";
 import { WalletProvider } from "@/contexts/WalletContext";
 import { TransactionProvider } from "@/contexts/TransactionContext";
 import { DelegationProvider } from "@/contexts/DelegationContext";
+import { LeaderboardProvider } from "@/contexts/LeaderboardContext";
 
 export default function App() {
   const location = useLocation();
@@ -39,6 +40,7 @@ export default function App() {
         <WalletProvider>
           <TransactionProvider>
             <DelegationProvider>
+              <LeaderboardProvider>
               <div className="min-h-screen bg-white">
                 {isLandingPage ? (
                   <main className="app-main">
@@ -68,6 +70,7 @@ export default function App() {
                   </>
                 )}
               </div>
+              </LeaderboardProvider>
             </DelegationProvider>
           </TransactionProvider>
         </WalletProvider>
