@@ -38,14 +38,14 @@ export const ErrorDrawer: React.FC<ErrorDrawerProps> = ({
       <DrawerContent className="bg-[#121212] border-[#2a2a2a]">
         <DrawerHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center">
-              <AlertCircle className="w-8 h-8 text-red-500" />
+            <div className="w-12 h-12 bg-red-500/10 rounded-full flex items-center justify-center">
+              <AlertCircle className="w-6 h-6 text-red-500" />
             </div>
           </div>
-          <DrawerTitle className="text-xl font-bold text-white/90">
+          <DrawerTitle className="text-lg font-bold text-white/90">
             {title}
           </DrawerTitle>
-          <DrawerDescription className="text-gray-400 text-base">
+          <DrawerDescription className="text-gray-400 text-sm">
             {message}
           </DrawerDescription>
         
@@ -55,7 +55,7 @@ export const ErrorDrawer: React.FC<ErrorDrawerProps> = ({
           
           <button
             onClick={onClose}
-            className="w-full py-3 px-6 rounded-lg font-semibold text-lg border-2 border-[#C7EF6B] bg-transparent text-[#C7EF6B] hover:bg-[#C7EF6B] hover:text-black transition-colors"
+            className="w-full py-2.5 px-6 rounded-lg font-semibold text-lg border-2 border-[#C7EF6B] bg-transparent text-[#C7EF6B] hover:bg-[#C7EF6B] hover:text-black transition-colors"
           >
             Close
           </button>
