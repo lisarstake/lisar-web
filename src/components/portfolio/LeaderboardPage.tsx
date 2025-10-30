@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronDown } from "lucide-react";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { useLeaderboard } from "@/contexts/LeaderboardContext";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const LeaderboardPage: React.FC = () => {
   const navigate = useNavigate();
@@ -65,8 +66,23 @@ export const LeaderboardPage: React.FC = () => {
       <div className="flex-1 overflow-y-auto px-6 pb-20 scrollbar-hide">
         {/* Loading / Error States */}
         {loading && (
-          <div className="text-center text-sm text-gray-400">
-            Loading leaderboard…
+          <div className="space-y-3">
+            {Array.from({ length: 8 }).map((_, index) => (
+              <div key={`lb-skel-${index}`} className="bg-[#1a1a1a] rounded-xl p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <Skeleton className="w-10 h-10 rounded-full bg-[#2a2a2a]" />
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-32 bg-[#2a2a2a]" />
+                      <Skeleton className="h-3 w-20 bg-[#2a2a2a]" />
+                    </div>
+                  </div>
+                  <div className="text-right space-y-2">
+                    <Skeleton className="h-4 w-24 bg-[#2a2a2a] ml-auto" />
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         )}
         {error && !loading && (

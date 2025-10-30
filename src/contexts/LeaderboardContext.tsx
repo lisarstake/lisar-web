@@ -41,6 +41,7 @@ export const LeaderboardProvider: React.FC<LeaderboardProviderProps> = ({ childr
         offset,
         orderBy: "lifetimeReward",
         orderDirection: "desc",
+        timePeriod: apiTimePeriod,
       });
       if (response.success && response.data) {
         setEntries(response.data.earners || []);
@@ -68,7 +69,9 @@ export const LeaderboardProvider: React.FC<LeaderboardProviderProps> = ({ childr
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [apiTimePeriod]);
 
-  const setPeriod = (p: Period) => setSelectedPeriod(p);
+  const setPeriod = (p: Period) => {
+    setSelectedPeriod(p);
+  };
 
   const value: LeaderboardContextType = {
     entries,

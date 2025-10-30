@@ -12,9 +12,13 @@ export interface LeaderboardApiResponse<T> {
 
 // Query params for earner leaderboard
 export interface EarnerLeaderboardQuery {
-  limit?: number; // default set by backend
-  offset?: number; // default set by backend
-  orderBy?: "lifetimeReward" | "bondedAmount" | "delegatedAmount" | "lastClaimRound";
+  limit?: number;
+  offset?: number;
+  orderBy?:
+    | "lifetimeReward"
+    | "bondedAmount"
+    | "delegatedAmount"
+    | "lastClaimRound";
   orderDirection?: "asc" | "desc";
   timePeriod?: "daily" | "weekly" | "monthly" | "yearly" | "all";
 }
@@ -61,9 +65,7 @@ export interface LeaderboardConfig {
 }
 
 export const LEADERBOARD_CONFIG: LeaderboardConfig = {
-  baseUrl: 'https://lisar-api-1.onrender.com/api/v1',
+  baseUrl: "https://lisar-api-1.onrender.com/api/v1",
   timeout: 30000,
   retryAttempts: 3,
 };
-
-
