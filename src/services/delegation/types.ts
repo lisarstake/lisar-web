@@ -175,6 +175,31 @@ export interface OrchestratorQueryParams {
   active?: boolean;
 }
 
+// Calculate Yield Types
+export type YieldPeriod = "daily" | "weekly" | "monthly" | "6months" | "yearly" | "";
+
+export interface CalculateYieldRequest {
+  amount: number;
+  apy: string; // e.g. "5.2%"
+  period?: YieldPeriod; // leave empty string to fetch all
+  includeCurrencyConversion?: boolean;
+  currency?: string; // e.g. "USD"
+}
+
+export interface YieldProjection {
+  period: string;
+  projectedReward: number;
+  currency?: string;
+  apy: string;
+  amount: number;
+}
+
+export interface CalculateYieldData {
+  projections: YieldProjection[];
+}
+
+export interface CalculateYieldResponse extends DelegationApiResponse<CalculateYieldData | any> {}
+
 // Configuration
 export interface DelegationConfig {
   baseUrl: string;

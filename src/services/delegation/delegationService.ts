@@ -19,6 +19,8 @@ import {
   DelegatorStakeProfileResponse,
   OrchestratorQueryParams,
   ProtocolStatusResponse,
+  CalculateYieldRequest,
+  CalculateYieldResponse,
   DELEGATION_CONFIG,
 } from "./types";
 import { http } from "@/lib/http";
@@ -52,10 +54,6 @@ export class DelegationService implements IDelegationApiService {
     if (!token) {
       token = sessionStorage.getItem("auth_token");
     }
-
-    // Log token for API testing
-    console.log("🔑 Delegation Service Token:", token);
-    
 
     return token;
   }
@@ -402,5 +400,20 @@ export class DelegationService implements IDelegationApiService {
         error: error.response?.data?.error || error.message || "Unknown error",
       };
     }
+  }
+
+  // Calculate projected rewards based on amount and APY
+  async calculateYield(request: CalculateYieldRequest): Promise<CalculateYieldResponse> {
+    return this.makeRequest<CalculateYieldResponse["data"]>(`/delegation/calculate-yield`, {
+      method: "POST",
+      data: {
+        amount: request.amount,
+        apy: request.apy,
+        // Leave empty string to fetch all time periods
+        period: request.period ?? "",
+        includeCurrencyConversion: request.includeCurrencyConversion ?? true,
+        currency: request.currency ?? "USD",
+      },
+    }) as unknown as CalculateYieldResponse;
   }
 }

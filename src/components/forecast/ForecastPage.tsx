@@ -3,11 +3,13 @@ import { ChevronDown, CircleQuestionMark } from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { useOrchestrators } from "@/contexts/OrchestratorContext";
+import { delegationService } from "@/services";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type ForecastOrchestrator = {
   id: string;
   name: string;
-  apy: number; // normalized numeric APY
+  apy: number;
 };
 
 export const ForecastPage: React.FC = () => {
@@ -15,9 +17,13 @@ export const ForecastPage: React.FC = () => {
   const [selectedOrchestrator, setSelectedOrchestrator] =
     useState<ForecastOrchestrator | null>(null);
   const [delegationAmount, setDelegationAmount] = useState("0");
+  const [yieldLoading, setYieldLoading] = useState(false);
+  const [yieldError, setYieldError] = useState<string | null>(null);
+  const [projections, setProjections] = useState<
+    Array<{ period: string; projectedReward: number; currency?: string }>
+  >([]);
   const { orchestrators, isLoading, error } = useOrchestrators();
 
-  // Build list from real orchestrators
   const options: ForecastOrchestrator[] = useMemo(() => {
     const list = Array.isArray(orchestrators) ? orchestrators : [];
     const valid = list.filter((o: any) => {
@@ -27,9 +33,10 @@ export const ForecastPage: React.FC = () => {
     return valid
       .map((o: any) => {
         const rawApy = o.apy ?? o.apyPercentage ?? o.APY ?? 0;
-        const apyNum = typeof rawApy === "string"
-          ? parseFloat(rawApy.replace("%", ""))
-          : Number(rawApy) || 0;
+        const apyNum =
+          typeof rawApy === "string"
+            ? parseFloat(rawApy.replace("%", ""))
+            : Number(rawApy) || 0;
         return {
           id: o.address || o.id || (o.ensName ?? o.name),
           name: o.ensName || o.name,
@@ -59,13 +66,70 @@ export const ForecastPage: React.FC = () => {
     setDelegationAmount(e.target.value);
   };
 
-  // Calculate returns based on delegation amount and APY
+  // Calculate returns based on delegation amount and APY (fallback)
   const numericAmount = parseFloat(delegationAmount.replace(/,/g, "")) || 0;
   const apy = selectedOrchestrator?.apy || 0;
-  const dailyReturn = (numericAmount * apy) / 100 / 365;
-  const monthlyReturn = dailyReturn * 30;
-  const yearlyReturn = (numericAmount * apy) / 100;
-  const totalValue = numericAmount + yearlyReturn;
+  const fallbackDaily = (numericAmount * apy) / 100 / 365;
+  const fallbackMonthly = fallbackDaily * 30;
+  const fallbackYearly = (numericAmount * apy) / 100;
+
+  // Fetch projected yields from API whenever inputs change
+  useEffect(() => {
+    const run = async () => {
+      // Guard: require selected orchestrator, positive amount, and positive APY
+      if (
+        !selectedOrchestrator ||
+        numericAmount <= 0 ||
+        !Number.isFinite(apy) ||
+        apy <= 0
+      ) {
+        setProjections([]);
+        setYieldLoading(false);
+        setYieldError(null);
+        return;
+      }
+      setYieldLoading(true);
+      setYieldError(null);
+      try {
+        const res = await delegationService.calculateYield({
+          amount: numericAmount,
+          apy: `${apy}%`,
+          period: "", // fetch all time periods
+          includeCurrencyConversion: true,
+          currency: "USD",
+        });
+        let next: Array<{
+          period: string;
+          projectedReward: number;
+          currency?: string;
+        }> = [];
+        const data = (res as any)?.data ?? res;
+        const serverProjections = (data && (data.projections || data)) as any;
+        if (Array.isArray(serverProjections)) {
+          next = serverProjections.map((p: any) => ({
+            period: String(p.period ?? ""),
+            projectedReward: Number(p.projectedReward ?? 0),
+            currency: p.currency ?? "USD",
+          }));
+        } else if (serverProjections && typeof serverProjections === "object") {
+          next = Object.keys(serverProjections).map((k) => ({
+            period: k,
+            projectedReward: Number(
+              serverProjections[k]?.projectedReward ?? serverProjections[k] ?? 0
+            ),
+            currency: serverProjections[k]?.currency ?? "USD",
+          }));
+        }
+        setProjections(next);
+      } catch (e: any) {
+        setYieldError("Failed to fetch yield projections");
+        setProjections([]);
+      } finally {
+        setYieldLoading(false);
+      }
+    };
+    run();
+  }, [numericAmount, apy, selectedOrchestrator]);
 
   return (
     <div className="h-screen bg-[#050505] text-white flex flex-col">
@@ -99,7 +163,10 @@ export const ForecastPage: React.FC = () => {
               >
                 {options.map((o) => (
                   <option key={o.id} value={o.id}>
-                    {o.name.length > 14 ? `${o.name.substring(0, 20)}..` : o.name} - APY: {o.apy}%
+                    {o.name.length > 14
+                      ? `${o.name.substring(0, 20)}..`
+                      : o.name}{" "}
+                    - APY: {o.apy}%
                   </option>
                 ))}
               </select>
@@ -115,29 +182,36 @@ export const ForecastPage: React.FC = () => {
         {/* Delegation Amount */}
         <div className="mb-8">
           <label className="block text-gray-400 text-sm font-medium mb-3">
-            Delegation amount (USDC)
+            Delegation amount (USD)
           </label>
           <input
             type="text"
             value={delegationAmount}
             onChange={handleAmountChange}
             className="w-full p-4 bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl text-white focus:border-[#C7EF6B] focus:outline-none"
-            placeholder="Enter amount in USDC"
+            placeholder="Enter amount in USD"
           />
         </div>
 
-        {/* Total Projected Earnings */}
+        {/* Total Projected Earnings (Yearly) */}
         <div className="mb-8">
           <div className="bg-[#1a1a1a] rounded-xl p-6 text-center">
             <h2 className="text-gray-400 text-sm font-medium mb-2">
               Projected Annual Earnings
             </h2>
             <div className="text-3xl font-bold text-white mb-1">
-              {yearlyReturn.toFixed(2)} USDC
+              {yieldLoading ? (
+                <Skeleton className="h-7 w-10 bg-[#2a2a2a] inline-block align-middle rounded-sm mb-2" />
+              ) : (
+                (
+                  projections.find((p) =>
+                    p.period.toLowerCase().includes("year")
+                  )?.projectedReward ?? fallbackYearly
+                ).toFixed(2)
+              )}{" "}
+              USD
             </div>
-            <div className="text-[#C7EF6B] text-sm">
-              = {apy}% APY
-            </div>
+            <div className="text-[#C7EF6B] text-sm">= {apy}% APY</div>
           </div>
         </div>
 
@@ -148,19 +222,46 @@ export const ForecastPage: React.FC = () => {
             <div className="flex justify-between items-center">
               <span className="text-gray-400">Daily</span>
               <span className="text-white font-medium">
-                {dailyReturn.toFixed(2)} USDC
+                {yieldLoading ? (
+                  <Skeleton className="h-4 w-8 bg-[#2a2a2a] inline-block align-middle rounded-sm mb-1" />
+                ) : (
+                  (
+                    projections.find((p) =>
+                      p.period.toLowerCase().includes("day")
+                    )?.projectedReward ?? fallbackDaily
+                  ).toFixed(2)
+                )}{" "}
+                USD
               </span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-gray-400">Monthly</span>
               <span className="text-white font-medium">
-                {monthlyReturn.toFixed(2)} USDC
+                {yieldLoading ? (
+                  <Skeleton className="h-4 w-8 bg-[#2a2a2a] inline-block align-middle rounded-sm mb-1" />
+                ) : (
+                  (
+                    projections.find((p) =>
+                      p.period.toLowerCase().includes("month")
+                    )?.projectedReward ?? fallbackMonthly
+                  ).toFixed(2)
+                )}{" "}
+                USD
               </span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-gray-400">Yearly Return</span>
               <span className="text-white font-medium">
-                {yearlyReturn.toFixed(2)} USDC
+                {yieldLoading ? (
+                  <Skeleton className="h-4 w-8 bg-[#2a2a2a] inline-block align-middle rounded-sm mb-1" />
+                ) : (
+                  (
+                    projections.find((p) =>
+                      p.period.toLowerCase().includes("year")
+                    )?.projectedReward ?? fallbackYearly
+                  ).toFixed(2)
+                )}{" "}
+                USD
               </span>
             </div>
             <div className="flex justify-between items-center border-t border-[#2a2a2a] pt-3">
@@ -168,7 +269,16 @@ export const ForecastPage: React.FC = () => {
                 Total Annual Earnings
               </span>
               <span className="text-white font-bold">
-                {yearlyReturn.toFixed(2)} USDC
+                {yieldLoading ? (
+                  <Skeleton className="h-5 w-8 bg-[#2a2a2a] inline-block align-middle rounded-sm mb-1" />
+                ) : (
+                  (
+                    projections.find((p) =>
+                      p.period.toLowerCase().includes("year")
+                    )?.projectedReward ?? fallbackYearly
+                  ).toFixed(2)
+                )}{" "}
+                USD
               </span>
             </div>
           </div>
@@ -189,9 +299,9 @@ export const ForecastPage: React.FC = () => {
         onClose={() => setShowHelpDrawer(false)}
         title="Yield Calculator Guide"
         content={[
-          "Calculate your potential earnings by choosing a validator and entering your stake amount in USDC.",
+          "Calculate your potential earnings by choosing a validator and entering your stake amount in USD.",
           "Each validator has a different APY that affects your rewards. Higher APY means more earnings.",
-          "Results are estimates and may vary based on network performance."
+          "Results are estimates and may vary based on network performance.",
         ]}
       />
 
