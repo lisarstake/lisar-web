@@ -16,7 +16,10 @@ import {
   User,
   UpdateProfileRequest,
   LogoutRequest,
-  LogoutResponse
+  LogoutResponse,
+  RefreshTokenRequest,
+  RefreshTokenResponse,
+  GoogleOAuthResponse
 } from './types';
 
 export interface IAuthApiService {
@@ -26,7 +29,8 @@ export interface IAuthApiService {
   logout(request?: LogoutRequest): Promise<AuthApiResponse<LogoutResponse>>;
   
   // Google OAuth
-  initiateGoogleAuth(): void;
+  initiateGoogleAuth(): Promise<AuthApiResponse<{ url: string }>>;
+  handleGoogleCallback(): Promise<AuthApiResponse<GoogleOAuthResponse>>; // Processes tokens from URL hash
   
   // Password Management
   forgotPassword(request: ForgotPasswordRequest): Promise<AuthApiResponse<ForgotPasswordResponse>>;
@@ -38,4 +42,7 @@ export interface IAuthApiService {
   
   // Image Upload
   uploadProfileImage(file: File): Promise<AuthApiResponse<{ imageUrl: string }>>;
+  
+  // Token Refresh
+  refreshToken(request: RefreshTokenRequest): Promise<AuthApiResponse<RefreshTokenResponse>>;
 }

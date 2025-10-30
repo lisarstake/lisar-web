@@ -49,6 +49,7 @@ interface AuthContextType {
     rememberMe?: boolean
   ) => Promise<AuthApiResponse<any>>;
   signinWithGoogle: () => Promise<void>;
+  handleGoogleCallback: () => Promise<AuthApiResponse<any>>;
   logout: () => Promise<void>;
   forgotPassword: (email: string) => Promise<AuthApiResponse<any>>;
   resetPassword: (
@@ -145,48 +146,108 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Initialize auth state on app load
   useEffect(() => {
     const initializeAuth = async () => {
-      const token = localStorage.getItem("auth_token");
-      const refreshToken = localStorage.getItem("refresh_token");
+      const token =
+        localStorage.getItem("auth_token") ||
+        sessionStorage.getItem("auth_token");
+      const refreshToken =
+        localStorage.getItem("refresh_token") ||
+        sessionStorage.getItem("refresh_token");
+      const expiry =
+        localStorage.getItem("auth_expiry") ||
+        sessionStorage.getItem("auth_expiry");
 
       if (token) {
         try {
           dispatch({ type: "AUTH_START" });
-          const response = await authService.getCurrentUser();
-          if (response.success && response.data) {
-            // Get wallet info from user data (new structure)
-            const wallet: Wallet = {
-              id: response.data.wallet_id || "wallet_id",
-              address: response.data.wallet_address,
-              chain_type: response.data.chain_type || "ethereum",
-            };
 
-            // Create session from stored tokens
-            const session: Session = {
-              access_token: token,
-              refresh_token: refreshToken || "",
-              expires_in: 3600,
-              expires_at: Date.now() + 3600000, // 1 hour from now
-              token_type: "bearer",
-            };
+          // Check if token is expired
+          const isExpired = expiry && Date.now() > parseInt(expiry) * 1000;
 
-            dispatch({
-              type: "AUTH_SUCCESS",
-              payload: { user: response.data, wallet, session },
+          if (isExpired && refreshToken) {
+            // Try to refresh the token
+            const refreshResponse = await authService.refreshToken({
+              refreshToken,
             });
+
+            if (refreshResponse.success && refreshResponse.data) {
+              // Token refreshed successfully, get user data
+              const response = await authService.getCurrentUser();
+
+              if (response.success && response.data) {
+                const wallet: Wallet = {
+                  id: response.data.wallet_id || "wallet_id",
+                  address: response.data.wallet_address,
+                  chain_type: response.data.chain_type || "ethereum",
+                };
+
+                const session: Session = {
+                  access_token: refreshResponse.data.access_token,
+                  refresh_token: refreshResponse.data.refresh_token,
+                  expires_in: refreshResponse.data.expires_in,
+                  expires_at: refreshResponse.data.expires_at,
+                  token_type: refreshResponse.data.token_type,
+                };
+
+                dispatch({
+                  type: "AUTH_SUCCESS",
+                  payload: { user: response.data, wallet, session },
+                });
+              } else {
+                throw new Error("Failed to get user after refresh");
+              }
+            } else {
+              // Refresh failed, clear tokens
+              throw new Error("Token refresh failed");
+            }
           } else {
-            // Token is invalid, clear it and set as not authenticated
-            localStorage.removeItem("auth_token");
-            localStorage.removeItem("refresh_token");
-            dispatch({ type: "AUTH_LOGOUT" });
+            // Token not expired, validate it
+            const response = await authService.getCurrentUser();
+            if (response.success && response.data) {
+              // Get wallet info from user data
+              const wallet: Wallet = {
+                id: response.data.wallet_id || "wallet_id",
+                address: response.data.wallet_address,
+                chain_type: response.data.chain_type || "ethereum",
+              };
+
+              // Create session from stored tokens
+              const session: Session = {
+                access_token: token,
+                refresh_token: refreshToken || "",
+                expires_in: 3600,
+                expires_at: expiry
+                  ? parseInt(expiry)
+                  : Date.now() / 1000 + 3600,
+                token_type: "bearer",
+              };
+
+              dispatch({
+                type: "AUTH_SUCCESS",
+                payload: { user: response.data, wallet, session },
+              });
+            } else {
+              // Token is invalid, clear it and set as not authenticated
+              localStorage.removeItem("auth_token");
+              localStorage.removeItem("refresh_token");
+              localStorage.removeItem("auth_expiry");
+              sessionStorage.removeItem("auth_token");
+              sessionStorage.removeItem("refresh_token");
+              sessionStorage.removeItem("auth_expiry");
+              dispatch({ type: "AUTH_LOGOUT" });
+            }
           }
         } catch (error) {
-          // Token validation failed, clear it and set as not authenticated
+          // Token validation/refresh failed, clear it and set as not authenticated
           localStorage.removeItem("auth_token");
           localStorage.removeItem("refresh_token");
+          localStorage.removeItem("auth_expiry");
+          sessionStorage.removeItem("auth_token");
+          sessionStorage.removeItem("refresh_token");
+          sessionStorage.removeItem("auth_expiry");
           dispatch({ type: "AUTH_LOGOUT" });
         }
       } else {
-        // No token found - this is normal for new users, just set as not authenticated
+        // No token found,  set as not authenticated
         dispatch({ type: "AUTH_LOGOUT" });
       }
     };
@@ -265,7 +326,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const userResponse = await authService.getCurrentUser();
 
         if (userResponse && userResponse.success && userResponse.data) {
-          // Create wallet info from user data (new structure)
+          // Create wallet info from user data
           const wallet: Wallet = {
             id: userResponse.data.wallet_id || "wallet_id",
             address: userResponse.data.wallet_address,
@@ -331,7 +392,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           const userResponse = await authService.getCurrentUser();
 
           if (userResponse && userResponse.success && userResponse.data) {
-            // Get wallet info from user data (new structure)
+            // Get wallet info from user data
             const wallet: Wallet = {
               id: userResponse.data.wallet_id || "wallet_id",
               address: userResponse.data.wallet_address,
@@ -342,24 +403,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               type: "AUTH_SUCCESS",
               payload: {
                 user: userResponse.data,
-                wallet,
-                session: response.data.session,
-              },
-            });
-          } else {
-            // Fallback to using login response data if getCurrentUser fails
-            // Note: This uses the old login response structure
-            const wallet: Wallet = {
-              id: "wallet_id",
-              address:
-                (response.data.user as any).user_metadata?.wallet_address || "",
-              chain_type: "ethereum",
-            };
-
-            dispatch({
-              type: "AUTH_SUCCESS",
-              payload: {
-                user: response.data.user,
                 wallet,
                 session: response.data.session,
               },
@@ -389,6 +432,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const signinWithGoogle = async (): Promise<void> => {
     try {
       const response = await authService.initiateGoogleAuth();
+
       if (!response.success) {
         dispatch({
           type: "AUTH_FAILURE",
@@ -400,6 +444,73 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const errorMessage =
         error instanceof Error ? error.message : "Google OAuth failed";
       dispatch({ type: "AUTH_FAILURE", payload: errorMessage });
+    }
+  };
+
+  const handleGoogleCallback = async (): Promise<AuthApiResponse<any>> => {
+    try {
+      dispatch({ type: "AUTH_START" });
+
+      const response = await authService.handleGoogleCallback();
+
+      if (response.success && response.data) {
+        const data = response.data as any;
+
+        // Convert Google OAuth user to our User format
+        const user: User = {
+          user_id: data.user.id,
+          email: data.user.email,
+          full_name: data.user.user_metadata?.full_name || "",
+          wallet_address:
+            data.user.user_metadata?.wallet_address ||
+            data.wallet.wallet_address,
+          wallet_id: data.wallet.wallet_id,
+          chain_type: "ethereum",
+          privy_user_id: data.wallet.privy_user_id,
+          fiat_balance: 0,
+          lpt_balance: 0,
+          is_suspended: false,
+          created_date: data.user.created_at,
+          updated_at: data.user.updated_at,
+        };
+
+        const wallet: Wallet = {
+          id: data.wallet.wallet_id,
+          address: data.wallet.wallet_address,
+          chain_type: "ethereum",
+        };
+
+        dispatch({
+          type: "AUTH_SUCCESS",
+          payload: {
+            user,
+            wallet,
+            session: data.session,
+          },
+        });
+
+        return {
+          success: true,
+          message: "Google sign-in successful",
+          data: data,
+        };
+      } else {
+        dispatch({
+          type: "AUTH_FAILURE",
+          payload: response.message || "Google OAuth callback failed",
+        });
+        return response;
+      }
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Google OAuth callback failed";
+      dispatch({ type: "AUTH_FAILURE", payload: errorMessage });
+      return {
+        success: false,
+        message: errorMessage,
+        data: null,
+        error: errorMessage,
+      };
     }
   };
 
@@ -447,7 +558,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       await authService.logout();
     } catch (error) {
-      // Continue with logout even if API call fails
     } finally {
       localStorage.removeItem("auth_token");
       localStorage.removeItem("refresh_token");
@@ -502,6 +612,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     createWallet,
     signin,
     signinWithGoogle,
+    handleGoogleCallback,
     logout,
     forgotPassword,
     resetPassword,

@@ -131,7 +131,7 @@ const Hero = () => {
                 } as React.CSSProperties}
               />
 
-              <div className="flex items-center gap-1 sm:gap-3 mt-2">
+              <div className="flex items-center gap-2 sm:gap-3 mt-2">
                 {/* USDC Option */}
                 <div
                   className={`flex flex-col items-center cursor-pointer px-3 py-2.5 rounded-2xl border ${
@@ -167,7 +167,7 @@ const Hero = () => {
                     Soon
                   </div>
                 </div>
-                <div className="flex flex-col items-center px-3 py-2.5 rounded-2xl border border-gray-200 bg-white opacity-50 cursor-not-allowed relative">
+                <div className="hidden md:flex flex-col items-center px-3 py-2.5 rounded-2xl border border-gray-200 bg-white opacity-50 cursor-not-allowed relative">
                   <div className="rounded-full mb-1 flex items-center justify-center">
                     <img src="/lisk1.png" alt="LISK" className="h-10 w-10 mt-1" />
                   </div>

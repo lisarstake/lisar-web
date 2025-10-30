@@ -48,9 +48,31 @@ export interface LoginResponse {
 }
 
 // Google OAuth Types
+export interface GoogleOAuthUser {
+  id: string;
+  email: string;
+  email_confirmed_at?: string;
+  user_metadata: {
+    full_name: string;
+    wallet_address: string;
+  };
+  created_at: string;
+  updated_at: string;
+  last_sign_in_at?: string;
+}
+
+export interface GoogleOAuthWallet {
+  wallet_id: string;
+  wallet_address: string;
+  privy_user_id: string;
+}
+
 export interface GoogleOAuthResponse {
-  user: User;
+  success: boolean;
+  message: string;
+  user: GoogleOAuthUser;
   session: Session;
+  wallet: GoogleOAuthWallet;
 }
 
 export interface ForgotPasswordRequest {
@@ -137,9 +159,11 @@ export interface RefreshTokenRequest {
 }
 
 export interface RefreshTokenResponse {
-  token: string;
-  refreshToken: string;
-  expiresIn: number;
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+  expires_at: number;
+  token_type: string;
 }
 
 export interface LogoutRequest {

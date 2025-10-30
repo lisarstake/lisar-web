@@ -15,7 +15,7 @@ interface LoginFormData {
 
 export const LoginForm: React.FC = () => {
   const navigate = useNavigate();
-  const { signin, signinWithGoogle, state } = useAuth();
+  const { signin, signinWithGoogle, handleGoogleCallback, state } = useAuth();
 
   const [formData, setFormData] = useState<LoginFormData>({
     email: "",
@@ -41,13 +41,14 @@ export const LoginForm: React.FC = () => {
   useEffect(() => {
     const tokens = extractTokensFromHash();
     if (tokens) {
-      // Clear the hash from URL
-      clearHashFromURL();
-
       // Check if this is a Google OAuth token (has provider_token)
       if (tokens.provider_token) {
+        // DON'T clear hash yet - handleGoogleOAuthLogin needs to process it
         handleGoogleOAuthLogin(tokens);
       } else {
+        // Clear the hash from URL for non-Google OAuth
+        clearHashFromURL();
+        
         localStorage.setItem(
           "pending_confirmation_tokens",
           JSON.stringify(tokens)
@@ -71,42 +72,34 @@ export const LoginForm: React.FC = () => {
       // Store tokens in localStorage (Google OAuth users are remembered by default)
       localStorage.setItem("auth_token", tokens.access_token);
       localStorage.setItem("refresh_token", tokens.refresh_token);
-
+      
       if (tokens.expires_at) {
         localStorage.setItem("auth_expiry", tokens.expires_at.toString());
       }
 
-      // Get user info from the token (decode JWT)
-      const userInfo = JSON.parse(atob(tokens.access_token.split(".")[1]));
+      // Now call handleGoogleCallback which will read from localStorage we just set
+      // and update the auth context state
+      const response = await handleGoogleCallback();
 
-      // Create wallet info from user metadata
-      const wallet = {
-        id: userInfo.user_metadata?.id || "",
-        address: userInfo.user_metadata?.wallet_address || "",
-        chain_type: "ethereum",
-      };
+      // Clear the hash after successful processing
+      clearHashFromURL();
 
-      // Create session
-      const session = {
-        access_token: tokens.access_token,
-        refresh_token: tokens.refresh_token,
-        expires_in: tokens.expires_in,
-        expires_at: tokens.expires_at,
-        token_type: tokens.token_type,
-      };
+      if (response.success) {
+        // Show success message
+        setSuccessDrawer({
+          isOpen: true,
+          title: "Sign-in Successful!",
+          message: "You have successfully signed in with Google.",
+          details: "",
+        });
 
-      // Create user object
-      const user = {
-        id: userInfo.sub,
-        email: userInfo.email,
-        email_confirmed_at: userInfo.email_confirmed_at,
-        user_metadata: userInfo.user_metadata,
-        created_at: userInfo.created_at,
-        updated_at: userInfo.updated_at,
-        last_sign_in_at: userInfo.last_sign_in_at,
-      };
-
-      navigate("/wallet");
+        // Redirect to wallet after a brief delay
+        setTimeout(() => {
+          navigate("/wallet");
+        }, 1500);
+      } else {
+        throw new Error(response.message || "Google sign-in failed");
+      }
     } catch (error) {
       // Show error drawer
       setErrorDrawer({
@@ -168,8 +161,17 @@ export const LoginForm: React.FC = () => {
     }
   };
 
-  const handleGoogleLogin = () => {
-    signinWithGoogle();
+  const handleGoogleLogin = async () => {
+    try {
+      await signinWithGoogle();
+    } catch (error) {
+      setErrorDrawer({
+        isOpen: true,
+        title: "Google Sign-in Failed",
+        message: "Failed to initiate Google sign-in. Please try again.",
+        details: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
   };
 
   const isFormValid = formData.email && formData.password;
