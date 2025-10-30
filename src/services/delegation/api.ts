@@ -13,7 +13,9 @@ import {
   WithdrawStakeRequest,
   WithdrawStakeResponse,
   OrchestratorQueryParams,
-  ProtocolStatusResponse
+  ProtocolStatusResponse,
+  CalculateYieldRequest,
+  CalculateYieldResponse
 } from './types';
 
 export interface IDelegationApiService {
@@ -37,4 +39,7 @@ export interface IDelegationApiService {
 
   // Protocol Status
   getProtocolStatus(): Promise<ProtocolStatusResponse>;
+
+  // Calculate Yield
+  calculateYield(request: CalculateYieldRequest): Promise<CalculateYieldResponse>;
 }
