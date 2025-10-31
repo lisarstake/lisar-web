@@ -1,12 +1,22 @@
 import React from "react";
 import { Search, Bell, ChevronDown, Menu } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface HeaderProps {
   onMenuClick: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
+  const { state } = useAuth();
+  const user = state.user;
+
+  const displayName = user?.email?.split("@")[0] || "Admin";
+  const initials = displayName
+    .split(" ")
+    .map((n: string) => n[0])
+    .join("");
+
   return (
     <div className="h-16 lg:h-20 bg-white border-b border-gray-200 flex items-center justify-between px-4 lg:px-8">
       {/* Left: Menu + Welcome */}
@@ -19,7 +29,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
         </button>
         <div>
           <h1 className="text-base lg:text-lg font-medium text-gray-800">
-            Welcome Back, Zac!
+            Welcome back, {displayName.split(" ")[0]}!
           </h1>
         </div>
       </div>
@@ -35,11 +45,13 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
         </button>
         <div className="hidden sm:flex items-center gap-2 lg:gap-3 pl-2 lg:pl-4 border-l border-gray-200">
           <Avatar className="w-8 h-8">
-            <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=Zac" />
-            <AvatarFallback>ZH</AvatarFallback>
+            {null}
+            <AvatarFallback>{initials}</AvatarFallback>
           </Avatar>
           <div className="hidden md:flex flex-col">
-            <span className="text-xs lg:text-sm font-medium text-gray-900">Zac Hudson</span>
+            <span className="text-xs lg:text-sm font-medium text-gray-900">
+              {displayName}
+            </span>
           </div>
           <button className="p-1 hover:bg-gray-100 rounded-lg transition-colors">
             <ChevronDown className="w-3 h-3 lg:w-4 lg:h-4 text-gray-600" />
