@@ -1,0 +1,11 @@
+{
+  "extends": "../../packages/tsconfig/tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@lisar/ui": ["../../packages/ui/src"],
+      "@/*": ["src/*"]
+    }
+  },
+  "include": ["src", "vite.config.ts"]
+}
