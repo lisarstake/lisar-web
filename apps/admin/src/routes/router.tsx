@@ -1,11 +1,11 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
-import { OverviewPage } from "@/pages/OverviewPage";
-import { UsersPage } from "@/pages/UsersPage";
-import { TransactionsPage } from "@/pages/TransactionsPage";
-import { ValidatorsPage } from "@/pages/ValidatorsPage";
-import { HealthPage } from "@/pages/HealthPage";
-import { AdminPage } from "@/pages/AdminPage";
+import { OverviewPage } from "@/pages/screens/OverviewPage";
+import { UsersPage } from "@/pages/screens/UsersPage";
+import { TransactionsPage } from "@/pages/screens/TransactionsPage";
+import { ValidatorsPage } from "@/pages/screens/ValidatorsPage";
+import { HealthPage } from "@/pages/screens/HealthPage";
+import { AdminPage } from "@/pages/screens/AdminPage";
 import { AdminLogin } from "@/pages/auth/AdminLogin";
 import { AdminSignup } from "@/pages/auth/AdminSignup";
 
