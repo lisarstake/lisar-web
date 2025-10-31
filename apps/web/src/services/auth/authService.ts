@@ -19,7 +19,7 @@ import {
   ResetPasswordResponse,
   UpdateProfileRequest,
   ChangePasswordRequest,
-  ChangePasswordResponse,
+  ChangePasswordResponse, 
   RefreshTokenRequest,
   RefreshTokenResponse,
   LogoutRequest,
