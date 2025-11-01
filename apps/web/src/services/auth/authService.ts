@@ -211,92 +211,59 @@ export class AuthService implements IAuthApiService {
         expires_at = localStorage.getItem("auth_expiry");
       }
 
-      if (!access_token || !refresh_token) {
+      if (!access_token) {
         return {
           success: false,
-          message: "Missing tokens in Google OAuth response",
+          message: "Missing access token in Google OAuth response",
           data: null as unknown as GoogleOAuthResponse,
-          error: "Missing tokens",
+          error: "Missing access token",
         };
       }
 
-      // Store tokens in localStorage if we got them from hash
-      if (hash.length > 0) {
-        localStorage.setItem("auth_token", access_token);
-        localStorage.setItem("refresh_token", refresh_token);
-        
-        if (expires_at) {
-          localStorage.setItem("auth_expiry", expires_at);
-        }
-      }
-
-      // Decode JWT to get user info
+      // Call the backend API with access token and refresh token as query parameters
       try {
-        const tokenParts = access_token.split('.');
-        const payload = JSON.parse(atob(tokenParts[1]));
-        
-        // Extract user info from token
-        const user: any = {
-          id: payload.sub,
-          email: payload.email,
-          email_confirmed_at: payload.email_confirmed_at,
-          user_metadata: payload.user_metadata || {},
-          created_at: new Date(payload.iat * 1000).toISOString(),
-          updated_at: new Date().toISOString(),
-          last_sign_in_at: new Date().toISOString(),
-        };
-
-        // Create session object
-        const session = {
-          access_token,
-          refresh_token,
-          expires_in: expires_in ? parseInt(expires_in) : 3600,
-          expires_at: expires_at ? parseInt(expires_at) : Math.floor(Date.now() / 1000) + 3600,
-          token_type: 'bearer',
-        };
-
-        // Create wallet object from user metadata
-        const wallet = {
-          wallet_id: payload.user_metadata?.wallet_id || '',
-          wallet_address: payload.user_metadata?.wallet_address || '',
-          privy_user_id: payload.user_metadata?.privy_user_id || '',
-        };
-
-        // Log user data to check wallet creation
-        console.log("[Google OAuth] User Data:", {
-          userId: user.id,
-          email: user.email,
-          userMetadata: payload.user_metadata,
-          wallet: {
-            wallet_id: wallet.wallet_id,
-            wallet_address: wallet.wallet_address,
-            privy_user_id: wallet.privy_user_id,
-            hasWallet: !!(wallet.wallet_id && wallet.wallet_address),
-          },
+        const queryParams = new URLSearchParams({
+          code: access_token,
+          ...(refresh_token && { refresh_token: refresh_token })
         });
+        
+        const apiResponse = await this.makeRequest<GoogleOAuthResponse>(
+          `/auth/google/callback?${queryParams.toString()}`,
+          {
+            method: "GET",
+          }
+        );
 
-        const response: GoogleOAuthResponse = {
-          success: true,
-          message: "Google OAuth successful",
-          user,
-          session,
-          wallet,
-        };
+        if (apiResponse.success && apiResponse.data) {
+          // Store tokens from API response
+          const { session } = apiResponse.data;
+          if (session?.access_token && session?.refresh_token) {
+            localStorage.setItem("auth_token", session.access_token);
+            localStorage.setItem("refresh_token", session.refresh_token);
+            
+            if (session.expires_at) {
+              localStorage.setItem("auth_expiry", session.expires_at.toString());
+            }
+          }
 
-        // Clear the hash from URL
-        window.history.replaceState(null, '', window.location.pathname);
+          // Clear the hash from URL
+          window.history.replaceState(null, '', window.location.pathname);
 
-        return {
-          success: true,
-          message: "Google OAuth successful",
-          data: response,
-        };
-      } catch (decodeError) {
+          return apiResponse;
+        } else {
+          return {
+            success: false,
+            message: apiResponse.message || "Failed to process Google OAuth callback",
+            data: null as unknown as GoogleOAuthResponse,
+            error: apiResponse.error || "API error",
+          };
+        }
+      } catch (apiError) {
         return {
           success: false,
-          message: "Failed to decode token",
+          message: "Failed to call Google OAuth callback API",
           data: null as unknown as GoogleOAuthResponse,
-          error: decodeError instanceof Error ? decodeError.message : "Token decode error",
+          error: apiError instanceof Error ? apiError.message : "API call failed",
         };
       }
     } catch (error) {
