@@ -14,6 +14,7 @@ export default defineConfig({
   server: {
     port: 5173,
     open: false,
+    allowedHosts: ["shizue-noneliminative-luann.ngrok-free.dev"],
   },
   preview: {
     port: 5174,
