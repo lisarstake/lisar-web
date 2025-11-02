@@ -26,10 +26,14 @@ export class LeaderboardService implements ILeaderboardApiService {
     if (!token) {
       token = sessionStorage.getItem("auth_token");
     }
+    if (!token) {
+      return null;
+    }
     const expiry =
       localStorage.getItem("auth_expiry") ||
       sessionStorage.getItem("auth_expiry");
-    if (expiry && Date.now() > Number(expiry)) {
+    // expires_at is stored in seconds, Date.now() returns milliseconds
+    if (expiry && Date.now() > Number(expiry) * 1000) {
       this.removeStoredTokens();
       return null;
     }

@@ -199,7 +199,7 @@ export const ForecastPage: React.FC = () => {
             <h2 className="text-gray-400 text-sm font-medium mb-2">
               Projected Annual Earnings
             </h2>
-            <div className="text-3xl font-bold text-white mb-1">
+            <div className="text-3xl font-bold text-white/90 mb-1">
               {yieldLoading ? (
                 <Skeleton className="h-7 w-10 bg-[#2a2a2a] inline-block align-middle rounded-sm mb-2" />
               ) : (
@@ -221,7 +221,7 @@ export const ForecastPage: React.FC = () => {
           <div className="bg-[#1a1a1a] rounded-xl p-4 space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-gray-400">Daily</span>
-              <span className="text-white font-medium">
+              <span className="text-white/90 font-medium">
                 {yieldLoading ? (
                   <Skeleton className="h-4 w-8 bg-[#2a2a2a] inline-block align-middle rounded-sm mb-1" />
                 ) : (
@@ -236,7 +236,7 @@ export const ForecastPage: React.FC = () => {
             </div>
             <div className="flex justify-between items-center">
               <span className="text-gray-400">Monthly</span>
-              <span className="text-white font-medium">
+              <span className="text-white/90 font-medium">
                 {yieldLoading ? (
                   <Skeleton className="h-4 w-8 bg-[#2a2a2a] inline-block align-middle rounded-sm mb-1" />
                 ) : (
@@ -251,7 +251,7 @@ export const ForecastPage: React.FC = () => {
             </div>
             <div className="flex justify-between items-center">
               <span className="text-gray-400">Yearly Return</span>
-              <span className="text-white font-medium">
+              <span className="text-white/90 font-medium">
                 {yieldLoading ? (
                   <Skeleton className="h-4 w-8 bg-[#2a2a2a] inline-block align-middle rounded-sm mb-1" />
                 ) : (
@@ -268,7 +268,7 @@ export const ForecastPage: React.FC = () => {
               <span className="text-white font-medium">
                 Total Annual Earnings
               </span>
-              <span className="text-white font-bold">
+              <span className="text-white/90 font-bold">
                 {yieldLoading ? (
                   <Skeleton className="h-5 w-8 bg-[#2a2a2a] inline-block align-middle rounded-sm mb-1" />
                 ) : (

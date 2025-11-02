@@ -64,7 +64,7 @@ export const router = createBrowserRouter([
       { path: 'history', element: withSuspense(<HistoryPage />) },
       { path: 'transaction-detail/:transactionId', element: withSuspense(<TransactionDetailPage />) },
       { path: 'learn', element: withSuspense(<LearnPage />) },
-      { path: 'learn-detail/:contentId', element: withSuspense(<LearnDetailPage />) },
+      { path: 'learn/:slug', element: withSuspense(<LearnDetailPage />) },
       { path: 'forecast', element: withSuspense(<ForecastPage />) },
       { path: 'earn', element: withSuspense(<EarnPage />) },
       { path: 'portfolio', element: withSuspense(<PortfolioPage />) },

@@ -13,8 +13,8 @@ export const LearnPage: React.FC = () => {
 
   const learnContent = mockLearnContent;
 
-  const handleContentClick = (contentId: string) => {
-    navigate(`/learn-detail/${contentId}`);
+  const handleContentClick = (slug: string) => {
+    navigate(`/learn/${slug}`);
   };
 
   const handleCategoryChange = (category: "mandatory" | "academy") => {
@@ -39,7 +39,7 @@ export const LearnPage: React.FC = () => {
           {filteredContent.map((content) => (
             <div
               key={content.id}
-              onClick={() => handleContentClick(content.id)}
+              onClick={() => handleContentClick(content.slug)}
               className="bg-[#1a1a1a] rounded-xl overflow-hidden cursor-pointer hover:bg-[#2a2a2a] transition-colors"
             >
               {/* Video Thumbnail */}
