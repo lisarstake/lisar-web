@@ -2,7 +2,7 @@
  * Admin Authentication API Types
  */
 
-// Base API Response (some admin endpoints return flat objects, so this is optional)
+// Base API Response
 export interface AuthApiResponse<T> {
   success: boolean;
   message?: string;
@@ -24,7 +24,7 @@ export interface AdminUser {
 export interface CreateAdminRequest {
   email: string;
   password: string;
-  role: string; // typically "admin"
+  role: string;
 }
 
 export interface LoginAdminRequest {
@@ -37,7 +37,7 @@ export interface CreateAdminResponse extends AdminUser {}
 
 export interface LoginAdminResponse {
   success: boolean;
-  token: string; // JWT
+  token: string;
 }
 
 // API Configuration
@@ -48,8 +48,7 @@ export interface AuthConfig {
 }
 
 export const AUTH_CONFIG: AuthConfig = {
-  baseUrl: 'https://lisar-api-1.onrender.com/api/v1',
+  baseUrl: "https://lisar-api-1.onrender.com/api/v1",
   timeout: 30000,
   retryAttempts: 3,
-}
-
+};
