@@ -10,6 +10,7 @@ import {
   TransactionStats,
   TransactionFilters,
   PaginatedTransactionsResponse,
+  TransactionDetail,
 } from './types';
 
 export interface ITransactionApiService {
@@ -19,5 +20,6 @@ export interface ITransactionApiService {
   getTransactionStats(): Promise<TransactionApiResponse<TransactionStats>>;
   getFailedTransactions(limit?: number): Promise<TransactionApiResponse<Transaction[]>>;
   getPendingTransactions(olderThanMinutes?: number): Promise<TransactionApiResponse<Transaction[]>>;
+  getTransactionById(transactionId: string): Promise<TransactionApiResponse<TransactionDetail>>;
 }
 

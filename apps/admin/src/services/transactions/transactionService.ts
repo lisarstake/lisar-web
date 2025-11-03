@@ -9,6 +9,7 @@ import {
   TransactionStats,
   TransactionFilters,
   PaginatedTransactionsResponse,
+  TransactionDetail,
   TRANSACTION_CONFIG,
 } from "./types";
 import { ITransactionApiService } from "./api";
@@ -115,6 +116,14 @@ export class TransactionService implements ITransactionApiService {
   async getPendingTransactions(olderThanMinutes: number = 5): Promise<TransactionApiResponse<Transaction[]>> {
     const endpoint = `/admin/transactions/pending?olderThanMinutes=${olderThanMinutes}`;
     return this.makeRequest<Transaction[]>(endpoint, {
+      method: "GET",
+    });
+  }
+
+  // Get transaction by ID with details
+  async getTransactionById(transactionId: string): Promise<TransactionApiResponse<TransactionDetail>> {
+    const endpoint = `/admin/transactions/${transactionId}`;
+    return this.makeRequest<TransactionDetail>(endpoint, {
       method: "GET",
     });
   }

@@ -45,6 +45,17 @@ export interface Transaction {
   users: TransactionUser;
 }
 
+// Extended Transaction User Info (with lpt_balance)
+export interface TransactionDetailUser extends TransactionUser {
+  lpt_balance?: number;
+}
+
+// Transaction Detail (includes related transactions)
+export interface TransactionDetail extends Transaction {
+  users: TransactionDetailUser;
+  relatedTransactions?: Transaction[];
+}
+
 // Transaction Filters
 export interface TransactionFilters {
   page?: number;

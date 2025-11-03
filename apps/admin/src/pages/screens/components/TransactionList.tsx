@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -9,7 +10,12 @@ import {
   PaginatedTransactionsResponse,
   Transaction,
 } from "@/services/transactions/types";
-import { CheckCircle2, XCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  CheckCircle2,
+  XCircle,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 
 const formatDate = (dateString: string): string => {
   try {
@@ -70,7 +76,13 @@ export const TransactionList: React.FC<TransactionListProps> = ({
   onFilterChange,
   onPageChange,
 }) => {
+  const navigate = useNavigate();
   const transactionList = transactions?.transactions || [];
+
+  const handleTransactionClick = (transactionId: string | null, tid: string) => {
+    const id = transactionId || tid;
+    navigate(`/transactions/${id}`);
+  };
 
   return (
     <div className="space-y-4">
@@ -207,14 +219,17 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                         ? walletAddress.slice(2, 4).toUpperCase()
                         : "U";
 
+                      const transactionId = transaction.id || transaction.tid;
+
                       return (
                         <tr
-                          key={transaction.tid || idx}
-                          className="hover:bg-gray-50 transition-colors"
+                          key={transactionId || idx}
+                          onClick={() => handleTransactionClick(transaction.id, transaction.tid)}
+                          className="hover:bg-gray-50 transition-colors cursor-pointer"
                         >
                           <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm font-mono text-gray-700 hidden md:table-cell">
-                            {transaction.tid.slice(0, 6)}...
-                            {transaction.tid.slice(-4)}
+                            {transactionId.slice(0, 6)}...
+                            {transactionId.slice(-4)}
                           </td>
                           <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center gap-2 sm:gap-3">
@@ -226,16 +241,8 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                                   {walletAddress.slice(0, 6)}...
                                   {walletAddress.slice(-4)}
                                 </span>
-                                <span className="text-xs text-gray-500 md:hidden">
-                                  {transaction.transaction_hash.slice(0, 6)}...
-                                  {transaction.transaction_hash.slice(-4)}
-                                </span>
-                                <span className="text-xs text-gray-500 lg:hidden">
-                                  {transaction.transaction_type
-                                    .charAt(0)
-                                    .toUpperCase() +
-                                    transaction.transaction_type.slice(1)}
-                                </span>
+                               
+                              
                               </div>
                             </div>
                           </td>

@@ -92,7 +92,7 @@ export class AuthService {
       body: JSON.stringify(request),
     });
 
-    // Store token if present (either in result.data.token or top-level token)
+    // Store token if present
     const token = (result as any).data?.token ?? (result as any).token;
     if (result.success && token) {
       this.setStoredToken(token, remember);
