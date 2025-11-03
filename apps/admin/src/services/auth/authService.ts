@@ -58,7 +58,9 @@ export class AuthService {
 
   // Token helpers
   private getStoredToken(): string | null {
-    return localStorage.getItem("auth_token") || sessionStorage.getItem("auth_token");
+    return (
+      localStorage.getItem("auth_token") || sessionStorage.getItem("auth_token")
+    );
   }
 
   private setStoredToken(token: string, remember = false): void {
@@ -72,24 +74,31 @@ export class AuthService {
   }
 
   // Admin endpoints
-  async createAdmin(request: CreateAdminRequest): Promise<AuthApiResponse<CreateAdminResponse>> {
+  async createAdmin(
+    request: CreateAdminRequest
+  ): Promise<AuthApiResponse<CreateAdminResponse>> {
     return this.makeRequest<CreateAdminResponse>("/admin/create", {
       method: "POST",
       body: JSON.stringify(request),
     });
   }
 
-  async login(request: LoginAdminRequest, remember = false): Promise<AuthApiResponse<LoginAdminResponse>> {
+  async login(
+    request: LoginAdminRequest,
+    remember = false
+  ): Promise<AuthApiResponse<LoginAdminResponse>> {
     const result = await this.makeRequest<LoginAdminResponse>("/admin/login", {
       method: "POST",
       body: JSON.stringify(request),
     });
 
-    // Store token if present (either in result.data.token or top-level token)
+    // Store token if present
     const token = (result as any).data?.token ?? (result as any).token;
     if (result.success && token) {
       this.setStoredToken(token, remember);
     }
+
+    console.log(token);
 
     return result;
   }
@@ -98,7 +107,11 @@ export class AuthService {
   async getCurrentUser(): Promise<AuthApiResponse<AdminUser>> {
     const token = this.getStoredToken();
     if (!token) {
-      return { success: false, message: "Not authenticated", data: null as unknown as AdminUser };
+      return {
+        success: false,
+        message: "Not authenticated",
+        data: null as unknown as AdminUser,
+      };
     }
 
     return this.makeRequest<AdminUser>("/admin/me", {
@@ -110,4 +123,3 @@ export class AuthService {
     this.removeStoredTokens();
   }
 }
-

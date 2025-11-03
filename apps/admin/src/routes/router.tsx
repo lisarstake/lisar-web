@@ -3,6 +3,7 @@ import { Layout } from "@/components/layout/Layout";
 import { OverviewPage } from "@/pages/screens/OverviewPage";
 import { UsersPage } from "@/pages/screens/UsersPage";
 import { TransactionsPage } from "@/pages/screens/TransactionsPage";
+import { TransactionDetailPage } from "@/pages/screens/TransactionDetailPage";
 import { ValidatorsPage } from "@/pages/screens/ValidatorsPage";
 import { ValidatorDetailPage } from "@/pages/screens/ValidatorDetailPage";
 import { CreateValidatorPage } from "@/pages/screens/CreateValidatorPage";
@@ -27,6 +28,7 @@ const router = createBrowserRouter([
       { index: true, element: <OverviewPage /> },
       { path: "users", element: <UsersPage /> },
       { path: "transactions", element: <TransactionsPage /> },
+      { path: "transactions/:transactionId", element: <TransactionDetailPage /> },
       { path: "validators", element: <ValidatorsPage /> },
       { path: "validators/create", element: <CreateValidatorPage /> },
       { path: "validators/:validatorId", element: <ValidatorDetailPage /> },
