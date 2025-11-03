@@ -5,6 +5,8 @@ import { UsersPage } from "@/pages/screens/UsersPage";
 import { TransactionsPage } from "@/pages/screens/TransactionsPage";
 import { TransactionDetailPage } from "@/pages/screens/TransactionDetailPage";
 import { ValidatorsPage } from "@/pages/screens/ValidatorsPage";
+import { ValidatorDetailPage } from "@/pages/screens/ValidatorDetailPage";
+import { CreateValidatorPage } from "@/pages/screens/CreateValidatorPage";
 import { HealthPage } from "@/pages/screens/HealthPage";
 import { AdminPage } from "@/pages/screens/AdminPage";
 import { AdminLogin } from "@/pages/auth/AdminLogin";
@@ -28,6 +30,8 @@ const router = createBrowserRouter([
       { path: "transactions", element: <TransactionsPage /> },
       { path: "transactions/:transactionId", element: <TransactionDetailPage /> },
       { path: "validators", element: <ValidatorsPage /> },
+      { path: "validators/create", element: <CreateValidatorPage /> },
+      { path: "validators/:validatorId", element: <ValidatorDetailPage /> },
       { path: "health", element: <HealthPage /> },
       { path: "admin", element: <AdminPage /> },
     ],
