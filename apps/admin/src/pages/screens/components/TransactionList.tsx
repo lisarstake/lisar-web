@@ -116,7 +116,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
             <option value="delegation">Delegation</option>
             <option value="undelegation">Undelegation</option>
           </select>
-          <select
+          {/* <select
             value={filters.sortBy || "created_at"}
             onChange={(e) => onFilterChange("sortBy", e.target.value)}
             className="text-xs sm:text-sm px-2 sm:px-3 py-1.5 border border-gray-300 rounded-md bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#235538] focus:border-transparent"
@@ -125,7 +125,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
             <option value="amount">Sort by Amount</option>
             <option value="status">Sort by Status</option>
             <option value="transaction_type">Sort by Type</option>
-          </select>
+          </select> */}
           <select
             value={filters.sortOrder || "desc"}
             onChange={(e) =>
