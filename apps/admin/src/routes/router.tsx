@@ -2,6 +2,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { OverviewPage } from "@/pages/screens/OverviewPage";
 import { UsersPage } from "@/pages/screens/UsersPage";
+import { UserDetailPage } from "@/pages/screens/UserDetailPage";
 import { TransactionsPage } from "@/pages/screens/TransactionsPage";
 import { TransactionDetailPage } from "@/pages/screens/TransactionDetailPage";
 import { ValidatorsPage } from "@/pages/screens/ValidatorsPage";
@@ -27,6 +28,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <OverviewPage /> },
       { path: "users", element: <UsersPage /> },
+      { path: "users/:userId", element: <UserDetailPage /> },
       { path: "transactions", element: <TransactionsPage /> },
       { path: "transactions/:transactionId", element: <TransactionDetailPage /> },
       { path: "validators", element: <ValidatorsPage /> },

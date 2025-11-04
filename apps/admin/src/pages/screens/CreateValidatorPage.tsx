@@ -24,9 +24,7 @@ export const CreateValidatorPage: React.FC = () => {
     setFormData((prev) => ({
       ...prev,
       [name]:
-        name === "fee_pct" || name === "apy"
-          ? parseFloat(value) || 0
-          : value,
+        name === "fee_pct" || name === "apy" ? parseFloat(value) || 0 : value,
     }));
   };
 
@@ -40,17 +38,6 @@ export const CreateValidatorPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Button
-          variant="outline"
-          onClick={() => navigate("/validators")}
-        >
-          <ChevronLeft className="w-4 h-4 mr-2" />
-          Back
-        </Button>
-        <h1 className="text-2xl font-bold text-gray-900">Create Validator</h1>
-      </div>
-
       <Card>
         <CardContent className="p-6">
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -153,4 +140,3 @@ export const CreateValidatorPage: React.FC = () => {
     </div>
   );
 };
-
