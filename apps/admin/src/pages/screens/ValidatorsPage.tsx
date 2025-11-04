@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useValidator } from "@/contexts/ValidatorContext";
 import { ValidatorFilters } from "@/services/validators/types";
-import { ValidatorList } from "./components/ValidatorList";
+import { ValidatorList } from "../../components/screens/ValidatorList";
 import { Plus } from "lucide-react";
 
 const SummaryCard: React.FC<{
