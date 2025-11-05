@@ -1,8 +1,7 @@
-import { useState } from "react";
-import WaitlistModal from "./waitlist-modal";
+import { useNavigate } from "react-router-dom";
 
 const Navbar = () => {
-  const [showWaitlistModal, setShowWaitlistModal] = useState(false);
+  const navigate = useNavigate();
   return (
     <nav className="w-full flex items-center justify-between py-6 px-8 max-w-7xl mx-auto">
       {/* Logo */}
@@ -24,18 +23,12 @@ const Navbar = () => {
       {/* Get Started Button */}
       <div>
         <button
-          onClick={() => setShowWaitlistModal(true)}
+          onClick={() => navigate("/login")}
           className=" py-2 px-4 flex bg-[#C7EF6B] rounded-lg text-[#060E0A] cursor-pointer font-medium text-sm"
         >
           Stake now
         </button>
       </div>
-
-      {/* Waitlist Modal */}
-      <WaitlistModal
-        isOpen={showWaitlistModal}
-        onClose={() => setShowWaitlistModal(false)}
-      />
     </nav>
   );
 };
