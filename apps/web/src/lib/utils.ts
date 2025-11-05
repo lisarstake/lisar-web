@@ -4,3 +4,42 @@ import { twMerge } from "tailwind-merge"
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
+
+/**
+ * Format date relative to now (e.g., "2 hours ago")
+ */
+export const formatRelativeDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+  if (diffInSeconds < 60) {
+    return `${diffInSeconds} seconds ago`;
+  } else if (diffInSeconds < 3600) {
+    const minutes = Math.floor(diffInSeconds / 60);
+    return `${minutes} ${minutes === 1 ? "minute" : "minutes"} ago`;
+  } else if (diffInSeconds < 86400) {
+    const hours = Math.floor(diffInSeconds / 3600);
+    return `${hours} ${hours === 1 ? "hour" : "hours"} ago`;
+  } else if (diffInSeconds < 604800) {
+    const days = Math.floor(diffInSeconds / 86400);
+    return `${days} ${days === 1 ? "day" : "days"} ago`;
+  } else {
+    return date.toLocaleDateString();
+  }
+};
+
+/**
+ * Shorten Ethereum address or hash
+ */
+export const shortenHash = (hash: string): string => {
+  if (hash.length <= 10) return hash;
+  return `${hash.slice(0, 6)}...${hash.slice(-4)}`;
+};
+
+/**
+ * Get Arbitrum scan URL for transaction
+ */
+export const getArbitrumScanUrl = (hash: string): string => {
+  return `https://arbiscan.io/tx/${hash}`;
+};
