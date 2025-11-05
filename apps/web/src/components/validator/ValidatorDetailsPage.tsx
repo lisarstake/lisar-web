@@ -4,9 +4,9 @@ import { ChevronLeft, CircleQuestionMark } from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { ShareDrawer } from "@/components/general/ShareDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
-import { ValidatorRewardsChart } from "@/components/wallet/ValidatorRewardsChart";
-import { ValidatorActionButtons } from "@/components/wallet/ValidatorActionButtons";
-import { ValidatorAboutSection } from "@/components/wallet/ValidatorAboutSection";
+import { ValidatorRewardsChart } from "@/components/validator/ValidatorRewardsChart";
+import { ValidatorActionButtons } from "@/components/validator/ValidatorActionButtons";
+import { ValidatorAboutSection } from "@/components/validator/ValidatorAboutSection";
 import { useOrchestrators } from "@/contexts/OrchestratorContext";
 import { useDelegation } from "@/contexts/DelegationContext";
 
