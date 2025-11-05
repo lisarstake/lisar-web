@@ -1,5 +1,6 @@
 import React from "react";
 import { OrchestratorResponse } from "@/services/delegation/types";
+import { ExternalLink, Twitter, Github } from "lucide-react";
 
 interface ValidatorAboutSectionProps {
   validator: OrchestratorResponse | undefined;
@@ -38,9 +39,60 @@ export const ValidatorAboutSection: React.FC<ValidatorAboutSectionProps> = ({
       <h3 className="text-lg font-semibold text-white mb-2">About</h3>
 
       <div className="space-y-4">
+        {/* ENS Identity Avatar */}
+        {validator?.ensIdentity?.avatar && (
+          <div className="flex justify-center py-2">
+            <img
+              src={validator.ensIdentity.avatar}
+              alt={validator.ensIdentity.name || validator.ensName}
+              className="w-20 h-20 rounded-full object-cover border-2 border-[#C7EF6B]"
+            />
+          </div>
+        )}
+
+        {/* Description */}
         <p className="text-gray-300 text-xs leading-relaxed">
-          {validator?.description || "Livepeer transcoder"}
+          {validator?.ensIdentity?.description || validator?.description || "Livepeer transcoder"}
         </p>
+
+        {/* Social Links */}
+        {(validator?.ensIdentity?.url || validator?.ensIdentity?.twitter || validator?.ensIdentity?.github) && (
+          <div className="flex items-center gap-3 pt-2">
+            {validator?.ensIdentity?.url && (
+              <a
+                href={validator.ensIdentity.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-[#86B3F7] hover:text-[#C7EF6B] transition-colors text-xs"
+              >
+                <ExternalLink size={14} />
+                <span>Website</span>
+              </a>
+            )}
+            {validator?.ensIdentity?.twitter && (
+              <a
+                href={`https://twitter.com/${validator.ensIdentity.twitter.replace('@', '')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-[#86B3F7] hover:text-[#C7EF6B] transition-colors text-xs"
+              >
+                <Twitter size={14} />
+                <span>Twitter</span>
+              </a>
+            )}
+            {validator?.ensIdentity?.github && (
+              <a
+                href={`https://github.com/${validator.ensIdentity.github.replace('@', '')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-[#86B3F7] hover:text-[#C7EF6B] transition-colors text-xs"
+              >
+                <Github size={14} />
+                <span>GitHub</span>
+              </a>
+            )}
+          </div>
+        )}
 
         <div className="space-y-3">
           <div className="flex justify-between items-center py-2 border-b border-gray-800">

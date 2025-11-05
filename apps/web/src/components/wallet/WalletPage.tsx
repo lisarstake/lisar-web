@@ -15,14 +15,7 @@ export const WalletPage: React.FC = () => {
   const { state } = useAuth();
   const { wallet, isLoading: walletLoading } = useWallet();
 
-  // Filter by search query, and limit to 25 if no search query
-  const filteredOrchestrators = useMemo(() => {
-    const filtered = orchestrators.filter((orch) =>
-      orch.ensName?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-    // Show top 25 with lowest rewards if no search, otherwise show all matches
-    return searchQuery ? filtered : filtered.slice(0, 25);
-  }, [orchestrators, searchQuery]);
+  const filteredOrchestrators = useMemo(() => orchestrators, [orchestrators]);
 
   const handleStakeClick = () => {
     navigate("/validator");

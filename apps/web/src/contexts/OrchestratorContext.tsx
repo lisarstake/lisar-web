@@ -10,7 +10,7 @@ import {
   DelegatorRewardsData,
   OrchestratorQueryParams,
 } from "@/services/delegation/types";
-import { delegationService } from "@/services";
+import { delegationService, ensService } from "@/services";
 import { useAuth } from "./AuthContext";
 
 interface OrchestratorContextType {
@@ -49,7 +49,7 @@ export const OrchestratorProvider: React.FC<OrchestratorProviderProps> = ({
 
       const queryParams: OrchestratorQueryParams = params || {
         page: 1,
-        limit: 30,
+        limit: 25,
         sortBy: "totalStake",
         sortOrder: "desc",
         active: true,
@@ -60,6 +60,24 @@ export const OrchestratorProvider: React.FC<OrchestratorProviderProps> = ({
       let fetchedOrchestrators: OrchestratorResponse[] = [];
       if (response.success && response.data && Array.isArray(response.data)) {
         fetchedOrchestrators = response.data;
+        
+        // Fetch ENS identities for all orchestrators
+        try {
+          const addresses = fetchedOrchestrators.map((orch) => 
+            orch.ensName || orch.address
+          );
+          const ensIdentities = await ensService.getBatchEnsIdentities(addresses);
+          
+          // Attach ENS identities to orchestrators
+          fetchedOrchestrators = fetchedOrchestrators.map((orch) => ({
+            ...orch,
+            ensIdentity: ensIdentities[orch.ensName || orch.address],
+          }));
+        } catch (ensError) {
+          console.error("Failed to fetch ENS identities:", ensError);
+          // Continue without ENS data if it fails
+        }
+        
         setOrchestrators(fetchedOrchestrators);
       } else {
         console.error("Invalid response data:", response.data);

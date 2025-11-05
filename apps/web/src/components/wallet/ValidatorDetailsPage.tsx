@@ -122,10 +122,10 @@ export const ValidatorDetailsPage: React.FC = () => {
         </button>
 
         <h1 className="text-lg font-medium text-white">
-          {currentValidator?.ensName
-            ? currentValidator.ensName.length > 16
-              ? currentValidator.ensName.slice(0, 16) + ".."
-              : currentValidator.ensName
+          {currentValidator?.ensIdentity?.name || currentValidator?.ensName
+            ? (currentValidator?.ensIdentity?.name || currentValidator?.ensName).length > 16
+              ? (currentValidator?.ensIdentity?.name || currentValidator?.ensName).slice(0, 16) + ".."
+              : (currentValidator?.ensIdentity?.name || currentValidator?.ensName)
             : "Unknown V.."}
         </h1>
 

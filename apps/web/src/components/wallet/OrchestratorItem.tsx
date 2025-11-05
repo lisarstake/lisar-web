@@ -45,22 +45,39 @@ export const OrchestratorItem: React.FC<OrchestratorItemProps> = ({
     );
   }
 
+  // Get display name from ENS identity or fallback to ensName
+  const displayName = orchestrator?.ensIdentity?.name || orchestrator?.ensName || 'Unknown Validator';
+  const avatar = orchestrator?.ensIdentity?.avatar;
+  const displayInitial = displayName.charAt(0)?.toUpperCase() || '?';
+
   return (
     <div
       className="flex items-center justify-between p-4 bg-[#1a1a1a] rounded-xl border border-[#2a2a2a] hover:border-[#C7EF6B]/30 transition-colors cursor-pointer"
       onClick={handleClick}
     >
       <div className="flex items-center space-x-3">
-        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#C7EF6B] to-[#B8E55A] flex items-center justify-center">
-          <span className="text-black text-lg font-bold">
-            {orchestrator?.ensName?.charAt(0)?.toUpperCase() || '?'}
-          </span>
-        </div>
+        {avatar ? (
+          <img
+            src={avatar}
+            alt={displayName}
+            className="w-12 h-12 rounded-full object-cover"
+            onError={(e) => {
+              // Fallback to gradient background if avatar fails to load
+              e.currentTarget.style.display = 'none';
+            }}
+          />
+        ) : (
+          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#C7EF6B] to-[#B8E55A] flex items-center justify-center">
+            <span className="text-black text-lg font-bold">
+              {displayInitial}
+            </span>
+          </div>
+        )}
         <div>
           <h3 className="text-gray-100 font-medium text-base">
-            {orchestrator?.ensName && orchestrator.ensName.length > 20 
-              ? `${orchestrator.ensName.substring(0, 16)}..` 
-              : (orchestrator?.ensName || 'Unknown Validator')}
+            {displayName.length > 20 
+              ? `${displayName.substring(0, 16)}..` 
+              : displayName}
           </h3>
           <p className="text-gray-400 text-xs">
             Staked: {Math.round(parseFloat(orchestrator?.totalStake || '0')).toLocaleString()} LPT

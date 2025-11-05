@@ -17,6 +17,7 @@ import { delegationService } from "@/services";
 import { StakeRequest } from "@/services/delegation/types";
 import { usePrices } from "@/hooks/usePrices";
 import { priceService } from "@/lib/priceService";
+import { useWallet } from "@/contexts/WalletContext";
 
 export const StakePage: React.FC = () => {
   const navigate = useNavigate();
@@ -31,21 +32,20 @@ export const StakePage: React.FC = () => {
   const { orchestrators } = useOrchestrators();
   const { state } = useAuth();
   const { prices } = usePrices();
+  const { wallet } = useWallet();
 
   // Find the orchestrator by address (validatorId is the address)
-  const currentValidator = orchestrators.find(orch => orch.address === validatorId);
+  const currentValidator = orchestrators.find(
+    (orch) => orch.address === validatorId
+  );
 
   // Get user's preferred currency
-  const userCurrency = state.user?.fiat_type || 'NGN';
+  const userCurrency = state.user?.fiat_type || "NGN";
   const currencySymbol = priceService.getCurrencySymbol(userCurrency);
 
-  // Mock wallet balance (keeping as requested)
-  const walletData = {
-    balance: 5000, // Mock balance
-    currency: 'LPT',
-    fiatValue: '$100,000',
-    fiatCurrency: 'USD'
-  };
+  // User's wallet balance
+  const walletBalanceLpt = wallet?.balanceLpt || 0;
+  const walletCurrency = "LPT";
 
   // Determine if this is a deposit flow (from wallet) or stake flow (from validator details)
   const urlParams = new URLSearchParams(window.location.search);
@@ -57,7 +57,10 @@ export const StakePage: React.FC = () => {
     const initializeAmounts = async () => {
       if (prices.lpt > 0) {
         const lptAmount = 0;
-        const fiatValue = await priceService.convertLptToFiat(lptAmount, userCurrency);
+        const fiatValue = await priceService.convertLptToFiat(
+          lptAmount,
+          userCurrency
+        );
         setFiatAmount(Math.round(fiatValue).toString());
       }
     };
@@ -71,7 +74,10 @@ export const StakePage: React.FC = () => {
   const handleAmountSelect = async (amount: string) => {
     setLptAmount(amount);
     const numericAmount = parseInt(amount.replace(/,/g, ""));
-    const fiatValue = await priceService.convertLptToFiat(numericAmount, userCurrency);
+    const fiatValue = await priceService.convertLptToFiat(
+      numericAmount,
+      userCurrency
+    );
     setFiatAmount(Math.round(fiatValue).toString());
   };
 
@@ -101,10 +107,9 @@ export const StakePage: React.FC = () => {
       };
 
       const response = await delegationService.stake(stakeRequest);
-      
+
       if (response.success) {
-     
-        navigate("/wallet"); 
+        navigate("/wallet");
       } else {
         console.error("Staking failed");
       }
@@ -148,10 +153,13 @@ export const StakePage: React.FC = () => {
             type="text"
             value={`${currencySymbol} ${fiatAmount}`}
             onChange={async (e) => {
-              const value = e.target.value.replace(/[^0-9]/g, '');
+              const value = e.target.value.replace(/[^0-9]/g, "");
               setFiatAmount(value);
               const numericAmount = parseInt(value) || 0;
-              const lptValue = await priceService.convertFiatToLpt(numericAmount, userCurrency);
+              const lptValue = await priceService.convertFiatToLpt(
+                numericAmount,
+                userCurrency
+              );
               setLptAmount(Math.round(lptValue).toString());
             }}
             className="w-full bg-transparent text-white text-lg font-medium focus:outline-none"
@@ -210,12 +218,12 @@ export const StakePage: React.FC = () => {
             <button
               onClick={() => handlePaymentMethodSelect("wallet")}
               disabled={
-                parseInt(lptAmount.replace(/,/g, "")) > walletData.balance
+                parseInt(lptAmount.replace(/,/g, "")) > walletBalanceLpt
               }
               className={`w-full flex items-center justify-between p-4 rounded-xl transition-colors ${
                 selectedPaymentMethod === "wallet"
                   ? "bg-[#C7EF6B]/10 border border-[#C7EF6B]"
-                  : parseInt(lptAmount.replace(/,/g, "")) > walletData.balance
+                  : parseInt(lptAmount.replace(/,/g, "")) > walletBalanceLpt
                     ? "bg-[#1a1a1a] border border-[#2a2a2a] opacity-50 cursor-not-allowed"
                     : "bg-[#1a1a1a] border border-[#2a2a2a] hover:bg-[#2a2a2a]"
               }`}
@@ -230,8 +238,7 @@ export const StakePage: React.FC = () => {
                 <div className="flex items-center space-x-2">
                   <span className="text-white font-normal">Wallet balance</span>
                   <span className="text-gray-400 text-xs mt-0.5">
-                    ({walletData.balance.toLocaleString()} {walletData.currency}
-                    )
+                    ({walletBalanceLpt.toLocaleString()} {walletCurrency})
                   </span>
                 </div>
               </div>
@@ -303,8 +310,8 @@ export const StakePage: React.FC = () => {
               : "bg-[#636363] text-white cursor-not-allowed"
           }`}
         >
-          {isStaking 
-            ? "Processing..." 
+          {isStaking
+            ? "Processing..."
             : isDepositFlow
               ? "Proceed to Deposit"
               : selectedPaymentMethod === "onchain" ||
@@ -322,7 +329,7 @@ export const StakePage: React.FC = () => {
         content={[
           "Stake to a validator to start earning rewards. To get started, choose an amount you want to stake and a payment method.",
           "Use your existing wallet balance, or deposit with fiat money or tokens from another wallet or exchange.",
-          "Review all details before confirming your stake to ensure everything is correct."
+          "Review all details before confirming your stake to ensure everything is correct.",
         ]}
       />
 
