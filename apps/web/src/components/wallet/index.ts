@@ -6,7 +6,6 @@ export { StakePage } from '../stake/StakePage';
 export { DepositPage } from '../transactions/DepositPage';
 export { WithdrawNetworkPage } from '../stake/WithdrawNetworkPage';
 export { ConfirmWithdrawalPage } from '../stake/ConfirmWithdrawalPage';
-export { WithdrawalSuccessPage } from './WithdrawalSuccessPage';
 export { WithdrawalSuccessDrawer } from './WithdrawalSuccessDrawer';
 export { UnstakeAmountPage } from '../stake/UnstakeAmountPage';
 export { ConfirmUnstakePage } from './ConfirmUnstakePage';

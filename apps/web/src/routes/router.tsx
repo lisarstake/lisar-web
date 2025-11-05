@@ -6,7 +6,6 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { LoadingSpinner } from '@/components/general/LoadingSpinner'
 
 const HomePage = lazy(() => import('@/screens/home-page'))
-const OnboardingPage = lazy(() => import('@/screens/onboarding-page'))
 const SignupPage = lazy(() => import('@/screens/signup-page'))
 const LoginPage = lazy(() => import('@/screens/login-page'))
 const ForgotPasswordPage = lazy(() => import('@/screens/forgot-password-page'))
@@ -18,7 +17,6 @@ const StakePage = lazy(() => import('@/screens/stake-page'))
 const DepositPage = lazy(() => import('@/screens/deposit-page'))
 const WithdrawNetworkPage = lazy(() => import('@/screens/withdraw-network-page'))
 const ConfirmWithdrawalPage = lazy(() => import('@/screens/confirm-withdrawal-page'))
-const WithdrawalSuccessPage = lazy(() => import('@/screens/withdrawal-success-page'))
 const UnstakeAmountPage = lazy(() => import('@/screens/unstake-amount-page'))
 const ConfirmUnstakePage = lazy(() => import('@/screens/confirm-unstake-page'))
 const HistoryPage = lazy(() => import('@/screens/history-page'))
@@ -56,14 +54,6 @@ export const router = createBrowserRouter([
       { path: 'reset-password', element: withSuspense(<ResetPasswordPage />) },
       
       // Protected routes
-      {
-        path: 'onboarding',
-        element: (
-          <ProtectedRoute>
-            {withSuspense(<OnboardingPage />)}
-          </ProtectedRoute>
-        ),
-      },
       {
         path: 'wallet',
         element: (
@@ -117,14 +107,6 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             {withSuspense(<ConfirmWithdrawalPage />)}
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: 'withdrawal-success/:validatorId',
-        element: (
-          <ProtectedRoute>
-            {withSuspense(<WithdrawalSuccessPage />)}
           </ProtectedRoute>
         ),
       },
