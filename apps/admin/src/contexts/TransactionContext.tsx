@@ -19,6 +19,7 @@ import {
   PaginatedTransactionsResponse,
 } from "@/services/transactions/types";
 import { transactionService } from "@/services/transactions";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface TransactionState {
   dashboardSummary: DashboardSummary | null;
@@ -70,9 +71,9 @@ const initialState: TransactionState = {
   transactionStats: null,
   filteredTransactions: null,
   currentFilters: null,
-  isLoadingSummary: true,
-  isLoadingTransactions: true,
-  isLoadingStats: true,
+  isLoadingSummary: false,
+  isLoadingTransactions: false,
+  isLoadingStats: false,
   isLoadingFilteredTransactions: false,
   error: null,
   lastFetched: null,
@@ -175,21 +176,15 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({
 }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
   const stateRef = useRef(state);
+  const { state: authState } = useAuth();
+  const hasLoadedRef = useRef(false);
 
   // Update ref whenever state changes
   useEffect(() => {
     stateRef.current = state;
   }, [state]);
 
-  // Initial fetch on mount
-  useEffect(() => {
-    refreshDashboardSummary();
-    refreshTransactions(10);
-    refreshTransactionStats();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const refreshDashboardSummary = async () => {
+  const refreshDashboardSummary = useCallback(async () => {
     dispatch({ type: "FETCH_SUMMARY_START" });
     try {
       const response = await transactionService.getDashboardSummary();
@@ -207,9 +202,9 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({
         payload: err instanceof Error ? err.message : "Network error",
       });
     }
-  };
+  }, []);
 
-  const refreshTransactions = async (limit: number = 10) => {
+  const refreshTransactions = useCallback(async (limit: number = 10) => {
     dispatch({ type: "FETCH_TRANSACTIONS_START" });
     try {
       const response = await transactionService.getTransactions(limit);
@@ -230,9 +225,9 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({
         payload: err instanceof Error ? err.message : "Network error",
       });
     }
-  };
+  }, []);
 
-  const refreshTransactionStats = async () => {
+  const refreshTransactionStats = useCallback(async () => {
     dispatch({ type: "FETCH_STATS_START" });
     try {
       const response = await transactionService.getTransactionStats();
@@ -250,7 +245,24 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({
         payload: err instanceof Error ? err.message : "Network error",
       });
     }
-  };
+  }, []);
+
+  // Reset loaded flag when user logs out
+  useEffect(() => {
+    if (!authState.isAuthenticated && !authState.isLoading) {
+      hasLoadedRef.current = false;
+    }
+  }, [authState.isAuthenticated, authState.isLoading]);
+
+  // Load dashboard data when user is authenticated (only once)
+  useEffect(() => {
+    if (authState.isAuthenticated && !authState.isLoading && !hasLoadedRef.current) {
+      hasLoadedRef.current = true;
+      // Load overview/dashboard data
+      refreshDashboardSummary();
+      refreshTransactions(10);
+    }
+  }, [authState.isAuthenticated, authState.isLoading, refreshDashboardSummary, refreshTransactions]);
 
   const getFilteredTransactions = useCallback(
     async (filters: TransactionFilters) => {

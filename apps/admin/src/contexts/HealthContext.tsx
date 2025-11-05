@@ -2,7 +2,7 @@
  * Admin Health Context
  */
 
-import React, { createContext, useContext, useEffect, useReducer, ReactNode } from "react";
+import React, { createContext, useContext, useEffect, useReducer, useCallback, ReactNode } from "react";
 import { ExternalServicesHealth, AdminPanelHealth, HealthApiResponse } from "@/services/health/types";
 import { healthService } from "@/services/health";
 
@@ -70,16 +70,8 @@ const HealthContext = createContext<HealthContextType | undefined>(undefined);
 export const HealthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
 
-  // Initial fetch on mount
-  useEffect(() => {
-    refreshDashboardHealth();
-    refreshAdminHealth();
-  }, []);
-
-  const refreshDashboardHealth = async () => {
-    if (!state.dashboardHealth) {
-      dispatch({ type: "HEALTH_START" });
-    }
+  const refreshDashboardHealth = useCallback(async () => {
+    dispatch({ type: "HEALTH_START" });
     try {
       const response = await healthService.getDashboardHealth();
       if (response.success && response.data) {
@@ -90,9 +82,9 @@ export const HealthProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     } catch (err) {
       dispatch({ type: "HEALTH_FAILURE", payload: err instanceof Error ? err.message : "Network error" });
     }
-  };
+  }, []);
 
-  const refreshAdminHealth = async () => {
+  const refreshAdminHealth = useCallback(async () => {
     try {
       const response = await healthService.getAdminHealth();
       if (response.success && response.data) {
@@ -102,12 +94,12 @@ export const HealthProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       // Admin health is optional, so we don't show errors for it
       console.error("Failed to fetch admin health:", err);
     }
-  };
+  }, []);
 
-  const refreshAll = async () => {
+  const refreshAll = useCallback(async () => {
     dispatch({ type: "HEALTH_REFRESH" });
     await Promise.all([refreshDashboardHealth(), refreshAdminHealth()]);
-  };
+  }, [refreshDashboardHealth, refreshAdminHealth]);
 
   const value: HealthContextType = { state, refreshDashboardHealth, refreshAdminHealth, refreshAll };
   return <HealthContext.Provider value={value}>{children}</HealthContext.Provider>;

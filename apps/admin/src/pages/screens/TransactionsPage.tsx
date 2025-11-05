@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useTransaction } from "@/contexts/TransactionContext";
 import { TransactionFilters } from "@/services/transactions/types";
-import { TransactionSummaryCards } from "./components/TransactionSummaryCards";
-import { TransactionList } from "./components/TransactionList";
+import { TransactionSummaryCards } from "../../components/screens/TransactionSummaryCards";
+import { TransactionList } from "../../components/screens/TransactionList";
 
 export const TransactionsPage: React.FC = () => {
-  const { state, getFilteredTransactions } = useTransaction();
+  const { state, getFilteredTransactions, refreshTransactionStats } = useTransaction();
   const { transactionStats, isLoadingStats, filteredTransactions, isLoadingFilteredTransactions, error } = state;
 
   const [filters, setFilters] = useState<TransactionFilters>({
@@ -15,6 +15,14 @@ export const TransactionsPage: React.FC = () => {
     sortOrder: "desc",
   });
 
+  // Fetch transaction stats on mount
+  useEffect(() => {
+    if (!transactionStats && !isLoadingStats) {
+      refreshTransactionStats();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); 
+
   useEffect(() => {
     getFilteredTransactions(filters);
   }, [filters, getFilteredTransactions]);
@@ -23,7 +31,7 @@ export const TransactionsPage: React.FC = () => {
     setFilters((prev) => ({
       ...prev,
       [key]: value,
-      page: 1, // Reset to first page when filters change
+      page: 1, 
     }));
   };
 

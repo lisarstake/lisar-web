@@ -1,19 +1,42 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useUser } from "@/contexts/UserContext";
 import { UserFilters } from "@/services/users/types";
-import { UserList } from "./components/UserList";
+import { UserList } from "../../components/screens/UserList";
 
 const SummaryCard: React.FC<{
   value: string;
   label: string;
   sub: string;
   positive?: boolean;
-}> = ({ value, label, sub, positive = true }) => (
+  isLoading?: boolean;
+}> = ({ value, label, sub, positive = true, isLoading = false }) => (
   <Card className="bg-white">
     <CardContent className="p-6">
-      <p className="text-3xl font-bold text-gray-900 mb-1">{value}</p>
+      {isLoading ? (
+        <Skeleton className="h-9 w-24 mb-3" />
+      ) : (
+        <p className="text-3xl font-bold text-gray-900 mb-1">{value}</p>
+      )}
       <p className="text-sm text-gray-600 mb-2">{label}</p>
+      {isLoading ? (
+        <Skeleton className="h-5 w-32" />
+      ) : (
+        <p className={`text-sm ${positive ? "text-green-600" : "text-red-600"}`}>
+          {sub}
+        </p>
+      )}
+    </CardContent>
+  </Card>
+);
+
+const SummaryCardSkeleton: React.FC = () => (
+  <Card className="bg-white">
+    <CardContent className="p-6">
+      <Skeleton className="h-9 w-24 mb-3" />
+      <Skeleton className="h-4 w-32 mb-2" />
+      <Skeleton className="h-5 w-32" />
     </CardContent>
   </Card>
 );
@@ -29,9 +52,13 @@ export const UsersPage: React.FC = () => {
     sortOrder: "asc",
   });
 
+  // Fetch user stats on mount if not already present
   useEffect(() => {
-    getUserStats();
-  }, [getUserStats]);
+    if (!userStats && !isLoadingStats) {
+      getUserStats();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run on mount
 
   useEffect(() => {
     getUsers(filters);
@@ -50,27 +77,42 @@ export const UsersPage: React.FC = () => {
   return (
     <div className="space-y-6 lg:space-y-8">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-        <SummaryCard
-          value={totalUsers.toLocaleString()}
-          label="Total Users"
-          sub={`${activeUsers} active`}
-        />
-        <SummaryCard
-          value={activeUsers.toLocaleString()}
-          label="Active Users"
-          sub={`${suspendedUsers} suspended`}
-        />
-        <SummaryCard
-          value={suspendedUsers.toLocaleString()}
-          label="Suspended Users"
-          sub={`${totalUsers - suspendedUsers} active`}
-          positive={false}
-        />
-        <SummaryCard
-          value={newUsersToday.toString()}
-          label="New Users Today"
-          sub={`${totalLptBalance.toFixed(2)} LPT total`}
-        />
+        {isLoadingStats ? (
+          <>
+            <SummaryCardSkeleton />
+            <SummaryCardSkeleton />
+            <SummaryCardSkeleton />
+            <SummaryCardSkeleton />
+          </>
+        ) : (
+          <>
+            <SummaryCard
+              value={totalUsers.toLocaleString()}
+              label="Total Users"
+              sub={`${activeUsers} active`}
+              isLoading={isLoadingStats}
+            />
+            <SummaryCard
+              value={activeUsers.toLocaleString()}
+              label="Active Users"
+              sub={`${suspendedUsers} suspended`}
+              isLoading={isLoadingStats}
+            />
+            <SummaryCard
+              value={suspendedUsers.toLocaleString()}
+              label="Suspended Users"
+              sub={`${totalUsers - suspendedUsers} active`}
+              positive={false}
+              isLoading={isLoadingStats}
+            />
+            <SummaryCard
+              value={newUsersToday.toString()}
+              label="New Users Today"
+              sub={`${totalLptBalance.toFixed(2)} LPT total`}
+              isLoading={isLoadingStats}
+            />
+          </>
+        )}
       </div>
 
       <div className="space-y-4">

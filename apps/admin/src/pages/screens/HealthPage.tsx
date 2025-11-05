@@ -79,8 +79,19 @@ const formatTimestamp = (timestamp: string): string => {
 };
 
 export const HealthPage: React.FC = () => {
-  const { state } = useHealth();
+  const { state, refreshDashboardHealth, refreshAdminHealth } = useHealth();
   const { dashboardHealth, adminHealth, isLoading, error } = state;
+
+  // Fetch data on mount if not already present
+  React.useEffect(() => {
+    if (!dashboardHealth && !isLoading) {
+      refreshDashboardHealth();
+    }
+    if (!adminHealth && !isLoading) {
+      refreshAdminHealth();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run on mount
 
   const services: ServiceItem[] = dashboardHealth
     ? [
