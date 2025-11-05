@@ -1,0 +1,72 @@
+/**
+ * Wallet API Types
+ * Defines interfaces for wallet-related API operations
+ */
+
+// Base API Response
+export interface WalletApiResponse<T> {
+  success: boolean;
+  data: T;
+  message?: string;
+  error?: string;
+}
+
+// Wallet Data Types
+export interface WalletData {
+  id: string;
+  address: string;
+  chain_type: string;
+  policy_ids: string[];
+  additional_signers: string[];
+  exported_at: number | null;
+  imported_at: number | null;
+  created_at: number;
+  owner_id: string;
+}
+
+// Balance Types
+export interface BalanceData {
+  balance: string;
+}
+
+export interface BalanceResponse {
+  success: boolean;
+  balance: string;
+}
+
+// Export Types
+export interface ExportData {
+  privateKey: string;
+}
+
+export interface ExportResponse {
+  success: boolean;
+  privateKey: string;
+}
+
+// Request Types
+export interface GetWalletRequest {
+  walletId: string;
+}
+
+export interface GetBalanceRequest {
+  walletAddress: string;
+  token: 'ETH' | 'LPT';
+}
+
+export interface ExportWalletRequest {
+  walletId: string;
+}
+
+// Configuration
+export interface WalletConfig {
+  baseUrl: string;
+  timeout: number;
+  retryAttempts: number;
+}
+
+export const WALLET_CONFIG: WalletConfig = {
+  baseUrl: 'https://lisar-api-1.onrender.com/api/v1',
+  timeout: 30000,
+  retryAttempts: 3,
+};

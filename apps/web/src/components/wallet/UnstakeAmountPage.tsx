@@ -1,0 +1,197 @@
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { ChevronLeft, CircleQuestionMark, ArrowLeftRight } from "lucide-react";
+import { HelpDrawer } from "@/components/general/HelpDrawer";
+import { BottomNavigation } from "@/components/general/BottomNavigation";
+import { useOrchestrators } from "@/contexts/OrchestratorContext";
+import { useDelegation } from "@/contexts/DelegationContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { usePrices } from "@/hooks/usePrices";
+import { priceService } from "@/lib/priceService";
+
+export const UnstakeAmountPage: React.FC = () => {
+  const navigate = useNavigate();
+  const { validatorId } = useParams<{ validatorId: string }>();
+  const [fiatAmount, setFiatAmount] = useState("0");
+  const [lptAmount, setLptAmount] = useState("0");
+  const [showHelpDrawer, setShowHelpDrawer] = useState(false);
+  const { orchestrators } = useOrchestrators();
+  const { userDelegation } = useDelegation();
+  const { state } = useAuth();
+  const { prices } = usePrices();
+
+  // Find the orchestrator by address (validatorId is the address)
+  const currentValidator = orchestrators.find(
+    (orch) => orch.address === validatorId
+  );
+
+  // Get user's current stake with this validator
+  const hasStakeWithValidator =
+    userDelegation &&
+    userDelegation.delegate.id === validatorId &&
+    parseFloat(userDelegation.bondedAmount) > 0;
+
+  const currentStake = hasStakeWithValidator
+    ? parseFloat(userDelegation.bondedAmount)
+    : 0;
+  const userCurrency = state.user?.fiat_type || "NGN";
+  const currencySymbol = priceService.getCurrencySymbol(userCurrency);
+
+
+  const handleBackClick = () => {
+    navigate(-1);
+  };
+
+  const handleAmountSelect = (amount: string) => {
+    const numericAmount = parseInt(amount.replace(/,/g, ""));
+    setLptAmount(amount);
+    const fiatValue = priceService.convertLptToFiat(
+      numericAmount,
+      userCurrency
+    );
+    setFiatAmount(Math.round(fiatValue).toString());
+  };
+
+  const handleProceed = () => {
+    navigate(
+      `/confirm-unstake/${currentValidator?.address}?amount=${lptAmount}`
+    );
+  };
+
+  const handleHelpClick = () => {
+    setShowHelpDrawer(true);
+  };
+
+  return (
+    <div className="h-screen bg-[#050505] text-white flex flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between px-6 py-8">
+        <button
+          onClick={handleBackClick}
+          className="w-8 h-8 flex items-center justify-center"
+        >
+          <ChevronLeft color="#C7EF6B" />
+        </button>
+
+        <h1 className="text-lg font-medium text-white">Unstake</h1>
+
+        <button
+          onClick={handleHelpClick}
+          className="w-8 h-8 bg-[#2a2a2a] rounded-full flex items-center justify-center"
+        >
+          <CircleQuestionMark color="#86B3F7" size={16} />
+        </button>
+      </div>
+
+      {/* Amount Input Fields */}
+      <div className="px-6 py-6 space-y-2">
+        <div className="bg-[#1a1a1a] rounded-xl p-4">
+          <input
+            type="text"
+            value={`${lptAmount} LPT`}
+            onChange={(e) => {
+              const value = e.target.value.replace(/[^0-9]/g, "");
+              setLptAmount(value);
+              const numericAmount = parseInt(value) || 0;
+              const fiatValue = priceService.convertLptToFiat(
+                numericAmount,
+                userCurrency
+              );
+              setFiatAmount(Math.round(fiatValue).toString());
+            }}
+            className="w-full bg-transparent text-white text-lg font-medium focus:outline-none"
+          />
+        </div>
+
+        {/* Conversion Arrow */}
+        <div className="flex justify-center">
+          <ArrowLeftRight
+            size={20}
+            color="#C7EF6B"
+            className="font-extrabold"
+          />
+        </div>
+
+        {/* Fiat Amount */}
+        <div className="bg-[#1a1a1a] rounded-xl p-4">
+          <input
+            type="text"
+            value={`${currencySymbol} ${fiatAmount}`}
+            readOnly
+            tabIndex={-1}
+            className="w-full bg-transparent text-white text-lg font-medium focus:outline-none"
+          />
+        </div>
+      </div>
+
+      {/* Predefined LPT Amounts */}
+      <div className="px-6 py-4">
+        <div className="flex space-x-3">
+          {["1000", "5000", "10000"].map((amount) => (
+            <button
+              key={amount}
+              onClick={() => handleAmountSelect(amount)}
+              className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-colors ${
+                lptAmount === amount
+                  ? "bg-[#C7EF6B] text-black"
+                  : "bg-[#1a1a1a] text-white hover:bg-[#2a2a2a]"
+              }`}
+            >
+              {amount}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Current Stake Display */}
+      {hasStakeWithValidator && (
+        <div className="px-6 py-3">
+          <div className="bg-[#1a1a1a] rounded-lg px-4 py-4.5">
+            <div className="flex justify-between items-center">
+              <span className="text-gray-400 text-base">Staked</span>
+              <span className="text-[#C7EF6B] font-medium">
+                {Math.round(currentStake).toLocaleString()} LPT
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Proceed Button */}
+      <div className="flex-1 flex items-end px-6 pb-24">
+        <button
+          onClick={handleProceed}
+          disabled={
+            !lptAmount ||
+            parseInt(lptAmount) > currentStake ||
+            parseInt(lptAmount) <= 0
+          }
+          className={`w-full py-4 rounded-xl font-semibold text-lg transition-colors ${
+            lptAmount &&
+            parseInt(lptAmount) <= currentStake &&
+            parseInt(lptAmount) > 0
+              ? "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
+              : "bg-[#636363] text-white cursor-not-allowed"
+          }`}
+        >
+          Proceed to Unstake
+        </button>
+      </div>
+
+      {/* Help Drawer */}
+      <HelpDrawer
+        isOpen={showHelpDrawer}
+        onClose={() => setShowHelpDrawer(false)}
+        title="Unstaking Guide"
+        content={[
+          "Choose how much you want to unstake from this validator.",
+          "You can unstake part or all of your stake. You won't earn rewards during the unbonding period.",
+          "Your funds will be available after the unbonding period ends.",
+        ]}
+      />
+
+      {/* Bottom Navigation */}
+      <BottomNavigation />
+    </div>
+  );
+};
