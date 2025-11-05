@@ -5,6 +5,7 @@ import { WalletProvider } from "@/contexts/WalletContext";
 import { TransactionProvider } from "@/contexts/TransactionContext";
 import { DelegationProvider } from "@/contexts/DelegationContext";
 import { LeaderboardProvider } from "@/contexts/LeaderboardContext";
+import { DashboardProvider } from "@/contexts/DashboardContext";
 
 export default function App() {
   const location = useLocation();
@@ -37,45 +38,47 @@ export default function App() {
 
   return (
     <AuthProvider>
-      <OrchestratorProvider>
-        <WalletProvider>
-          <TransactionProvider>
-            <DelegationProvider>
-              <LeaderboardProvider>
-                <div className="min-h-screen bg-white">
-                  {useDesktopView ? (
-                    <main className="app-main">
-                      <Outlet />
-                    </main>
-                  ) : (
-                    <>
-                      {/* Desktop: Center mobile-like UI */}
-                      <div className="hidden md:flex md:items-center md:justify-center md:h-screen md:bg-[#0a0a0a]">
-                        <div className="relative w-full max-w-[390px] h-full max-h-[99vh] shadow-2xl overflow-hidden">
+      <DashboardProvider>
+        <OrchestratorProvider>
+          <WalletProvider>
+            <TransactionProvider>
+              <DelegationProvider>
+                <LeaderboardProvider>
+                  <div className="min-h-screen bg-white">
+                    {useDesktopView ? (
+                      <main className="app-main">
+                        <Outlet />
+                      </main>
+                    ) : (
+                      <>
+                        {/* Desktop: Center mobile-like UI */}
+                        <div className="hidden md:flex md:items-center md:justify-center md:h-screen md:bg-[#0a0a0a]">
+                          <div className="relative w-full max-w-[390px] h-full max-h-[99vh] shadow-2xl overflow-hidden">
+                            <main
+                              className={`app-main h-full overflow-y-auto ${hasBottomNav ? "with-bottom-nav" : ""}`}
+                            >
+                              <Outlet />
+                            </main>
+                          </div>
+                        </div>
+
+                        {/* Mobile: Full width */}
+                        <div className="md:hidden">
                           <main
-                            className={`app-main h-full overflow-y-auto ${hasBottomNav ? "with-bottom-nav" : ""}`}
+                            className={`app-main ${hasBottomNav ? "with-bottom-nav" : ""}`}
                           >
                             <Outlet />
                           </main>
                         </div>
-                      </div>
-
-                      {/* Mobile: Full width */}
-                      <div className="md:hidden">
-                        <main
-                          className={`app-main ${hasBottomNav ? "with-bottom-nav" : ""}`}
-                        >
-                          <Outlet />
-                        </main>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </LeaderboardProvider>
-            </DelegationProvider>
-          </TransactionProvider>
-        </WalletProvider>
-      </OrchestratorProvider>
+                      </>
+                    )}
+                  </div>
+                </LeaderboardProvider>
+              </DelegationProvider>
+            </TransactionProvider>
+          </WalletProvider>
+        </OrchestratorProvider>
+      </DashboardProvider>
     </AuthProvider>
   );
 }
