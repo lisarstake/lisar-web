@@ -3,6 +3,7 @@ import { createBrowserRouter } from 'react-router-dom'
 import App from '@/App'
 import { ErrorBoundary } from '@/components/general/ErrorBoundary'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
+import { LoadingSpinner } from '@/components/general/LoadingSpinner'
 
 const HomePage = lazy(() => import('@/screens/home-page'))
 const OnboardingPage = lazy(() => import('@/screens/onboarding-page'))
@@ -34,7 +35,7 @@ const NotificationsPage = lazy(() => import('@/screens/notifications-page'))
 const NotFoundPage = lazy(() => import('@/screens/NotFoundPage'))
 
 const withSuspense = (element: ReactNode) => (
-  <Suspense fallback={<div>Loading...</div>}>{element}</Suspense>
+  <Suspense fallback={<LoadingSpinner />}>{element}</Suspense>
 )
 
 export const router = createBrowserRouter([
