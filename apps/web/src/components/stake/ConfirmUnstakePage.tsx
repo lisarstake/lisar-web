@@ -3,7 +3,8 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ChevronLeft, CircleQuestionMark } from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
-import { UnstakeSuccessDrawer } from "./UnstakeSuccessDrawer";
+import { SuccessDrawer } from "@/components/ui/SuccessDrawer";
+import { ErrorDrawer } from "@/components/ui/ErrorDrawer";
 import { useOrchestrators } from "@/contexts/OrchestratorContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { priceService } from "@/lib/priceService";
@@ -17,6 +18,8 @@ export const ConfirmUnstakePage: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
   const [showSuccessDrawer, setShowSuccessDrawer] = useState(false);
+  const [showErrorDrawer, setShowErrorDrawer] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string>("");
   const { orchestrators } = useOrchestrators();
   const { state } = useAuth();
 
@@ -64,12 +67,13 @@ export const ConfirmUnstakePage: React.FC = () => {
       if (response.success) {
         setShowSuccessDrawer(true);
       } else {
-        console.error("Unbonding failed");
-        // Show error message
+        setErrorMessage("Failed to unstake. Please try again.");
+        setShowErrorDrawer(true);
       }
     } catch (error) {
       console.error("Unbonding error:", error);
-      // Show error message
+      setErrorMessage("An unexpected error occurred. Please try again.");
+      setShowErrorDrawer(true);
     } finally {
       setIsProcessing(false);
     }
@@ -175,9 +179,27 @@ export const ConfirmUnstakePage: React.FC = () => {
       />
 
       {/* Success Drawer */}
-      <UnstakeSuccessDrawer
+      <SuccessDrawer
         isOpen={showSuccessDrawer}
-        onClose={() => setShowSuccessDrawer(false)}
+        onClose={() => {
+          setShowSuccessDrawer(false);
+          navigate("/wallet");
+        }}
+        title="Unstake Successful!"
+        message="Your unstaking request has been processed successfully. Your funds will be available after the unbonding period."
+      />
+
+      {/* Error Drawer */}
+      <ErrorDrawer
+        isOpen={showErrorDrawer}
+        onClose={() => setShowErrorDrawer(false)}
+        title="Unstake Failed"
+        message={errorMessage}
+        onRetry={() => {
+          setShowErrorDrawer(false);
+          handleProceed();
+        }}
+        retryText="Try Again"
       />
 
       {/* Bottom Navigation */}

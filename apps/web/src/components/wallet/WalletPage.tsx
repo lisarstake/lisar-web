@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { OrchestratorList } from "./OrchestratorList";
+import { OrchestratorList } from "../validator/OrchestratorList";
 import { WalletActionButtons } from "./WalletActionButtons";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { useOrchestrators } from "@/contexts/OrchestratorContext";

@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
-import { TransactionList } from "@/components/wallet/TransactionList";
+import { TransactionList } from "@/components/transactions/TransactionList";
 import { useTransactions } from "@/contexts/TransactionContext";
 import { TransactionData } from "@/services/transactions/types";
 
