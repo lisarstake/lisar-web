@@ -26,6 +26,7 @@ export interface OrchestratorApiResponse {
 export interface OrchestratorResponse {
   address: string;
   ensName: string;
+  avatar?: string;
   apy: string;
   totalStake: string;
   totalVolumeETH: string;
@@ -35,6 +36,7 @@ export interface OrchestratorResponse {
   active: boolean;
   activeSince: string;
   description: string;
+  yieldSource?: string;
   ensIdentity?: EnsIdentity; // ENS identity data
 }
 

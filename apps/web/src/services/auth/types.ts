@@ -113,6 +113,7 @@ export interface User {
   is_suspended: boolean;
   suspended_at?: string;
   suspension_reason?: string;
+  is_onboarded?: boolean;
   created_date: string;
   updated_at: string;
 }
@@ -140,6 +141,10 @@ export interface UpdateProfileRequest {
   country?: string;
   state?: string;
   fiat_type?: string;
+}
+
+export interface UpdateOnboardingStatusRequest {
+  is_onboarded: boolean;
 }
 
 export interface ChangePasswordRequest {

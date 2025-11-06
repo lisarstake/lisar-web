@@ -95,6 +95,17 @@ export class TransactionService implements ITransactionApiService {
 
   // Get all transactions for a user
   async getUserTransactions(userId: string): Promise<TransactionApiResponse<TransactionData[]>> {
+    const token = this.getStoredToken();
+    if (!token) {
+      return {
+        success: false,
+        data: null as unknown as TransactionData[],
+        message: "Authentication required",
+        error: "No authentication token found",
+        count: 0,
+      };
+    }
+
     return this.makeRequest<TransactionData[]>(`/transactions/user/${userId}`, {
       method: "GET",
     });
@@ -102,6 +113,17 @@ export class TransactionService implements ITransactionApiService {
 
   // Get a specific transaction by ID
   async getTransactionById(transactionId: string): Promise<TransactionApiResponse<TransactionData>> {
+    const token = this.getStoredToken();
+    if (!token) {
+      return {
+        success: false,
+        data: null as unknown as TransactionData,
+        message: "Authentication required",
+        error: "No authentication token found",
+        count: 0,
+      };
+    }
+
     return this.makeRequest<TransactionData>(`/transactions/${transactionId}`, {
       method: "GET",
     });
@@ -112,6 +134,17 @@ export class TransactionService implements ITransactionApiService {
     userId: string, 
     type: TransactionType
   ): Promise<TransactionApiResponse<TransactionData[]>> {
+    const token = this.getStoredToken();
+    if (!token) {
+      return {
+        success: false,
+        data: null as unknown as TransactionData[],
+        message: "Authentication required",
+        error: "No authentication token found",
+        count: 0,
+      };
+    }
+
     return this.makeRequest<TransactionData[]>(`/transactions/user/${userId}/type/${type}`, {
       method: "GET",
     });
@@ -119,11 +152,32 @@ export class TransactionService implements ITransactionApiService {
 
   // Create a new transaction
   async createTransaction(request: CreateTransactionRequest): Promise<CreateTransactionResponse> {
+    const token = this.getStoredToken();
+    if (!token) {
+      return {
+        success: false,
+        data: {
+          id: "",
+          user_id: request.user_id,
+          transaction_hash: request.transaction_hash,
+          transaction_type: request.transaction_type,
+          amount: request.amount,
+          token_address: request.token_address,
+          token_symbol: request.token_symbol,
+          wallet_address: request.wallet_address,
+          wallet_id: request.wallet_id,
+          status: request.status,
+          source: request.source,
+          svix_id: "",
+          created_at: new Date().toISOString(),
+        },
+      };
+    }
+
     try {
-      const token = this.getStoredToken();
       const headers = {
         "Content-Type": "application/json",
-        ...(token && { Authorization: `Bearer ${token}` }),
+        Authorization: `Bearer ${token}`,
       };
 
       const response = await http.request({
@@ -165,11 +219,32 @@ export class TransactionService implements ITransactionApiService {
     transactionId: string, 
     request: UpdateTransactionStatusRequest
   ): Promise<UpdateTransactionStatusResponse> {
+    const token = this.getStoredToken();
+    if (!token) {
+      return {
+        success: false,
+        data: {
+          id: transactionId,
+          user_id: "",
+          transaction_hash: "",
+          transaction_type: "deposit",
+          amount: "0",
+          token_address: "",
+          token_symbol: "",
+          wallet_address: "",
+          wallet_id: "",
+          status: request.status,
+          source: "",
+          svix_id: "",
+          created_at: new Date().toISOString(),
+        },
+      };
+    }
+
     try {
-      const token = this.getStoredToken();
       const headers = {
         "Content-Type": "application/json",
-        ...(token && { Authorization: `Bearer ${token}` }),
+        Authorization: `Bearer ${token}`,
       };
 
       const response = await http.request({

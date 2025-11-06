@@ -18,6 +18,7 @@ import {
   ResetPasswordRequest,
   ResetPasswordResponse,
   UpdateProfileRequest,
+  UpdateOnboardingStatusRequest,
   ChangePasswordRequest,
   ChangePasswordResponse,
   RefreshTokenRequest,
@@ -381,6 +382,26 @@ export class AuthService implements IAuthApiService {
         error: error instanceof Error ? error.message : "Token decode error",
       };
     }
+  }
+
+  async updateOnboardingStatus(
+    userId: string,
+    request: UpdateOnboardingStatusRequest
+  ): Promise<AuthApiResponse<User>> {
+    const token = this.getStoredToken();
+    if (!token) {
+      return {
+        success: false,
+        message: "No authentication token found",
+        data: null as unknown as User,
+        error: "Authentication required",
+      };
+    }
+
+    return this.makeRequest<User>(`/users/profile/${userId}/onboard`, {
+      method: "PATCH",
+      body: JSON.stringify(request),
+    });
   }
 
   // Image Upload

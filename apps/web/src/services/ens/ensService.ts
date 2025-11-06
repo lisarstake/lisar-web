@@ -56,11 +56,11 @@ export class EnsService implements IEnsApiService {
     config: any = {}
   ): Promise<EnsApiResponse<T>> {
     try {
-      // Add authorization header if token exists
+      // Require authorization token
       const token = this.getStoredToken();
       const headers = {
         "Content-Type": "application/json",
-        ...(token && { Authorization: `Bearer ${token}` }),
+        Authorization: `Bearer ${token}`,
         ...config.headers,
       };
 
@@ -90,6 +90,16 @@ export class EnsService implements IEnsApiService {
    * Get ENS identity for a single address or ENS name
    */
   async getEnsIdentity(addressOrEns: string): Promise<EnsApiResponse<EnsIdentity>> {
+    const token = this.getStoredToken();
+    if (!token) {
+      return {
+        success: false,
+        data: null as unknown as EnsIdentity,
+        message: "Authentication required",
+        error: "No authentication token found",
+      };
+    }
+
     return this.makeRequest<EnsIdentity>(`/ens/identity/${addressOrEns}`, {
       method: "GET",
     });

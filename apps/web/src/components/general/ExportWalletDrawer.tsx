@@ -6,7 +6,14 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import { Copy as CopyIcon, Eye, EyeOff, Check } from "lucide-react";
+import {
+  Copy as CopyIcon,
+  Eye,
+  EyeOff,
+  Check,
+  EyeClosed,
+  EyeIcon,
+} from "lucide-react";
 import { authService } from "@/services/auth";
 import { walletService } from "@/services";
 import { useAuth } from "@/contexts/AuthContext";
@@ -123,11 +130,17 @@ export const ExportWalletDrawer: React.FC<ExportWalletDrawerProps> = ({
                       showPassword ? "Hide password" : "Show password"
                     }
                   >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    {showPassword ? (
+                      <EyeIcon className="w-5 h-5" />
+                    ) : (
+                      <EyeClosed className="w-5 h-5" />
+                    )}
                   </button>
                 </div>
                 {exportError && (
-                  <p className="text-red-500 text-sm mt-2 pl-1">{exportError}</p>
+                  <p className="text-red-500 text-sm mt-2 pl-1">
+                    {exportError}
+                  </p>
                 )}
               </div>
             </div>
@@ -147,23 +160,27 @@ export const ExportWalletDrawer: React.FC<ExportWalletDrawerProps> = ({
                     value={privateKey}
                     className="flex-1 px-4 py-3 bg-[#121212] border border-[#2a2a2a] rounded-lg text-gray-100"
                   />
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(privateKey);
-                    setCopied(true);
-                    window.setTimeout(() => setCopied(false), 1200);
-                  }}
-                  className={`px-3 py-3 bg-[#1f1f1f] border border-[#2a2a2a] rounded-lg hover:bg-[#2a2a2a] transition-all ${
-                    copied ? "scale-105 border-[#C7EF6B]" : ""
-                  }`}
-                  aria-label={copied ? "Copied" : "Copy private key"}
-                >
-                  {copied ? (
-                    <Check size={16} color="#C7EF6B" className="animate-pulse" />
-                  ) : (
-                    <CopyIcon size={16} color="#C7EF6B" />
-                  )}
-                </button>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(privateKey);
+                      setCopied(true);
+                      window.setTimeout(() => setCopied(false), 1200);
+                    }}
+                    className={`px-3 py-3 bg-[#1f1f1f] border border-[#2a2a2a] rounded-lg hover:bg-[#2a2a2a] transition-all ${
+                      copied ? "scale-105 border-[#C7EF6B]" : ""
+                    }`}
+                    aria-label={copied ? "Copied" : "Copy private key"}
+                  >
+                    {copied ? (
+                      <Check
+                        size={16}
+                        color="#C7EF6B"
+                        className="animate-pulse"
+                      />
+                    ) : (
+                      <CopyIcon size={16} color="#C7EF6B" />
+                    )}
+                  </button>
                 </div>
               </div>
             </div>

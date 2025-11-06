@@ -68,7 +68,7 @@ export const LoginForm: React.FC = () => {
     try {
       setIsSubmitting(true);
 
-      // Store tokens in localStorage (Google OAuth users are remembered by default)
+      // Store tokens in localStorage
       localStorage.setItem("auth_token", tokens.access_token);
       localStorage.setItem("refresh_token", tokens.refresh_token);
 
@@ -88,9 +88,13 @@ export const LoginForm: React.FC = () => {
           details: "",
         });
 
-        // Redirect to wallet after a brief delay
+        // Wait for state to update, then redirect based on onboarding status
         setTimeout(() => {
-          navigate("/wallet");
+          if (state.user?.is_onboarded === false) {
+            navigate("/learn/what-is-lisar", { replace: true });
+          } else {
+            navigate("/wallet", { replace: true });
+          }
         }, 1500);
       } else {
         throw new Error(response.message || "Google sign-in failed");
@@ -131,7 +135,14 @@ export const LoginForm: React.FC = () => {
       );
 
       if (response.success) {
-        navigate("/wallet");
+        // Wait for state to update, then redirect based on onboarding status
+        setTimeout(() => {
+          if (state.user?.is_onboarded === false) {
+            navigate("/learn/what-is-lisar", { replace: true });
+          } else {
+            navigate("/wallet", { replace: true });
+          }
+        }, 100);
       } else {
         // Show error in drawer
         setErrorDrawer({

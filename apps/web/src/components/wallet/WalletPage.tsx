@@ -52,7 +52,7 @@ export const WalletPage: React.FC = () => {
     <div className="h-screen bg-[#050505] text-white flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-8">
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-2.5">
           <button
             onClick={handleProfileClick}
             className="w-10 h-10 bg-[#86B3F7] rounded-full flex items-center justify-center hover:bg-[#96C3F7] transition-colors cursor-pointer"
@@ -71,12 +71,16 @@ export const WalletPage: React.FC = () => {
               </span>
             )}
           </button>
-          <div className="flex flex-col gap-1">
-            <span className="text-gray-300 text-sm font-normal">
-              @{state.user?.email?.split("@")[0] || "User"}
-            </span>
+          <div className="flex flex-col gap-0.5">
             <span className="text-gray-100 text-sm font-medium">
-              Welcome back!
+              Hi, {state.user?.full_name?.split(" ")[0] || "User"}!
+            </span>
+            <span className="text-gray-300 text-xs font-normal">
+              {state.user?.email
+                ? state.user.email.length > 20
+                  ? state.user.email.slice(0, 20) + "..."
+                  : state.user.email
+                : "User"}
             </span>
           </div>
         </div>

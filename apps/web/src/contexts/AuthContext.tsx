@@ -393,6 +393,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           const userResponse = await authService.getCurrentUser();
 
           if (userResponse && userResponse.success && userResponse.data) {
+            console.log(userResponse.data.user_id);
             // Get wallet info from user data
             const wallet: Wallet = {
               id: userResponse.data.wallet_id || "wallet_id",

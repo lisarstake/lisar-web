@@ -70,11 +70,11 @@ export class DelegationService implements IDelegationApiService {
     config: any = {}
   ): Promise<DelegationApiResponse<T>> {
     try {
-      // Add authorization header if token exists
+      // Require authorization token
       const token = this.getStoredToken();
       const headers = {
         "Content-Type": "application/json",
-        ...(token && { Authorization: `Bearer ${token}` }),
+        Authorization: `Bearer ${token}`,
         ...config.headers,
       };
 
@@ -104,6 +104,16 @@ export class DelegationService implements IDelegationApiService {
   async getOrchestrators(
     params?: OrchestratorQueryParams
   ): Promise<DelegationApiResponse<OrchestratorResponse[]>> {
+    const token = this.getStoredToken();
+    if (!token) {
+      return {
+        success: false,
+        data: null as unknown as OrchestratorResponse[],
+        message: "Authentication required",
+        error: "No authentication token found",
+      };
+    }
+
     let endpoint = "/orchestrator";
     
     if (params) {
@@ -127,11 +137,21 @@ export class DelegationService implements IDelegationApiService {
 
   // Stake tokens to an orchestrator
   async stake(request: StakeRequest): Promise<StakeResponse> {
+    const token = this.getStoredToken();
+    if (!token) {
+      return {
+        success: false,
+        data: {
+          transactionHash: "",
+          blockNumber: "",
+        },
+      };
+    }
+
     try {
-      const token = this.getStoredToken();
       const headers = {
         "Content-Type": "application/json",
-        ...(token && { Authorization: `Bearer ${token}` }),
+        Authorization: `Bearer ${token}`,
       };
 
       const response = await http.request({
@@ -159,11 +179,18 @@ export class DelegationService implements IDelegationApiService {
 
   // Unbond tokens from an orchestrator
   async unbond(request: UnbondRequest): Promise<UnbondResponse> {
+    const token = this.getStoredToken();
+    if (!token) {
+      return {
+        success: false,
+        txHash: "",
+      };
+    }
+
     try {
-      const token = this.getStoredToken();
       const headers = {
         "Content-Type": "application/json",
-        ...(token && { Authorization: `Bearer ${token}` }),
+        Authorization: `Bearer ${token}`,
       };
 
       const response = await http.request({
@@ -188,11 +215,19 @@ export class DelegationService implements IDelegationApiService {
 
   // Withdraw unbonded stake from Livepeer
   async withdrawStake(request: WithdrawStakeRequest): Promise<WithdrawStakeResponse> {
+    const token = this.getStoredToken();
+    if (!token) {
+      return {
+        success: false,
+        error: "No authentication token found",
+        message: "Authentication required",
+      };
+    }
+
     try {
-      const token = this.getStoredToken();
       const headers = {
         "Content-Type": "application/json",
-        ...(token && { Authorization: `Bearer ${token}` }),
+        Authorization: `Bearer ${token}`,
       };
 
       const response = await http.request({
@@ -219,11 +254,37 @@ export class DelegationService implements IDelegationApiService {
 
   // Get delegations for a delegator
   async getDelegations(delegatorAddress: string): Promise<DelegationResponse> {
+    const token = this.getStoredToken();
+    if (!token) {
+      return {
+        success: false,
+        data: {
+          bondedAmount: "0",
+          delegate: {
+            active: false,
+            feeShare: "0",
+            id: "",
+            rewardCut: "0",
+            status: "Not Registered",
+            totalStake: "0",
+          },
+          delegatedAmount: "0",
+          fees: "0",
+          id: delegatorAddress,
+          lastClaimRound: { id: "0" },
+          principal: "0",
+          startRound: "0",
+          unbonded: "0",
+          unbondingLocks: [],
+          withdrawnFees: "0",
+        },
+      };
+    }
+
     try {
-      const token = this.getStoredToken();
       const headers = {
         "Content-Type": "application/json",
-        ...(token && { Authorization: `Bearer ${token}` }),
+        Authorization: `Bearer ${token}`,
       };
 
       const response = await http.request({
@@ -266,11 +327,22 @@ export class DelegationService implements IDelegationApiService {
 
   // Get delegator transactions 
   async getDelegatorTransactions(delegatorAddress: string): Promise<DelegatorTransactionsResponse> {
+    const token = this.getStoredToken();
+    if (!token) {
+      return {
+        success: false,
+        data: {
+          pendingStakeTransactions: [],
+          completedStakeTransactions: [],
+          currentRound: "0",
+        },
+      };
+    }
+
     try {
-      const token = this.getStoredToken();
       const headers = {
         "Content-Type": "application/json",
-        ...(token && { Authorization: `Bearer ${token}` }),
+        Authorization: `Bearer ${token}`,
       };
 
       const response = await http.request({
@@ -298,11 +370,20 @@ export class DelegationService implements IDelegationApiService {
 
   // Get delegator rewards over rounds
   async getDelegatorRewards(delegatorAddress: string): Promise<DelegatorRewardsResponse> {
+    const token = this.getStoredToken();
+    if (!token) {
+      return {
+        success: false,
+        data: {
+          rewards: [],
+        },
+      };
+    }
+
     try {
-      const token = this.getStoredToken();
       const headers = {
         "Content-Type": "application/json",
-        ...(token && { Authorization: `Bearer ${token}` }),
+        Authorization: `Bearer ${token}`,
       };
 
       const response = await http.request({
@@ -328,11 +409,24 @@ export class DelegationService implements IDelegationApiService {
 
   // Get delegator stake profile
   async getDelegatorStakeProfile(delegatorAddress: string): Promise<DelegatorStakeProfileResponse> {
+    const token = this.getStoredToken();
+    if (!token) {
+      return {
+        success: false,
+        data: {
+          delegator: delegatorAddress,
+          currentStake: "0",
+          lifetimeStaked: "0",
+          lifetimeUnbonded: "0",
+          lifetimeRewards: "0",
+        },
+      };
+    }
+
     try {
-      const token = this.getStoredToken();
       const headers = {
         "Content-Type": "application/json",
-        ...(token && { Authorization: `Bearer ${token}` }),
+        Authorization: `Bearer ${token}`,
       };
 
       const response = await http.request({

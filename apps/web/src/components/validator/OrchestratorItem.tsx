@@ -1,7 +1,9 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import QRCode from "qrcode";
 import { OrchestratorResponse } from "@/services/delegation/types";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getColorForAddress } from "@/lib/qrcode";
 
 interface OrchestratorItemProps {
   orchestrator?: OrchestratorResponse;
@@ -15,17 +17,47 @@ export const OrchestratorItem: React.FC<OrchestratorItemProps> = ({
   isLoading = false,
 }) => {
   const navigate = useNavigate();
+  const qrCanvasRef = useRef<HTMLCanvasElement>(null);
+  const [avatarError, setAvatarError] = useState(false);
 
   const handleClick = () => {
     if (isLoading || !orchestrator) return;
-    
+
     if (onClick) {
       onClick();
     } else {
-      // Use address as identifier for now
       navigate(`/validator-details/${orchestrator.address}`);
     }
   };
+
+  // Generate QR code when there's no avatar or avatar fails to load
+  useEffect(() => {
+    if (!orchestrator || !qrCanvasRef.current) return;
+
+    const avatar = orchestrator?.avatar || orchestrator?.ensIdentity?.avatar;
+    if (avatar && !avatarError) return; // Don't generate QR if avatar exists and loaded
+
+    const address = orchestrator.address;
+    if (!address) return;
+
+    const qrColor = getColorForAddress(address);
+
+    QRCode.toCanvas(
+      qrCanvasRef.current,
+      address,
+      {
+        width: 48,
+        margin: 1,
+        color: {
+          dark: qrColor,
+          light: "#1a1a1a",
+        },
+      },
+      (error) => {
+        if (error) console.error("QR Code generation error:", error);
+      }
+    );
+  }, [orchestrator, avatarError]);
 
   if (isLoading) {
     return (
@@ -45,10 +77,13 @@ export const OrchestratorItem: React.FC<OrchestratorItemProps> = ({
     );
   }
 
-  // Get display name from ENS identity or fallback to ensName
-  const displayName = orchestrator?.ensIdentity?.name || orchestrator?.ensName || 'Unknown Validator';
-  const avatar = orchestrator?.ensIdentity?.avatar;
-  const displayInitial = displayName.charAt(0)?.toUpperCase() || '?';
+  // Get display name from ENS identity
+  const displayName =
+    orchestrator?.ensIdentity?.name ||
+    orchestrator?.ensName ||
+    "Unknown Validator";
+  const avatar = orchestrator?.avatar || orchestrator?.ensIdentity?.avatar;
+  const displayInitial = displayName.charAt(0)?.toUpperCase() || "?";
 
   return (
     <div
@@ -56,41 +91,46 @@ export const OrchestratorItem: React.FC<OrchestratorItemProps> = ({
       onClick={handleClick}
     >
       <div className="flex items-center space-x-3">
-        {avatar ? (
+        {avatar && !avatarError ? (
           <img
             src={avatar}
             alt={displayName}
             className="w-12 h-12 rounded-full object-cover"
-            onError={(e) => {
-              // Fallback to gradient background if avatar fails to load
-              e.currentTarget.style.display = 'none';
+            onError={() => {
+              // Fallback to QR code if avatar fails to load
+              setAvatarError(true);
             }}
           />
         ) : (
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#C7EF6B] to-[#B8E55A] flex items-center justify-center">
-            <span className="text-black text-lg font-bold">
-              {displayInitial}
-            </span>
+          <div className="w-12 h-12 rounded-full bg-[#1a1a1a] flex items-center justify-center overflow-hidden">
+            <canvas ref={qrCanvasRef} className="w-full h-full rounded-full" />
           </div>
         )}
         <div>
           <h3 className="text-gray-100 font-medium text-base">
-            {displayName.length > 20 
-              ? `${displayName.substring(0, 16)}..` 
+            {displayName.length > 20
+              ? `${displayName.substring(0, 16)}..`
               : displayName}
           </h3>
           <p className="text-gray-400 text-xs">
-            Staked: {Math.round(parseFloat(orchestrator?.totalStake || '0')).toLocaleString()} LPT
+            Staked:{" "}
+            {Math.round(
+              parseFloat(orchestrator?.totalStake || "0")
+            ).toLocaleString()}{" "}
+            LPT
           </p>
         </div>
       </div>
 
       <div className="text-right">
         <p className="text-[#C7EF6B] font-medium text-sm">
-          APY: {orchestrator?.apy || '0%'}
+          APY: {orchestrator?.apy || "0%"}
         </p>
         <p className="text-gray-400 text-xs mt-1">
-          Fee: {orchestrator?.reward ? (parseFloat(orchestrator.reward) / 10000).toFixed(1) + '%' : '0%'}
+          Fee:{" "}
+          {orchestrator?.reward
+            ? (parseFloat(orchestrator.reward) / 10000).toFixed(1) + "%"
+            : "0%"}
         </p>
       </div>
     </div>
