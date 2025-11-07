@@ -25,6 +25,9 @@ interface AuthContextType {
   createWallet: (email: string, password: string, fullName: string) => Promise<AuthApiResponse<any>>; // maps to createAdmin
   signin: (email: string, password: string, rememberMe?: boolean) => Promise<AuthApiResponse<any>>; // maps to login
   logout: () => Promise<void>;
+  requestPasswordReset: (email: string) => Promise<AuthApiResponse<any>>;
+  verifyPasswordResetToken: (token: string) => Promise<AuthApiResponse<any>>;
+  resetPassword: (token: string, newPassword: string) => Promise<AuthApiResponse<any>>;
 }
 
 const initialState: AuthState = {
@@ -112,7 +115,27 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     dispatch({ type: "AUTH_LOGOUT" });
   };
 
-  const value: AuthContextType = { state, createWallet, signin, logout };
+  const requestPasswordReset = async (email: string) => {
+    return await authService.requestPasswordReset({ email });
+  };
+
+  const verifyPasswordResetToken = async (token: string) => {
+    return await authService.verifyPasswordResetToken({ token });
+  };
+
+  const resetPassword = async (token: string, newPassword: string) => {
+    return await authService.resetPassword({ token, newPassword });
+  };
+
+  const value: AuthContextType = { 
+    state, 
+    createWallet, 
+    signin, 
+    logout,
+    requestPasswordReset,
+    verifyPasswordResetToken,
+    resetPassword,
+  };
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 

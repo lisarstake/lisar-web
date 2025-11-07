@@ -144,7 +144,7 @@ export const AdminLogin: React.FC = () => {
                   Remember for 30 days
                 </span>
               </label>
-              <Link to="#" className="text-[#235538] text-sm hover:underline">
+              <Link to="/forgot-password" className="text-[#235538] text-sm hover:underline">
                 Forgot password
               </Link>
             </div>

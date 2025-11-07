@@ -19,7 +19,7 @@ import {
   ResetPasswordResponse,
   UpdateProfileRequest,
   ChangePasswordRequest,
-  ChangePasswordResponse, 
+  ChangePasswordResponse,
   RefreshTokenRequest,
   RefreshTokenResponse,
   LogoutRequest,
@@ -189,7 +189,7 @@ export class AuthService implements IAuthApiService {
     try {
       // Extract tokens from URL hash OR from localStorage if already stored
       const hash = window.location.hash.substring(1);
-      
+
       let access_token: string | null = null;
       let refresh_token: string | null = null;
       let expires_at: string | null = null;
@@ -199,11 +199,11 @@ export class AuthService implements IAuthApiService {
       if (hash.length > 0) {
         // Extract from hash
         const params = new URLSearchParams(hash);
-        access_token = params.get('access_token');
-        refresh_token = params.get('refresh_token');
-        expires_at = params.get('expires_at');
-        expires_in = params.get('expires_in');
-        provider_token = params.get('provider_token');
+        access_token = params.get("access_token");
+        refresh_token = params.get("refresh_token");
+        expires_at = params.get("expires_at");
+        expires_in = params.get("expires_in");
+        provider_token = params.get("provider_token");
       } else {
         // Hash is empty, try to read from localStorage (already stored by LoginForm)
         access_token = localStorage.getItem("auth_token");
@@ -224,7 +224,7 @@ export class AuthService implements IAuthApiService {
       if (hash.length > 0) {
         localStorage.setItem("auth_token", access_token);
         localStorage.setItem("refresh_token", refresh_token);
-        
+
         if (expires_at) {
           localStorage.setItem("auth_expiry", expires_at);
         }
@@ -232,9 +232,9 @@ export class AuthService implements IAuthApiService {
 
       // Decode JWT to get user info
       try {
-        const tokenParts = access_token.split('.');
+        const tokenParts = access_token.split(".");
         const payload = JSON.parse(atob(tokenParts[1]));
-        
+
         // Extract user info from token
         const user: any = {
           id: payload.sub,
@@ -251,15 +251,17 @@ export class AuthService implements IAuthApiService {
           access_token,
           refresh_token,
           expires_in: expires_in ? parseInt(expires_in) : 3600,
-          expires_at: expires_at ? parseInt(expires_at) : Math.floor(Date.now() / 1000) + 3600,
-          token_type: 'bearer',
+          expires_at: expires_at
+            ? parseInt(expires_at)
+            : Math.floor(Date.now() / 1000) + 3600,
+          token_type: "bearer",
         };
 
         // Create wallet object from user metadata
         const wallet = {
-          wallet_id: payload.user_metadata?.wallet_id || '',
-          wallet_address: payload.user_metadata?.wallet_address || '',
-          privy_user_id: payload.user_metadata?.privy_user_id || '',
+          wallet_id: payload.user_metadata?.wallet_id || "",
+          wallet_address: payload.user_metadata?.wallet_address || "",
+          privy_user_id: payload.user_metadata?.privy_user_id || "",
         };
 
         // Log user data to check wallet creation
@@ -284,7 +286,7 @@ export class AuthService implements IAuthApiService {
         };
 
         // Clear the hash from URL
-        window.history.replaceState(null, '', window.location.pathname);
+        window.history.replaceState(null, "", window.location.pathname);
 
         return {
           success: true,
@@ -296,7 +298,10 @@ export class AuthService implements IAuthApiService {
           success: false,
           message: "Failed to decode token",
           data: null as unknown as GoogleOAuthResponse,
-          error: decodeError instanceof Error ? decodeError.message : "Token decode error",
+          error:
+            decodeError instanceof Error
+              ? decodeError.message
+              : "Token decode error",
         };
       }
     } catch (error) {
@@ -319,12 +324,10 @@ export class AuthService implements IAuthApiService {
         body: JSON.stringify(request || {}),
       });
 
-      // Always remove tokens locally regardless of API response
       this.removeStoredTokens();
 
       return response;
     } catch (error) {
-      // Even if API call fails, remove tokens locally
       this.removeStoredTokens();
       return {
         success: true,
@@ -486,17 +489,22 @@ export class AuthService implements IAuthApiService {
     request: RefreshTokenRequest
   ): Promise<AuthApiResponse<RefreshTokenResponse>> {
     try {
-      const response = await this.makeRequest<RefreshTokenResponse>("/auth/refresh", {
-        method: "POST",
-        body: JSON.stringify({ refreshToken: request.refreshToken }),
-      });
+      const response = await this.makeRequest<RefreshTokenResponse>(
+        "/auth/refresh",
+        {
+          method: "POST",
+          body: JSON.stringify({ refreshToken: request.refreshToken }),
+        }
+      );
 
       if (response.success && response.data) {
         // Update stored tokens
-        const storage = localStorage.getItem("auth_token") ? localStorage : sessionStorage;
+        const storage = localStorage.getItem("auth_token")
+          ? localStorage
+          : sessionStorage;
         storage.setItem("auth_token", response.data.access_token);
         storage.setItem("refresh_token", response.data.refresh_token);
-        
+
         if (response.data.expires_at) {
           storage.setItem("auth_expiry", response.data.expires_at.toString());
         }

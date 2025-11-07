@@ -3,7 +3,7 @@
  * Shows error messages in a drawer similar to success screens
  */
 
-import React from 'react';
+import React from "react";
 import {
   Drawer,
   DrawerContent,
@@ -11,8 +11,8 @@ import {
   DrawerFooter,
   DrawerHeader,
   DrawerTitle,
-} from './drawer';
-import { AlertCircle } from 'lucide-react';
+} from "./drawer";
+import { AlertCircle } from "lucide-react";
 
 interface ErrorDrawerProps {
   isOpen: boolean;
@@ -31,7 +31,7 @@ export const ErrorDrawer: React.FC<ErrorDrawerProps> = ({
   message,
   details,
   onRetry,
-  retryText = "Try Again"
+  retryText = "Try Again",
 }) => {
   return (
     <Drawer open={isOpen} onOpenChange={onClose}>
@@ -48,11 +48,9 @@ export const ErrorDrawer: React.FC<ErrorDrawerProps> = ({
           <DrawerDescription className="text-gray-600 text-sm">
             {message}
           </DrawerDescription>
-        
         </DrawerHeader>
-        
+
         <DrawerFooter className="space-y-3">
-          
           <button
             onClick={onClose}
             className="w-full py-2.5 px-6 rounded-lg font-semibold text-lg border-2 border-[#235538] bg-transparent text-[#235538] hover:bg-[#235538] hover:text-white transition-colors"
@@ -64,4 +62,3 @@ export const ErrorDrawer: React.FC<ErrorDrawerProps> = ({
     </Drawer>
   );
 };
-

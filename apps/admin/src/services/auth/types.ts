@@ -40,6 +40,56 @@ export interface LoginAdminResponse {
   token: string;
 }
 
+// Token Management
+export interface RefreshTokenRequest {
+  refreshToken: string;
+}
+
+export interface RefreshTokenResponse {
+  success: boolean;
+  accessToken: string;
+  expiresIn: number;
+}
+
+export interface RevokeTokenRequest {
+  refreshToken: string;
+}
+
+export interface RevokeTokenResponse {
+  success: boolean;
+  message: string;
+}
+
+// Password Reset
+export interface PasswordResetRequestRequest {
+  email: string;
+}
+
+export interface PasswordResetRequestResponse {
+  success: boolean;
+  message: string;
+}
+
+export interface PasswordResetVerifyRequest {
+  token: string;
+}
+
+export interface PasswordResetVerifyResponse {
+  success: boolean;
+  message: string;
+  email: string;
+}
+
+export interface PasswordResetResetRequest {
+  token: string;
+  newPassword: string;
+}
+
+export interface PasswordResetResetResponse {
+  success: boolean;
+  message: string;
+}
+
 // API Configuration
 export interface AuthConfig {
   baseUrl: string;

@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { ErrorDrawer } from "@/components/ui/ErrorDrawer";
 import {
   Drawer,
   DrawerContent,
@@ -8,8 +10,6 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import { useAuth } from "@/contexts/AuthContext";
-import { ErrorDrawer } from "@/components/ui/ErrorDrawer";
 import { CheckCircle } from "lucide-react";
 
 interface ForgotPasswordFormData {
@@ -19,7 +19,7 @@ interface ForgotPasswordFormData {
 type ForgotPasswordState = "inactive" | "active" | "email-sent" | "success";
 
 export const ForgotPasswordForm: React.FC = () => {
-  const { forgotPassword } = useAuth();
+  const { requestPasswordReset } = useAuth();
 
   const [formData, setFormData] = useState<ForgotPasswordFormData>({
     email: "",
@@ -28,7 +28,6 @@ export const ForgotPasswordForm: React.FC = () => {
   const [currentState, setCurrentState] =
     useState<ForgotPasswordState>("inactive");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [errorDrawer, setErrorDrawer] = useState({
     isOpen: false,
     title: "",
@@ -57,10 +56,9 @@ export const ForgotPasswordForm: React.FC = () => {
     if (!formData.email || isSubmitting) return;
 
     setIsSubmitting(true);
-    setError(null);
 
     try {
-      const response = await forgotPassword(formData.email);
+      const response = await requestPasswordReset(formData.email);
 
       if (response.success) {
         setCurrentState("email-sent");
@@ -87,7 +85,6 @@ export const ForgotPasswordForm: React.FC = () => {
     }
   };
 
-
   const handleGoToLogin = () => {
     // Navigate to login page
     window.location.href = "/login";
@@ -101,20 +98,20 @@ export const ForgotPasswordForm: React.FC = () => {
   const isFormValid = formData.email && formData.email.includes("@");
 
   return (
-    <div className="min-h-screen bg-black flex flex-col">
+    <div className="min-h-screen bg-white flex flex-col">
       {/* Main Content */}
       <div className="flex-1 flex flex-col justify-start px-6 py-8">
         {/* Logo */}
         <div className="flex justify-center mb-8 mt-14">
-          <img src="/Logo2.svg" alt="Lisar Logo" className="h-5 w-auto" />
+          <img src="/Logo.svg" alt="Lisar Logo" className="h-5 w-auto" />
         </div>
 
         {/* Title */}
         <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-white mb-2">
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">
             Forgot password?
           </h2>
-          <p className="text-white/70 text-lg">
+          <p className="text-gray-600 text-lg">
             Welcome back! Please enter your details
           </p>
         </div>
@@ -125,7 +122,7 @@ export const ForgotPasswordForm: React.FC = () => {
           <div>
             <label
               htmlFor="email"
-              className="block text-white text-sm font-medium mb-2"
+              className="block text-gray-900 text-sm font-medium mb-2"
             >
               Enter Email Address
             </label>
@@ -136,12 +133,12 @@ export const ForgotPasswordForm: React.FC = () => {
               value={formData.email}
               onChange={handleInputChange}
               placeholder="example@gmail.com"
-              className={`w-full px-4 py-3 bg-[#121212] border rounded-lg text-white placeholder-gray-400 focus:outline-none transition-colors ${
+              className={`w-full px-4 py-3 bg-gray-50 border rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none transition-colors ${
                 currentState === "active" ||
                 currentState === "email-sent" ||
                 currentState === "success"
-                  ? "border-[#C7EF6B]"
-                  : "border-[#121212]"
+                  ? "border-[#235538]"
+                  : "border-gray-200"
               }`}
             />
           </div>
@@ -152,8 +149,8 @@ export const ForgotPasswordForm: React.FC = () => {
             disabled={!isFormValid || isSubmitting}
             className={`w-full py-3 px-6 rounded-lg font-semibold text-lg transition-colors ${
               isFormValid && !isSubmitting
-                ? "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
-                : "bg-[#636363] text-white cursor-not-allowed"
+                ? "bg-[#235538] text-white hover:bg-[#3b925f]"
+                : "bg-gray-300 text-gray-500 cursor-not-allowed"
             }`}
           >
             {isSubmitting ? "Processing..." : "Reset password"}
@@ -165,19 +162,19 @@ export const ForgotPasswordForm: React.FC = () => {
           open={currentState === "email-sent" || currentState === "success"}
           onOpenChange={(open) => !open && handleDrawerClose()}
         >
-          <DrawerContent>
+          <DrawerContent className="bg-white border-gray-200">
             <DrawerHeader>
               <div className="flex justify-center mb-4">
-                <div className="w-16 h-16 bg-[#C7EF6B]/10 rounded-full flex items-center justify-center">
-                  <CheckCircle className="w-8 h-8 text-[#C7EF6B]" />
+                <div className="w-16 h-16 bg-[#235538]/10 rounded-full flex items-center justify-center">
+                  <CheckCircle className="w-8 h-8 text-[#235538]" />
                 </div>
               </div>
-              <DrawerTitle>
+              <DrawerTitle className="text-gray-900">
                 {currentState === "email-sent"
                   ? "Email has been sent"
                   : "Success!"}
               </DrawerTitle>
-              <DrawerDescription>
+              <DrawerDescription className="text-gray-600">
                 {currentState === "email-sent"
                   ? "A link has been sent to your e-mail. Please check to reset password"
                   : "Your password has been reset successfully"}
@@ -187,27 +184,27 @@ export const ForgotPasswordForm: React.FC = () => {
               {currentState === "email-sent" ? (
                 <button
                   onClick={handleDrawerClose}
-                  className="w-full py-3 px-6 rounded-lg font-semibold text-lg bg-[#C7EF6B] text-black hover:bg-[#B8E55A] transition-colors"
+                  className="w-full py-3 px-6 rounded-lg font-semibold text-lg bg-[#235538] text-white hover:bg-[#3b925f] transition-colors"
                 >
                   Got it
                 </button>
               ) : (
                 <button
                   onClick={handleGoToLogin}
-                  className="w-full py-3 px-6 rounded-lg font-semibold text-lg bg-[#C7EF6B] text-black hover:bg-[#B8E55A] transition-colors"
+                  className="w-full py-3 px-6 rounded-lg font-semibold text-lg bg-[#235538] text-white hover:bg-[#3b925f] transition-colors"
                 >
                   Go to login
                 </button>
               )}
-            </DrawerFooter> 
+            </DrawerFooter>
           </DrawerContent>
         </Drawer>
 
         {/* Footer Link */}
         <div className="text-center mt-8">
-          <p className="text-white">
+          <p className="text-gray-900">
             Remember your password?{" "}
-            <Link to="/login" className="text-[#C7EF6B] hover:underline">
+            <Link to="/login" className="text-[#235538] hover:underline">
               Log in
             </Link>
           </p>
@@ -229,3 +226,4 @@ export const ForgotPasswordForm: React.FC = () => {
     </div>
   );
 };
+

@@ -12,6 +12,8 @@ import { HealthPage } from "@/pages/screens/HealthPage";
 import { AdminPage } from "@/pages/screens/AdminPage";
 import { AdminLogin } from "@/pages/auth/AdminLogin";
 import { AdminSignup } from "@/pages/auth/AdminSignup";
+import ForgotPasswordPage from "@/pages/auth/ForgotPasswordPage";
+import ResetPasswordPage from "@/pages/auth/ResetPasswordPage";
 
 const router = createBrowserRouter([
   {
@@ -21,6 +23,14 @@ const router = createBrowserRouter([
   {
     path: "/signup",
     element: <AdminSignup />,
+  },
+  {
+    path: "/forgot-password",
+    element: <ForgotPasswordPage />,
+  },
+  {
+    path: "/reset-password",
+    element: <ResetPasswordPage />,
   },
   {
     path: "/",

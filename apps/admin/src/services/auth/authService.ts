@@ -10,6 +10,16 @@ import {
   LoginAdminResponse,
   AdminUser,
   AUTH_CONFIG,
+  RefreshTokenRequest,
+  RefreshTokenResponse,
+  RevokeTokenRequest,
+  RevokeTokenResponse,
+  PasswordResetRequestRequest,
+  PasswordResetRequestResponse,
+  PasswordResetVerifyRequest,
+  PasswordResetVerifyResponse,
+  PasswordResetResetRequest,
+  PasswordResetResetResponse,
 } from "./types";
 
 export class AuthService {
@@ -63,6 +73,13 @@ export class AuthService {
     );
   }
 
+  private getStoredRefreshToken(): string | null {
+    return (
+      localStorage.getItem("refresh_token") ||
+      sessionStorage.getItem("refresh_token")
+    );
+  }
+
   private setStoredToken(token: string, remember = false): void {
     const storage = remember ? localStorage : sessionStorage;
     storage.setItem("auth_token", token);
@@ -70,7 +87,9 @@ export class AuthService {
 
   removeStoredTokens(): void {
     localStorage.removeItem("auth_token");
+    localStorage.removeItem("refresh_token");
     sessionStorage.removeItem("auth_token");
+    sessionStorage.removeItem("refresh_token");
   }
 
   // Admin endpoints
@@ -120,6 +139,97 @@ export class AuthService {
   }
 
   async logout(): Promise<void> {
+    const refreshToken = this.getStoredRefreshToken();
+
+    if (refreshToken) {
+      try {
+        await this.revokeToken({ refreshToken });
+      } catch (error) {
+        console.error("Failed to revoke token:", error);
+      }
+    }
+
+    // Always clear stored tokens
     this.removeStoredTokens();
+  }
+
+  // Token Management
+  async refreshToken(
+    request: RefreshTokenRequest
+  ): Promise<AuthApiResponse<RefreshTokenResponse>> {
+    const result = await this.makeRequest<RefreshTokenResponse>(
+      "/admin/refresh",
+      {
+        method: "POST",
+        body: JSON.stringify(request),
+      }
+    );
+
+    // Update stored token if refresh was successful
+    if (result.success && result.data?.accessToken) {
+      // Determine which storage to use (check if token exists in localStorage)
+      const storage = localStorage.getItem("auth_token")
+        ? localStorage
+        : sessionStorage;
+      storage.setItem("auth_token", result.data.accessToken);
+    }
+
+    return result;
+  }
+
+  async revokeToken(
+    request: RevokeTokenRequest
+  ): Promise<AuthApiResponse<RevokeTokenResponse>> {
+    const result = await this.makeRequest<RevokeTokenResponse>(
+      "/admin/revoke",
+      {
+        method: "POST",
+        body: JSON.stringify(request),
+      }
+    );
+
+    // Clear stored tokens if revoke was successful
+    if (result.success) {
+      this.removeStoredTokens();
+    }
+
+    return result;
+  }
+
+  // Password Reset
+  async requestPasswordReset(
+    request: PasswordResetRequestRequest
+  ): Promise<AuthApiResponse<PasswordResetRequestResponse>> {
+    return this.makeRequest<PasswordResetRequestResponse>(
+      "/admin/password-reset/request",
+      {
+        method: "POST",
+        body: JSON.stringify(request),
+      }
+    );
+  }
+
+  async verifyPasswordResetToken(
+    request: PasswordResetVerifyRequest
+  ): Promise<AuthApiResponse<PasswordResetVerifyResponse>> {
+    return this.makeRequest<PasswordResetVerifyResponse>(
+      "/admin/password-reset/verify",
+      {
+        method: "POST",
+        body: JSON.stringify(request),
+      }
+    );
+  }
+
+  async resetPassword(
+    request: PasswordResetResetRequest
+  ): Promise<AuthApiResponse<PasswordResetResetResponse>> {
+    return this.makeRequest<PasswordResetResetResponse>(
+      "/admin/password-reset/reset",
+      {
+        method: "POST",
+        body: JSON.stringify(request),
+      }
+    );
   }
 }
