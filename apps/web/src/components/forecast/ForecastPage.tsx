@@ -105,7 +105,7 @@ export const ForecastPage: React.FC = () => {
   const fallbackMonthly = fallbackDaily * 30;
   const fallbackYearly = (numericAmount * apy) / 100;
 
-  // Fetch projected yields 
+  // Fetch projected yields
   useEffect(() => {
     const run = async () => {
       // Guard: require selected orchestrator, positive amount, and positive APY
@@ -127,7 +127,7 @@ export const ForecastPage: React.FC = () => {
           amount: numericAmount,
           apy: `${apy}%`,
           period: "", // fetch all time periods
-          includeCurrencyConversion: true,
+          includeCurrencyConversion: selectedCurrency !== "LPT",
           currency: selectedCurrency,
         });
         let next: Array<{
@@ -172,11 +172,11 @@ export const ForecastPage: React.FC = () => {
           <h1 className="text-lg font-medium text-white">Yield Calculator</h1>
 
           <button
-          onClick={handleHelpClick}
-          className="w-8 h-8 bg-[#2a2a2a] rounded-full flex items-center justify-center"
-        >
-          <CircleQuestionMark color="#86B3F7" size={16} />
-        </button>
+            onClick={handleHelpClick}
+            className="w-8 h-8 bg-[#2a2a2a] rounded-full flex items-center justify-center"
+          >
+            <CircleQuestionMark color="#86B3F7" size={16} />
+          </button>
         </div>
 
         {/* Select Orchestrator */}

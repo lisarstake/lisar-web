@@ -8,9 +8,9 @@
  */
 export const CURRENCY_TO_FIATTYPE: Record<string, number> = {
   NGN: 6,   // Nigerian Naira
-  USD: 1,   // US Dollar
-  EUR: 2,   // Euro
-  GBP: 3,   // British Pound
+  USD: 21,   // US Dollar
+  EUR: 12,   // Euro
+  GBP: 20,   // British Pound
 };
 
 /**

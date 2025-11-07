@@ -143,7 +143,7 @@ export const StakePage: React.FC = () => {
         walletAddress: state.user.wallet_address,
         flowType: 1, // onramp
         fiatType: fiatType,
-        paymentMethod: 1, // Instant transfer
+        paymentMethod: 2, // Instant transfer
         fiatAmount: numericAmount,
         coinCode: "lpt",
         network: "arbitrum",
