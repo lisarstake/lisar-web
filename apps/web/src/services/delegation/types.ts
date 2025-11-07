@@ -3,6 +3,8 @@
  * Defines interfaces for delegation-related API operations
  */
 
+import { EnsIdentity } from '../ens/types';
+
 // Base API Response
 export interface DelegationApiResponse<T> {
   success: boolean;
@@ -24,6 +26,7 @@ export interface OrchestratorApiResponse {
 export interface OrchestratorResponse {
   address: string;
   ensName: string;
+  avatar?: string;
   apy: string;
   totalStake: string;
   totalVolumeETH: string;
@@ -33,6 +36,8 @@ export interface OrchestratorResponse {
   active: boolean;
   activeSince: string;
   description: string;
+  yieldSource?: string;
+  ensIdentity?: EnsIdentity; // ENS identity data
 }
 
 // Stake Types

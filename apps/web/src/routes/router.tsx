@@ -2,9 +2,10 @@ import { Suspense, lazy, type ReactNode } from 'react'
 import { createBrowserRouter } from 'react-router-dom'
 import App from '@/App'
 import { ErrorBoundary } from '@/components/general/ErrorBoundary'
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
+import { LoadingSpinner } from '@/components/general/LoadingSpinner'
 
 const HomePage = lazy(() => import('@/screens/home-page'))
-const OnboardingPage = lazy(() => import('@/screens/onboarding-page'))
 const SignupPage = lazy(() => import('@/screens/signup-page'))
 const LoginPage = lazy(() => import('@/screens/login-page'))
 const ForgotPasswordPage = lazy(() => import('@/screens/forgot-password-page'))
@@ -16,7 +17,6 @@ const StakePage = lazy(() => import('@/screens/stake-page'))
 const DepositPage = lazy(() => import('@/screens/deposit-page'))
 const WithdrawNetworkPage = lazy(() => import('@/screens/withdraw-network-page'))
 const ConfirmWithdrawalPage = lazy(() => import('@/screens/confirm-withdrawal-page'))
-const WithdrawalSuccessPage = lazy(() => import('@/screens/withdrawal-success-page'))
 const UnstakeAmountPage = lazy(() => import('@/screens/unstake-amount-page'))
 const ConfirmUnstakePage = lazy(() => import('@/screens/confirm-unstake-page'))
 const HistoryPage = lazy(() => import('@/screens/history-page'))
@@ -33,7 +33,7 @@ const NotificationsPage = lazy(() => import('@/screens/notifications-page'))
 const NotFoundPage = lazy(() => import('@/screens/NotFoundPage'))
 
 const withSuspense = (element: ReactNode) => (
-  <Suspense fallback={<div>Loading...</div>}>{element}</Suspense>
+  <Suspense fallback={<LoadingSpinner />}>{element}</Suspense>
 )
 
 export const router = createBrowserRouter([
@@ -45,33 +45,167 @@ export const router = createBrowserRouter([
       </ErrorBoundary>
     ),
     children: [
+      // Public routes
       { index: true, element: withSuspense(<HomePage />) },
-      { path: 'onboarding', element: withSuspense(<OnboardingPage />) },
-      { path: 'signup', element: withSuspense(<SignupPage />) },
       { path: 'login', element: withSuspense(<LoginPage />) },
+      { path: 'signup', element: withSuspense(<SignupPage />) },
+      { path: 'dashboard', element: withSuspense(<DashboardPage />) },
       { path: 'forgot-password', element: withSuspense(<ForgotPasswordPage />) },
       { path: 'reset-password', element: withSuspense(<ResetPasswordPage />) },
-      { path: 'wallet', element: withSuspense(<WalletPage />) },
-      { path: 'validator', element: withSuspense(<ValidatorPage />) },
-      { path: 'validator-details/:validatorId', element: withSuspense(<ValidatorDetailsPage />) },
-      { path: 'stake/:validatorId', element: withSuspense(<StakePage />) },
-      { path: 'deposit/:validatorId', element: withSuspense(<DepositPage />) },
-      { path: 'withdraw-network/:validatorId', element: withSuspense(<WithdrawNetworkPage />) },
-      { path: 'confirm-withdrawal/:validatorId', element: withSuspense(<ConfirmWithdrawalPage />) },
-      { path: 'withdrawal-success/:validatorId', element: withSuspense(<WithdrawalSuccessPage />) },
-      { path: 'unstake-amount/:validatorId', element: withSuspense(<UnstakeAmountPage />) },
-      { path: 'confirm-unstake/:validatorId', element: withSuspense(<ConfirmUnstakePage />) },
-      { path: 'history', element: withSuspense(<HistoryPage />) },
-      { path: 'transaction-detail/:transactionId', element: withSuspense(<TransactionDetailPage />) },
-      { path: 'learn', element: withSuspense(<LearnPage />) },
-      { path: 'learn-detail/:contentId', element: withSuspense(<LearnDetailPage />) },
-      { path: 'forecast', element: withSuspense(<ForecastPage />) },
-      { path: 'earn', element: withSuspense(<EarnPage />) },
-      { path: 'portfolio', element: withSuspense(<PortfolioPage />) },
-      { path: 'leaderboard', element: withSuspense(<LeaderboardPage />) },
-      { path: 'dashboard', element: withSuspense(<DashboardPage />) },
-      { path: 'profile', element: withSuspense(<ProfilePage />) },
-      { path: 'notifications', element: withSuspense(<NotificationsPage />) },
+      
+      // Protected routes
+      {
+        path: 'wallet',
+        element: (
+          <ProtectedRoute>
+            {withSuspense(<WalletPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'validator',
+        element: (
+          <ProtectedRoute>
+            {withSuspense(<ValidatorPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'validator-details/:validatorId',
+        element: (
+          <ProtectedRoute>
+            {withSuspense(<ValidatorDetailsPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'stake/:validatorId',
+        element: (
+          <ProtectedRoute>
+            {withSuspense(<StakePage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'deposit/:validatorId',
+        element: (
+          <ProtectedRoute>
+            {withSuspense(<DepositPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'withdraw-network/:validatorId',
+        element: (
+          <ProtectedRoute>
+            {withSuspense(<WithdrawNetworkPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'confirm-withdrawal/:validatorId',
+        element: (
+          <ProtectedRoute>
+            {withSuspense(<ConfirmWithdrawalPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'unstake-amount/:validatorId',
+        element: (
+          <ProtectedRoute>
+            {withSuspense(<UnstakeAmountPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'confirm-unstake/:validatorId',
+        element: (
+          <ProtectedRoute>
+            {withSuspense(<ConfirmUnstakePage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'history',
+        element: (
+          <ProtectedRoute>
+            {withSuspense(<HistoryPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'transaction-detail/:transactionId',
+        element: (
+          <ProtectedRoute>
+            {withSuspense(<TransactionDetailPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'learn',
+        element: (
+          <ProtectedRoute>
+            {withSuspense(<LearnPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'learn/:slug',
+        element: (
+          <ProtectedRoute>
+            {withSuspense(<LearnDetailPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'forecast',
+        element: (
+          <ProtectedRoute>
+            {withSuspense(<ForecastPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'earn',
+        element: (
+          <ProtectedRoute>
+            {withSuspense(<EarnPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'portfolio',
+        element: (
+          <ProtectedRoute>
+            {withSuspense(<PortfolioPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'leaderboard',
+        element: (
+          <ProtectedRoute>
+            {withSuspense(<LeaderboardPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'profile',
+        element: (
+          <ProtectedRoute>
+            {withSuspense(<ProfilePage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'notifications',
+        element: (
+          <ProtectedRoute>
+            {withSuspense(<NotificationsPage />)}
+          </ProtectedRoute>
+        ),
+      },
       { path: '*', element: withSuspense(<NotFoundPage />) },
     ],
   },

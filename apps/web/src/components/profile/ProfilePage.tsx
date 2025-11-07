@@ -245,7 +245,7 @@ export const ProfilePage: React.FC = () => {
         {/* Form Fields */}
         <div className="space-y-6">
           {/* Username */}
-          <div>
+          {/* <div>
             <label className="block text-gray-100 text-sm font-medium mb-2">
               Username
             </label>
@@ -255,7 +255,7 @@ export const ProfilePage: React.FC = () => {
               onChange={(e) => handleInputChange("username", e.target.value)}
               className="w-full px-4 py-3 bg-[#121212] border border-[#121212] rounded-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:border-[#C7EF6B] transition-colors"
             />
-          </div>
+          </div> */}
 
           {/* Full Name */}
           <div>

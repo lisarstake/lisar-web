@@ -15,3 +15,7 @@ export * from './transactions';
 export * from './wallet';
 // Export leaderboard services
 export * from './leaderboard';
+// Export ENS services
+export * from './ens';
+// Export dashboard services
+export * from './dashboard';

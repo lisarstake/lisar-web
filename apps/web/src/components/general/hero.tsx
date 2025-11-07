@@ -1,10 +1,10 @@
 import { useState } from "react";
-import WaitlistModal from "./waitlist-modal";
+import { useNavigate } from "react-router-dom";
 import {LisarLines} from "./lisar-lines";
 import { usePrices } from "@/hooks/usePrices";
 
 const Hero = () => {
-  const [showWaitlistModal, setShowWaitlistModal] = useState(false);
+  const navigate = useNavigate();
   const [stakeAmount, setStakeAmount] = useState(1000);
   const [currencyType] = useState<"LPT" | "USD">("USD");
   const [settlementToken, setSettlementToken] = useState<"LPT" | "USDC">("USDC");
@@ -87,7 +87,7 @@ const Hero = () => {
             <div className="flex gap-4">
               <button
                 className="bg-[#C7EF6B] rounded-lg cursor-pointer text-[#060E0A] px-8 py-3 font-semibold transition-colors"
-                onClick={() => setShowWaitlistModal(true)}
+                onClick={() => navigate("/login")}
               >
                 Stake now
               </button>
@@ -225,12 +225,6 @@ const Hero = () => {
           </div>
         </div>
       </div>
-
-      {/* Waitlist Modal */}
-      <WaitlistModal
-        isOpen={showWaitlistModal}
-        onClose={() => setShowWaitlistModal(false)}
-      />
     </section>
   );
 };

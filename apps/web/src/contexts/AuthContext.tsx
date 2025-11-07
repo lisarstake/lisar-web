@@ -379,6 +379,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           // Store tokens
           storage.setItem("auth_token", response.data.session.access_token);
           storage.setItem("refresh_token", response.data.session.refresh_token);
+          console.log(response.data.session.access_token);
 
           // Store expiration if rememberMe is true
           if (rememberMe && response.data.session.expires_at) {
@@ -392,6 +393,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           const userResponse = await authService.getCurrentUser();
 
           if (userResponse && userResponse.success && userResponse.data) {
+            console.log(userResponse.data.user_id);
             // Get wallet info from user data
             const wallet: Wallet = {
               id: userResponse.data.wallet_id || "wallet_id",
@@ -456,7 +458,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (response.success && response.data) {
         const data = response.data as any;
 
-        console.log(data)
+        const avatarUrl =
+          data.user.user_metadata?.avatar_url ||
+          data.user.user_metadata?.picture ||
+          "";
 
         // Convert Google OAuth user to our User format
         const user: User = {
@@ -474,6 +479,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           is_suspended: false,
           created_date: data.user.created_at,
           updated_at: data.user.updated_at,
+          img: avatarUrl,
         };
 
         const wallet: Wallet = {

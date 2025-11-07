@@ -5,6 +5,8 @@ import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { useOrchestrators } from "@/contexts/OrchestratorContext";
 import { delegationService } from "@/services";
 import { Skeleton } from "@/components/ui/skeleton";
+import { priceService } from "@/lib/priceService";
+import { useAuth } from "@/contexts/AuthContext";
 
 type ForecastOrchestrator = {
   id: string;
@@ -12,17 +14,31 @@ type ForecastOrchestrator = {
   apy: number;
 };
 
+type Currency = "USD" | "LPT" | "NGN" | "GBP";
+
 export const ForecastPage: React.FC = () => {
+  const { state } = useAuth();
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
+  const [showCurrencyDropdown, setShowCurrencyDropdown] = useState(false);
   const [selectedOrchestrator, setSelectedOrchestrator] =
     useState<ForecastOrchestrator | null>(null);
   const [delegationAmount, setDelegationAmount] = useState("0");
+  const [selectedCurrency, setSelectedCurrency] = useState<Currency>(
+    (state.user?.fiat_type as Currency) || "USD"
+  );
   const [yieldLoading, setYieldLoading] = useState(false);
   const [yieldError, setYieldError] = useState<string | null>(null);
   const [projections, setProjections] = useState<
     Array<{ period: string; projectedReward: number; currency?: string }>
   >([]);
   const { orchestrators, isLoading, error } = useOrchestrators();
+
+  const currencies: Currency[] = ["USD", "LPT", "NGN", "GBP"];
+
+  const getCurrencySymbol = (currency: Currency): string => {
+    if (currency === "LPT") return "LPT";
+    return priceService.getCurrencySymbol(currency);
+  };
 
   const options: ForecastOrchestrator[] = useMemo(() => {
     const list = Array.isArray(orchestrators) ? orchestrators : [];
@@ -54,6 +70,22 @@ export const ForecastPage: React.FC = () => {
     }
   }, [options, selectedOrchestrator]);
 
+  // Close currency dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest("[data-currency-dropdown]")) {
+        setShowCurrencyDropdown(false);
+      }
+    };
+
+    if (showCurrencyDropdown) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [showCurrencyDropdown]);
+
   const handleHelpClick = () => {
     setShowHelpDrawer(true);
   };
@@ -73,7 +105,7 @@ export const ForecastPage: React.FC = () => {
   const fallbackMonthly = fallbackDaily * 30;
   const fallbackYearly = (numericAmount * apy) / 100;
 
-  // Fetch projected yields from API whenever inputs change
+  // Fetch projected yields
   useEffect(() => {
     const run = async () => {
       // Guard: require selected orchestrator, positive amount, and positive APY
@@ -95,8 +127,8 @@ export const ForecastPage: React.FC = () => {
           amount: numericAmount,
           apy: `${apy}%`,
           period: "", // fetch all time periods
-          includeCurrencyConversion: true,
-          currency: "USD",
+          includeCurrencyConversion: selectedCurrency !== "LPT",
+          currency: selectedCurrency,
         });
         let next: Array<{
           period: string;
@@ -129,7 +161,7 @@ export const ForecastPage: React.FC = () => {
       }
     };
     run();
-  }, [numericAmount, apy, selectedOrchestrator]);
+  }, [numericAmount, apy, selectedOrchestrator, selectedCurrency]);
 
   return (
     <div className="h-screen bg-[#050505] text-white flex flex-col">
@@ -138,6 +170,13 @@ export const ForecastPage: React.FC = () => {
         {/* Header - Scrollable */}
         <div className="flex items-center justify-between py-8">
           <h1 className="text-lg font-medium text-white">Yield Calculator</h1>
+
+          <button
+            onClick={handleHelpClick}
+            className="w-8 h-8 bg-[#2a2a2a] rounded-full flex items-center justify-center"
+          >
+            <CircleQuestionMark color="#86B3F7" size={16} />
+          </button>
         </div>
 
         {/* Select Orchestrator */}
@@ -181,15 +220,51 @@ export const ForecastPage: React.FC = () => {
 
         {/* Delegation Amount */}
         <div className="mb-8">
-          <label className="block text-gray-400 text-sm font-medium mb-3">
-            Delegation amount (USD)
-          </label>
+          <div className="flex items-center justify-between mb-3">
+            <label className="block text-gray-400 text-sm font-medium">
+              Delegation amount
+            </label>
+            <div className="relative pr-0.5" data-currency-dropdown>
+              <button
+                onClick={() => setShowCurrencyDropdown(!showCurrencyDropdown)}
+                className="flex items-center space-x-1 text-sm font-medium text-white/80 transition-colors"
+              >
+                <span>({selectedCurrency})</span>
+                <ChevronDown
+                  size={16}
+                  className={`transition-transform ${
+                    showCurrencyDropdown ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+              {showCurrencyDropdown && (
+                <div className="absolute right-0 mt-2 w-32 bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl shadow-lg z-10 overflow-hidden">
+                  {currencies.map((currency) => (
+                    <button
+                      key={currency}
+                      onClick={() => {
+                        setSelectedCurrency(currency);
+                        setShowCurrencyDropdown(false);
+                      }}
+                      className={`w-full text-left px-4 py-2 text-sm hover:bg-[#2a2a2a] transition-colors ${
+                        selectedCurrency === currency
+                          ? "text-[#C7EF6B] bg-[#2a2a2a]"
+                          : "text-white"
+                      }`}
+                    >
+                      {currency}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
           <input
             type="text"
             value={delegationAmount}
             onChange={handleAmountChange}
             className="w-full p-4 bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl text-white focus:border-[#C7EF6B] focus:outline-none"
-            placeholder="Enter amount in USD"
+            placeholder={`Enter amount in ${selectedCurrency}`}
           />
         </div>
 
@@ -199,7 +274,7 @@ export const ForecastPage: React.FC = () => {
             <h2 className="text-gray-400 text-sm font-medium mb-2">
               Projected Annual Earnings
             </h2>
-            <div className="text-3xl font-bold text-white mb-1">
+            <div className="text-3xl font-bold text-white/90 mb-1">
               {yieldLoading ? (
                 <Skeleton className="h-7 w-10 bg-[#2a2a2a] inline-block align-middle rounded-sm mb-2" />
               ) : (
@@ -209,7 +284,7 @@ export const ForecastPage: React.FC = () => {
                   )?.projectedReward ?? fallbackYearly
                 ).toFixed(2)
               )}{" "}
-              USD
+              {selectedCurrency}
             </div>
             <div className="text-[#C7EF6B] text-sm">= {apy}% APY</div>
           </div>
@@ -221,9 +296,9 @@ export const ForecastPage: React.FC = () => {
           <div className="bg-[#1a1a1a] rounded-xl p-4 space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-gray-400">Daily</span>
-              <span className="text-white font-medium">
+              <span className="text-white/90 font-medium">
                 {yieldLoading ? (
-                  <Skeleton className="h-4 w-8 bg-[#2a2a2a] inline-block align-middle rounded-sm mb-1" />
+                  <Skeleton className="h-5 w-8 bg-[#2a2a2a] inline-block align-middle rounded-sm mb-1" />
                 ) : (
                   (
                     projections.find((p) =>
@@ -231,14 +306,14 @@ export const ForecastPage: React.FC = () => {
                     )?.projectedReward ?? fallbackDaily
                   ).toFixed(2)
                 )}{" "}
-                USD
+                {selectedCurrency}
               </span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-gray-400">Monthly</span>
-              <span className="text-white font-medium">
+              <span className="text-white/90 font-medium">
                 {yieldLoading ? (
-                  <Skeleton className="h-4 w-8 bg-[#2a2a2a] inline-block align-middle rounded-sm mb-1" />
+                  <Skeleton className="h-5 w-8 bg-[#2a2a2a] inline-block align-middle rounded-sm mb-1" />
                 ) : (
                   (
                     projections.find((p) =>
@@ -246,29 +321,12 @@ export const ForecastPage: React.FC = () => {
                     )?.projectedReward ?? fallbackMonthly
                   ).toFixed(2)
                 )}{" "}
-                USD
+                {selectedCurrency}
               </span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-gray-400">Yearly Return</span>
-              <span className="text-white font-medium">
-                {yieldLoading ? (
-                  <Skeleton className="h-4 w-8 bg-[#2a2a2a] inline-block align-middle rounded-sm mb-1" />
-                ) : (
-                  (
-                    projections.find((p) =>
-                      p.period.toLowerCase().includes("year")
-                    )?.projectedReward ?? fallbackYearly
-                  ).toFixed(2)
-                )}{" "}
-                USD
-              </span>
-            </div>
-            <div className="flex justify-between items-center border-t border-[#2a2a2a] pt-3">
-              <span className="text-white font-medium">
-                Total Annual Earnings
-              </span>
-              <span className="text-white font-bold">
+              <span className="text-white/90 font-medium">
                 {yieldLoading ? (
                   <Skeleton className="h-5 w-8 bg-[#2a2a2a] inline-block align-middle rounded-sm mb-1" />
                 ) : (
@@ -278,7 +336,24 @@ export const ForecastPage: React.FC = () => {
                     )?.projectedReward ?? fallbackYearly
                   ).toFixed(2)
                 )}{" "}
-                USD
+                {selectedCurrency}
+              </span>
+            </div>
+            <div className="flex justify-between items-center border-t border-[#2a2a2a] pt-3">
+              <span className="text-white font-medium">
+                Total Annual Earnings
+              </span>
+              <span className="text-white/90 font-bold">
+                {yieldLoading ? (
+                  <Skeleton className="h-5 w-8 bg-[#2a2a2a] inline-block align-middle rounded-sm mb-1" />
+                ) : (
+                  (
+                    projections.find((p) =>
+                      p.period.toLowerCase().includes("year")
+                    )?.projectedReward ?? fallbackYearly
+                  ).toFixed(2)
+                )}{" "}
+                {selectedCurrency}
               </span>
             </div>
           </div>
@@ -299,7 +374,8 @@ export const ForecastPage: React.FC = () => {
         onClose={() => setShowHelpDrawer(false)}
         title="Yield Calculator Guide"
         content={[
-          "Calculate your potential earnings by choosing a validator and entering your stake amount in USD.",
+          "Calculate your potential earnings by choosing a validator and entering your stake amount.",
+          "You can select your preferred currency (USD, LPT, NGN, GBP) using the dropdown next to the amount field.",
           "Each validator has a different APY that affects your rewards. Higher APY means more earnings.",
           "Results are estimates and may vary based on network performance.",
         ]}

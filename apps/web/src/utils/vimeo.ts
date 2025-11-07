@@ -71,6 +71,7 @@ export const getVimeoEmbedUrl = (
     title: title ? '1' : '0',
     portrait: portrait ? '1' : '0',
     byline: byline ? '1' : '0',
+    api: '1', // Enable JavaScript API
   });
 
   return `https://player.vimeo.com/video/${videoId}?${params.toString()}`;

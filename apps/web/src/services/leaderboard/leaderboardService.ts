@@ -26,10 +26,14 @@ export class LeaderboardService implements ILeaderboardApiService {
     if (!token) {
       token = sessionStorage.getItem("auth_token");
     }
+    if (!token) {
+      return null;
+    }
     const expiry =
       localStorage.getItem("auth_expiry") ||
       sessionStorage.getItem("auth_expiry");
-    if (expiry && Date.now() > Number(expiry)) {
+    // expires_at is stored in seconds, Date.now() returns milliseconds
+    if (expiry && Date.now() > Number(expiry) * 1000) {
       this.removeStoredTokens();
       return null;
     }
@@ -52,7 +56,7 @@ export class LeaderboardService implements ILeaderboardApiService {
       const token = this.getStoredToken();
       const headers = {
         "Content-Type": "application/json",
-        ...(token && { Authorization: `Bearer ${token}` }),
+        Authorization: `Bearer ${token}`,
         ...config.headers,
       };
       const response = await http.request({
@@ -82,6 +86,16 @@ export class LeaderboardService implements ILeaderboardApiService {
   async getEarnerLeaderboard(
     params?: EarnerLeaderboardQuery
   ): Promise<LeaderboardApiResponse<EarnerLeaderboardResponse["data"]>> {
+    const token = this.getStoredToken();
+    if (!token) {
+      return {
+        success: false,
+        data: null as unknown as EarnerLeaderboardResponse["data"],
+        message: "Authentication required",
+        error: "No authentication token found",
+      };
+    }
+
     let endpoint = "/earners/leaderboard";
 
     if (params) {

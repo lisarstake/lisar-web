@@ -1,36 +1,124 @@
-import React, { useMemo, useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ChevronLeft, CircleQuestionMark } from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
-import { mockLearnContent } from "@/mock/learn";
-import { extractVimeoId, getVimeoEmbedUrl } from "@/utils/vimeo";
+import { mockLearnContent, LearnContent } from "@/mock/learn";
+import { useVimeoPlayer } from "@/hooks/useVimeoPlayer";
+import { useAuth } from "@/contexts/AuthContext";
+import { authService } from "@/services/auth";
 
 const learnContent = mockLearnContent;
 
+const findNextVideoInCategory = (
+  currentContent: LearnContent
+): LearnContent | null => {
+  const currentIndex = learnContent.findIndex(
+    (c) => c.id === currentContent.id
+  );
+  if (currentIndex === -1) return null;
+
+  for (let i = currentIndex + 1; i < learnContent.length; i++) {
+    if (learnContent[i].category === currentContent.category) {
+      return learnContent[i];
+    }
+  }
+
+  return null;
+};
+
 export const LearnDetailPage: React.FC = () => {
   const navigate = useNavigate();
-  const { contentId } = useParams<{ contentId: string }>();
+  const { slug } = useParams<{ slug: string }>();
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
-  const [currentHighlight, setCurrentHighlight] = useState(0);
-  const content = learnContent.find((c) => c.id === contentId);
-  const vimeoId = useMemo(() => {
-    if (content?.videoUrl) return extractVimeoId(content.videoUrl) || undefined;
-    return undefined;
-  }, [content?.videoUrl]);
+  const { state, refreshUser } = useAuth();
+  const content = learnContent.find((c) => c.slug === slug);
 
-  const embedUrl = useMemo(() => {
-    if (!vimeoId) return undefined;
-    return getVimeoEmbedUrl(vimeoId, {
-      autoplay: false,
-      muted: false,
-      loop: false,
-      controls: true,
-      title: false,
-      portrait: false,
-      byline: false,
-    });
-  }, [vimeoId]);
+  // Track completed mandatory videos
+  const markVideoAsCompleted = (videoSlug: string): boolean => {
+    if (!content || content.category !== "mandatory") return false;
+    
+    const completedKey = "onboarding_videos_completed";
+    const completed = JSON.parse(localStorage.getItem(completedKey) || "[]");
+    
+    if (!completed.includes(videoSlug)) {
+      completed.push(videoSlug);
+      localStorage.setItem(completedKey, JSON.stringify(completed));
+      
+      // Check if all 3 mandatory videos are completed
+      const mandatoryVideos = learnContent
+        .filter((c) => c.category === "mandatory")
+        .map((c) => c.slug);
+      
+      const allCompleted = mandatoryVideos.every((slug) =>
+        completed.includes(slug)
+      );
+      
+      return allCompleted;
+    }
+    
+    // Check if all are already completed
+    const mandatoryVideos = learnContent
+      .filter((c) => c.category === "mandatory")
+      .map((c) => c.slug);
+    
+    const allCompleted = mandatoryVideos.every((slug) =>
+      completed.includes(slug)
+    );
+    
+    return allCompleted;
+  };
+
+  const updateOnboardingStatus = async () => {
+    try {
+      if (!state.user?.user_id) return;
+      
+      const response = await authService.updateOnboardingStatus(
+        state.user.user_id,
+        { is_onboarded: true }
+      );
+      
+      if (response.success && response.data) {
+        // Refresh user data to update onboarding status
+        await refreshUser();
+        
+        // Clear completed videos tracking
+        localStorage.removeItem("onboarding_videos_completed");
+        
+        // Redirect to wallet after a brief delay
+        setTimeout(() => {
+          navigate("/wallet");
+        }, 1000);
+      }
+    } catch (error) {
+      console.error("Failed to update onboarding status:", error);
+    }
+  };
+
+  const handleVideoEnded = () => {
+    if (!content) return;
+    
+    // Mark mandatory video as completed and check if all are done
+    const allMandatoryCompleted = markVideoAsCompleted(content.slug);
+    
+    // If all mandatory videos are completed and user is not onboarded, update status
+    if (allMandatoryCompleted && state.user && !state.user.is_onboarded) {
+      updateOnboardingStatus();
+      return;
+    }
+    
+    const nextVideo = findNextVideoInCategory(content);
+    if (nextVideo) {
+      navigate(`/learn/${nextVideo.slug}`);
+    } else {
+      // No more videos in this category
+      // If user is onboarded or not in mandatory category, go to wallet
+      if (state.user?.is_onboarded || content.category !== "mandatory") {
+        navigate("/wallet");
+      }
+    }
+  };
+
   if (!content) {
     return (
       <div className="h-screen bg-[#050505] text-white flex items-center justify-center">
@@ -39,21 +127,79 @@ export const LearnDetailPage: React.FC = () => {
     );
   }
 
+  const { iframeRef, embedUrl, elapsedTime } = useVimeoPlayer({
+    videoUrl: content.videoUrl,
+    onEnded: handleVideoEnded,
+  });
+
+  const [currentHighlight, setCurrentHighlight] = useState(0);
+
+  const contentSentences = useMemo(() => {
+    return content.fullContent
+      .split(". ")
+      .map((sentence) => sentence.trim() + (sentence.endsWith(".") ? "" : "."));
+  }, [content.fullContent]);
+
+  const sentenceWordCounts = useMemo(() => {
+    return contentSentences.map((sentence) => {
+      return sentence.split(/\s+/).filter((word) => word.length > 0).length;
+    });
+  }, [contentSentences]);
+
+  const cumulativeWordCounts = useMemo(() => {
+    const cumulative: number[] = [];
+    let total = 0;
+    sentenceWordCounts.forEach((count) => {
+      total += count;
+      cumulative.push(total);
+    });
+    return cumulative;
+  }, [sentenceWordCounts]);
+
+  const totalWords = useMemo(() => {
+    return content.fullContent.split(/\s+/).filter((word) => word.length > 0)
+      .length;
+  }, [content.fullContent]);
+
+  const wordsPerSecond = useMemo(() => {
+    return totalWords / content.duration;
+  }, [content.duration, totalWords]);
+
+  useEffect(() => {
+    if (!content.duration) return;
+
+    const wordsRead = elapsedTime * wordsPerSecond * content.s_factor;
+
+    let highlightIndex = 0;
+    for (let i = 0; i < cumulativeWordCounts.length; i++) {
+      if (wordsRead < cumulativeWordCounts[i]) {
+        highlightIndex = i;
+        break;
+      }
+      highlightIndex = i + 1;
+    }
+
+    highlightIndex = Math.min(highlightIndex, contentSentences.length - 1);
+    setCurrentHighlight(highlightIndex);
+
+    if (elapsedTime === 0) {
+      setCurrentHighlight(0);
+    }
+  }, [
+    elapsedTime,
+    wordsPerSecond,
+    cumulativeWordCounts,
+    contentSentences.length,
+    content.duration,
+    content.s_factor,
+  ]);
+
   const handleBackClick = () => {
     navigate(-1);
   };
 
   const handleHelpClick = () => {
     setShowHelpDrawer(true);
-  };
-
-  // Split content into sentences for highlighting
-  const contentSentences = content.fullContent
-    .split(". ")
-    .map((sentence) => sentence.trim() + (sentence.endsWith(".") ? "" : "."));
-
-  const handleReset = () => {
-    setCurrentHighlight(0);
   };
 
   return (
@@ -76,13 +222,13 @@ export const LearnDetailPage: React.FC = () => {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto px-6 scrollbar-hide">
-       
+      <div className="flex-1 overflow-y-auto px-6 scrollbar-hide pb-10">
         <div className="relative w-full bg-black rounded-xl mb-6 overflow-hidden">
           {/* 16:9 aspect ratio */}
           <div className="pt-[56.25%]" />
           {embedUrl ? (
             <iframe
+              ref={iframeRef}
               src={embedUrl}
               title="Vimeo player"
               className="absolute inset-0 w-full h-full"
@@ -103,14 +249,16 @@ export const LearnDetailPage: React.FC = () => {
 
           {/* Script with highlighting */}
           <div className="space-y-3">
-            <div className=" max-h-96 overflow-y-auto scrollbar-hide">
+            <div className="max-h-96 overflow-y-auto scrollbar-hide">
               {contentSentences.map((sentence, index) => (
                 <span
                   key={index}
                   className={`text-sm leading-relaxed transition-all duration-500 ${
                     index === currentHighlight
                       ? "text-[#C7EF6B] bg-[#C7EF6B]/10 px-0.5 py-1 rounded"
-                      : "text-gray-300"
+                      : index < currentHighlight
+                        ? "text-gray-400"
+                        : "text-gray-300"
                   }`}
                 >
                   {sentence}
@@ -130,7 +278,7 @@ export const LearnDetailPage: React.FC = () => {
         content={[
           "Watch the video and follow along with the highlighted script to learn about Lisar and crypto.",
           "Use the player's controls to play or pause as needed.",
-          "You can read the script without watching the video if you prefer."
+          "You can read the script without watching the video if you prefer.",
         ]}
       />
 
