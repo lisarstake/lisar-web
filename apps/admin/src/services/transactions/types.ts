@@ -10,13 +10,22 @@ export interface TransactionApiResponse<T> {
   error?: string;
 }
 
-// Dashboard Summary
+// Dashboard Summary 
 export interface DashboardSummary {
   totalDelegators: number;
   totalNgNConverted: number;
   totalLptDelegated: number;
-  totalRewardsDistributedNgn: number;
+  totalValidators: number;
   lastUpdated: string;
+}
+
+// Dashboard Transaction Types (for public dashboard endpoint)
+export interface DashboardTransaction {
+  address: string;
+  event: string;
+  description: string;
+  date: string;
+  transaction_hash: string;
 }
 
 // Transaction User Info

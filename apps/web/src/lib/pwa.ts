@@ -3,7 +3,7 @@ export const registerServiceWorker = async () => {
   if ('serviceWorker' in navigator) {
     try {
       const registration = await navigator.serviceWorker.register('/sw.js');
-      console.log('SW registered: ', registration);
+     
       
       // Check for updates
       registration.addEventListener('updatefound', () => {
@@ -12,7 +12,7 @@ export const registerServiceWorker = async () => {
           newWorker.addEventListener('statechange', () => {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
               // New content is available, show update prompt
-              console.log('New content available');
+             
             }
           });
         }
@@ -20,7 +20,7 @@ export const registerServiceWorker = async () => {
       
       return registration;
     } catch (error) {
-      console.log('SW registration failed: ', error);
+    
     }
   }
 };

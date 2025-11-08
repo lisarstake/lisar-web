@@ -63,8 +63,25 @@ export class ValidatorService {
     );
   }
 
+  // Helper to check authentication before making request
+  private checkAuth<T>(): ValidatorApiResponse<T> | null {
+    const token = this.getStoredToken();
+    if (!token) {
+      return {
+        success: false,
+        message: "Not authenticated",
+        data: null as unknown as T,
+        error: "No authentication token found",
+      };
+    }
+    return null;
+  }
+
   // Get all validators with filters and pagination
   async getValidators(filters?: ValidatorFilters): Promise<ValidatorApiResponse<PaginatedValidatorsResponse>> {
+    const authError = this.checkAuth<PaginatedValidatorsResponse>();
+    if (authError) return authError;
+
     const params = new URLSearchParams();
     
     if (filters?.page) params.append("page", filters.page.toString());
@@ -79,6 +96,9 @@ export class ValidatorService {
 
   // Get validator by ID
   async getValidatorById(id: string): Promise<ValidatorApiResponse<Validator>> {
+    const authError = this.checkAuth<Validator>();
+    if (authError) return authError;
+
     const endpoint = `/admin/validators/${id}`;
     return this.makeRequest<Validator>(endpoint, {
       method: "GET",
@@ -87,6 +107,9 @@ export class ValidatorService {
 
   // Create validator
   async createValidator(request: CreateValidatorRequest): Promise<ValidatorApiResponse<Validator>> {
+    const authError = this.checkAuth<Validator>();
+    if (authError) return authError;
+
     return this.makeRequest<Validator>("/admin/validators", {
       method: "POST",
       body: JSON.stringify(request),
@@ -95,6 +118,9 @@ export class ValidatorService {
 
   // Update validator
   async updateValidator(id: string, request: UpdateValidatorRequest): Promise<ValidatorApiResponse<Validator>> {
+    const authError = this.checkAuth<Validator>();
+    if (authError) return authError;
+
     const endpoint = `/admin/validators/${id}`;
     return this.makeRequest<Validator>(endpoint, {
       method: "PATCH",
@@ -104,6 +130,9 @@ export class ValidatorService {
 
   // Update validator status
   async updateValidatorStatus(id: string, request: UpdateValidatorStatusRequest): Promise<ValidatorApiResponse<Validator>> {
+    const authError = this.checkAuth<Validator>();
+    if (authError) return authError;
+
     const endpoint = `/admin/validators/${id}/status`;
     return this.makeRequest<Validator>(endpoint, {
       method: "PATCH",

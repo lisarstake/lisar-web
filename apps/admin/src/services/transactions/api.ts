@@ -6,6 +6,7 @@
 import {
   TransactionApiResponse,
   DashboardSummary,
+  DashboardTransaction,
   Transaction,
   TransactionStats,
   TransactionFilters,
@@ -15,7 +16,7 @@ import {
 
 export interface ITransactionApiService {
   getDashboardSummary(): Promise<TransactionApiResponse<DashboardSummary>>;
-  getTransactions(limit?: number): Promise<TransactionApiResponse<Transaction[]>>;
+  getTransactions(limit?: number): Promise<TransactionApiResponse<DashboardTransaction[]>>;
   getAllTransactions(filters?: TransactionFilters): Promise<TransactionApiResponse<PaginatedTransactionsResponse>>;
   getTransactionStats(): Promise<TransactionApiResponse<TransactionStats>>;
   getFailedTransactions(limit?: number): Promise<TransactionApiResponse<Transaction[]>>;

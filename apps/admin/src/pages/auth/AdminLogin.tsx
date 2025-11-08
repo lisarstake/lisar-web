@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
-import { SuccessDrawer } from "@/components/ui/SuccessDrawer";
 import { ErrorDrawer } from "@/components/ui/ErrorDrawer";
 import { EyeClosed, EyeIcon } from "lucide-react";
 
@@ -14,25 +13,10 @@ export const AdminLogin: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const [successOpen, setSuccessOpen] = useState(false);
-  const [successMessage, setSuccessMessage] = useState(
-    "Signed in successfully"
-  );
   const [errorOpen, setErrorOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState("An error occurred");
 
   const isFormValid = email && password;
-
-  // Auto-redirect after 2 seconds when success opens
-  useEffect(() => {
-    if (successOpen) {
-      const timer = setTimeout(() => {
-        setSuccessOpen(false);
-        navigate("/");
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [successOpen, navigate]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,8 +26,9 @@ export const AdminLogin: React.FC = () => {
     try {
       const res = await signin(email, password, rememberMe);
       if (res.success) {
-        setSuccessMessage("You have successfully signed in.");
-        setSuccessOpen(true);
+        setTimeout(() => {
+          navigate("/", { replace: true });
+        }, 100);
       } else {
         const msg = res.error || "Invalid email or password";
         setErrorMessage(msg);
@@ -144,7 +129,10 @@ export const AdminLogin: React.FC = () => {
                   Remember for 30 days
                 </span>
               </label>
-              <Link to="/forgot-password" className="text-[#235538] text-sm hover:underline">
+              <Link
+                to="/forgot-password"
+                className="text-[#235538] text-sm hover:underline"
+              >
                 Forgot password
               </Link>
             </div>
@@ -191,16 +179,6 @@ export const AdminLogin: React.FC = () => {
           isOpen={errorOpen}
           onClose={() => setErrorOpen(false)}
           message={errorMessage}
-        />
-      )}
-      {successOpen && (
-        <SuccessDrawer
-          isOpen={successOpen}
-          onClose={() => {
-            setSuccessOpen(false);
-            navigate("/");
-          }}
-          message={successMessage}
         />
       )}
     </>

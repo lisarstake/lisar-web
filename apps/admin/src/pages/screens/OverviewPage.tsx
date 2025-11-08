@@ -33,27 +33,31 @@ const SummaryCardSkeleton: React.FC = () => (
   </Card>
 );
 
-const formatDate = (dateString: string): string => {
+const formatDate = (dateString: string | null | undefined): string => {
+  if (!dateString) return 'N/A';
   try {
     const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'N/A';
     return date.toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
     });
   } catch {
-    return dateString;
+    return 'N/A';
   }
 };
 
-const formatAmount = (amount: number): string => {
+const formatAmount = (amount: number | null | undefined): string => {
+  if (amount === null || amount === undefined || isNaN(amount)) return 'N/A';
   return amount.toLocaleString("en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
 };
 
-const getStatusColor = (status: string): string => {
+const getStatusColor = (status: string | null | undefined): string => {
+  if (!status) return "bg-gray-100 text-gray-800 border-0 text-xs";
   const normalized = status.toLowerCase();
   if (normalized === "confirmed") {
     return "bg-green-100 text-green-800 border-0 text-xs";
@@ -64,12 +68,32 @@ const getStatusColor = (status: string): string => {
   }
 };
 
-const getStatusIcon = (status: string) => {
+const getStatusIcon = (status: string | null | undefined) => {
+  if (!status) return <XCircle className="w-3 h-3 mr-1" />;
   const normalized = status.toLowerCase();
   if (normalized === "confirmed") {
     return <CheckCircle2 className="w-3 h-3 mr-1" />;
   }
   return <XCircle className="w-3 h-3 mr-1" />;
+};
+
+const formatTransactionType = (type: string | null | undefined): string => {
+  if (!type) return 'N/A';
+  try {
+    return type.charAt(0).toUpperCase() + type.slice(1);
+  } catch {
+    return type;
+  }
+};
+
+const formatWalletAddress = (address: string | null | undefined): string => {
+  if (!address) return 'N/A';
+  try {
+    if (address.length <= 10) return address;
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  } catch {
+    return address;
+  }
 };
 
 export const OverviewPage: React.FC = () => {
@@ -125,10 +149,10 @@ export const OverviewPage: React.FC = () => {
             <SummaryCard
               value={
                 dashboardSummary
-                  ? `₦ ${formatAmount(dashboardSummary.totalRewardsDistributedNgn)}`
+                  ? dashboardSummary.totalValidators.toString()
                   : null
               }
-              label="Total Rewards"
+              label="Total Validators"
               isLoading={isLoadingSummary}
             />
           </>
@@ -138,7 +162,7 @@ export const OverviewPage: React.FC = () => {
       {/* Transactions Table */}
       <div className="space-y-4">
         <h2 className="text-lg sm:text-xl font-bold text-gray-900">
-          Dashboard Transactions
+          Recent Transactions
         </h2>
         <Card className="bg-white overflow-hidden py-0">
           <CardContent className="p-0">
@@ -148,19 +172,19 @@ export const OverviewPage: React.FC = () => {
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
-                        Wallet
+                        Account
                       </th>
                       <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Type
+                        Event
                       </th>
                       <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
-                        Amount
-                      </th>
-                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
+                        Description
                       </th>
                       <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Date
+                      </th>
+                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                        Transaction
                       </th>
                     </tr>
                   </thead>
@@ -171,20 +195,20 @@ export const OverviewPage: React.FC = () => {
                           key={index}
                           className="hover:bg-gray-50 transition-colors"
                         >
-                          <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
+                          <td className="px-3 sm:px-6 py-4 whitespace-nowrap hidden md:table-cell">
                             <Skeleton className="h-4 w-24" />
                           </td>
                           <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                             <Skeleton className="h-4 w-20" />
                           </td>
                           <td className="px-3 sm:px-6 py-4 whitespace-nowrap hidden sm:table-cell">
-                            <Skeleton className="h-4 w-16" />
+                            <Skeleton className="h-4 w-32" />
                           </td>
                           <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
-                            <Skeleton className="h-6 w-20 rounded-full" />
+                            <Skeleton className="h-4 w-24" />
                           </td>
                           <td className="px-3 sm:px-6 py-4 whitespace-nowrap hidden md:table-cell">
-                            <Skeleton className="h-4 w-32" />
+                            <Skeleton className="h-4 w-24" />
                           </td>
                         </tr>
                       ))
@@ -209,46 +233,30 @@ export const OverviewPage: React.FC = () => {
                     ) : (
                       transactions.map((transaction, idx) => (
                         <tr
-                          key={transaction.tid || idx}
+                          key={transaction.transaction_hash || idx}
                           className="hover:bg-gray-50 transition-colors"
                         >
                           <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-600 hidden md:table-cell">
-                            {transaction.wallet_address.slice(0, 6)}...
-                            {transaction.wallet_address.slice(-4)}
+                            {formatWalletAddress(transaction.address)}
                           </td>
                           <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                             <div>
                               <span className="text-xs sm:text-sm font-medium text-gray-900 hidden sm:block">
-                                {transaction.transaction_type
-                                  .charAt(0)
-                                  .toUpperCase() +
-                                  transaction.transaction_type.slice(1)}
+                                {formatTransactionType(transaction.event)}
                               </span>
                               <span className="text-xs text-gray-500 sm:hidden">
-                                {transaction.transaction_type}
+                                {transaction.event || 'N/A'}
                               </span>
                             </div>
                           </td>
                           <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm font-medium text-gray-900 hidden sm:table-cell">
-                            {formatAmount(transaction.amount)}{" "}
-                            {transaction.token_symbol}
-                          </td>
-                          <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
-                            <Badge
-                              className={getStatusColor(transaction.status)}
-                            >
-                              {getStatusIcon(transaction.status)}
-                              <span className="hidden sm:inline">
-                                {transaction.status.charAt(0).toUpperCase() +
-                                  transaction.status.slice(1)}
-                              </span>
-                              <span className="sm:hidden">
-                                {transaction.status.charAt(0).toUpperCase()}
-                              </span>
-                            </Badge>
+                            {transaction.description || 'N/A'}
                           </td>
                           <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm font-medium text-gray-900">
-                            {formatDate(transaction.created_at)}
+                            {formatDate(transaction.date)}
+                          </td>
+                          <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-600 hidden md:table-cell">
+                            {formatWalletAddress(transaction.transaction_hash)}
                           </td>
                         </tr>
                       ))

@@ -23,7 +23,9 @@ const SummaryCard: React.FC<{
       {isLoading ? (
         <Skeleton className="h-5 w-32" />
       ) : (
-        <p className={`text-sm ${positive ? "text-green-600" : "text-red-600"}`}>
+        <p
+          className={`text-sm ${positive ? "text-green-600" : "text-red-600"}`}
+        >
           {sub}
         </p>
       )}
@@ -89,26 +91,30 @@ export const UsersPage: React.FC = () => {
             <SummaryCard
               value={totalUsers.toLocaleString()}
               label="Total Users"
-              sub={`${activeUsers} active`}
+              sub={`${activeUsers} active users`}
               isLoading={isLoadingStats}
             />
-            <SummaryCard
-              value={activeUsers.toLocaleString()}
-              label="Active Users"
-              sub={`${suspendedUsers} suspended`}
-              isLoading={isLoadingStats}
-            />
+
             <SummaryCard
               value={suspendedUsers.toLocaleString()}
               label="Suspended Users"
-              sub={`${totalUsers - suspendedUsers} active`}
+              sub={`${suspendedUsers} suspended`}
               positive={false}
               isLoading={isLoadingStats}
             />
             <SummaryCard
               value={newUsersToday.toString()}
-              label="New Users Today"
-              sub={`${totalLptBalance.toFixed(2)} LPT total`}
+              label="New Users"
+              sub={`${newUsersToday} users today`}
+              isLoading={isLoadingStats}
+            />
+            <SummaryCard
+              value={totalLptBalance.toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+              label="Total Balance"
+              sub="Across all users"
               isLoading={isLoadingStats}
             />
           </>

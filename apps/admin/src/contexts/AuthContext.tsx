@@ -2,7 +2,13 @@
  * Admin Authentication Context
  */
 
-import React, { createContext, useContext, useEffect, useReducer, ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useReducer,
+  ReactNode,
+} from "react";
 import { AdminUser, AuthApiResponse } from "@/services/auth/types";
 import { authService } from "@/services/auth";
 
@@ -22,12 +28,23 @@ type AuthAction =
 
 interface AuthContextType {
   state: AuthState;
-  createWallet: (email: string, password: string, fullName: string) => Promise<AuthApiResponse<any>>; // maps to createAdmin
-  signin: (email: string, password: string, rememberMe?: boolean) => Promise<AuthApiResponse<any>>; // maps to login
+  createWallet: (
+    email: string,
+    password: string,
+    fullName: string
+  ) => Promise<AuthApiResponse<any>>; // maps to createAdmin
+  signin: (
+    email: string,
+    password: string,
+    rememberMe?: boolean
+  ) => Promise<AuthApiResponse<any>>; // maps to login
   logout: () => Promise<void>;
   requestPasswordReset: (email: string) => Promise<AuthApiResponse<any>>;
   verifyPasswordResetToken: (token: string) => Promise<AuthApiResponse<any>>;
-  resetPassword: (token: string, newPassword: string) => Promise<AuthApiResponse<any>>;
+  resetPassword: (
+    token: string,
+    newPassword: string
+  ) => Promise<AuthApiResponse<any>>;
 }
 
 const initialState: AuthState = {
@@ -52,9 +69,23 @@ const reducer = (state: AuthState, action: AuthAction): AuthState => {
         error: null,
       };
     case "AUTH_FAILURE":
-      return { ...state, isLoading: false, error: action.payload, user: null, token: null, isAuthenticated: false };
+      return {
+        ...state,
+        isLoading: false,
+        error: action.payload,
+        user: null,
+        token: null,
+        isAuthenticated: false,
+      };
     case "AUTH_LOGOUT":
-      return { ...state, user: null, token: null, isAuthenticated: false, isLoading: false, error: null };
+      return {
+        ...state,
+        user: null,
+        token: null,
+        isAuthenticated: false,
+        isLoading: false,
+        error: null,
+      };
     default:
       return state;
   }
@@ -62,50 +93,120 @@ const reducer = (state: AuthState, action: AuthAction): AuthState => {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({
+  children,
+}) => {
   const [state, dispatch] = useReducer(reducer, initialState);
 
   // Initialize auth state using stored token
   useEffect(() => {
     const init = async () => {
+      const publicRoutes = [
+        "/login",
+        "/signup",
+        "/forgot-password",
+        "/reset-password",
+      ];
+      const currentPath = window.location.pathname;
+      const isPublicRoute = publicRoutes.some(
+        (route) => currentPath === route || currentPath.startsWith(route)
+      );
+
       dispatch({ type: "AUTH_START" });
-      const token = localStorage.getItem("auth_token") || sessionStorage.getItem("auth_token");
+      const token =
+        localStorage.getItem("auth_token") ||
+        sessionStorage.getItem("auth_token");
+
+      if (isPublicRoute && !token) {
+        dispatch({ type: "AUTH_FAILURE", payload: "Not authenticated" });
+        return;
+      }
+
       if (!token) {
         dispatch({ type: "AUTH_FAILURE", payload: "Not authenticated" });
         return;
       }
-      const me = await authService.getCurrentUser();
-      if (me.success && me.data) {
-        dispatch({ type: "AUTH_SUCCESS", payload: { user: me.data, token } });
-      } else {
-        dispatch({ type: "AUTH_FAILURE", payload: me.message || "Failed to load user" });
+
+      if (isPublicRoute) {
+        dispatch({ type: "AUTH_FAILURE", payload: "Not authenticated" });
+        return;
+      }
+
+      try {
+        const me = await authService.getCurrentUser();
+        if (me.success && me.data) {
+          dispatch({ type: "AUTH_SUCCESS", payload: { user: me.data, token } });
+        } else {
+          if (
+            me.error?.includes("401") ||
+            me.error?.includes("Unauthorized") ||
+            me.message?.includes("Not authenticated")
+          ) {
+            // Token is invalid, clear it silently
+            dispatch({ type: "AUTH_FAILURE", payload: "" });
+          } else {
+            dispatch({
+              type: "AUTH_FAILURE",
+              payload: me.message || "Failed to load user",
+            });
+          }
+        }
+      } catch (error) {
+        // Handle any unexpected errors - clear state silently
+        dispatch({ type: "AUTH_FAILURE", payload: "" });
       }
     };
     init();
   }, []);
 
-  // Map UI API to admin endpoints
-  const createWallet = async (email: string, password: string, _fullName: string) => {
+  const createWallet = async (
+    email: string,
+    password: string,
+    _fullName: string
+  ) => {
     dispatch({ type: "AUTH_START" });
-    const res = await authService.createAdmin({ email, password, role: "admin" });
-    if (!res.success) dispatch({ type: "AUTH_FAILURE", payload: res.message || "Signup failed" });
+    const res = await authService.createAdmin({
+      email,
+      password,
+      role: "admin",
+    });
+    if (!res.success)
+      dispatch({
+        type: "AUTH_FAILURE",
+        payload: res.message || "Signup failed",
+      });
     else dispatch({ type: "AUTH_FAILURE", payload: "" }); // remain unauthenticated after signup
     return res;
   };
 
-  const signin = async (email: string, password: string, rememberMe: boolean = false) => {
+  const signin = async (
+    email: string,
+    password: string,
+    rememberMe: boolean = false
+  ) => {
     dispatch({ type: "AUTH_START" });
     const res = await authService.login({ email, password }, rememberMe);
+    
     if (res.success) {
       const me = await authService.getCurrentUser();
+      
       if (me.success && me.data) {
-        const token = localStorage.getItem("auth_token") || sessionStorage.getItem("auth_token") || "";
+        const token =
+          localStorage.getItem("auth_token") ||
+          sessionStorage.getItem("auth_token") ||
+          "";
         dispatch({ type: "AUTH_SUCCESS", payload: { user: me.data, token } });
       } else {
-        dispatch({ type: "AUTH_FAILURE", payload: me.message || "Failed to load user" });
+        dispatch({
+          type: "AUTH_FAILURE",
+          payload: me.message || "Failed to load user",
+        });
       }
     } else {
-      dispatch({ type: "AUTH_FAILURE", payload: res.message || "Login failed" });
+      dispatch({
+        type: "AUTH_FAILURE",
+        payload: res.message || "Login failed",
+      });
     }
     return res;
   };
@@ -127,10 +228,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return await authService.resetPassword({ token, newPassword });
   };
 
-  const value: AuthContextType = { 
-    state, 
-    createWallet, 
-    signin, 
+  const value: AuthContextType = {
+    state,
+    createWallet,
+    signin,
     logout,
     requestPasswordReset,
     verifyPasswordResetToken,
@@ -144,4 +245,3 @@ export const useAuth = (): AuthContextType => {
   if (!ctx) throw new Error("useAuth must be used within an AuthProvider");
   return ctx;
 };
-

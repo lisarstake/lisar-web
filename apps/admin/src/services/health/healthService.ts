@@ -69,14 +69,34 @@ export class HealthService {
     );
   }
 
+  // Helper to check authentication before making request
+  private checkAuth<T>(): HealthApiResponse<T> | null {
+    const token = this.getStoredToken();
+    if (!token) {
+      return {
+        success: false,
+        message: "Not authenticated",
+        data: null as unknown as T,
+        error: "No authentication token found",
+      };
+    }
+    return null;
+  }
+
   // Health endpoints
   async getDashboardHealth(): Promise<HealthApiResponse<ExternalServicesHealth>> {
+    const authError = this.checkAuth<ExternalServicesHealth>();
+    if (authError) return authError;
+
     return this.makeRequest<ExternalServicesHealth>("/admin/dashboard/health", {
       method: "GET",
     });
   }
 
   async getAdminHealth(): Promise<HealthApiResponse<AdminPanelHealth>> {
+    const authError = this.checkAuth<AdminPanelHealth>();
+    if (authError) return authError;
+
     return this.makeRequest<AdminPanelHealth>("/admin/health", {
       method: "GET",
     });

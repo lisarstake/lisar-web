@@ -13,6 +13,7 @@ import React, {
 } from "react";
 import {
   DashboardSummary,
+  DashboardTransaction,
   Transaction,
   TransactionStats,
   TransactionFilters,
@@ -23,7 +24,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 interface TransactionState {
   dashboardSummary: DashboardSummary | null;
-  transactions: Transaction[];
+  transactions: DashboardTransaction[];
   transactionStats: TransactionStats | null;
   filteredTransactions: PaginatedTransactionsResponse | null;
   currentFilters: TransactionFilters | null;
@@ -41,7 +42,7 @@ type TransactionAction =
   | { type: "FETCH_STATS_START" }
   | { type: "FETCH_FILTERED_TRANSACTIONS_START"; payload: TransactionFilters }
   | { type: "FETCH_SUMMARY_SUCCESS"; payload: DashboardSummary }
-  | { type: "FETCH_TRANSACTIONS_SUCCESS"; payload: Transaction[] }
+  | { type: "FETCH_TRANSACTIONS_SUCCESS"; payload: DashboardTransaction[] }
   | { type: "FETCH_STATS_SUCCESS"; payload: TransactionStats }
   | {
       type: "FETCH_FILTERED_TRANSACTIONS_SUCCESS";

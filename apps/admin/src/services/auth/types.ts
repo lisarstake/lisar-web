@@ -37,7 +37,9 @@ export interface CreateAdminResponse extends AdminUser {}
 
 export interface LoginAdminResponse {
   success: boolean;
-  token: string;
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
 }
 
 // Token Management

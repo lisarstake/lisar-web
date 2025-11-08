@@ -57,10 +57,21 @@ export class AuthService {
     const response = await fetch(url, config);
     const data = await response.json().catch(() => ({}));
 
+    if (response.status === 401) {
+      const isPublicEndpoint =
+        endpoint.includes("/login") ||
+        endpoint.includes("/signup") ||
+        endpoint.includes("/password-reset") ||
+        endpoint.includes("/create");
+
+      if (!isPublicEndpoint) {
+        this.removeStoredTokens();
+      }
+    }
+
     return {
       success: response.ok,
       message: data.message,
-      // some admin endpoints are not wrapped in {data}
       data: (data.data as T) ?? (data as T),
       error: response.ok ? undefined : data.error,
     } as AuthApiResponse<T>;
@@ -111,13 +122,20 @@ export class AuthService {
       body: JSON.stringify(request),
     });
 
-    // Store token if present
-    const token = (result as any).data?.token ?? (result as any).token;
-    if (result.success && token) {
-      this.setStoredToken(token, remember);
+    // Store tokens if present
+    const accessToken = result.data?.accessToken;
+    const refreshToken = result.data?.refreshToken;
+    
+    if (result.success && accessToken) {
+      // Store access token
+      this.setStoredToken(accessToken, remember);
+      
+      // Store refresh token
+      const storage = remember ? localStorage : sessionStorage;
+      if (refreshToken) {
+        storage.setItem("refresh_token", refreshToken);
+      }
     }
-
-    console.log(token);
 
     return result;
   }
@@ -130,6 +148,7 @@ export class AuthService {
         success: false,
         message: "Not authenticated",
         data: null as unknown as AdminUser,
+        error: "No authentication token found",
       };
     }
 
@@ -141,10 +160,12 @@ export class AuthService {
   async logout(): Promise<void> {
     const refreshToken = this.getStoredRefreshToken();
 
+    // Only attempt to revoke token if refresh token exists
     if (refreshToken) {
       try {
         await this.revokeToken({ refreshToken });
       } catch (error) {
+        // Silently fail - we'll clear tokens anyway
         console.error("Failed to revoke token:", error);
       }
     }
@@ -157,6 +178,16 @@ export class AuthService {
   async refreshToken(
     request: RefreshTokenRequest
   ): Promise<AuthApiResponse<RefreshTokenResponse>> {
+    // Check if refresh token exists
+    if (!request.refreshToken) {
+      return {
+        success: false,
+        message: "No refresh token provided",
+        data: null as unknown as RefreshTokenResponse,
+        error: "Missing refresh token",
+      };
+    }
+
     const result = await this.makeRequest<RefreshTokenResponse>(
       "/admin/refresh",
       {
@@ -180,6 +211,16 @@ export class AuthService {
   async revokeToken(
     request: RevokeTokenRequest
   ): Promise<AuthApiResponse<RevokeTokenResponse>> {
+    // Check if refresh token exists
+    if (!request.refreshToken) {
+      return {
+        success: false,
+        message: "No refresh token provided",
+        data: null as unknown as RevokeTokenResponse,
+        error: "Missing refresh token",
+      };
+    }
+
     const result = await this.makeRequest<RevokeTokenResponse>(
       "/admin/revoke",
       {

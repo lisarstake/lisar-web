@@ -65,8 +65,25 @@ export class UserService implements IUserApiService {
     );
   }
 
+  // Helper to check authentication before making request
+  private checkAuth<T>(): UserApiResponse<T> | null {
+    const token = this.getStoredToken();
+    if (!token) {
+      return {
+        success: false,
+        message: "Not authenticated",
+        data: null as unknown as T,
+        error: "No authentication token found",
+      };
+    }
+    return null;
+  }
+
   // Get user statistics
   async getUserStats(): Promise<UserApiResponse<UserStats>> {
+    const authError = this.checkAuth<UserStats>();
+    if (authError) return authError;
+
     const endpoint = "/admin/users/stats";
     return this.makeRequest<UserStats>(endpoint, {
       method: "GET",
@@ -75,6 +92,9 @@ export class UserService implements IUserApiService {
 
   // Get all users with filters and pagination
   async getUsers(filters?: UserFilters): Promise<UserApiResponse<PaginatedUsersResponse>> {
+    const authError = this.checkAuth<PaginatedUsersResponse>();
+    if (authError) return authError;
+
     const params = new URLSearchParams();
     
     if (filters?.page) params.append("page", filters.page.toString());
@@ -91,6 +111,9 @@ export class UserService implements IUserApiService {
 
   // Get user by ID
   async getUserById(userId: string): Promise<UserApiResponse<UserDetail>> {
+    const authError = this.checkAuth<UserDetail>();
+    if (authError) return authError;
+
     const endpoint = `/admin/users/${userId}`;
     return this.makeRequest<UserDetail>(endpoint, {
       method: "GET",
@@ -99,6 +122,9 @@ export class UserService implements IUserApiService {
 
   // Suspend user
   async suspendUser(userId: string, request: SuspendUserRequest): Promise<UserApiResponse<void>> {
+    const authError = this.checkAuth<void>();
+    if (authError) return authError;
+
     const endpoint = `/admin/users/${userId}/suspend`;
     return this.makeRequest<void>(endpoint, {
       method: "POST",
@@ -108,6 +134,9 @@ export class UserService implements IUserApiService {
 
   // Unsuspend user
   async unsuspendUser(userId: string): Promise<UserApiResponse<void>> {
+    const authError = this.checkAuth<void>();
+    if (authError) return authError;
+
     const endpoint = `/admin/users/${userId}/unsuspend`;
     return this.makeRequest<void>(endpoint, {
       method: "POST",
@@ -116,6 +145,9 @@ export class UserService implements IUserApiService {
 
   // Update user balance
   async updateUserBalance(userId: string, request: UpdateUserBalanceRequest): Promise<UserApiResponse<void>> {
+    const authError = this.checkAuth<void>();
+    if (authError) return authError;
+
     const endpoint = `/admin/users/${userId}/balance`;
     return this.makeRequest<void>(endpoint, {
       method: "PUT",
