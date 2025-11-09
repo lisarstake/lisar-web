@@ -16,7 +16,7 @@ export interface DashboardSummary {
   totalDelegators: number;
   totalNgNConverted: number;
   totalLptDelegated: number;
-  totalValidators: number;
+  totalValidators: number; 
   lastUpdated: string;
 }
 

@@ -135,7 +135,7 @@ export const LoginForm: React.FC = () => {
       );
 
       if (response.success) {
-        // Wait for state to update, then redirect based on onboarding status
+        // redirect based on onboarding status
         setTimeout(() => {
           if (state.user?.is_onboarded === false) {
             navigate("/learn/what-is-lisar", { replace: true });
