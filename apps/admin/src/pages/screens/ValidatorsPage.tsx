@@ -113,7 +113,7 @@ export const ValidatorsPage: React.FC = () => {
           <h2 className="text-lg sm:text-xl font-bold text-gray-900">
             Validators
           </h2>
-          <Button onClick={handleCreateClick} className="w-full sm:w-auto">
+          <Button size="lg" onClick={handleCreateClick} className="w-fit">
             <Plus className="w-4 h-4 mr-2" />
             Create Validator
           </Button>

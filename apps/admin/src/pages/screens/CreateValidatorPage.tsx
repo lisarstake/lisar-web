@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useValidator } from "@/contexts/ValidatorContext";
-import { ChevronLeft, Save } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 
 export const CreateValidatorPage: React.FC = () => {
   const navigate = useNavigate();
@@ -119,15 +119,16 @@ export const CreateValidatorPage: React.FC = () => {
             <div className="flex gap-2">
               <Button
                 type="submit"
+                size="lg"
                 disabled={isLoadingCreate}
                 className="flex-1"
               >
-                <Save className="w-4 h-4 mr-2" />
                 {isLoadingCreate ? "Creating..." : "Create Validator"}
               </Button>
               <Button
                 type="button"
                 variant="outline"
+                size="lg"
                 onClick={() => navigate("/validators")}
                 disabled={isLoadingCreate}
               >

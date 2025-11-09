@@ -7,54 +7,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { transactionService } from "@/services/transactions";
 import { TransactionDetail } from "@/services/transactions/types";
+import { ChevronLeft, Copy, ExternalLink } from "lucide-react";
 import {
-  CheckCircle2,
-  XCircle,
-  ChevronLeft,
-  Copy,
-  ExternalLink,
-} from "lucide-react";
-
-const formatDate = (dateString: string): string => {
-  try {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  } catch {
-    return dateString;
-  }
-};
-
-const formatAmount = (amount: number): string => {
-  return amount.toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 6,
-  });
-};
-
-const getStatusColor = (status: string): string => {
-  const normalized = status.toLowerCase();
-  if (normalized === "confirmed") {
-    return "bg-green-100 text-green-800 border-0 text-xs";
-  } else if (normalized === "pending") {
-    return "bg-yellow-100 text-yellow-800 border-0 text-xs";
-  } else {
-    return "bg-red-100 text-red-800 border-0 text-xs";
-  }
-};
-
-const getStatusIcon = (status: string) => {
-  const normalized = status.toLowerCase();
-  if (normalized === "confirmed") {
-    return <CheckCircle2 className="w-3 h-3 mr-1" />;
-  }
-  return <XCircle className="w-3 h-3 mr-1" />;
-};
+  formatDate,
+  formatAmount,
+  getStatusColor,
+  getStatusIcon,
+  getInitials,
+} from "@/lib/formatters";
 
 const copyToClipboard = (text: string) => {
   navigator.clipboard.writeText(text);
@@ -83,6 +43,7 @@ export const TransactionDetailPage: React.FC = () => {
       try {
         const response =
           await transactionService.getTransactionById(transactionId);
+
         if (response.success && response.data) {
           setTransaction(response.data);
         } else {
@@ -117,6 +78,7 @@ export const TransactionDetailPage: React.FC = () => {
       <div className="space-y-6">
         <Button
           variant="outline"
+          size="lg"
           onClick={() => navigate("/transactions")}
           className="mb-4"
         >
@@ -134,9 +96,7 @@ export const TransactionDetailPage: React.FC = () => {
 
   const walletAddress =
     transaction.users?.wallet_address || transaction.wallet_address;
-  const initials = walletAddress
-    ? walletAddress.slice(2, 4).toUpperCase()
-    : "U";
+  const initials = getInitials(walletAddress);
 
   const ethScanUrl = `https://etherscan.io/tx/${transaction.transaction_hash}`;
 
@@ -146,7 +106,7 @@ export const TransactionDetailPage: React.FC = () => {
         {/* Main Details */}
         <div className="lg:col-span-3 space-y-6">
           <Card>
-            <CardContent className="p-6 space-y-6">
+            <CardContent className="md:p-6 space-y-6">
               <div>
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">
                   Transaction Information
@@ -172,7 +132,7 @@ export const TransactionDetailPage: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Amount</span>
                     <span className="text-sm font-medium text-gray-900">
-                      {formatAmount(transaction.amount)}{" "}
+                      {formatAmount(transaction.amount, { maxDecimals: 6 })}{" "}
                       {transaction.token_symbol}
                     </span>
                   </div>
@@ -180,7 +140,9 @@ export const TransactionDetailPage: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Date</span>
                     <span className="text-sm text-gray-900">
-                      {formatDate(transaction.created_at)}
+                      {formatDate(transaction.created_at, {
+                        includeTime: true,
+                      })}
                     </span>
                   </div>
 
@@ -203,7 +165,7 @@ export const TransactionDetailPage: React.FC = () => {
                   </code>
                   <Button
                     variant="ghost"
-                    size="sm"
+                    size="lg"
                     onClick={() =>
                       copyToClipboard(transaction.transaction_hash)
                     }
@@ -213,7 +175,7 @@ export const TransactionDetailPage: React.FC = () => {
                   </Button>
                   <Button
                     variant="ghost"
-                    size="sm"
+                    size="lg"
                     onClick={() => window.open(ethScanUrl, "_blank")}
                     className="shrink-0"
                   >
@@ -237,7 +199,7 @@ export const TransactionDetailPage: React.FC = () => {
                       </code>
                       <Button
                         variant="ghost"
-                        size="sm"
+                        size="lg"
                         onClick={() =>
                           copyToClipboard(transaction.token_address)
                         }
@@ -257,7 +219,7 @@ export const TransactionDetailPage: React.FC = () => {
                       </code>
                       <Button
                         variant="ghost"
-                        size="sm"
+                        size="lg"
                         onClick={() =>
                           copyToClipboard(transaction.wallet_address)
                         }
@@ -277,7 +239,7 @@ export const TransactionDetailPage: React.FC = () => {
                       </code>
                       <Button
                         variant="ghost"
-                        size="sm"
+                        size="lg"
                         onClick={() => copyToClipboard(transaction.wallet_id)}
                         className="shrink-0"
                       >

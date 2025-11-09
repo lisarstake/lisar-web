@@ -1,7 +1,3 @@
-/**
- * Admin Authentication API Service
- */
-
 import {
   AuthApiResponse,
   CreateAdminRequest,
@@ -31,10 +27,10 @@ export class AuthService {
     this.timeout = AUTH_CONFIG.timeout;
   }
 
-  // Helper method for making HTTP requests
   private async makeRequest<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
+    retryOn401: boolean = true
   ): Promise<AuthApiResponse<T>> {
     const url = `${this.baseUrl}${endpoint}`;
 
@@ -57,14 +53,27 @@ export class AuthService {
     const response = await fetch(url, config);
     const data = await response.json().catch(() => ({}));
 
-    if (response.status === 401) {
+    if (response.status === 401 && retryOn401) {
       const isPublicEndpoint =
         endpoint.includes("/login") ||
         endpoint.includes("/signup") ||
         endpoint.includes("/password-reset") ||
-        endpoint.includes("/create");
+        endpoint.includes("/create") ||
+        endpoint.includes("/refresh") ||
+        endpoint.includes("/revoke");
 
       if (!isPublicEndpoint) {
+        const refreshToken = this.getStoredRefreshToken();
+        if (refreshToken) {
+          try {
+            const refreshResult = await this.refreshToken({ refreshToken });
+            if (refreshResult.success && refreshResult.data?.accessToken) {
+              return this.makeRequest<T>(endpoint, options, false);
+            }
+          } catch (error) {
+            console.error("Token refresh failed:", error);
+          }
+        }
         this.removeStoredTokens();
       }
     }
@@ -77,7 +86,6 @@ export class AuthService {
     } as AuthApiResponse<T>;
   }
 
-  // Token helpers
   private getStoredToken(): string | null {
     return (
       localStorage.getItem("auth_token") || sessionStorage.getItem("auth_token")
@@ -99,11 +107,12 @@ export class AuthService {
   removeStoredTokens(): void {
     localStorage.removeItem("auth_token");
     localStorage.removeItem("refresh_token");
+    localStorage.removeItem("auth_expiry");
     sessionStorage.removeItem("auth_token");
     sessionStorage.removeItem("refresh_token");
+    sessionStorage.removeItem("auth_expiry");
   }
 
-  // Admin endpoints
   async createAdmin(
     request: CreateAdminRequest
   ): Promise<AuthApiResponse<CreateAdminResponse>> {
@@ -122,25 +131,26 @@ export class AuthService {
       body: JSON.stringify(request),
     });
 
-    // Store tokens if present
     const accessToken = result.data?.accessToken;
     const refreshToken = result.data?.refreshToken;
-    
+    const expiresIn = result.data?.expiresIn;
+
     if (result.success && accessToken) {
-      // Store access token
       this.setStoredToken(accessToken, remember);
-      
-      // Store refresh token
+
       const storage = remember ? localStorage : sessionStorage;
       if (refreshToken) {
         storage.setItem("refresh_token", refreshToken);
+      }
+      if (expiresIn) {
+        const expiresAt = Math.floor(Date.now() / 1000) + expiresIn;
+        storage.setItem("auth_expiry", expiresAt.toString());
       }
     }
 
     return result;
   }
 
-  // Get current admin info from /admin/me endpoint
   async getCurrentUser(): Promise<AuthApiResponse<AdminUser>> {
     const token = this.getStoredToken();
     if (!token) {
@@ -160,25 +170,20 @@ export class AuthService {
   async logout(): Promise<void> {
     const refreshToken = this.getStoredRefreshToken();
 
-    // Only attempt to revoke token if refresh token exists
     if (refreshToken) {
       try {
         await this.revokeToken({ refreshToken });
       } catch (error) {
-        // Silently fail - we'll clear tokens anyway
         console.error("Failed to revoke token:", error);
       }
     }
 
-    // Always clear stored tokens
     this.removeStoredTokens();
   }
 
-  // Token Management
   async refreshToken(
     request: RefreshTokenRequest
   ): Promise<AuthApiResponse<RefreshTokenResponse>> {
-    // Check if refresh token exists
     if (!request.refreshToken) {
       return {
         success: false,
@@ -193,16 +198,21 @@ export class AuthService {
       {
         method: "POST",
         body: JSON.stringify(request),
-      }
+      },
+      false
     );
 
-    // Update stored token if refresh was successful
     if (result.success && result.data?.accessToken) {
-      // Determine which storage to use (check if token exists in localStorage)
       const storage = localStorage.getItem("auth_token")
         ? localStorage
         : sessionStorage;
       storage.setItem("auth_token", result.data.accessToken);
+      if (result.data.expiresIn) {
+        const expiresAt = Math.floor(Date.now() / 1000) + result.data.expiresIn;
+        storage.setItem("auth_expiry", expiresAt.toString());
+      }
+    } else {
+      this.removeStoredTokens();
     }
 
     return result;
@@ -211,7 +221,6 @@ export class AuthService {
   async revokeToken(
     request: RevokeTokenRequest
   ): Promise<AuthApiResponse<RevokeTokenResponse>> {
-    // Check if refresh token exists
     if (!request.refreshToken) {
       return {
         success: false,
@@ -229,7 +238,6 @@ export class AuthService {
       }
     );
 
-    // Clear stored tokens if revoke was successful
     if (result.success) {
       this.removeStoredTokens();
     }
@@ -237,7 +245,6 @@ export class AuthService {
     return result;
   }
 
-  // Password Reset
   async requestPasswordReset(
     request: PasswordResetRequestRequest
   ): Promise<AuthApiResponse<PasswordResetRequestResponse>> {

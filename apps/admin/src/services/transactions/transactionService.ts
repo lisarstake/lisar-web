@@ -197,7 +197,7 @@ export class TransactionService implements ITransactionApiService {
     });
   }
 
-  // Get pending transactions that need attention
+  // Get pending transactions 
   async getPendingTransactions(
     olderThanMinutes: number = 5
   ): Promise<TransactionApiResponse<Transaction[]>> {
@@ -210,7 +210,7 @@ export class TransactionService implements ITransactionApiService {
     });
   }
 
-  // Get transaction by ID with details
+  // Get transaction by ID 
   async getTransactionById(
     transactionId: string
   ): Promise<TransactionApiResponse<TransactionDetail>> {
@@ -222,4 +222,6 @@ export class TransactionService implements ITransactionApiService {
       method: "GET",
     });
   }
+
+ 
 }

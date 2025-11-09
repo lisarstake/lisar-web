@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PaginatedValidatorsResponse, ValidatorFilters } from "@/services/validators/types";
+import { formatAmount } from "@/lib/formatters";
 
 interface ValidatorListProps {
   validators: PaginatedValidatorsResponse | null;
@@ -12,13 +13,6 @@ interface ValidatorListProps {
   error: string | null;
   onPageChange: (page: number) => void;
 }
-
-const formatAmount = (amount: number): string => {
-  return amount.toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-};
 
 export const ValidatorList: React.FC<ValidatorListProps> = ({
   validators,

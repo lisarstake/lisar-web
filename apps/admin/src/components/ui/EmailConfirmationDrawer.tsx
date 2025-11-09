@@ -44,7 +44,7 @@ export const EmailConfirmationDrawer: React.FC<
         <DrawerFooter className="space-y-3">
           <button
             onClick={onClose}
-            className="w-full py-3 px-6 rounded-lg font-semibold text-lg bg-[#C7EF6B] text-black hover:bg-[#B8E55A] transition-colors"
+            className="w-full py-3 px-6 rounded-lg font-semibold text-lg bg-[#C7EF6B] text-black hover:bg-[#b0d85a] transition-colors"
           >
             Got it
           </button>

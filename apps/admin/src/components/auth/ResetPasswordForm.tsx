@@ -177,9 +177,10 @@ export const ResetPasswordForm: React.FC = () => {
   return (
     <div className="min-h-screen bg-white flex flex-col">
       {/* Main Content */}
-      <div className="flex-1 flex flex-col justify-start px-6 py-8">
+      <div className="flex-1 flex flex-col justify-center px-6 py-8">
+        <div className="w-full max-w-md mx-auto">
         {/* Logo */}
-        <div className="flex justify-center mb-8 mt-14">
+        <div className="flex justify-center mb-8">
           <img src="/Logo.svg" alt="Lisar Logo" className="h-5 w-auto" />
         </div>
 
@@ -298,7 +299,7 @@ export const ResetPasswordForm: React.FC = () => {
               disabled={!isFormValid || isSubmitting || !isTokenValid}
               className={`w-full py-3 px-6 rounded-lg font-semibold text-lg transition-colors ${
                 isFormValid && !isSubmitting && isTokenValid
-                  ? "bg-[#235538] text-white hover:bg-[#3b925f]"
+                  ? "bg-[#235538] text-white hover:bg-[#1d4530]"
                   : "bg-gray-300 text-gray-500 cursor-not-allowed"
               }`}
             >
@@ -327,7 +328,7 @@ export const ResetPasswordForm: React.FC = () => {
             <DrawerFooter>
               <button
                 onClick={handleGoToLogin}
-                className="w-full py-3 px-6 rounded-lg font-semibold text-lg bg-[#235538] text-white hover:bg-[#3b925f] transition-colors"
+                className="w-full py-3 px-6 rounded-lg font-semibold text-lg bg-[#235538] text-white hover:bg-[#1d4530] transition-colors"
               >
                 Go to login
               </button>
@@ -346,6 +347,7 @@ export const ResetPasswordForm: React.FC = () => {
               Log in
             </button>
           </p>
+        </div>
         </div>
       </div>
 

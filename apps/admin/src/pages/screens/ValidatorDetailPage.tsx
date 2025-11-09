@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useValidator } from "@/contexts/ValidatorContext";
-import { ChevronLeft, Save } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 
 export const ValidatorDetailPage: React.FC = () => {
   const navigate = useNavigate();
@@ -101,6 +101,7 @@ export const ValidatorDetailPage: React.FC = () => {
       <div className="space-y-6">
         <Button
           variant="outline"
+          size="lg"
           onClick={() => navigate("/validators")}
           className="mb-4"
         >
@@ -131,7 +132,7 @@ export const ValidatorDetailPage: React.FC = () => {
               {!isEditing && (
                 <Button
                   variant="outline"
-                  size="sm"
+                  size="lg"
                   onClick={() => setIsEditing(true)}
                 >
                   Edit
@@ -195,15 +196,16 @@ export const ValidatorDetailPage: React.FC = () => {
 
                 <div className="flex gap-2">
                   <Button
+                    size="lg"
                     onClick={handleSave}
                     disabled={isLoadingUpdate}
                     className="flex-1"
                   >
-                    <Save className="w-4 h-4 mr-2" />
                     {isLoadingUpdate ? "Saving..." : "Save Changes"}
                   </Button>
                   <Button
                     variant="outline"
+                    size="lg"
                     onClick={() => {
                       setIsEditing(false);
                       setFormData({
@@ -275,7 +277,7 @@ export const ValidatorDetailPage: React.FC = () => {
               {!isUpdatingStatus && (
                 <Button
                   variant="outline"
-                  size="sm"
+                  size="lg"
                   onClick={() => setIsUpdatingStatus(true)}
                 >
                   Edit
@@ -303,15 +305,16 @@ export const ValidatorDetailPage: React.FC = () => {
 
                 <div className="flex gap-2">
                   <Button
+                    size="lg"
                     onClick={handleStatusSave}
                     disabled={isLoadingUpdateStatus}
                     className="flex-1"
                   >
-                    <Save className="w-4 h-4 mr-2" />
                     {isLoadingUpdateStatus ? "Saving..." : "Save Status"}
                   </Button>
                   <Button
                     variant="outline"
+                    size="lg"
                     onClick={() => {
                       setIsUpdatingStatus(false);
                       setStatusData({

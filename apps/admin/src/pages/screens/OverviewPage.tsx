@@ -1,9 +1,17 @@
 import React from "react";
-import { CheckCircle2, XCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTransaction } from "@/contexts/TransactionContext";
+import {
+  formatDate,
+  formatAmount,
+  getStatusColor,
+  getStatusIcon,
+  formatTransactionType,
+  formatWalletAddress,
+} from "@/lib/formatters";
 
 const SummaryCard: React.FC<{
   value: string | null;
@@ -33,70 +41,8 @@ const SummaryCardSkeleton: React.FC = () => (
   </Card>
 );
 
-const formatDate = (dateString: string | null | undefined): string => {
-  if (!dateString) return 'N/A';
-  try {
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return 'N/A';
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  } catch {
-    return 'N/A';
-  }
-};
-
-const formatAmount = (amount: number | null | undefined): string => {
-  if (amount === null || amount === undefined || isNaN(amount)) return 'N/A';
-  return amount.toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-};
-
-const getStatusColor = (status: string | null | undefined): string => {
-  if (!status) return "bg-gray-100 text-gray-800 border-0 text-xs";
-  const normalized = status.toLowerCase();
-  if (normalized === "confirmed") {
-    return "bg-green-100 text-green-800 border-0 text-xs";
-  } else if (normalized === "pending") {
-    return "bg-yellow-100 text-yellow-800 border-0 text-xs";
-  } else {
-    return "bg-red-100 text-red-800 border-0 text-xs";
-  }
-};
-
-const getStatusIcon = (status: string | null | undefined) => {
-  if (!status) return <XCircle className="w-3 h-3 mr-1" />;
-  const normalized = status.toLowerCase();
-  if (normalized === "confirmed") {
-    return <CheckCircle2 className="w-3 h-3 mr-1" />;
-  }
-  return <XCircle className="w-3 h-3 mr-1" />;
-};
-
-const formatTransactionType = (type: string | null | undefined): string => {
-  if (!type) return 'N/A';
-  try {
-    return type.charAt(0).toUpperCase() + type.slice(1);
-  } catch {
-    return type;
-  }
-};
-
-const formatWalletAddress = (address: string | null | undefined): string => {
-  if (!address) return 'N/A';
-  try {
-    if (address.length <= 10) return address;
-    return `${address.slice(0, 6)}...${address.slice(-4)}`;
-  } catch {
-    return address;
-  }
-};
-
 export const OverviewPage: React.FC = () => {
+  const navigate = useNavigate();
   const { state } = useTransaction();
   const {
     dashboardSummary,
@@ -105,6 +51,10 @@ export const OverviewPage: React.FC = () => {
     isLoadingTransactions,
     error,
   } = state;
+
+  const handleTransactionClick = () => {
+    navigate(`/transactions`)
+  };
 
   return (
     <div className="space-y-6 lg:space-y-8">
@@ -171,7 +121,7 @@ export const OverviewPage: React.FC = () => {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider table-cell">
                         Account
                       </th>
                       <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -234,9 +184,12 @@ export const OverviewPage: React.FC = () => {
                       transactions.map((transaction, idx) => (
                         <tr
                           key={transaction.transaction_hash || idx}
-                          className="hover:bg-gray-50 transition-colors"
+                          onClick={() =>
+                            handleTransactionClick()
+                          }
+                          className="hover:bg-gray-50 transition-colors cursor-pointer"
                         >
-                          <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-600 hidden md:table-cell">
+                          <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-600 table-cell">
                             {formatWalletAddress(transaction.address)}
                           </td>
                           <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
@@ -245,12 +198,12 @@ export const OverviewPage: React.FC = () => {
                                 {formatTransactionType(transaction.event)}
                               </span>
                               <span className="text-xs text-gray-500 sm:hidden">
-                                {transaction.event || 'N/A'}
+                                {transaction.event || "N/A"}
                               </span>
                             </div>
                           </td>
                           <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm font-medium text-gray-900 hidden sm:table-cell">
-                            {transaction.description || 'N/A'}
+                            {transaction.description || "N/A"}
                           </td>
                           <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm font-medium text-gray-900">
                             {formatDate(transaction.date)}

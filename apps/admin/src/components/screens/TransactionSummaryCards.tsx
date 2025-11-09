@@ -2,6 +2,7 @@ import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TransactionStats } from "@/services/transactions/types";
+import { formatAmount } from "@/lib/formatters";
 
 const SummaryCard: React.FC<{
   value: string | null;
@@ -30,13 +31,6 @@ const SummaryCardSkeleton: React.FC = () => (
     </CardContent>
   </Card>
 );
-
-const formatAmount = (amount: number): string => {
-  return amount.toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-};
 
 interface TransactionSummaryCardsProps {
   transactionStats: TransactionStats | null;

@@ -48,6 +48,7 @@ export const AdminLogin: React.FC = () => {
       <div className="min-h-screen bg-white flex flex-col">
         {/* Main Content */}
         <div className="flex-1 flex flex-col justify-center px-6 py-8">
+          <div className="w-full max-w-md mx-auto">
           {/* Logo */}
           <div className="flex justify-center mb-8">
             <img src="/Logo.svg" alt="Lisar Logo" className="h-5 w-auto" />
@@ -143,7 +144,7 @@ export const AdminLogin: React.FC = () => {
               disabled={!isFormValid || isSubmitting}
               className={`w-full py-3 px-6 rounded-lg font-semibold text-lg transition-colors ${
                 isFormValid && !isSubmitting
-                  ? "bg-[#235538] text-white hover:bg-[#B8E55A]"
+                  ? "bg-[#235538] text-white hover:bg-[#1d4530]"
                   : "bg-gray-300 text-gray-500 cursor-not-allowed"
               }`}
             >
@@ -169,6 +170,7 @@ export const AdminLogin: React.FC = () => {
                 Create admin
               </Link>
             </p>
+          </div>
           </div>
         </div>
       </div>

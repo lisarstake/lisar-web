@@ -10,51 +10,16 @@ import {
   PaginatedTransactionsResponse,
   Transaction,
 } from "@/services/transactions/types";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
-  CheckCircle2,
-  XCircle,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
-
-const formatDate = (dateString: string): string => {
-  try {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  } catch {
-    return dateString;
-  }
-};
-
-const formatAmount = (amount: number): string => {
-  return amount.toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-};
-
-const getStatusColor = (status: string): string => {
-  const normalized = status.toLowerCase();
-  if (normalized === "confirmed") {
-    return "bg-green-100 text-green-800 border-0 text-xs";
-  } else if (normalized === "pending") {
-    return "bg-yellow-100 text-yellow-800 border-0 text-xs";
-  } else {
-    return "bg-red-100 text-red-800 border-0 text-xs";
-  }
-};
-
-const getStatusIcon = (status: string) => {
-  const normalized = status.toLowerCase();
-  if (normalized === "confirmed") {
-    return <CheckCircle2 className="w-3 h-3 mr-1" />;
-  }
-  return <XCircle className="w-3 h-3 mr-1" />;
-};
+  formatDate,
+  formatAmount,
+  getStatusColor,
+  getStatusIcon,
+  getInitials,
+  formatWalletAddress,
+  formatTransactionType,
+} from "@/lib/formatters";
 
 interface TransactionListProps {
   transactions: PaginatedTransactionsResponse | null;
@@ -79,7 +44,10 @@ export const TransactionList: React.FC<TransactionListProps> = ({
   const navigate = useNavigate();
   const transactionList = transactions?.transactions || [];
 
-  const handleTransactionClick = (transactionId: string | null, tid: string) => {
+  const handleTransactionClick = (
+    transactionId: string | null,
+    tid: string
+  ) => {
     const id = transactionId || tid;
     navigate(`/transactions/${id}`);
   };
@@ -149,7 +117,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                       Tx ID
                     </th>
                     <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      User
+                      Account
                     </th>
                     <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
                       Type
@@ -215,42 +183,39 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                       const walletAddress =
                         transaction.users?.wallet_address ||
                         transaction.wallet_address;
-                      const initials = walletAddress
-                        ? walletAddress.slice(2, 4).toUpperCase()
-                        : "U";
-
+                      const initials = getInitials(walletAddress);
                       const transactionId = transaction.id || transaction.tid;
 
                       return (
                         <tr
                           key={transactionId || idx}
-                          onClick={() => handleTransactionClick(transaction.id, transaction.tid)}
+                          onClick={() =>
+                            handleTransactionClick(
+                              transaction.id,
+                              transaction.tid
+                            )
+                          }
                           className="hover:bg-gray-50 transition-colors cursor-pointer"
                         >
                           <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm font-mono text-gray-700 hidden md:table-cell">
-                            {transactionId.slice(0, 6)}...
-                            {transactionId.slice(-4)}
+                            {formatWalletAddress(transactionId)}
                           </td>
                           <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center gap-2 sm:gap-3">
-                              <Avatar className="w-8 h-8 sm:w-10 sm:h-10">
+                              <Avatar className="hidden md:block w-8 h-8 sm:w-10 sm:h-10">
                                 <AvatarFallback>{initials}</AvatarFallback>
                               </Avatar>
                               <div>
                                 <span className="text-xs sm:text-sm font-medium text-gray-900 block">
-                                  {walletAddress.slice(0, 6)}...
-                                  {walletAddress.slice(-4)}
+                                  {formatWalletAddress(walletAddress)}
                                 </span>
-                               
-                              
                               </div>
                             </div>
                           </td>
                           <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-600 hidden lg:table-cell">
-                            {transaction.transaction_type
-                              .charAt(0)
-                              .toUpperCase() +
-                              transaction.transaction_type.slice(1)}
+                            {formatTransactionType(
+                              transaction.transaction_type
+                            )}
                           </td>
                           <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900 font-medium">
                             {formatAmount(transaction.amount)}{" "}
@@ -261,12 +226,9 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                               className={getStatusColor(transaction.status)}
                             >
                               {getStatusIcon(transaction.status)}
-                              <span className="hidden sm:inline">
+                              <span>
                                 {transaction.status.charAt(0).toUpperCase() +
                                   transaction.status.slice(1)}
-                              </span>
-                              <span className="sm:hidden">
-                                {transaction.status.charAt(0).toUpperCase()}
                               </span>
                             </Badge>
                           </td>
@@ -290,7 +252,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
           <div className="flex flex-1 justify-between sm:hidden">
             <Button
               variant="outline"
-              size="sm"
+              size="lg"
               onClick={() => onPageChange((filters.page || 1) - 1)}
               disabled={!filters.page || filters.page <= 1}
               className="text-xs"
@@ -299,7 +261,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
             </Button>
             <Button
               variant="outline"
-              size="sm"
+              size="lg"
               onClick={() => onPageChange((filters.page || 1) + 1)}
               disabled={
                 !transactions || (filters.page || 1) >= transactions.totalPages
@@ -332,7 +294,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
-                size="sm"
+                size="lg"
                 onClick={() => onPageChange((filters.page || 1) - 1)}
                 disabled={!filters.page || filters.page <= 1}
                 className="text-xs"
@@ -345,7 +307,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
               </span>
               <Button
                 variant="outline"
-                size="sm"
+                size="lg"
                 onClick={() => onPageChange((filters.page || 1) + 1)}
                 disabled={
                   !transactions ||

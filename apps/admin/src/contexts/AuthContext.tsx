@@ -1,7 +1,3 @@
-/**
- * Admin Authentication Context
- */
-
 import React, {
   createContext,
   useContext,
@@ -28,16 +24,16 @@ type AuthAction =
 
 interface AuthContextType {
   state: AuthState;
-  createWallet: (
+  createAdmin: (
     email: string,
     password: string,
     fullName: string
-  ) => Promise<AuthApiResponse<any>>; // maps to createAdmin
+  ) => Promise<AuthApiResponse<any>>;
   signin: (
     email: string,
     password: string,
     rememberMe?: boolean
-  ) => Promise<AuthApiResponse<any>>; // maps to login
+  ) => Promise<AuthApiResponse<any>>;
   logout: () => Promise<void>;
   requestPasswordReset: (email: string) => Promise<AuthApiResponse<any>>;
   verifyPasswordResetToken: (token: string) => Promise<AuthApiResponse<any>>;
@@ -98,68 +94,86 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
 
-  // Initialize auth state using stored token
   useEffect(() => {
-    const init = async () => {
-      const publicRoutes = [
-        "/login",
-        "/signup",
-        "/forgot-password",
-        "/reset-password",
-      ];
-      const currentPath = window.location.pathname;
-      const isPublicRoute = publicRoutes.some(
-        (route) => currentPath === route || currentPath.startsWith(route)
-      );
-
-      dispatch({ type: "AUTH_START" });
+    const initializeAuth = async () => {
       const token =
         localStorage.getItem("auth_token") ||
         sessionStorage.getItem("auth_token");
+      const refreshToken =
+        localStorage.getItem("refresh_token") ||
+        sessionStorage.getItem("refresh_token");
+      const expiry =
+        localStorage.getItem("auth_expiry") ||
+        sessionStorage.getItem("auth_expiry");
 
-      if (isPublicRoute && !token) {
-        dispatch({ type: "AUTH_FAILURE", payload: "Not authenticated" });
-        return;
-      }
+      if (token) {
+        try {
+          dispatch({ type: "AUTH_START" });
 
-      if (!token) {
-        dispatch({ type: "AUTH_FAILURE", payload: "Not authenticated" });
-        return;
-      }
+          const isExpired = expiry && Date.now() > parseInt(expiry) * 1000;
 
-      if (isPublicRoute) {
-        dispatch({ type: "AUTH_FAILURE", payload: "Not authenticated" });
-        return;
-      }
-
-      try {
-        const me = await authService.getCurrentUser();
-        if (me.success && me.data) {
-          dispatch({ type: "AUTH_SUCCESS", payload: { user: me.data, token } });
-        } else {
-          if (
-            me.error?.includes("401") ||
-            me.error?.includes("Unauthorized") ||
-            me.message?.includes("Not authenticated")
-          ) {
-            // Token is invalid, clear it silently
-            dispatch({ type: "AUTH_FAILURE", payload: "" });
-          } else {
-            dispatch({
-              type: "AUTH_FAILURE",
-              payload: me.message || "Failed to load user",
+          if (isExpired && refreshToken) {
+            const refreshResponse = await authService.refreshToken({
+              refreshToken,
             });
+
+            if (refreshResponse.success && refreshResponse.data) {
+              const response = await authService.getCurrentUser();
+
+              if (response.success && response.data) {
+                const updatedToken =
+                  localStorage.getItem("auth_token") ||
+                  sessionStorage.getItem("auth_token") ||
+                  token;
+                dispatch({
+                  type: "AUTH_SUCCESS",
+                  payload: { user: response.data, token: updatedToken },
+                });
+              } else {
+                throw new Error("Failed to get user after refresh");
+              }
+            } else {
+              throw new Error("Token refresh failed");
+            }
+          } else {
+            const response = await authService.getCurrentUser();
+            if (response.success && response.data) {
+              const updatedToken =
+                localStorage.getItem("auth_token") ||
+                sessionStorage.getItem("auth_token") ||
+                token;
+              dispatch({
+                type: "AUTH_SUCCESS",
+                payload: { user: response.data, token: updatedToken },
+              });
+            } else {
+              localStorage.removeItem("auth_token");
+              localStorage.removeItem("refresh_token");
+              localStorage.removeItem("auth_expiry");
+              sessionStorage.removeItem("auth_token");
+              sessionStorage.removeItem("refresh_token");
+              sessionStorage.removeItem("auth_expiry");
+              dispatch({ type: "AUTH_LOGOUT" });
+            }
           }
+        } catch (error) {
+          localStorage.removeItem("auth_token");
+          localStorage.removeItem("refresh_token");
+          localStorage.removeItem("auth_expiry");
+          sessionStorage.removeItem("auth_token");
+          sessionStorage.removeItem("refresh_token");
+          sessionStorage.removeItem("auth_expiry");
+          dispatch({ type: "AUTH_LOGOUT" });
         }
-      } catch (error) {
-        // Handle any unexpected errors - clear state silently
-        dispatch({ type: "AUTH_FAILURE", payload: "" });
+      } else {
+        dispatch({ type: "AUTH_LOGOUT" });
       }
     };
-    init();
+
+    initializeAuth();
   }, []);
 
-  const createWallet = async (
+  const createAdmin = async (
     email: string,
     password: string,
     _fullName: string
@@ -170,12 +184,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       password,
       role: "admin",
     });
-    if (!res.success)
+    if (!res.success) {
       dispatch({
         type: "AUTH_FAILURE",
         payload: res.message || "Signup failed",
       });
-    else dispatch({ type: "AUTH_FAILURE", payload: "" }); // remain unauthenticated after signup
+    } else {
+      dispatch({ type: "AUTH_FAILURE", payload: "" });
+    }
     return res;
   };
 
@@ -186,10 +202,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   ) => {
     dispatch({ type: "AUTH_START" });
     const res = await authService.login({ email, password }, rememberMe);
-    
+
     if (res.success) {
+      const storage = rememberMe ? localStorage : sessionStorage;
+      if (res.data?.expiresIn) {
+        const expiresAt = Math.floor(Date.now() / 1000) + res.data.expiresIn;
+        storage.setItem("auth_expiry", expiresAt.toString());
+      }
+
       const me = await authService.getCurrentUser();
-      
       if (me.success && me.data) {
         const token =
           localStorage.getItem("auth_token") ||
@@ -230,7 +251,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
   const value: AuthContextType = {
     state,
-    createWallet,
+    createAdmin,
     signin,
     logout,
     requestPasswordReset,

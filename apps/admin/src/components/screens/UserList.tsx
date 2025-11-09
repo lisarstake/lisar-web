@@ -8,45 +8,13 @@ import { Button } from "@/components/ui/button";
 import { PaginatedUsersResponse, UserFilters } from "@/services/users/types";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-const formatAmount = (amount: number | null | undefined): string => {
-  if (amount === null || amount === undefined) {
-    return "0.00";
-  }
-  return amount.toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-};
-
-const formatDate = (dateString: string | null): string => {
-  if (!dateString) return "N/A";
-  try {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  } catch {
-    return dateString;
-  }
-};
-
-const getStatusColor = (isSuspended: boolean): string => {
-  return isSuspended
-    ? "bg-red-100 text-red-800 border-0 text-xs"
-    : "bg-green-100 text-green-800 border-0 text-xs";
-};
-
-const getInitials = (name: string | null): string => {
-  if (!name) return "U";
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-};
+import {
+  formatDate,
+  formatAmount,
+  getStatusColor,
+  getInitials,
+  formatWalletAddress,
+} from "@/lib/formatters";
 
 interface UserListProps {
   users: PaginatedUsersResponse | null;
@@ -189,7 +157,7 @@ export const UserList: React.FC<UserListProps> = ({
           <div className="flex flex-1 justify-between sm:hidden">
             <Button
               variant="outline"
-              size="sm"
+              size="lg"
               onClick={() => onPageChange((filters.page || 1) - 1)}
               disabled={!filters.page || filters.page <= 1}
               className="text-xs"
@@ -198,7 +166,7 @@ export const UserList: React.FC<UserListProps> = ({
             </Button>
             <Button
               variant="outline"
-              size="sm"
+              size="lg"
               onClick={() => onPageChange((filters.page || 1) + 1)}
               disabled={
                 !users || (filters.page || 1) >= users.totalPages
@@ -231,7 +199,7 @@ export const UserList: React.FC<UserListProps> = ({
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
-                size="sm"
+                size="lg"
                 onClick={() => onPageChange((filters.page || 1) - 1)}
                 disabled={!filters.page || filters.page <= 1}
                 className="text-xs"
@@ -244,7 +212,7 @@ export const UserList: React.FC<UserListProps> = ({
               </span>
               <Button
                 variant="outline"
-                size="sm"
+                size="lg"
                 onClick={() => onPageChange((filters.page || 1) + 1)}
                 disabled={
                   !users ||

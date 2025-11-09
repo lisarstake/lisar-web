@@ -602,7 +602,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const clearError = (): void => {
     dispatch({ type: "AUTH_CLEAR_ERROR" });
   };
-
+ 
   const refreshUser = async (): Promise<void> => {
     try {
       const response = await authService.getCurrentUser();

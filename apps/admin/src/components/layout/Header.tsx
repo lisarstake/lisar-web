@@ -1,6 +1,7 @@
 import React from "react";
-import { Search, Bell, ChevronDown, Menu } from "lucide-react";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Menu } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface HeaderProps {
@@ -8,6 +9,7 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
+  const navigate = useNavigate();
   const { state } = useAuth();
   const user = state.user;
 
@@ -18,8 +20,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
     .join("");
 
   return (
-    <div className="h-16 lg:h-20 bg-white border-b border-gray-200 flex items-center justify-between px-4 lg:px-8">
-      {/* Left: Menu + Welcome */}
+    <div className="h-17 bg-white border-b border-gray-200 flex items-center justify-between px-4 lg:px-8">
       <div className="flex items-center gap-4">
         <button
           onClick={onMenuClick}
@@ -36,29 +37,16 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
 
       {/* Right Controls */}
       <div className="flex items-center gap-2 lg:gap-4">
-        <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-          <Search className="w-4 h-4 lg:w-5 lg:h-5 text-gray-600" />
-        </button>
-        <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors relative">
-          <Bell className="w-4 h-4 lg:w-5 lg:h-5 text-gray-600" />
-          <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-        </button>
-        <div className="hidden sm:flex items-center gap-2 lg:gap-3 pl-2 lg:pl-4 border-l border-gray-200">
+        <button
+          onClick={() => navigate("/admin")}
+          className="hidden sm:flex items-center gap-2 lg:gap-3 pl-2 lg:pl-4 border-l border-gray-200 hover:opacity-80 transition-opacity cursor-pointer"
+        >
           <Avatar className="w-8 h-8">
             {null}
             <AvatarFallback>{initials}</AvatarFallback>
           </Avatar>
-          <div className="hidden md:flex flex-col">
-            <span className="text-xs lg:text-sm font-medium text-gray-900">
-              {displayName}
-            </span>
-          </div>
-          <button className="p-1 hover:bg-gray-100 rounded-lg transition-colors">
-            <ChevronDown className="w-3 h-3 lg:w-4 lg:h-4 text-gray-600" />
-          </button>
-        </div>
+        </button>
       </div>
     </div>
   );
 };
-

@@ -8,8 +8,6 @@ import {
   AuthApiResponse,
   CreateWalletRequest,
   CreateWalletResponse,
-  SignupRequest,
-  SignupResponse,
   LoginRequest,
   LoginResponse,
   GoogleOAuthResponse,
@@ -19,14 +17,11 @@ import {
   ResetPasswordResponse,
   UpdateProfileRequest,
   UpdateOnboardingStatusRequest,
-  ChangePasswordRequest,
-  ChangePasswordResponse,
   RefreshTokenRequest,
   RefreshTokenResponse,
   LogoutRequest,
   LogoutResponse,
   User,
-  SessionInfo,
   AUTH_CONFIG,
 } from "./types";
 
@@ -108,33 +103,12 @@ export class AuthService implements IAuthApiService {
         return null;
       }
     }
-
     // If not in localStorage, check sessionStorage
     if (!token) {
       token = sessionStorage.getItem("auth_token");
     }
 
     return token;
-  }
-
-  private setStoredToken(token: string): void {
-    localStorage.setItem("auth_token", token);
-  }
-
-  private getStoredRefreshToken(): string | null {
-    // Check localStorage first
-    let refreshToken = localStorage.getItem("refresh_token");
-
-    // If not in localStorage, check sessionStorage
-    if (!refreshToken) {
-      refreshToken = sessionStorage.getItem("refresh_token");
-    }
-
-    return refreshToken;
-  }
-
-  private setStoredRefreshToken(token: string): void {
-    localStorage.setItem("refresh_token", token);
   }
 
   private removeStoredTokens(): void {
@@ -225,9 +199,9 @@ export class AuthService implements IAuthApiService {
       try {
         const queryParams = new URLSearchParams({
           code: access_token,
-          ...(refresh_token && { refresh_token: refresh_token })
+          ...(refresh_token && { refresh_token: refresh_token }),
         });
-        
+
         const apiResponse = await this.makeRequest<GoogleOAuthResponse>(
           `/auth/google/callback?${queryParams.toString()}`,
           {
@@ -241,20 +215,24 @@ export class AuthService implements IAuthApiService {
           if (session?.access_token && session?.refresh_token) {
             localStorage.setItem("auth_token", session.access_token);
             localStorage.setItem("refresh_token", session.refresh_token);
-            
+
             if (session.expires_at) {
-              localStorage.setItem("auth_expiry", session.expires_at.toString());
+              localStorage.setItem(
+                "auth_expiry",
+                session.expires_at.toString()
+              );
             }
           }
 
           // Clear the hash from URL
-          window.history.replaceState(null, '', window.location.pathname);
+          window.history.replaceState(null, "", window.location.pathname);
 
           return apiResponse;
         } else {
           return {
             success: false,
-            message: apiResponse.message || "Failed to process Google OAuth callback",
+            message:
+              apiResponse.message || "Failed to process Google OAuth callback",
             data: null as unknown as GoogleOAuthResponse,
             error: apiResponse.error || "API error",
           };
@@ -264,7 +242,8 @@ export class AuthService implements IAuthApiService {
           success: false,
           message: "Failed to call Google OAuth callback API",
           data: null as unknown as GoogleOAuthResponse,
-          error: apiError instanceof Error ? apiError.message : "API call failed",
+          error:
+            apiError instanceof Error ? apiError.message : "API call failed",
         };
       }
     } catch (error) {
@@ -331,7 +310,6 @@ export class AuthService implements IAuthApiService {
       };
     }
 
-    // Decode the token to get user ID
     try {
       const tokenPayload = JSON.parse(atob(token.split(".")[1]));
       const userId = tokenPayload.sub;
@@ -352,7 +330,6 @@ export class AuthService implements IAuthApiService {
   async updateProfile(
     request: UpdateProfileRequest
   ): Promise<AuthApiResponse<User>> {
-    // Get the current user ID from the stored token or make a request to get it
     const token = this.getStoredToken();
     if (!token) {
       return {
@@ -363,7 +340,6 @@ export class AuthService implements IAuthApiService {
       };
     }
 
-    // Decode the token to get user ID
     try {
       const tokenPayload = JSON.parse(atob(token.split(".")[1]));
       const userId = tokenPayload.sub;

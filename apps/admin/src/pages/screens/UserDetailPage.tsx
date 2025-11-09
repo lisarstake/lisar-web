@@ -10,44 +10,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useUser } from "@/contexts/UserContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { ChevronLeft, Save, Ban, CheckCircle, DollarSign } from "lucide-react";
+import { ChevronLeft, Ban, CheckCircle, DollarSign } from "lucide-react";
 import { toast } from "sonner";
 
-const formatAmount = (amount: number | null | undefined): string => {
-  if (amount === null || amount === undefined) {
-    return "0.00";
-  }
-  return amount.toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-};
-
-const formatDate = (dateString: string | null): string => {
-  if (!dateString) return "N/A";
-  try {
-    const date = new Date(dateString);
-    return date.toLocaleString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  } catch {
-    return dateString;
-  }
-};
-
-const getInitials = (name: string | null): string => {
-  if (!name) return "U";
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-};
+import {
+  formatDate,
+  formatAmount,
+  formatWalletAddress,
+  getInitials,
+} from "@/lib/formatters";
 
 export const UserDetailPage: React.FC = () => {
   const navigate = useNavigate();
@@ -170,6 +141,7 @@ export const UserDetailPage: React.FC = () => {
       <div className="space-y-6">
         <Button
           variant="outline"
+          size="lg"
           onClick={() => navigate("/users")}
           className="mb-4"
         >
@@ -197,14 +169,14 @@ export const UserDetailPage: React.FC = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center gap-4 pb-4 border-b">
-              <Avatar className="w-16 h-16">
+              <Avatar className="w-14 h-14 md:w-16 md:h-16">
                 <AvatarImage src={selectedUser.img || undefined} />
                 <AvatarFallback>
                   {getInitials(selectedUser.full_name)}
                 </AvatarFallback>
               </Avatar>
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">
+                <h3 className="md:text-lg text-base font-semibold text-gray-900">
                   {selectedUser.full_name || "N/A"}
                 </h3>
                 <p className="text-sm text-gray-600">{selectedUser.email}</p>
@@ -223,15 +195,14 @@ export const UserDetailPage: React.FC = () => {
             <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">User ID</span>
-                <span className="text-sm font-mono text-gray-900">
+                <span className="text-sm font-mono text-gray-900 max-w-[180px] truncate overflow-hidden inline-block align-middle" title={selectedUser.user_id}>
                   {selectedUser.user_id}
                 </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Wallet Address</span>
                 <span className="text-sm font-mono text-gray-900">
-                  {selectedUser.wallet_address.slice(0, 6)}...
-                  {selectedUser.wallet_address.slice(-4)}
+                  {formatWalletAddress(selectedUser.wallet_address)}
                 </span>
               </div>
               <div className="flex justify-between items-center">
@@ -256,7 +227,7 @@ export const UserDetailPage: React.FC = () => {
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Created Date</span>
                 <span className="text-sm text-gray-900">
-                  {formatDate(selectedUser.created_date)}
+                  {formatDate(selectedUser.created_date, { includeTime: true })}
                 </span>
               </div>
               {selectedUser.is_suspended && selectedUser.suspension_reason && (
@@ -273,7 +244,7 @@ export const UserDetailPage: React.FC = () => {
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Suspended At</span>
                   <span className="text-sm text-gray-900">
-                    {formatDate(selectedUser.suspended_at)}
+                    {formatDate(selectedUser.suspended_at, { includeTime: true })}
                   </span>
                 </div>
               )}
@@ -354,7 +325,6 @@ export const UserDetailPage: React.FC = () => {
                         }
                         className="flex-1"
                       >
-                        <Save className="w-4 h-4 mr-2" />
                         {isLoadingSuspend ? "Suspending..." : "Confirm Suspend"}
                       </Button>
                       <Button
@@ -432,19 +402,20 @@ export const UserDetailPage: React.FC = () => {
                     </div>
                     <div className="flex gap-2">
                       <Button
+                        size="lg"
                         onClick={handleBalanceUpdate}
                         disabled={
                           isLoadingBalanceUpdate || !balanceForm.reason.trim()
                         }
                         className="flex-1"
                       >
-                        <Save className="w-4 h-4 mr-2" />
                         {isLoadingBalanceUpdate
                           ? "Updating..."
                           : "Update Balance"}
                       </Button>
                       <Button
                         variant="outline"
+                        size="lg"
                         onClick={() => {
                           setShowBalanceForm(false);
                           setBalanceForm({ ...balanceForm, reason: "" });

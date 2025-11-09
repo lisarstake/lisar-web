@@ -59,7 +59,7 @@ export interface TransactionDetailUser extends TransactionUser {
   lpt_balance?: number;
 }
 
-// Transaction Detail (includes related transactions)
+// Transaction Detail
 export interface TransactionDetail extends Transaction {
   users: TransactionDetailUser;
   relatedTransactions?: Transaction[];

@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useHealth } from "@/contexts/HealthContext";
+import { getStatusColor } from "@/lib/formatters";
 
 const SummaryCard: React.FC<{
   value: string | null;
@@ -37,21 +38,6 @@ interface ServiceItem {
   status: string;
   displayStatus: string;
 }
-
-const getStatusColor = (status: string): string => {
-  const normalized = status.toLowerCase();
-  if (
-    normalized === "ok" ||
-    normalized === "connected" ||
-    normalized === "operational"
-  ) {
-    return "bg-green-100 text-green-800 border-0 text-xs";
-  } else if (normalized === "unknown" || normalized === "degraded") {
-    return "bg-yellow-100 text-yellow-800 border-0 text-xs";
-  } else {
-    return "bg-red-100 text-red-800 border-0 text-xs";
-  }
-};
 
 const getDisplayStatus = (status: string): string => {
   const normalized = status.toLowerCase();
