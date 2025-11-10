@@ -296,9 +296,8 @@ export const UserDetailPage: React.FC = () => {
                 {!showSuspendForm ? (
                   <Button
                     variant="destructive"
-                    size={'lg'}
+                    size="lg"
                     onClick={() => setShowSuspendForm(true)}
-                   
                   >
                     <Ban className="w-4 h-4 mr-2" />
                     Suspend User
@@ -318,7 +317,7 @@ export const UserDetailPage: React.FC = () => {
                     <div className="flex gap-2">
                       <Button
                         variant="destructive"
-                        size={'lg'}
+                        size="lg"
                         onClick={handleSuspend}
                         disabled={
                           isLoadingSuspend || !suspendForm.reason.trim()
@@ -329,7 +328,7 @@ export const UserDetailPage: React.FC = () => {
                       </Button>
                       <Button
                         variant="outline"
-                        size={'lg'}
+                        size="lg"
                         onClick={() => {
                           setShowSuspendForm(false);
                           setSuspendForm({ reason: "" });
@@ -345,10 +344,9 @@ export const UserDetailPage: React.FC = () => {
             ) : (
               <Button
                 variant="default"
-                size={'lg'}
+                size="lg"
                 onClick={handleUnsuspend}
                 disabled={isLoadingUnsuspend}
-               
               >
                 <CheckCircle className="w-4 h-4 mr-2" />
                 {isLoadingUnsuspend ? "Unsuspending..." : "Unsuspend User"}
@@ -361,6 +359,7 @@ export const UserDetailPage: React.FC = () => {
                 {!showBalanceForm ? (
                   <Button
                     variant="outline"
+                    size="lg"
                     onClick={() => setShowBalanceForm(true)}
                     className="w-full"
                   >
