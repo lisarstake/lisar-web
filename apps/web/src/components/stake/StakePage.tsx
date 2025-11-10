@@ -139,9 +139,8 @@ export const StakePage: React.FC = () => {
 
       const onramp = new OnrampWebSDK({
         appId: import.meta.env.VITE_ONRAMP_APP_ID || 1674103,
-        // appId: 1,
         walletAddress: state.user.wallet_address,
-        flowType: 1, // onramp
+        flowType: 1,
         fiatType: fiatType,
         paymentMethod: 2, // Instant transfer
         fiatAmount: numericAmount,

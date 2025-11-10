@@ -1,47 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useUser } from "@/contexts/UserContext";
 import { UserFilters } from "@/services/users/types";
 import { UserList } from "../../components/screens/UserList";
-
-const SummaryCard: React.FC<{
-  value: string;
-  label: string;
-  sub: string;
-  positive?: boolean;
-  isLoading?: boolean;
-}> = ({ value, label, sub, positive = true, isLoading = false }) => (
-  <Card className="bg-white">
-    <CardContent className="p-6">
-      {isLoading ? (
-        <Skeleton className="h-9 w-24 mb-3" />
-      ) : (
-        <p className="text-3xl font-bold text-gray-900 mb-1">{value}</p>
-      )}
-      <p className="text-sm text-gray-600 mb-2">{label}</p>
-      {isLoading ? (
-        <Skeleton className="h-5 w-32" />
-      ) : (
-        <p
-          className={`text-sm ${positive ? "text-green-600" : "text-red-600"}`}
-        >
-          {sub}
-        </p>
-      )}
-    </CardContent>
-  </Card>
-);
-
-const SummaryCardSkeleton: React.FC = () => (
-  <Card className="bg-white">
-    <CardContent className="p-6">
-      <Skeleton className="h-9 w-24 mb-3" />
-      <Skeleton className="h-4 w-32 mb-2" />
-      <Skeleton className="h-5 w-32" />
-    </CardContent>
-  </Card>
-);
+import {
+  SummaryCard,
+  SummaryCardSkeleton,
+} from "@/components/screens/SummaryCard";
 
 export const UsersPage: React.FC = () => {
   const { state, getUserStats, getUsers } = useUser();
@@ -89,32 +53,34 @@ export const UsersPage: React.FC = () => {
         ) : (
           <>
             <SummaryCard
+              title="Total Users"
+              subtitle={`${activeUsers} active users`}
               value={totalUsers.toLocaleString()}
-              label="Total Users"
-              sub={`${activeUsers} active users`}
+              color="green"
               isLoading={isLoadingStats}
             />
-
             <SummaryCard
+              title="Suspended Users"
+              subtitle={`${suspendedUsers} suspended`}
               value={suspendedUsers.toLocaleString()}
-              label="Suspended Users"
-              sub={`${suspendedUsers} suspended`}
-              positive={false}
+              color="blue"
               isLoading={isLoadingStats}
             />
             <SummaryCard
+              title="New Users"
+              subtitle={`${newUsersToday} users today`}
               value={newUsersToday.toString()}
-              label="New Users"
-              sub={`${newUsersToday} users today`}
+              color="lime"
               isLoading={isLoadingStats}
             />
             <SummaryCard
+              title="Total Balance"
+              subtitle="Across all users"
               value={totalLptBalance.toLocaleString("en-US", {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
               })}
-              label="Total Balance"
-              sub="Across all users"
+              color="orange"
               isLoading={isLoadingStats}
             />
           </>
