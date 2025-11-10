@@ -2,6 +2,8 @@
  * Admin Authentication API Types
  */
 
+import { env } from '@/lib/env'
+
 // Base API Response
 export interface AuthApiResponse<T> {
   success: boolean;
@@ -100,7 +102,7 @@ export interface AuthConfig {
 }
 
 export const AUTH_CONFIG: AuthConfig = {
-  baseUrl: "https://lisar-api-1.onrender.com/api/v1",
+  baseUrl: env.VITE_API_BASE_URL,
   timeout: 30000,
   retryAttempts: 3,
 };

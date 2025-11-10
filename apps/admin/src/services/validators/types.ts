@@ -2,6 +2,8 @@
  * Admin Validators API Types
  */
 
+import { env } from '@/lib/env'
+
 // Base API Response
 export interface ValidatorApiResponse<T> {
   success: boolean;
@@ -70,7 +72,7 @@ export interface ValidatorConfig {
 }
 
 export const VALIDATOR_CONFIG: ValidatorConfig = {
-  baseUrl: 'https://lisar-api-1.onrender.com/api/v1',
+  baseUrl: env.VITE_API_BASE_URL,
   timeout: 30000,
   retryAttempts: 3,
 };
