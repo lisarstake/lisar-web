@@ -3,6 +3,8 @@
  * Defines interfaces for transaction-related API operations
  */
 
+import { env } from '@/lib/env'
+
 // Base API Response
 export interface TransactionApiResponse<T> {
   success: boolean;
@@ -98,7 +100,7 @@ export interface TransactionConfig {
 }
 
 export const TRANSACTION_CONFIG: TransactionConfig = {
-  baseUrl: 'https://lisar-api-1.onrender.com/api/v1',
+  baseUrl: env.VITE_API_BASE_URL,
   timeout: 30000,
   retryAttempts: 3,
 };
