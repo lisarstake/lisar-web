@@ -1,14 +1,8 @@
 import { CheckCircle2, XCircle } from "lucide-react";
 import React from "react";
 
-// Formatter utilities for admin app
+// --- Formatters for the admin app ---
 
-/**
- * Format a date string to a readable format
- * @param dateString - Date string to format
- * @param options - Formatting options
- * @returns Formatted date string or 'N/A' if invalid
- */
 export const formatDate = (
   dateString: string | null | undefined,
   options?: {
@@ -41,12 +35,6 @@ export const formatDate = (
   }
 };
 
-/**
- * Format a number as currency/amount
- * @param amount - Amount to format
- * @param options - Formatting options
- * @returns Formatted amount string or 'N/A' if invalid
- */
 export const formatAmount = (
   amount: number | null | undefined,
   options?: {
@@ -58,18 +46,12 @@ export const formatAmount = (
   if (amount === null || amount === undefined || isNaN(amount)) {
     return options?.defaultValue || "0.00";
   }
-
   return amount.toLocaleString("en-US", {
     minimumFractionDigits: options?.minDecimals ?? 2,
     maximumFractionDigits: options?.maxDecimals ?? 2,
   });
 };
 
-/**
- * Get status color class for badges
- * @param status - Status string or boolean
- * @returns Tailwind CSS classes for status badge
- */
 export const getStatusColor = (
   status: string | boolean | null | undefined
 ): string => {
@@ -77,7 +59,6 @@ export const getStatusColor = (
     return "bg-gray-100 text-gray-800 border-0 text-xs";
   }
 
-  // Handle boolean status (e.g., is_suspended)
   if (typeof status === "boolean") {
     return status
       ? "bg-red-100 text-red-800 border-0 text-xs"
@@ -86,7 +67,6 @@ export const getStatusColor = (
 
   const normalized = status.toLowerCase();
 
-  // Transaction statuses
   if (normalized === "confirmed") {
     return "bg-green-100 text-green-800 border-0 text-xs";
   } else if (normalized === "pending") {
@@ -95,7 +75,6 @@ export const getStatusColor = (
     return "bg-red-100 text-red-800 border-0 text-xs";
   }
 
-  // Health/System statuses
   if (
     normalized === "ok" ||
     normalized === "connected" ||
@@ -108,33 +87,26 @@ export const getStatusColor = (
     return "bg-red-100 text-red-800 border-0 text-xs";
   }
 
-  // Default
   return "bg-gray-100 text-gray-800 border-0 text-xs";
 };
 
-/**
- * Get status icon component
- * @param status - Status string
- * @returns React component for status icon
- */
 export const getStatusIcon = (
   status: string | null | undefined
 ): React.ReactNode => {
   if (!status) return <XCircle className="w-3 h-3 mr-1" />;
 
   const normalized = status.toLowerCase();
-  if (normalized === "confirmed" || normalized === "ok" || normalized === "connected" || normalized === "operational") {
+  if (
+    normalized === "confirmed" ||
+    normalized === "ok" ||
+    normalized === "connected" ||
+    normalized === "operational"
+  ) {
     return <CheckCircle2 className="w-3 h-3 mr-1" />;
   }
   return <XCircle className="w-3 h-3 mr-1" />;
 };
 
-/**
- * Format wallet address to shortened version
- * @param address - Wallet address to format
- * @param options - Formatting options
- * @returns Formatted address or 'N/A' if invalid
- */
 export const formatWalletAddress = (
   address: string | null | undefined,
   options?: {
@@ -146,7 +118,6 @@ export const formatWalletAddress = (
   try {
     const start = options?.startChars ?? 6;
     const end = options?.endChars ?? 4;
-
     if (address.length <= start + end) return address;
     return `${address.slice(0, start)}...${address.slice(-end)}`;
   } catch {
@@ -154,11 +125,6 @@ export const formatWalletAddress = (
   }
 };
 
-/**
- * Format transaction type to capitalized string
- * @param type - Transaction type string
- * @returns Capitalized type or 'N/A' if invalid
- */
 export const formatTransactionType = (
   type: string | null | undefined
 ): string => {
@@ -170,25 +136,45 @@ export const formatTransactionType = (
   }
 };
 
-/**
- * Get user initials from name or wallet address
- * @param nameOrAddress - Name or wallet address
- * @returns Initials string
- */
-export const getInitials = (nameOrAddress: string | null | undefined): string => {
+export const getTransactionTypeColor = (
+  type:
+    | "deposit"
+    | "withdrawal"
+    | "delegation"
+    | "undelegation"
+    | string
+    | null
+    | undefined
+): string => {
+  if (!type) return "bg-gray-100 text-gray-800 border-0 text-xs";
+  const normalized = type.toLowerCase();
+  switch (normalized) {
+    case "deposit":
+      return "bg-green-100 text-green-800 border-0 text-xs";
+    case "withdrawal":
+      return "bg-red-100 text-red-800 border-0 text-xs";
+    case "delegation":
+      return "bg-green-100 text-green-800 border-0 text-xs";
+    case "undelegation":
+      return "bg-red-100 text-red-800 border-0 text-xs";
+    default:
+      return "bg-gray-100 text-gray-800 border-0 text-xs";
+  }
+};
+
+export const getInitials = (
+  nameOrAddress: string | null | undefined
+): string => {
   if (!nameOrAddress) return "U";
-  
-  // If it's a wallet address (starts with 0x), use the next 2 chars
   if (nameOrAddress.startsWith("0x") && nameOrAddress.length > 4) {
     return nameOrAddress.slice(2, 4).toUpperCase();
   }
-  
-  // Otherwise, use first letters of words
-  return nameOrAddress
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2) || "U";
+  return (
+    nameOrAddress
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2) || "U"
+  );
 };
-

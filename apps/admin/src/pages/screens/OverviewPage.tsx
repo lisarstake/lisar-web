@@ -11,35 +11,12 @@ import {
   getStatusIcon,
   formatTransactionType,
   formatWalletAddress,
+  getTransactionTypeColor,
 } from "@/lib/formatters";
-
-const SummaryCard: React.FC<{
-  value: string | null;
-  label: string;
-  isLoading?: boolean;
-}> = ({ value, label, isLoading = false }) => (
-  <Card className="bg-white">
-    <CardContent className="p-6">
-      {isLoading ? (
-        <Skeleton className="h-9 w-24 mb-3" />
-      ) : (
-        <p className="text-2xl font-semibold text-gray-900 mb-1">
-          {value || "-"}
-        </p>
-      )}
-      <p className="text-sm text-gray-600">{label}</p>
-    </CardContent>
-  </Card>
-);
-
-const SummaryCardSkeleton: React.FC = () => (
-  <Card className="bg-white">
-    <CardContent className="p-6">
-      <Skeleton className="h-9 w-24 mb-3" />
-      <Skeleton className="h-4 w-32" />
-    </CardContent>
-  </Card>
-);
+import {
+  SummaryCard,
+  SummaryCardSkeleton,
+} from "@/components/screens/SummaryCard";
 
 export const OverviewPage: React.FC = () => {
   const navigate = useNavigate();
@@ -70,39 +47,47 @@ export const OverviewPage: React.FC = () => {
         ) : (
           <>
             <SummaryCard
+              title="Total Delegators"
+              subtitle="All delegators"
               value={
                 dashboardSummary
                   ? dashboardSummary.totalDelegators.toString()
                   : null
               }
-              label="Total Delegators"
+              color="green"
               isLoading={isLoadingSummary}
             />
             <SummaryCard
+              title="Total Converted"
+              subtitle="Naira converted"
               value={
                 dashboardSummary
                   ? `₦ ${formatAmount(dashboardSummary.totalNgNConverted)}`
                   : null
               }
-              label="Total Converted"
+              color="blue"
               isLoading={isLoadingSummary}
             />
             <SummaryCard
+              title="Total Delegated"
+              subtitle="LPT delegated"
               value={
                 dashboardSummary
                   ? `${formatAmount(dashboardSummary.totalLptDelegated)} LPT`
                   : null
               }
-              label="Total Delegated"
+              color="lime"
               isLoading={isLoadingSummary}
             />
             <SummaryCard
+              title="Total Validators"
+              subtitle="All validators"
               value={
                 dashboardSummary
                   ? dashboardSummary.totalValidators.toString()
                   : null
               }
-              label="Total Validators"
+              color="orange"
               isLoading={isLoadingSummary}
             />
           </>
@@ -193,14 +178,9 @@ export const OverviewPage: React.FC = () => {
                             {formatWalletAddress(transaction.address)}
                           </td>
                           <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
-                            <div>
-                              <span className="text-xs sm:text-sm font-medium text-gray-900 hidden sm:block">
-                                {formatTransactionType(transaction.event)}
-                              </span>
-                              <span className="text-xs text-gray-500 sm:hidden">
-                                {transaction.event || "N/A"}
-                              </span>
-                            </div>
+                            <Badge className={getTransactionTypeColor(transaction.event)}>
+                              {formatTransactionType(transaction.event)}
+                            </Badge>
                           </td>
                           <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm font-medium text-gray-900 hidden sm:table-cell">
                             {transaction.description || "N/A"}

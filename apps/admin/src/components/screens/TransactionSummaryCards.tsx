@@ -1,36 +1,10 @@
 import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { TransactionStats } from "@/services/transactions/types";
 import { formatAmount } from "@/lib/formatters";
-
-const SummaryCard: React.FC<{
-  value: string | null;
-  label: string;
-  isLoading?: boolean;
-}> = ({ value, label, isLoading = false }) => (
-  <Card className="bg-white">
-    <CardContent className="p-6">
-      {isLoading ? (
-        <Skeleton className="h-9 w-24 mb-3" />
-      ) : (
-        <p className="text-2xl font-semibold text-gray-900 mb-1">
-          {value || "-"}
-        </p>
-      )}
-      <p className="text-sm text-gray-600">{label}</p>
-    </CardContent>
-  </Card>
-);
-
-const SummaryCardSkeleton: React.FC = () => (
-  <Card className="bg-white">
-    <CardContent className="p-6">
-      <Skeleton className="h-9 w-24 mb-3" />
-      <Skeleton className="h-4 w-32" />
-    </CardContent>
-  </Card>
-);
+import {
+  SummaryCard,
+  SummaryCardSkeleton,
+} from "./SummaryCard";
 
 interface TransactionSummaryCardsProps {
   transactionStats: TransactionStats | null;
@@ -53,35 +27,43 @@ export const TransactionSummaryCards: React.FC<TransactionSummaryCardsProps> = (
       ) : (
         <>
           <SummaryCard
+            title="Total Volume"
+            subtitle="All transactions"
             value={
               transactionStats
                 ? `${formatAmount(transactionStats.totalVolume)} LPT`
                 : null
             }
-            label="Total Volume"
+            color="green"
             isLoading={isLoading}
           />
           <SummaryCard
+            title="Successful"
+            subtitle={`${transactionStats?.confirmed || 0} confirmed`}
             value={
               transactionStats
                 ? transactionStats.confirmed.toString()
                 : null
             }
-            label="Successful"
+            color="blue"
             isLoading={isLoading}
           />
           <SummaryCard
+            title="Failed"
+            subtitle={`${transactionStats?.failed || 0} failed`}
             value={
               transactionStats ? transactionStats.failed.toString() : null
             }
-            label="Failed"
+            color="lime"
             isLoading={isLoading}
           />
           <SummaryCard
+            title="Pending"
+            subtitle={`${transactionStats?.pending || 0} pending`}
             value={
               transactionStats ? transactionStats.pending.toString() : null
             }
-            label="Pending"
+            color="orange"
             isLoading={isLoading}
           />
         </>

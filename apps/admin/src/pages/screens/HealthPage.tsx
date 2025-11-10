@@ -4,34 +4,10 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useHealth } from "@/contexts/HealthContext";
 import { getStatusColor } from "@/lib/formatters";
-
-const SummaryCard: React.FC<{
-  value: string | null;
-  label: string;
-  sub: string | null;
-  positive?: boolean;
-  isLoading?: boolean;
-}> = ({ value, label, sub, positive = true, isLoading = false }) => (
-  <Card className="bg-white">
-    <CardContent className="p-6">
-      {isLoading ? (
-        <Skeleton className="h-9 w-24 mb-3" />
-      ) : (
-        <p className="text-3xl font-bold text-gray-900 mb-1">{value || "-"}</p>
-      )}
-      <p className="text-sm text-gray-600 mb-2">{label}</p>
-      {isLoading ? (
-        <Skeleton className="h-5 w-32" />
-      ) : (
-        <p
-          className={`text-sm ${positive ? "text-green-600" : "text-red-600"}`}
-        >
-          {sub || "-"}
-        </p>
-      )}
-    </CardContent>
-  </Card>
-);
+import {
+  SummaryCard,
+  SummaryCardSkeleton,
+} from "@/components/screens/SummaryCard";
 
 interface ServiceItem {
   name: string;
@@ -117,31 +93,43 @@ export const HealthPage: React.FC = () => {
   return (
     <div className="space-y-6 lg:space-y-8">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
-        <SummaryCard
-          value={isLoading ? null : `${healthPercentage}%`}
-          label="Services Operational"
-          sub={
-            isLoading
-              ? null
-              : `${operationalCount} of ${totalServices} services`
-          }
-          isLoading={isLoading}
-        />
-        <SummaryCard
-          value={isLoading ? null : operationalCount.toString()}
-          label="Healthy Services"
-          sub={
-            isLoading ? null : `${totalServices - operationalCount} with issues`
-          }
-          positive={operationalCount === totalServices}
-          isLoading={isLoading}
-        />
-        <SummaryCard
-          value={isLoading ? null : totalServices.toString()}
-          label="Total Services"
-          sub={isLoading ? null : "Monitored services"}
-          isLoading={isLoading}
-        />
+        {isLoading ? (
+          <>
+            <SummaryCardSkeleton />
+            <SummaryCardSkeleton />
+            <SummaryCardSkeleton />
+          </>
+        ) : (
+          <>
+            <SummaryCard
+              title="Services Operational"
+              subtitle={
+                isLoading
+                  ? undefined
+                  : `${operationalCount} of ${totalServices} services`
+              }
+              value={`${healthPercentage}%`}
+              color="green"
+              isLoading={isLoading}
+            />
+            <SummaryCard
+              title="Healthy Services"
+              subtitle={
+                isLoading ? undefined : `${totalServices - operationalCount} with issues`
+              }
+              value={operationalCount.toString()}
+              color="lime"
+              isLoading={isLoading}
+            />
+            <SummaryCard
+              title="Total Services"
+              subtitle="Monitored services"
+              value={totalServices.toString()}
+              color="orange"
+              isLoading={isLoading}
+            />
+          </>
+        )}
       </div>
 
       <div className="space-y-4">
