@@ -1,14 +1,25 @@
 import React from 'react'
-import { Button } from '@lisar/ui'
+import { Toaster } from 'sonner'
+import { AuthProvider } from './contexts/AuthContext'
+import { ValidatorProvider } from './contexts/ValidatorContext'
+import { TransactionProvider } from './contexts/TransactionContext'
+import { HealthProvider } from './contexts/HealthContext'
+import { UserProvider } from './contexts/UserContext'
+import { AppRouter } from './routes/router'
 
 export const App: React.FC = () => {
   return (
-    <div style={{ padding: 24 }}>
-      <h1 style={{ color: 'white' }}>Lisar Admin</h1>
-      <p style={{ color: '#9ca3af' }}>Admin dashboard scaffold</p>
-      <div style={{ marginTop: 16 }}>
-        <Button variant="primary">Primary Button</Button>
-      </div>
-    </div>
+    <AuthProvider>
+      <ValidatorProvider>
+        <TransactionProvider>
+          <UserProvider>
+            <HealthProvider>
+              <AppRouter />
+              <Toaster position="top-right" />
+            </HealthProvider>
+          </UserProvider>
+        </TransactionProvider>
+      </ValidatorProvider>
+    </AuthProvider>
   )
 }

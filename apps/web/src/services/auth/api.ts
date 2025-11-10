@@ -15,6 +15,7 @@ import {
   ResetPasswordResponse,
   User,
   UpdateProfileRequest,
+  UpdateOnboardingStatusRequest,
   LogoutRequest,
   LogoutResponse,
   RefreshTokenRequest,
@@ -39,6 +40,7 @@ export interface IAuthApiService {
   // User Profile
   getCurrentUser(): Promise<AuthApiResponse<User>>;
   updateProfile(request: UpdateProfileRequest): Promise<AuthApiResponse<User>>;
+  updateOnboardingStatus(userId: string, request: UpdateOnboardingStatusRequest): Promise<AuthApiResponse<User>>;
   
   // Image Upload
   uploadProfileImage(file: File): Promise<AuthApiResponse<{ imageUrl: string }>>;

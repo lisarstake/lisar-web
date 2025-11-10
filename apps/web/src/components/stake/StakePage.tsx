@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   ChevronLeft,
@@ -9,8 +9,11 @@ import {
   CreditCard,
   ScanQrCode,
 } from "lucide-react";
+import { OnrampWebSDK } from "@onramp.money/onramp-web-sdk";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
+import { ErrorDrawer } from "@/components/ui/ErrorDrawer";
+import { SuccessDrawer } from "@/components/ui/SuccessDrawer";
 import { useOrchestrators } from "@/contexts/OrchestratorContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { delegationService } from "@/services";
@@ -18,6 +21,7 @@ import { StakeRequest } from "@/services/delegation/types";
 import { usePrices } from "@/hooks/usePrices";
 import { priceService } from "@/lib/priceService";
 import { useWallet } from "@/contexts/WalletContext";
+import { getFiatType } from "@/lib/onramp";
 
 export const StakePage: React.FC = () => {
   const navigate = useNavigate();
@@ -29,6 +33,11 @@ export const StakePage: React.FC = () => {
   >(null);
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
   const [isStaking, setIsStaking] = useState(false);
+  const [showErrorDrawer, setShowErrorDrawer] = useState(false);
+  const [showSuccessDrawer, setShowSuccessDrawer] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const onrampInstanceRef = useRef<OnrampWebSDK | null>(null);
   const { orchestrators } = useOrchestrators();
   const { state } = useAuth();
   const { prices } = usePrices();
@@ -67,6 +76,19 @@ export const StakePage: React.FC = () => {
     initializeAmounts();
   }, [prices.lpt, userCurrency]);
 
+  // Clean up onramp instance when component unmounts
+  useEffect(() => {
+    return () => {
+      if (onrampInstanceRef.current) {
+        try {
+          onrampInstanceRef.current.close();
+        } catch (error) {
+          console.error("Error closing onramp widget:", error);
+        }
+      }
+    };
+  }, []);
+
   const handleBackClick = () => {
     navigate(-1);
   };
@@ -89,8 +111,99 @@ export const StakePage: React.FC = () => {
     if (selectedPaymentMethod === "onchain") {
       const depositParam = isDepositFlow ? "?deposit=true" : "";
       navigate(`/deposit/${currentValidator?.address}${depositParam}`);
+    } else if (selectedPaymentMethod === "fiat") {
+      await handleFundWallet();
     } else if (selectedPaymentMethod === "wallet") {
       await handleStake();
+    }
+  };
+
+  const handleFundWallet = async () => {
+    if (!state.user || !fiatAmount || parseFloat(fiatAmount) <= 0) {
+      setErrorMessage("Please enter a valid amount to deposit.");
+      setShowErrorDrawer(true);
+      return;
+    }
+
+    if (!state.user.wallet_address) {
+      setErrorMessage(
+        "No wallet available. Please ensure you have a wallet connected."
+      );
+      setShowErrorDrawer(true);
+      return;
+    }
+
+    try {
+      const numericAmount = parseFloat(fiatAmount.replace(/,/g, ""));
+      const fiatType = getFiatType(userCurrency);
+
+      const onramp = new OnrampWebSDK({
+        appId: import.meta.env.VITE_ONRAMP_APP_ID || 1674103,
+        // appId: 1,
+        walletAddress: state.user.wallet_address,
+        flowType: 1, // onramp
+        fiatType: fiatType,
+        paymentMethod: 2, // Instant transfer
+        fiatAmount: numericAmount,
+        coinCode: "lpt",
+        network: "arbitrum",
+        theme: {
+          lightMode: {
+            baseColor: "#C7EF6B",
+            inputRadius: "8px",
+            buttonRadius: "8px",
+          },
+          darkMode: {
+            baseColor: "#6A8F2A",
+            inputRadius: "8px",
+            buttonRadius: "8px",
+          },
+          default: "darkMode",
+        },
+        isRestricted: true,
+      });
+
+      onramp.on("TX_EVENTS", async (e) => {
+        switch (e.type) {
+          case "ONRAMP_WIDGET_TX_COMPLETED":
+            setSuccessMessage(
+              "Payment completed successfully! Your LPT tokens will be sent to your wallet shortly."
+            );
+            setShowSuccessDrawer(true);
+            break;
+
+          case "ONRAMP_WIDGET_TX_SENDING_FAILED":
+          case "ONRAMP_WIDGET_TX_PURCHASING_FAILED":
+          case "ONRAMP_WIDGET_TX_FINDING_FAILED":
+            setErrorMessage(
+              "Payment failed. Please try again or contact support if the issue persists."
+            );
+            setShowErrorDrawer(true);
+            break;
+        }
+      });
+
+      onramp.on("WIDGET_EVENTS", async (e) => {
+        switch (e.type) {
+          case "ONRAMP_WIDGET_CLOSE_REQUEST_CONFIRMED":
+            setErrorMessage("Payment cancelled, please try again.");
+            setShowErrorDrawer(true);
+            break;
+
+          case "ONRAMP_WIDGET_FAILED":
+            setErrorMessage("Payment widget failed to load. Please try again.");
+            setShowErrorDrawer(true);
+            break;
+        }
+      });
+
+      onrampInstanceRef.current = onramp;
+
+      onramp.show();
+    } catch (error) {
+      console.error("Failed to initialize onramp widget:", error);
+      setErrorMessage("Failed to initialize payment widget. Please try again.");
+      setShowErrorDrawer(true);
     }
   };
 
@@ -331,6 +444,22 @@ export const StakePage: React.FC = () => {
           "Use your existing wallet balance, or deposit with fiat money or tokens from another wallet or exchange.",
           "Review all details before confirming your stake to ensure everything is correct.",
         ]}
+      />
+
+      {/* Error Drawer */}
+      <ErrorDrawer
+        isOpen={showErrorDrawer}
+        onClose={() => setShowErrorDrawer(false)}
+        title="Payment Error"
+        message={errorMessage}
+      />
+
+      {/* Success Drawer */}
+      <SuccessDrawer
+        isOpen={showSuccessDrawer}
+        onClose={() => setShowSuccessDrawer(false)}
+        title="Payment Successful!"
+        message={successMessage}
       />
 
       {/* Bottom Navigation */}

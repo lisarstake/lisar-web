@@ -5,6 +5,8 @@ import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { mockLearnContent, LearnContent } from "@/mock/learn";
 import { useVimeoPlayer } from "@/hooks/useVimeoPlayer";
+import { useAuth } from "@/contexts/AuthContext";
+import { authService } from "@/services/auth";
 
 const learnContent = mockLearnContent;
 
@@ -29,13 +31,91 @@ export const LearnDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const { slug } = useParams<{ slug: string }>();
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
+  const { state, refreshUser } = useAuth();
   const content = learnContent.find((c) => c.slug === slug);
+
+  // Track completed mandatory videos
+  const markVideoAsCompleted = (videoSlug: string): boolean => {
+    if (!content || content.category !== "mandatory") return false;
+    
+    const completedKey = "onboarding_videos_completed";
+    const completed = JSON.parse(localStorage.getItem(completedKey) || "[]");
+    
+    if (!completed.includes(videoSlug)) {
+      completed.push(videoSlug);
+      localStorage.setItem(completedKey, JSON.stringify(completed));
+      
+      // Check if all 3 mandatory videos are completed
+      const mandatoryVideos = learnContent
+        .filter((c) => c.category === "mandatory")
+        .map((c) => c.slug);
+      
+      const allCompleted = mandatoryVideos.every((slug) =>
+        completed.includes(slug)
+      );
+      
+      return allCompleted;
+    }
+    
+    // Check if all are already completed
+    const mandatoryVideos = learnContent
+      .filter((c) => c.category === "mandatory")
+      .map((c) => c.slug);
+    
+    const allCompleted = mandatoryVideos.every((slug) =>
+      completed.includes(slug)
+    );
+    
+    return allCompleted;
+  };
+
+  const updateOnboardingStatus = async () => {
+    try {
+      if (!state.user?.user_id) return;
+      
+      const response = await authService.updateOnboardingStatus(
+        state.user.user_id,
+        { is_onboarded: true }
+      );
+      
+      if (response.success && response.data) {
+        // Refresh user data to update onboarding status
+        await refreshUser();
+        
+        // Clear completed videos tracking
+        localStorage.removeItem("onboarding_videos_completed");
+        
+        // Redirect to wallet after a brief delay
+        setTimeout(() => {
+          navigate("/wallet");
+        }, 1000);
+      }
+    } catch (error) {
+      console.error("Failed to update onboarding status:", error);
+    }
+  };
 
   const handleVideoEnded = () => {
     if (!content) return;
+    
+    // Mark mandatory video as completed and check if all are done
+    const allMandatoryCompleted = markVideoAsCompleted(content.slug);
+    
+    // If all mandatory videos are completed and user is not onboarded, update status
+    if (allMandatoryCompleted && state.user && !state.user.is_onboarded) {
+      updateOnboardingStatus();
+      return;
+    }
+    
     const nextVideo = findNextVideoInCategory(content);
     if (nextVideo) {
       navigate(`/learn/${nextVideo.slug}`);
+    } else {
+      // No more videos in this category
+      // If user is onboarded or not in mandatory category, go to wallet
+      if (state.user?.is_onboarded || content.category !== "mandatory") {
+        navigate("/wallet");
+      }
     }
   };
 

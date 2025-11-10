@@ -90,6 +90,16 @@ export class WalletService implements IWalletApiService {
 
   // Get wallet by ID
   async getWallet(walletId: string): Promise<WalletApiResponse<WalletData>> {
+    const token = this.getStoredToken();
+    if (!token) {
+      return {
+        success: false,
+        data: null as unknown as WalletData,
+        message: "Authentication required",
+        error: "No authentication token found",
+      };
+    }
+
     return this.makeRequest<WalletData>(`/wallet/${walletId}`, {
       method: "GET",
     });
@@ -97,11 +107,18 @@ export class WalletService implements IWalletApiService {
 
   // Get wallet balance
   async getBalance(walletAddress: string, token: 'ETH' | 'LPT'): Promise<BalanceResponse> {
+    const token_auth = this.getStoredToken();
+    if (!token_auth) {
+      return {
+        success: false,
+        balance: "0",
+      };
+    }
+
     try {
-      const token_auth = this.getStoredToken();
       const headers = {
         "Content-Type": "application/json",
-        ...(token_auth && { Authorization: `Bearer ${token_auth}` }),
+        Authorization: `Bearer ${token_auth}`,
       };
 
       const response = await http.request({
@@ -125,11 +142,18 @@ export class WalletService implements IWalletApiService {
 
   // Export wallet private key
   async exportWallet(walletId: string): Promise<ExportResponse> {
+    const token = this.getStoredToken();
+    if (!token) {
+      return {
+        success: false,
+        privateKey: "",
+      };
+    }
+
     try {
-      const token = this.getStoredToken();
       const headers = {
         "Content-Type": "application/json",
-        ...(token && { Authorization: `Bearer ${token}` }),
+        Authorization: `Bearer ${token}`,
       };
 
       const response = await http.request({

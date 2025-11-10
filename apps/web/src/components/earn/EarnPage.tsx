@@ -51,6 +51,13 @@ export const EarnPage: React.FC = () => {
         {/* Header - Scrollable */}
         <div className="flex items-center justify-between py-8">
           <h1 className="text-lg font-medium text-white">Earn on Lisar</h1>
+
+          <button
+          onClick={handleHelpClick}
+          className="w-8 h-8 bg-[#2a2a2a] rounded-full flex items-center justify-center"
+        >
+          <CircleQuestionMark color="#86B3F7" size={16} />
+        </button>
         </div>
 
         {/* Earn Cards */}
@@ -102,9 +109,8 @@ export const EarnPage: React.FC = () => {
         onClose={() => setShowHelpDrawer(false)}
         title="Earning Guide"
         content={[
-          "Earn money through staking, liquidity mining, or yield farming with your crypto.",
-          "Staking is the safest option for beginners, while advanced users can explore other strategies.",
-          "Choose the earning method that matches your risk tolerance and experience level."
+          "Earn money referring friends to Lisar or creating content for Lisar.",
+          "Currently coming soon, stay tuned for updates."
         ]}
       />
 

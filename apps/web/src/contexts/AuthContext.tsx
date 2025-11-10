@@ -379,7 +379,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           // Store tokens
           storage.setItem("auth_token", response.data.session.access_token);
           storage.setItem("refresh_token", response.data.session.refresh_token);
-          console.log(response.data.session.access_token);
 
           // Store expiration if rememberMe is true
           if (rememberMe && response.data.session.expires_at) {
@@ -393,6 +392,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           const userResponse = await authService.getCurrentUser();
 
           if (userResponse && userResponse.success && userResponse.data) {
+           
             // Get wallet info from user data
             const wallet: Wallet = {
               id: userResponse.data.wallet_id || "wallet_id",
@@ -602,7 +602,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const clearError = (): void => {
     dispatch({ type: "AUTH_CLEAR_ERROR" });
   };
-
+ 
   const refreshUser = async (): Promise<void> => {
     try {
       const response = await authService.getCurrentUser();

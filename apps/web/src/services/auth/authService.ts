@@ -8,8 +8,6 @@ import {
   AuthApiResponse,
   CreateWalletRequest,
   CreateWalletResponse,
-  SignupRequest,
-  SignupResponse,
   LoginRequest,
   LoginResponse,
   GoogleOAuthResponse,
@@ -18,14 +16,12 @@ import {
   ResetPasswordRequest,
   ResetPasswordResponse,
   UpdateProfileRequest,
-  ChangePasswordRequest,
-  ChangePasswordResponse,
+  UpdateOnboardingStatusRequest,
   RefreshTokenRequest,
   RefreshTokenResponse,
   LogoutRequest,
   LogoutResponse,
   User,
-  SessionInfo,
   AUTH_CONFIG,
 } from "./types";
 
@@ -107,33 +103,12 @@ export class AuthService implements IAuthApiService {
         return null;
       }
     }
-
     // If not in localStorage, check sessionStorage
     if (!token) {
       token = sessionStorage.getItem("auth_token");
     }
 
     return token;
-  }
-
-  private setStoredToken(token: string): void {
-    localStorage.setItem("auth_token", token);
-  }
-
-  private getStoredRefreshToken(): string | null {
-    // Check localStorage first
-    let refreshToken = localStorage.getItem("refresh_token");
-
-    // If not in localStorage, check sessionStorage
-    if (!refreshToken) {
-      refreshToken = sessionStorage.getItem("refresh_token");
-    }
-
-    return refreshToken;
-  }
-
-  private setStoredRefreshToken(token: string): void {
-    localStorage.setItem("refresh_token", token);
   }
 
   private removeStoredTokens(): void {
@@ -189,7 +164,7 @@ export class AuthService implements IAuthApiService {
     try {
       // Extract tokens from URL hash OR from localStorage if already stored
       const hash = window.location.hash.substring(1);
-      
+
       let access_token: string | null = null;
       let refresh_token: string | null = null;
       let expires_at: string | null = null;
@@ -199,11 +174,11 @@ export class AuthService implements IAuthApiService {
       if (hash.length > 0) {
         // Extract from hash
         const params = new URLSearchParams(hash);
-        access_token = params.get('access_token');
-        refresh_token = params.get('refresh_token');
-        expires_at = params.get('expires_at');
-        expires_in = params.get('expires_in');
-        provider_token = params.get('provider_token');
+        access_token = params.get("access_token");
+        refresh_token = params.get("refresh_token");
+        expires_at = params.get("expires_at");
+        expires_in = params.get("expires_in");
+        provider_token = params.get("provider_token");
       } else {
         // Hash is empty, try to read from localStorage (already stored by LoginForm)
         access_token = localStorage.getItem("auth_token");
@@ -224,9 +199,9 @@ export class AuthService implements IAuthApiService {
       try {
         const queryParams = new URLSearchParams({
           code: access_token,
-          ...(refresh_token && { refresh_token: refresh_token })
+          ...(refresh_token && { refresh_token: refresh_token }),
         });
-        
+
         const apiResponse = await this.makeRequest<GoogleOAuthResponse>(
           `/auth/google/callback?${queryParams.toString()}`,
           {
@@ -240,20 +215,24 @@ export class AuthService implements IAuthApiService {
           if (session?.access_token && session?.refresh_token) {
             localStorage.setItem("auth_token", session.access_token);
             localStorage.setItem("refresh_token", session.refresh_token);
-            
+
             if (session.expires_at) {
-              localStorage.setItem("auth_expiry", session.expires_at.toString());
+              localStorage.setItem(
+                "auth_expiry",
+                session.expires_at.toString()
+              );
             }
           }
 
           // Clear the hash from URL
-          window.history.replaceState(null, '', window.location.pathname);
+          window.history.replaceState(null, "", window.location.pathname);
 
           return apiResponse;
         } else {
           return {
             success: false,
-            message: apiResponse.message || "Failed to process Google OAuth callback",
+            message:
+              apiResponse.message || "Failed to process Google OAuth callback",
             data: null as unknown as GoogleOAuthResponse,
             error: apiResponse.error || "API error",
           };
@@ -263,7 +242,8 @@ export class AuthService implements IAuthApiService {
           success: false,
           message: "Failed to call Google OAuth callback API",
           data: null as unknown as GoogleOAuthResponse,
-          error: apiError instanceof Error ? apiError.message : "API call failed",
+          error:
+            apiError instanceof Error ? apiError.message : "API call failed",
         };
       }
     } catch (error) {
@@ -286,12 +266,10 @@ export class AuthService implements IAuthApiService {
         body: JSON.stringify(request || {}),
       });
 
-      // Always remove tokens locally regardless of API response
       this.removeStoredTokens();
 
       return response;
     } catch (error) {
-      // Even if API call fails, remove tokens locally
       this.removeStoredTokens();
       return {
         success: true,
@@ -332,7 +310,6 @@ export class AuthService implements IAuthApiService {
       };
     }
 
-    // Decode the token to get user ID
     try {
       const tokenPayload = JSON.parse(atob(token.split(".")[1]));
       const userId = tokenPayload.sub;
@@ -353,7 +330,6 @@ export class AuthService implements IAuthApiService {
   async updateProfile(
     request: UpdateProfileRequest
   ): Promise<AuthApiResponse<User>> {
-    // Get the current user ID from the stored token or make a request to get it
     const token = this.getStoredToken();
     if (!token) {
       return {
@@ -364,7 +340,6 @@ export class AuthService implements IAuthApiService {
       };
     }
 
-    // Decode the token to get user ID
     try {
       const tokenPayload = JSON.parse(atob(token.split(".")[1]));
       const userId = tokenPayload.sub;
@@ -381,6 +356,26 @@ export class AuthService implements IAuthApiService {
         error: error instanceof Error ? error.message : "Token decode error",
       };
     }
+  }
+
+  async updateOnboardingStatus(
+    userId: string,
+    request: UpdateOnboardingStatusRequest
+  ): Promise<AuthApiResponse<User>> {
+    const token = this.getStoredToken();
+    if (!token) {
+      return {
+        success: false,
+        message: "No authentication token found",
+        data: null as unknown as User,
+        error: "Authentication required",
+      };
+    }
+
+    return this.makeRequest<User>(`/users/profile/${userId}/onboard`, {
+      method: "PATCH",
+      body: JSON.stringify(request),
+    });
   }
 
   // Image Upload
@@ -453,17 +448,22 @@ export class AuthService implements IAuthApiService {
     request: RefreshTokenRequest
   ): Promise<AuthApiResponse<RefreshTokenResponse>> {
     try {
-      const response = await this.makeRequest<RefreshTokenResponse>("/auth/refresh", {
-        method: "POST",
-        body: JSON.stringify({ refreshToken: request.refreshToken }),
-      });
+      const response = await this.makeRequest<RefreshTokenResponse>(
+        "/auth/refresh",
+        {
+          method: "POST",
+          body: JSON.stringify({ refreshToken: request.refreshToken }),
+        }
+      );
 
       if (response.success && response.data) {
         // Update stored tokens
-        const storage = localStorage.getItem("auth_token") ? localStorage : sessionStorage;
+        const storage = localStorage.getItem("auth_token")
+          ? localStorage
+          : sessionStorage;
         storage.setItem("auth_token", response.data.access_token);
         storage.setItem("refresh_token", response.data.refresh_token);
-        
+
         if (response.data.expires_at) {
           storage.setItem("auth_expiry", response.data.expires_at.toString());
         }

@@ -26,6 +26,7 @@ export interface OrchestratorApiResponse {
 export interface OrchestratorResponse {
   address: string;
   ensName: string;
+  avatar?: string;
   apy: string;
   totalStake: string;
   totalVolumeETH: string;
@@ -35,6 +36,7 @@ export interface OrchestratorResponse {
   active: boolean;
   activeSince: string;
   description: string;
+  yieldSource?: string;
   ensIdentity?: EnsIdentity; // ENS identity data
 }
 
@@ -211,7 +213,7 @@ export interface DelegationConfig {
 }
 
 export const DELEGATION_CONFIG: DelegationConfig = {
-  baseUrl: 'https://lisar-api-1.onrender.com/api/v1',
+  baseUrl: env.VITE_API_BASE_URL,
   timeout: 30000,
   retryAttempts: 3,
 };

@@ -2,6 +2,8 @@
  * Authentication API Types
  */
 
+import { env } from '@/lib/env'
+
 // Base API Response
 export interface AuthApiResponse<T> {
   success: boolean;
@@ -113,6 +115,7 @@ export interface User {
   is_suspended: boolean;
   suspended_at?: string;
   suspension_reason?: string;
+  is_onboarded?: boolean;
   created_date: string;
   updated_at: string;
 }
@@ -140,6 +143,10 @@ export interface UpdateProfileRequest {
   country?: string;
   state?: string;
   fiat_type?: string;
+}
+
+export interface UpdateOnboardingStatusRequest {
+  is_onboarded: boolean;
 }
 
 export interface ChangePasswordRequest {
@@ -198,7 +205,7 @@ export interface AuthConfig {
 
 // Constants
 export const AUTH_CONFIG: AuthConfig = {
-  baseUrl: 'https://lisar-api-1.onrender.com/api/v1',
+  baseUrl: env.VITE_API_BASE_URL,
   timeout: 30000,
   retryAttempts: 3
 };

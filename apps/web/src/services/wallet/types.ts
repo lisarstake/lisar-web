@@ -3,6 +3,8 @@
  * Defines interfaces for wallet-related API operations
  */
 
+import { env } from '@/lib/env'
+
 // Base API Response
 export interface WalletApiResponse<T> {
   success: boolean;
@@ -66,7 +68,7 @@ export interface WalletConfig {
 }
 
 export const WALLET_CONFIG: WalletConfig = {
-  baseUrl: 'https://lisar-api-1.onrender.com/api/v1',
+  baseUrl: env.VITE_API_BASE_URL,
   timeout: 30000,
   retryAttempts: 3,
 };

@@ -1,12 +1,14 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Play } from "lucide-react";
+import { CircleQuestionMark, Play } from "lucide-react";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { mockLearnContent, LearnContent } from "@/mock/learn";
 import { extractVimeoId, getVimeoThumbnail } from "@/utils/vimeo";
+import { HelpDrawer } from "../general/HelpDrawer";
 
 export const LearnPage: React.FC = () => {
   const navigate = useNavigate();
+  const [showHelpDrawer, setShowHelpDrawer] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<
     "mandatory" | "academy"
   >("academy");
@@ -25,6 +27,10 @@ export const LearnPage: React.FC = () => {
     (content) => content.category === selectedCategory
   );
 
+  const handleHelpClick = () => {
+    setShowHelpDrawer(true);
+  };
+
   return (
     <div className="h-screen bg-[#050505] text-white flex flex-col">
       {/* Content List - Scrollable */}
@@ -32,6 +38,13 @@ export const LearnPage: React.FC = () => {
         {/* Header - Now scrollable */}
         <div className="flex items-center justify-between py-8">
           <h1 className="text-lg font-medium text-white">Lisar Academy</h1>
+
+          <button
+          onClick={handleHelpClick}
+          className="w-8 h-8 bg-[#2a2a2a] rounded-full flex items-center justify-center"
+        >
+          <CircleQuestionMark color="#86B3F7" size={16} />
+        </button>
         </div>
 
         {/* Video Content */}
@@ -108,6 +121,18 @@ export const LearnPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+        {/* Help Drawer */}
+        <HelpDrawer
+        isOpen={showHelpDrawer}
+        onClose={() => setShowHelpDrawer(false)}
+        title="Learning Guide"
+        content={[
+          "Learn about Lisar and crypto through our academy videos.",
+          "Watch the videos and follow along with the highlighted script to learn about Lisar and crypto.",
+          "You can read the script without watching the video if you prefer."
+        ]}
+      />
 
       {/* Bottom Navigation */}
       <BottomNavigation currentPath="/learn" />

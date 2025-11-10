@@ -3,6 +3,8 @@
  * Defines interfaces for dashboard-related API operations
  */
 
+import { env } from '@/lib/env'
+
 // Base API Response
 export interface DashboardApiResponse<T> {
   success: boolean;
@@ -16,7 +18,7 @@ export interface DashboardSummary {
   totalDelegators: number;
   totalNgNConverted: number;
   totalLptDelegated: number;
-  totalValidators: number;
+  totalValidators: number; 
   lastUpdated: string;
 }
 
@@ -37,7 +39,7 @@ export interface DashboardConfig {
 }
 
 export const DASHBOARD_CONFIG: DashboardConfig = {
-  baseUrl: 'https://lisar-api-1.onrender.com/api/v1',
+  baseUrl: env.VITE_API_BASE_URL,
   timeout: 30000,
   retryAttempts: 3,
 };

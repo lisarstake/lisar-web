@@ -2,6 +2,8 @@
  * Leaderboard API Types
  */
 
+import { env } from '@/lib/env'
+
 // Base API Response
 export interface LeaderboardApiResponse<T> {
   success: boolean;
@@ -65,7 +67,7 @@ export interface LeaderboardConfig {
 }
 
 export const LEADERBOARD_CONFIG: LeaderboardConfig = {
-  baseUrl: "https://lisar-api-1.onrender.com/api/v1",
+  baseUrl: env.VITE_API_BASE_URL,
   timeout: 30000,
   retryAttempts: 3,
 };

@@ -56,7 +56,7 @@ export class LeaderboardService implements ILeaderboardApiService {
       const token = this.getStoredToken();
       const headers = {
         "Content-Type": "application/json",
-        ...(token && { Authorization: `Bearer ${token}` }),
+        Authorization: `Bearer ${token}`,
         ...config.headers,
       };
       const response = await http.request({
@@ -86,6 +86,16 @@ export class LeaderboardService implements ILeaderboardApiService {
   async getEarnerLeaderboard(
     params?: EarnerLeaderboardQuery
   ): Promise<LeaderboardApiResponse<EarnerLeaderboardResponse["data"]>> {
+    const token = this.getStoredToken();
+    if (!token) {
+      return {
+        success: false,
+        data: null as unknown as EarnerLeaderboardResponse["data"],
+        message: "Authentication required",
+        error: "No authentication token found",
+      };
+    }
+
     let endpoint = "/earners/leaderboard";
 
     if (params) {

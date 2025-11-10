@@ -1,4 +1,5 @@
 import { Outlet, useLocation } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { OrchestratorProvider } from "@/contexts/OrchestratorContext";
 import { WalletProvider } from "@/contexts/WalletContext";
@@ -38,6 +39,7 @@ export default function App() {
 
   return (
     <AuthProvider>
+      <Toaster position="top-right" />
       <DashboardProvider>
         <OrchestratorProvider>
           <WalletProvider>
@@ -51,7 +53,6 @@ export default function App() {
                       </main>
                     ) : (
                       <>
-                        {/* Desktop: Center mobile-like UI */}
                         <div className="hidden md:flex md:items-center md:justify-center md:h-screen md:bg-[#0a0a0a]">
                           <div className="relative w-full max-w-[390px] h-full max-h-[99vh] shadow-2xl overflow-hidden">
                             <main
@@ -62,7 +63,6 @@ export default function App() {
                           </div>
                         </div>
 
-                        {/* Mobile: Full width */}
                         <div className="md:hidden">
                           <main
                             className={`app-main ${hasBottomNav ? "with-bottom-nav" : ""}`}

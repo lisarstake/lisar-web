@@ -199,7 +199,7 @@ export const ForgotPasswordForm: React.FC = () => {
                   Go to login
                 </button>
               )}
-            </DrawerFooter>
+            </DrawerFooter> 
           </DrawerContent>
         </Drawer>
 
