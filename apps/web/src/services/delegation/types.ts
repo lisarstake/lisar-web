@@ -4,6 +4,7 @@
  */
 
 import { EnsIdentity } from '../ens/types';
+import { env } from '@/lib/env';
 
 // Base API Response
 export interface DelegationApiResponse<T> {

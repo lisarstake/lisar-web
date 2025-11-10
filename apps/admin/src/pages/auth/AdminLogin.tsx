@@ -3,6 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
 import { ErrorDrawer } from "@/components/ui/ErrorDrawer";
 import { EyeClosed, EyeIcon } from "lucide-react";
+import { isProduction } from "@/lib/utils";
 
 export const AdminLogin: React.FC = () => {
   const navigate = useNavigate();
@@ -163,19 +164,21 @@ export const AdminLogin: React.FC = () => {
           </form>
 
           {/* Footer Link */}
-          <div className="text-center mt-8">
-            <p className="text-gray-900">
-              Don't have an admin account?{" "}
-              <Link to="/signup" className="text-[#235538] hover:underline">
-                Create admin
-              </Link>
-            </p>
-          </div>
+          {!isProduction() && (
+            <div className="text-center mt-8">
+              <p className="text-gray-900">
+                Don't have an admin account?{" "}
+                <Link to="/signup" className="text-[#235538] hover:underline">
+                  Create admin
+                </Link>
+              </p>
+            </div>
+          )}
           </div>
         </div>
       </div>
 
-      {/* Drawers - Conditionally rendered to avoid React hook errors */}
+      {/* Drawers */}
       {errorOpen && (
         <ErrorDrawer
           isOpen={errorOpen}

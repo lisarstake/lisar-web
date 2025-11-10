@@ -29,7 +29,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
           <Menu className="w-5 h-5 text-gray-600" />
         </button>
         <div>
-          <h1 className="text-base lg:text-lg font-medium text-gray-800">
+          <h1 className="text-sm lg:text-base text-gray-800">
             Welcome back, {displayName.split(" ")[0]}!
           </h1>
         </div>
@@ -38,7 +38,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
       {/* Right Controls */}
       <div className="flex items-center gap-2 lg:gap-4">
         <button
-          onClick={() => navigate("/admin")}
+          // onClick={() => navigate("/admin")}
           className="hidden sm:flex items-center gap-2 lg:gap-3 pl-2 lg:pl-4 border-l border-gray-200 hover:opacity-80 transition-opacity cursor-pointer"
         >
           <Avatar className="w-8 h-8">
