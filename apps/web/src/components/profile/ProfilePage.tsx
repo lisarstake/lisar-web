@@ -6,6 +6,8 @@ import {
   ChevronDown,
   ArrowRight,
   CircleArrowOutUpRight,
+  Copy,
+  Check,
 } from "lucide-react";
 import { SuccessDrawer } from "../ui/SuccessDrawer";
 import { ErrorDrawer } from "../ui/ErrorDrawer";
@@ -35,6 +37,8 @@ export const ProfilePage: React.FC = () => {
   const [showErrorDrawer, setShowErrorDrawer] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [showExportDrawer, setShowExportDrawer] = useState(false);
+  const [addressCopied, setAddressCopied] = useState(false);
+  const [isHoveringCopy, setIsHoveringCopy] = useState(false);
 
   // Load user data on component mount
   useEffect(() => {
@@ -132,6 +136,36 @@ export const ProfilePage: React.FC = () => {
     } catch (error) {
       // Still navigate to home even if logout fails
       navigate("/");
+    }
+  };
+
+  const handleCopyAddress = async () => {
+    if (!formData.depositAddress) return;
+
+    try {
+      await navigator.clipboard.writeText(formData.depositAddress);
+      setAddressCopied(true);
+      setTimeout(() => {
+        setAddressCopied(false);
+      }, 2000);
+    } catch (error) {
+      // Fallback for older browsers
+      const textArea = document.createElement("textarea");
+      textArea.value = formData.depositAddress;
+      textArea.style.position = "fixed";
+      textArea.style.opacity = "0";
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand("copy");
+        setAddressCopied(true);
+        setTimeout(() => {
+          setAddressCopied(false);
+        }, 2000);
+      } catch (err) {
+        console.error("Failed to copy address:", err);
+      }
+      document.body.removeChild(textArea);
     }
   };
 
@@ -316,12 +350,27 @@ export const ProfilePage: React.FC = () => {
             <label className="block text-gray-100 text-sm font-medium mb-2">
               Deposit Address
             </label>
-            <input
-              type="text"
-              value={formData.depositAddress}
-              readOnly
-              className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#2a2a2a] rounded-lg text-gray-400 cursor-not-allowed"
-            />
+            <div className="relative">
+              <input
+                type="text"
+                value={formData.depositAddress}
+                readOnly
+                className="w-full px-4 py-3 pr-12 bg-[#0a0a0a] border border-[#2a2a2a] rounded-lg text-gray-400 cursor-not-allowed"
+              />
+              <button
+                onClick={handleCopyAddress}
+                onMouseEnter={() => setIsHoveringCopy(true)}
+                onMouseLeave={() => setIsHoveringCopy(false)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1.5 hover:bg-[#2a2a2a] rounded transition-all"
+                aria-label="Copy address"
+              >
+                {addressCopied ? (
+                  <Check size={18} color="#C7EF6B" className="transition-all" />
+                ) : (
+                  <Copy size={18} color={isHoveringCopy ? "#C7EF6B" : "#636363"} className="transition-all" />
+                )}
+              </button>
+            </div>
           </div>
 
           {/* Preferred Currency */}

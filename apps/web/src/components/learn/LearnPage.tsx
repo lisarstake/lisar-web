@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { CircleQuestionMark, Play } from "lucide-react";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { mockLearnContent, LearnContent } from "@/mock/learn";
-import { extractVimeoId, getVimeoThumbnail } from "@/utils/vimeo";
+import { extractVimeoId, getVimeoThumbnail } from "@/lib/vimeo";
 import { HelpDrawer } from "../general/HelpDrawer";
 
 export const LearnPage: React.FC = () => {

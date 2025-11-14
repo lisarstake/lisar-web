@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
   extractResetTokenFromURL,
   clearResetTokenFromURL,
-} from "@/utils/resetTokenExtractor";
+} from "@/lib/resetTokenExtractor";
 import { ErrorDrawer } from "@/components/ui/ErrorDrawer";
 import {
   Drawer,
