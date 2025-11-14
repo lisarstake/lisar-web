@@ -6,7 +6,7 @@ import { SuccessDrawer } from "@/components/ui/SuccessDrawer";
 import {
   extractTokensFromHash,
   clearHashFromURL,
-} from "@/utils/tokenExtractor";
+} from "@/lib/tokenExtractor";
 import { EyeClosed, EyeIcon } from "lucide-react";
 
 interface LoginFormData {

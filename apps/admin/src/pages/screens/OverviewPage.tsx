@@ -36,7 +36,7 @@ export const OverviewPage: React.FC = () => {
   return (
     <div className="space-y-6 lg:space-y-8">
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 ">
         {isLoadingSummary ? (
           <>
             <SummaryCardSkeleton />

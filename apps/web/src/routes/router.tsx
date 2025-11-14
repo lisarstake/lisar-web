@@ -15,6 +15,7 @@ const ValidatorPage = lazy(() => import('@/screens/validator-page'))
 const ValidatorDetailsPage = lazy(() => import('@/screens/validator-details-page'))
 const StakePage = lazy(() => import('@/screens/stake-page'))
 const DepositPage = lazy(() => import('@/screens/deposit-page'))
+const OnchainDepositPage = lazy(() => import('@/screens/onchain-deposit-page'))
 const WithdrawNetworkPage = lazy(() => import('@/screens/withdraw-network-page'))
 const ConfirmWithdrawalPage = lazy(() => import('@/screens/confirm-withdrawal-page'))
 const UnstakeAmountPage = lazy(() => import('@/screens/unstake-amount-page'))
@@ -87,10 +88,26 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: 'deposit',
+        element: (
+          <ProtectedRoute>
+            {withSuspense(<DepositPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
         path: 'deposit/:validatorId',
         element: (
           <ProtectedRoute>
             {withSuspense(<DepositPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'deposit-address',
+        element: (
+          <ProtectedRoute>
+            {withSuspense(<OnchainDepositPage />)}
           </ProtectedRoute>
         ),
       },

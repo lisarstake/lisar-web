@@ -42,7 +42,8 @@ export const DelegationProvider: React.FC<DelegationProviderProps> = ({
     useState<DelegatorTransactionsData | null>(null);
   const [delegatorStakeProfile, setDelegatorStakeProfile] =
     useState<DelegatorStakeProfile | null>(null);
-  const [protocolStatus, setProtocolStatus] = useState<ProtocolStatusData | null>(null);
+  const [protocolStatus, setProtocolStatus] =
+    useState<ProtocolStatusData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { state } = useAuth();
@@ -61,9 +62,10 @@ export const DelegationProvider: React.FC<DelegationProviderProps> = ({
       setIsLoading(true);
       setError(null);
 
-      const delegatorAddress = state.user?.wallet_address;
+      // const delegatorAddress = state.user?.wallet_address;
+      const delegatorAddress = "0x20B5ba0c3221700a83B4d74d32240e496C3EcAc7";
 
-      // Fetch user delegation data
+      // Fetch user delegation data (current stakes for portfolio)
       try {
         const delegationResponse =
           await delegationService.getDelegations(delegatorAddress);
@@ -74,7 +76,7 @@ export const DelegationProvider: React.FC<DelegationProviderProps> = ({
         setUserDelegation(null);
       }
 
-      // Fetch delegator transactions
+      // Fetch delegator transactions (checking unbonding and completed unbonding process)
       try {
         const transactionsResponse =
           await delegationService.getDelegatorTransactions(delegatorAddress);
@@ -85,7 +87,7 @@ export const DelegationProvider: React.FC<DelegationProviderProps> = ({
         setDelegatorTransactions(null);
       }
 
-      // Fetch delegator stake profile
+      // Fetch delegator stake profile (total stake in portfolio)
       try {
         const stakeProfileResponse =
           await delegationService.getDelegatorStakeProfile(delegatorAddress);
