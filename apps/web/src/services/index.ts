@@ -19,3 +19,5 @@ export * from './leaderboard';
 export * from './ens';
 // Export dashboard services
 export * from './dashboard';
+// Export notification services
+export * from './notifications';

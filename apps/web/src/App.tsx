@@ -7,6 +7,7 @@ import { TransactionProvider } from "@/contexts/TransactionContext";
 import { DelegationProvider } from "@/contexts/DelegationContext";
 import { LeaderboardProvider } from "@/contexts/LeaderboardContext";
 import { DashboardProvider } from "@/contexts/DashboardContext";
+import { NotificationProvider } from "@/contexts/NotificationContext";
 
 export default function App() {
   const location = useLocation();
@@ -46,7 +47,8 @@ export default function App() {
             <TransactionProvider>
               <DelegationProvider>
                 <LeaderboardProvider>
-                  <div className="min-h-screen bg-white">
+                  <NotificationProvider>
+                    <div className="min-h-screen bg-white">
                     {useDesktopView ? (
                       <main className="app-main">
                         <Outlet />
@@ -73,6 +75,7 @@ export default function App() {
                       </>
                     )}
                   </div>
+                  </NotificationProvider>
                 </LeaderboardProvider>
               </DelegationProvider>
             </TransactionProvider>
