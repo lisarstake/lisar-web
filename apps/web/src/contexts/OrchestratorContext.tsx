@@ -12,6 +12,7 @@ import {
 } from "@/services/delegation/types";
 import { delegationService, ensService } from "@/services";
 import { useAuth } from "./AuthContext";
+import { filterOrchestratorsWithoutNames } from "@/lib/orchestrators";
 
 interface OrchestratorContextType {
   orchestrators: OrchestratorResponse[];
@@ -78,6 +79,9 @@ export const OrchestratorProvider: React.FC<OrchestratorProviderProps> = ({
         //   console.error("Failed to fetch ENS identities:", ensError);
         //   // Continue without ENS data if it fails
         // }
+        
+        // Filter out orchestrators whose names start with "0x" (addresses without proper names)
+        fetchedOrchestrators = filterOrchestratorsWithoutNames(fetchedOrchestrators);
         
         setOrchestrators(fetchedOrchestrators);
       } else {

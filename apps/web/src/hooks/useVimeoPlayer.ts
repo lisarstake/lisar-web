@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { extractVimeoId, getVimeoEmbedUrl } from '@/utils/vimeo';
+import { extractVimeoId, getVimeoEmbedUrl } from '@/lib/vimeo';
 
 interface UseVimeoPlayerOptions {
   videoUrl?: string;

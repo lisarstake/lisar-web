@@ -325,7 +325,7 @@ export class DelegationService implements IDelegationApiService {
     }
   }
 
-  // Get delegator transactions 
+  // Get delegator transactions (for checking unbonding and completed unbonding process)
   async getDelegatorTransactions(delegatorAddress: string): Promise<DelegatorTransactionsResponse> {
     const token = this.getStoredToken();
     if (!token) {
