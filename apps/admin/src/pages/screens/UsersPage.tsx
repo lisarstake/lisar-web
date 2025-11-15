@@ -45,10 +45,10 @@ export const UsersPage: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {isLoadingStats ? (
           <>
-            <SummaryCardSkeleton />
-            <SummaryCardSkeleton />
-            <SummaryCardSkeleton />
-            <SummaryCardSkeleton />
+            <SummaryCardSkeleton color="green" />
+            <SummaryCardSkeleton color="blue" />
+            <SummaryCardSkeleton color="lime" />
+            <SummaryCardSkeleton color="orange" />
           </>
         ) : (
           <>

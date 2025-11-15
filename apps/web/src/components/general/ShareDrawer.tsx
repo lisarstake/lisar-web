@@ -30,8 +30,7 @@ export const ShareDrawer: React.FC<ShareDrawerProps> = ({
   const [copied, setCopied] = React.useState(false);
 
   const shareUrl = `${window.location.origin}/validator-details/${validatorId}`;
-  const shareText = `Check out ${validatorName} on Lisar! Earn rewards while supporting decentralized video infrastructure. Join the future of Web3 streaming! 🚀`;
-  const shareTitle = `Stake with ${validatorName} on Lisar`;
+  const shareText = `Check out ${validatorName} on Lisar. You can earn rewards by staking here.`;
 
   const handleCopyLink = async () => {
     try {
@@ -72,11 +71,11 @@ export const ShareDrawer: React.FC<ShareDrawerProps> = ({
     <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DrawerContent>
         <DrawerHeader>
-          <DrawerTitle className="text-center text-2xl font-bold text-white">
+          <DrawerTitle className="text-center text-xl font-semibold text-white">
             Share {validatorName}
           </DrawerTitle>
-          <DrawerDescription className="text-center text-white/70 text-base">
-            Help others discover this validator
+          <DrawerDescription className="text-center text-white/70 text-sm">
+            Share this validator with your friends
           </DrawerDescription>
         </DrawerHeader>
 
@@ -91,21 +90,21 @@ export const ShareDrawer: React.FC<ShareDrawerProps> = ({
               <span className="text-white/90 font-normal">Twitter</span>
             </button>
 
-            <button
+            {/* <button
               onClick={handleFacebookShare}
               className="flex items-center justify-center space-x-3 p-4 bg-[#1a1a1a] rounded-xl border border-[#2a2a2a] hover:border-[#1877F2] transition-colors"
             >
               <Facebook size={18} color="#1877F2" />
               <span className="text-white/90 font-normal">Facebook</span>
-            </button>
+            </button> */}
 
-            <button
+            {/* <button
               onClick={handleLinkedInShare}
               className="flex items-center justify-center space-x-3 p-4 bg-[#1a1a1a] rounded-xl border border-[#2a2a2a] hover:border-[#0077B5] transition-colors"
             >
               <Linkedin size={18} color="#0077B5" />
               <span className="text-white/90 font-normal">LinkedIn</span>
-            </button>
+            </button> */}
 
             <button
               onClick={handleWhatsAppShare}

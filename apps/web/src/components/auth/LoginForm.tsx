@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { ErrorDrawer } from "@/components/ui/ErrorDrawer";
 import { SuccessDrawer } from "@/components/ui/SuccessDrawer";
+import { LoadingSpinner } from "@/components/general/LoadingSpinner";
 import {
   extractTokensFromHash,
   clearHashFromURL,
@@ -38,6 +39,16 @@ export const LoginForm: React.FC = () => {
     message: "",
     details: "",
   });
+
+  useEffect(() => {
+    if (!state.isLoading && state.isAuthenticated) {
+      if (state.user?.is_onboarded === false) {
+        navigate("/learn/what-is-lisar", { replace: true });
+      } else {
+        navigate("/wallet", { replace: true });
+      }
+    }
+  }, [state.isLoading, state.isAuthenticated, state.user?.is_onboarded, navigate]);
 
   useEffect(() => {
     const tokens = extractTokensFromHash();
@@ -180,6 +191,10 @@ export const LoginForm: React.FC = () => {
   };
 
   const isFormValid = formData.email && formData.password;
+
+  if (state.isLoading) {
+    return <LoadingSpinner message="Checking session..." />;
+  }
 
   return (
     <div className="min-h-screen bg-black flex flex-col">

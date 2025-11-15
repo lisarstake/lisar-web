@@ -8,6 +8,7 @@ import { useDelegation } from "@/contexts/DelegationContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePrices } from "@/hooks/usePrices";
 import { priceService } from "@/lib/priceService";
+import { formatNumber, parseFormattedNumber } from "@/lib/formatters";
 
 export const UnstakeAmountPage: React.FC = () => {
   const navigate = useNavigate();
@@ -43,7 +44,7 @@ export const UnstakeAmountPage: React.FC = () => {
   };
 
   const handleAmountSelect = (amount: string) => {
-    const numericAmount = parseInt(amount.replace(/,/g, ""));
+    const numericAmount = parseInt(parseFormattedNumber(amount));
     setLptAmount(amount);
     const fiatValue = priceService.convertLptToFiat(
       numericAmount,
@@ -88,9 +89,10 @@ export const UnstakeAmountPage: React.FC = () => {
         <div className="bg-[#1a1a1a] rounded-xl p-4">
           <input
             type="text"
-            value={`${lptAmount} LPT`}
+            value={lptAmount ? `${formatNumber(lptAmount)} LPT` : "LPT"}
             onChange={(e) => {
-              const value = e.target.value.replace(/[^0-9]/g, "");
+              const rawValue = parseFormattedNumber(e.target.value.replace(/ LPT/g, ""));
+              const value = rawValue.replace(/[^0-9]/g, "");
               setLptAmount(value);
               const numericAmount = parseInt(value) || 0;
               const fiatValue = priceService.convertLptToFiat(
@@ -116,7 +118,7 @@ export const UnstakeAmountPage: React.FC = () => {
         <div className="bg-[#1a1a1a] rounded-xl p-4">
           <input
             type="text"
-            value={`${currencySymbol} ${fiatAmount}`}
+            value={fiatAmount ? `${currencySymbol} ${formatNumber(fiatAmount)}` : `${currencySymbol} 0`}
             readOnly
             tabIndex={-1}
             className="w-full bg-transparent text-white text-lg font-medium focus:outline-none"
@@ -127,19 +129,22 @@ export const UnstakeAmountPage: React.FC = () => {
       {/* Predefined LPT Amounts */}
       <div className="px-6 py-4">
         <div className="flex space-x-3">
-          {["1000", "5000", "10000"].map((amount) => (
-            <button
-              key={amount}
-              onClick={() => handleAmountSelect(amount)}
-              className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-colors ${
-                lptAmount === amount
-                  ? "bg-[#C7EF6B] text-black"
-                  : "bg-[#1a1a1a] text-white hover:bg-[#2a2a2a]"
-              }`}
-            >
-              {amount}
-            </button>
-          ))}
+          {["1000", "5000", "10000"].map((amount) => {
+            const isActive = lptAmount === amount || parseFloat(lptAmount || "0") === parseFloat(amount);
+            return (
+              <button
+                key={amount}
+                onClick={() => handleAmountSelect(amount)}
+                className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-colors ${
+                  isActive
+                    ? "bg-[#C7EF6B] text-black"
+                    : "bg-[#1a1a1a] text-white hover:bg-[#2a2a2a]"
+                }`}
+              >
+                {formatNumber(amount)}
+              </button>
+            );
+          })}
         </div>
       </div>
 

@@ -37,7 +37,7 @@ export interface HealthConfig {
 
 export const HEALTH_CONFIG: HealthConfig = {
   baseUrl: env.VITE_API_BASE_URL,
-  timeout: 30000,
+  timeout: 100000,
   retryAttempts: 3,
 }
 
