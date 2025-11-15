@@ -207,6 +207,11 @@ export class AuthService {
         ? localStorage
         : sessionStorage;
       storage.setItem("auth_token", result.data.accessToken);
+
+      if (result.data.refreshToken) {
+        storage.setItem("refresh_token", result.data.refreshToken);
+      }
+
       if (result.data.expiresIn) {
         const expiresAt = Math.floor(Date.now() / 1000) + result.data.expiresIn;
         storage.setItem("auth_expiry", expiresAt.toString());

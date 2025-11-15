@@ -11,7 +11,7 @@ export const ValidatorRewardsChart: React.FC<ValidatorRewardsChartProps> = ({
   isLoading,
 }) => {
   return (
-    <div className="px-6 py-4">
+    <div className="px-6 py-1">
       <div className="bg-[#1a1a1a] rounded-xl">
         <div className="h-32 bg-[#0a0a0a] rounded-lg relative overflow-hidden">
           {isLoading ? (
@@ -124,7 +124,7 @@ export const ValidatorRewardsChart: React.FC<ValidatorRewardsChartProps> = ({
                           fontSize="8"
                           fontWeight="bold"
                         >
-                          Round {points[points.length - 1].round}
+                          Reward
                         </text>
                       </>
                     )}

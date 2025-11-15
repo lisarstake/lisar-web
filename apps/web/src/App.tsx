@@ -1,5 +1,6 @@
 import { Outlet, useLocation } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
+import { ErrorBoundary } from "@/components/general/ErrorBoundary";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { OrchestratorProvider } from "@/contexts/OrchestratorContext";
 import { WalletProvider } from "@/contexts/WalletContext";
@@ -38,47 +39,61 @@ export default function App() {
   );
 
   return (
-    <AuthProvider>
-      <Toaster position="top-right" />
-      <DashboardProvider>
-        <OrchestratorProvider>
-          <WalletProvider>
-            <TransactionProvider>
-              <DelegationProvider>
-                <LeaderboardProvider>
-                  <div className="min-h-screen bg-white">
-                    {useDesktopView ? (
-                      <main className="app-main">
-                        <Outlet />
-                      </main>
-                    ) : (
-                      <>
-                        <div className="hidden md:flex md:items-center md:justify-center md:h-screen md:bg-[#0a0a0a]">
-                          <div className="relative w-full max-w-[390px] h-full max-h-[99vh] shadow-2xl overflow-hidden">
-                            <main
-                              className={`app-main h-full overflow-y-auto ${hasBottomNav ? "with-bottom-nav" : ""}`}
-                            >
-                              <Outlet />
-                            </main>
-                          </div>
-                        </div>
+    <ErrorBoundary>
+      <AuthProvider>
+        <Toaster position="top-right" />
+        <ErrorBoundary>
+          <DashboardProvider>
+            <ErrorBoundary>
+              <OrchestratorProvider>
+                <ErrorBoundary>
+                  <WalletProvider>
+                    <ErrorBoundary>
+                      <TransactionProvider>
+                        <ErrorBoundary>
+                          <DelegationProvider>
+                            <ErrorBoundary>
+                              <LeaderboardProvider>
+                                <div className="min-h-screen bg-white">
+                                  {useDesktopView ? (
+                                    <main className="app-main">
+                                      <Outlet />
+                                    </main>
+                                  ) : (
+                                    <>
+                                      <div className="hidden md:flex md:items-center md:justify-center md:h-screen md:bg-[#0a0a0a]">
+                                        <div className="relative w-full max-w-[390px] h-full max-h-[99vh] shadow-2xl overflow-hidden">
+                                          <main
+                                            className={`app-main h-full overflow-y-auto ${hasBottomNav ? "with-bottom-nav" : ""}`}
+                                          >
+                                            <Outlet />
+                                          </main>
+                                        </div>
+                                      </div>
 
-                        <div className="md:hidden">
-                          <main
-                            className={`app-main ${hasBottomNav ? "with-bottom-nav" : ""}`}
-                          >
-                            <Outlet />
-                          </main>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </LeaderboardProvider>
-              </DelegationProvider>
-            </TransactionProvider>
-          </WalletProvider>
-        </OrchestratorProvider>
-      </DashboardProvider>
-    </AuthProvider>
+                                      <div className="md:hidden">
+                                        <main
+                                          className={`app-main ${hasBottomNav ? "with-bottom-nav" : ""}`}
+                                        >
+                                          <Outlet />
+                                        </main>
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
+                              </LeaderboardProvider>
+                            </ErrorBoundary>
+                          </DelegationProvider>
+                        </ErrorBoundary>
+                      </TransactionProvider>
+                    </ErrorBoundary>
+                  </WalletProvider>
+                </ErrorBoundary>
+              </OrchestratorProvider>
+            </ErrorBoundary>
+          </DashboardProvider>
+        </ErrorBoundary>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }

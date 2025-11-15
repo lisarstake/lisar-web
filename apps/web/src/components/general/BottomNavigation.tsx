@@ -39,19 +39,6 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
           )}
         </Link>
 
-        {/* Learn */}
-        <Link
-          to="/learn"
-          className={`flex flex-col items-center py-2 px-3 ${
-            isActive("/learn") ? "text-[#C7EF6B]" : "text-gray-400"
-          }`}
-        >
-          <TvMinimalPlay size={22} className="mb-1" />
-          <span className="text-xs">Learn</span>
-          {isActive("/learn") && (
-            <div className="w-6 h-0.5 bg-[#C7EF6B] mt-1 rounded-full"></div>
-          )}
-        </Link>
 
         {/* Forecast */}
         <Link
@@ -66,6 +53,21 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
             <div className="w-6 h-0.5 bg-[#C7EF6B] mt-1 rounded-full"></div>
           )}
         </Link>
+
+        {/* Learn */}
+        <Link
+          to="/learn"
+          className={`flex flex-col items-center py-2 px-3 ${
+            isActive("/learn") ? "text-[#C7EF6B]" : "text-gray-400"
+          }`}
+        >
+          <TvMinimalPlay size={22} className="mb-1" />
+          <span className="text-xs">Learn</span>
+          {isActive("/learn") && (
+            <div className="w-6 h-0.5 bg-[#C7EF6B] mt-1 rounded-full"></div>
+          )}
+        </Link>
+
 
         {/* Earn */}
         <Link

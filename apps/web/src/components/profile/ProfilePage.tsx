@@ -226,7 +226,7 @@ export const ProfilePage: React.FC = () => {
           <h1 className="text-lg font-bold text-gray-100">User Profile</h1>
         </div>
         <button
-          onClick={() => setShowExportDrawer(true)}
+          // onClick={() => setShowExportDrawer(true)}
           className="w-8 h-8 bg-[#2a2a2a] rounded-full flex items-center justify-center"
           aria-label="Help & Export"
         >
