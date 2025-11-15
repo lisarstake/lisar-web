@@ -265,7 +265,7 @@ export const DepositPage: React.FC = () => {
         {/* Predefined Fiat Amounts */}
         <div className="pb-4">
           <div className="flex space-x-3">
-            {["10000", "50000", "100000"].map((amount) => {
+            {["15000", "50000", "100000"].map((amount) => {
               const isActive = fiatAmount === amount || parseFloat(fiatAmount || "0") === parseFloat(amount);
               return (
                 <button
@@ -384,7 +384,7 @@ export const DepositPage: React.FC = () => {
       <ErrorDrawer
         isOpen={showErrorDrawer}
         onClose={() => setShowErrorDrawer(false)}
-        title="Payment Error"
+        title="Something went wrong"
         message={errorMessage}
       />
 

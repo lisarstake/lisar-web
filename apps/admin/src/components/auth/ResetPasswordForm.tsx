@@ -140,7 +140,7 @@ export const ResetPasswordForm: React.FC = () => {
       } else {
         setErrorDrawer({
           isOpen: true,
-          title: "Password Reset Failed",
+          title: "Something went wrong",
           message: response.message || "Failed to reset password",
           details: response.error || "",
         });
@@ -148,7 +148,7 @@ export const ResetPasswordForm: React.FC = () => {
     } catch (error) {
       setErrorDrawer({
         isOpen: true,
-        title: "Network Error",
+        title: "Something went wrong",
         message:
           "Unable to connect to the server. Please check your internet connection and try again.",
         details: error instanceof Error ? error.message : "Unknown error",

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { ErrorDrawer } from "@/components/ui/ErrorDrawer";
 import { LoadingSpinner } from "@/components/general/LoadingSpinner";
 import { EyeClosed, EyeIcon } from "lucide-react";
@@ -8,6 +8,7 @@ import { isProduction } from "@/lib/utils";
 
 export const AdminLogin: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { signin, state } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,14 +20,16 @@ export const AdminLogin: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState("An error occurred");
 
   useEffect(() => {
-    if (!state.isLoading && state.isAuthenticated) {
+    const fromSignup = location.state?.fromSignup;
+
+    if (!state.isLoading && state.isAuthenticated && !fromSignup) {
       navigate("/", { replace: true });
     }
-  }, [state.isLoading, state.isAuthenticated, navigate]);
+  }, [state.isLoading, state.isAuthenticated, navigate, location.state]);
 
   const isFormValid = email && password;
 
-  if (state.isLoading) {
+  if (state.isLoading && !isSubmitting) {
     return <LoadingSpinner message="Checking session..." />;
   }
 

@@ -193,7 +193,7 @@ export const ConfirmUnstakePage: React.FC = () => {
       <ErrorDrawer
         isOpen={showErrorDrawer}
         onClose={() => setShowErrorDrawer(false)}
-        title="Unstake Failed"
+        title="Something went wrong"
         message={errorMessage}
         onRetry={() => {
           setShowErrorDrawer(false);
