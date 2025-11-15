@@ -61,7 +61,7 @@ export const SignupForm: React.FC = () => {
         // Show error in drawer
         setErrorDrawer({
           isOpen: true,
-          title: "Signup Failed",
+          title: "Something went wrong",
           message: walletResponse.message || "Failed to create account",
           details: walletResponse.error || "",
         });
@@ -70,7 +70,7 @@ export const SignupForm: React.FC = () => {
       // Show error in drawer
       setErrorDrawer({
         isOpen: true,
-        title: "Network Error",
+        title: "Something went wrong",
         message:
           "Unable to connect to the server. Please check your internet connection and try again.",
         details: error instanceof Error ? error.message : "Unknown error",
@@ -86,7 +86,7 @@ export const SignupForm: React.FC = () => {
 
   const handleEmailConfirmationClose = () => {
     setShowEmailConfirmation(false);
-    navigate("/login");
+    navigate("/login", { state: { fromSignup: true } });
   };
 
   const isFormValid =

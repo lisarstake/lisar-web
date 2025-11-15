@@ -292,7 +292,7 @@ export const StakePage: React.FC = () => {
       <ErrorDrawer
         isOpen={showErrorDrawer}
         onClose={() => setShowErrorDrawer(false)}
-        title="Staking Error"
+        title="Something went wrong"
         message={errorMessage}
       />
 

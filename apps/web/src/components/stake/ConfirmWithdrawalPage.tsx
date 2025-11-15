@@ -254,7 +254,7 @@ export const ConfirmWithdrawalPage: React.FC = () => {
       <ErrorDrawer
         isOpen={showErrorDrawer}
         onClose={() => setShowErrorDrawer(false)}
-        title="Withdrawal Failed"
+        title="Something went wrong"
         message={errorMessage}
       />
 

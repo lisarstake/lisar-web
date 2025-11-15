@@ -41,7 +41,7 @@ export const AdminSignup: React.FC = () => {
     if (successOpen) {
       const timer = setTimeout(() => {
         setSuccessOpen(false);
-        navigate("/login");
+        navigate("/login", { state: { fromSignup: true } });
       }, 2000);
       return () => clearTimeout(timer);
     }
@@ -232,7 +232,7 @@ export const AdminSignup: React.FC = () => {
           isOpen={successOpen}
           onClose={() => {
             setSuccessOpen(false);
-            navigate("/login");
+            navigate("/login", { state: { fromSignup: true } });
           }}
           message={successMessage}
         />

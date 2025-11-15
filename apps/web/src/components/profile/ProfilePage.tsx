@@ -448,7 +448,7 @@ export const ProfilePage: React.FC = () => {
       <ErrorDrawer
         isOpen={showErrorDrawer}
         onClose={() => setShowErrorDrawer(false)}
-        title="Update Failed"
+        title="Something went wrong"
         message={errorMessage}
         details="Please check your connection and try again. If the problem persists, contact support."
       />

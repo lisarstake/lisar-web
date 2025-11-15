@@ -68,7 +68,7 @@ export const ForgotPasswordForm: React.FC = () => {
         // Show error in drawer
         setErrorDrawer({
           isOpen: true,
-          title: "Password Reset Failed",
+          title: "Something went wrong",
           message: response.message || "Failed to send reset email",
           details: response.error || "",
         });
@@ -77,7 +77,7 @@ export const ForgotPasswordForm: React.FC = () => {
       // Show error in drawer
       setErrorDrawer({
         isOpen: true,
-        title: "Network Error",
+        title: "Something went wrong",
         message:
           "Unable to connect to the server. Please check your internet connection and try again.",
         details: error instanceof Error ? error.message : "Unknown error",
