@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { ErrorDrawer } from "@/components/ui/ErrorDrawer";
 import { SuccessDrawer } from "@/components/ui/SuccessDrawer";
-import {
-  extractTokensFromHash,
-  clearHashFromURL,
-} from "@/lib/tokenExtractor";
+import { LoadingSpinner } from "@/components/general/LoadingSpinner";
+import { extractTokensFromHash, clearHashFromURL } from "@/lib/tokenExtractor";
 import { EyeClosed, EyeIcon } from "lucide-react";
 
 interface LoginFormData {
@@ -16,6 +14,7 @@ interface LoginFormData {
 
 export const LoginForm: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { signin, signinWithGoogle, handleGoogleCallback, state } = useAuth();
 
   const [formData, setFormData] = useState<LoginFormData>({
@@ -38,6 +37,24 @@ export const LoginForm: React.FC = () => {
     message: "",
     details: "",
   });
+
+  useEffect(() => {
+    const fromSignup = location.state?.fromSignup;
+
+    if (!state.isLoading && state.isAuthenticated && !fromSignup) {
+      if (state.user?.is_onboarded === false) {
+        navigate("/learn/what-is-lisar", { replace: true });
+      } else {
+        navigate("/wallet", { replace: true });
+      }
+    }
+  }, [
+    state.isLoading,
+    state.isAuthenticated,
+    state.user?.is_onboarded,
+    navigate,
+    location.state,
+  ]);
 
   useEffect(() => {
     const tokens = extractTokensFromHash();
@@ -103,7 +120,7 @@ export const LoginForm: React.FC = () => {
       // Show error drawer
       setErrorDrawer({
         isOpen: true,
-        title: "Google Sign-in Failed",
+        title: "Something went wrong",
         message: "Failed to process Google sign-in. Please try again.",
         details: error instanceof Error ? error.message : "Unknown error",
       });
@@ -147,7 +164,7 @@ export const LoginForm: React.FC = () => {
         // Show error in drawer
         setErrorDrawer({
           isOpen: true,
-          title: "Login Failed",
+          title: "Something went wrong",
           message: response.error || "Invalid email or password",
           details: response.error || "",
         });
@@ -156,7 +173,7 @@ export const LoginForm: React.FC = () => {
       // Show error in drawer
       setErrorDrawer({
         isOpen: true,
-        title: "Network Error",
+        title: "Something went wrong",
         message:
           "Unable to connect to the server. Please check your internet connection and try again.",
         details: error instanceof Error ? error.message : "Unknown error",
@@ -172,7 +189,7 @@ export const LoginForm: React.FC = () => {
     } catch (error) {
       setErrorDrawer({
         isOpen: true,
-        title: "Google Sign-in Failed",
+        title: "Something went wrong",
         message: "Failed to initiate Google sign-in. Please try again.",
         details: error instanceof Error ? error.message : "Unknown error",
       });
@@ -180,6 +197,10 @@ export const LoginForm: React.FC = () => {
   };
 
   const isFormValid = formData.email && formData.password;
+
+  if (state.isLoading && !isSubmitting) {
+    return <LoadingSpinner message="Checking session..." />;
+  }
 
   return (
     <div className="min-h-screen bg-black flex flex-col">

@@ -32,3 +32,26 @@ export const formatLifetime = (value: number): string => {
   return value.toFixed(2);
 };
 
+/**
+ * Format number with thousand separators (commas)
+ * Example: 1000 -> "1,000", 1000000 -> "1,000,000"
+ */
+export const formatNumber = (value: number | string, decimals: number = 0): string => {
+  const numValue = typeof value === 'string' ? parseFloat(value) || 0 : value;
+  
+  if (isNaN(numValue)) return '0';
+  
+  return numValue.toLocaleString('en-US', {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  });
+};
+
+/**
+ * Parse formatted number string back to numeric value
+ * Removes commas and other formatting
+ */
+export const parseFormattedNumber = (value: string): string => {
+  return value.replace(/,/g, '');
+};
+

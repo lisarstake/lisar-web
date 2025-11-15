@@ -11,6 +11,7 @@ import { delegationService } from "@/services";
 import { StakeRequest } from "@/services/delegation/types";
 import { priceService } from "@/lib/priceService";
 import { useWallet } from "@/contexts/WalletContext";
+import { formatNumber, parseFormattedNumber } from "@/lib/formatters";
 
 export const StakePage: React.FC = () => {
   const navigate = useNavigate();
@@ -76,7 +77,12 @@ export const StakePage: React.FC = () => {
   };
 
   const handleAmountSelect = (amount: string) => {
-    setLptAmount(amount);
+    const numericAmount = parseFormattedNumber(amount);
+    setLptAmount(numericAmount);
+  };
+
+  const handleMaxClick = () => {
+    setLptAmount(walletBalanceLpt.toString());
   };
 
   const handleProceed = async () => {
@@ -175,17 +181,24 @@ export const StakePage: React.FC = () => {
       <div className="flex-1 overflow-y-auto px-6 pb-28 scrollbar-hide">
         {/* Amount Input Field */}
         <div className="py-6">
-          <div className="bg-[#1a1a1a] rounded-xl p-4">
+          <div className="bg-[#1a1a1a] rounded-xl p-4 flex items-center gap-3">
             <input
               type="text"
-              value={lptAmount}
+              value={lptAmount ? formatNumber(lptAmount) : ""}
               onChange={(e) => {
-                const value = e.target.value.replace(/[^0-9.]/g, "");
-                setLptAmount(value);
+                const rawValue = parseFormattedNumber(e.target.value);
+                const numericValue = rawValue.replace(/[^0-9.]/g, "");
+                setLptAmount(numericValue);
               }}
               placeholder="LPT"
-              className="w-full bg-transparent text-white text-lg font-medium focus:outline-none"
+              className="flex-1 bg-transparent text-white text-lg font-medium focus:outline-none"
             />
+            <button
+              onClick={handleMaxClick}
+              className="text-[#C7EF6B] text-sm font-medium transition-colors"
+            >
+              Max
+            </button>
           </div>
           <p className="text-gray-400 text-xs mt-2 pl-2">
             ≈ {currencySymbol}
@@ -199,19 +212,22 @@ export const StakePage: React.FC = () => {
         {/* Predefined LPT Amounts */}
         <div className="pb-4">
           <div className="flex space-x-3">
-            {["10", "50", "100"].map((amount) => (
-              <button
-                key={amount}
-                onClick={() => handleAmountSelect(amount)}
-                className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-colors ${
-                  lptAmount === amount
-                    ? "bg-[#C7EF6B] text-black"
-                    : "bg-[#1a1a1a] text-white/80 hover:bg-[#2a2a2a]"
-                }`}
-              >
-                {amount} LPT
-              </button>
-            ))}
+            {["10", "50", "100"].map((amount) => {
+              const isActive = lptAmount === amount || parseFloat(lptAmount || "0") === parseFloat(amount);
+              return (
+                <button
+                  key={amount}
+                  onClick={() => handleAmountSelect(amount)}
+                  className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-colors ${
+                    isActive
+                      ? "bg-[#C7EF6B] text-black"
+                      : "bg-[#1a1a1a] text-white/80 hover:bg-[#2a2a2a]"
+                  }`}
+                >
+                  {formatNumber(amount)} LPT
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -276,7 +292,7 @@ export const StakePage: React.FC = () => {
       <ErrorDrawer
         isOpen={showErrorDrawer}
         onClose={() => setShowErrorDrawer(false)}
-        title="Staking Error"
+        title="Something went wrong"
         message={errorMessage}
       />
 

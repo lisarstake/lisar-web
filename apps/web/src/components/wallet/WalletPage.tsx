@@ -19,9 +19,40 @@ export const WalletPage: React.FC = () => {
   const { orchestrators, isLoading, error, refetch } = useOrchestrators();
   const { state } = useAuth();
   const { wallet, isLoading: walletLoading } = useWallet();
-  const { delegatorStakeProfile, isLoading: delegationLoading } = useDelegation();
+  const { delegatorStakeProfile, isLoading: delegationLoading } =
+    useDelegation();
 
-  const filteredOrchestrators = useMemo(() => orchestrators, [orchestrators]);
+  const filteredOrchestrators = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return orchestrators;
+    }
+
+    const query = searchQuery.toLowerCase().trim();
+
+    return orchestrators.filter((orchestrator) => {
+      // Search by ENS name
+      const ensName =
+        orchestrator.ensIdentity?.name || orchestrator.ensName || "";
+      if (ensName.toLowerCase().includes(query)) {
+        return true;
+      }
+
+      // Search by address
+      const address = orchestrator.address || "";
+      if (address.toLowerCase().includes(query)) {
+        return true;
+      }
+
+      // Search by description
+      const description =
+        orchestrator.ensIdentity?.description || orchestrator.description || "";
+      if (description.toLowerCase().includes(query)) {
+        return true;
+      }
+
+      return false;
+    });
+  }, [orchestrators, searchQuery]);
 
   // Calculate combined balance (wallet + staked)
   const combinedBalance = useMemo(() => {
@@ -43,15 +74,16 @@ export const WalletPage: React.FC = () => {
     return priceService.getCurrencySymbol(fiatCurrency);
   }, [wallet?.fiatCurrency, state.user?.fiat_type]);
 
-  // Calculate individual balances for drawer
-  const walletBalance = useMemo(() => wallet?.balanceLpt || 0, [wallet?.balanceLpt]);
+  const walletBalance = useMemo(
+    () => wallet?.balanceLpt || 0,
+    [wallet?.balanceLpt]
+  );
   const stakedBalance = useMemo(() => {
     return delegatorStakeProfile
       ? parseFloat(delegatorStakeProfile.currentStake) || 0
       : 0;
   }, [delegatorStakeProfile]);
 
-  // Calculate fiat values for individual balances
   const walletFiatValue = useMemo(() => {
     const fiatCurrency = wallet?.fiatCurrency || state.user?.fiat_type || "USD";
     return priceService.convertLptToFiat(walletBalance, fiatCurrency);
@@ -216,18 +248,27 @@ export const WalletPage: React.FC = () => {
         title="Balance Information"
         content={[
           `Your total balance is a combination of your unstaked balance and staked balance.`,
-          `Unstaked Balance: ${formatEarnings(walletBalance)} LPT (≈${fiatSymbol}${walletFiatValue.toLocaleString(undefined, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })})`,
-          `Staked Balance: ${formatEarnings(stakedBalance)} LPT (≈${fiatSymbol}${stakedFiatValue.toLocaleString(undefined, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })})`,
-          `Total Balance: ${formatEarnings(combinedBalance)} LPT (≈${fiatSymbol}${fiatValue.toLocaleString(undefined, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })})`,
+          `Unstaked Balance: ${formatEarnings(walletBalance)} LPT (≈${fiatSymbol}${walletFiatValue.toLocaleString(
+            undefined,
+            {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }
+          )})`,
+          `Staked Balance: ${formatEarnings(stakedBalance)} LPT (≈${fiatSymbol}${stakedFiatValue.toLocaleString(
+            undefined,
+            {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }
+          )})`,
+          `Total Balance: ${formatEarnings(combinedBalance)} LPT (≈${fiatSymbol}${fiatValue.toLocaleString(
+            undefined,
+            {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }
+          )})`,
         ]}
       />
     </div>

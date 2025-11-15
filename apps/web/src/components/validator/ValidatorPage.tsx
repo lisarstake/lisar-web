@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useMemo, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { OrchestratorList } from "../validator/OrchestratorList";
 import { useOrchestrators } from "@/contexts/OrchestratorContext";
 import { FilterType } from "@/types/wallet";
@@ -9,11 +9,32 @@ import { BottomNavigation } from "@/components/general/BottomNavigation";
 
 export const ValidatorPage: React.FC = () => {
   const navigate = useNavigate();
-  const [activeFilter, setActiveFilter] = useState<FilterType>("apy");
+  const [searchParams, setSearchParams] = useSearchParams();
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
   const { orchestrators, isLoading, error, refetch } = useOrchestrators();
 
-  // Sort orchestrators client-side based on active filter
+  const urlFilter = useMemo((): FilterType => {
+    const filterParam = searchParams.get("filter");
+    if (
+      filterParam &&
+      ["apy", "total-stake", "active-time"].includes(filterParam)
+    ) {
+      return filterParam as FilterType;
+    }
+    return "apy";
+  }, [searchParams]);
+
+  const [activeFilter, setActiveFilter] = useState<FilterType>(urlFilter);
+
+  useEffect(() => {
+    setActiveFilter(urlFilter);
+  }, [urlFilter]);
+
+  const handleFilterChange = (filter: FilterType) => {
+    setActiveFilter(filter);
+    setSearchParams({ filter });
+  };
+
   const sortedOrchestrators = useMemo(() => {
     const sorted = [...orchestrators].sort((a, b) => {
       switch (activeFilter) {
@@ -66,7 +87,7 @@ export const ValidatorPage: React.FC = () => {
       {/* Filter Tabs - Separated */}
       <div className="flex items-center justify-start px-6 pb-4 space-x-2">
         <button
-          onClick={() => setActiveFilter("apy")}
+          onClick={() => handleFilterChange("apy")}
           className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
             activeFilter === "apy"
               ? "bg-[#C7EF6B] text-black"
@@ -76,7 +97,7 @@ export const ValidatorPage: React.FC = () => {
           APY
         </button>
         <button
-          onClick={() => setActiveFilter("total-stake")}
+          onClick={() => handleFilterChange("total-stake")}
           className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
             activeFilter === "total-stake"
               ? "bg-[#C7EF6B] text-black"
@@ -86,7 +107,7 @@ export const ValidatorPage: React.FC = () => {
           Total stake
         </button>
         <button
-          onClick={() => setActiveFilter("active-time")}
+          onClick={() => handleFilterChange("active-time")}
           className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
             activeFilter === "active-time"
               ? "bg-[#C7EF6B] text-black"

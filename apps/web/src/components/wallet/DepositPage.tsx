@@ -15,6 +15,7 @@ import { SuccessDrawer } from "@/components/ui/SuccessDrawer";
 import { useAuth } from "@/contexts/AuthContext";
 import { priceService } from "@/lib/priceService";
 import { getFiatType } from "@/lib/onramp";
+import { formatNumber, parseFormattedNumber } from "@/lib/formatters";
 
 export const DepositPage: React.FC = () => {
   const navigate = useNavigate();
@@ -105,7 +106,8 @@ export const DepositPage: React.FC = () => {
   };
 
   const handleAmountSelect = (amount: string) => {
-    setFiatAmount(amount);
+    const numericAmount = parseFormattedNumber(amount);
+    setFiatAmount(numericAmount);
   };
 
   const handlePaymentMethodSelect = (method: string) => {
@@ -240,10 +242,11 @@ export const DepositPage: React.FC = () => {
           <div className="bg-[#1a1a1a] rounded-xl p-4">
             <input
               type="text"
-              value={fiatAmount}
+              value={fiatAmount ? formatNumber(fiatAmount) : ""}
               onChange={(e) => {
-                const value = e.target.value.replace(/[^0-9.]/g, "");
-                setFiatAmount(value);
+                const rawValue = parseFormattedNumber(e.target.value);
+                const numericValue = rawValue.replace(/[^0-9.]/g, "");
+                setFiatAmount(numericValue);
               }}
               placeholder={currencySymbol}
               className="w-full bg-transparent text-white text-lg font-medium focus:outline-none"
@@ -262,20 +265,23 @@ export const DepositPage: React.FC = () => {
         {/* Predefined Fiat Amounts */}
         <div className="pb-4">
           <div className="flex space-x-3">
-            {["10,000", "50,000", "100,000"].map((amount) => (
-              <button
-                key={amount}
-                onClick={() => handleAmountSelect(amount)}
-                className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-colors ${
-                  fiatAmount === amount
-                    ? "bg-[#C7EF6B] text-black"
-                    : "bg-[#1a1a1a] text-white/80 hover:bg-[#2a2a2a]"
-                }`}
-              >
-                {currencySymbol}
-                {amount}
-              </button>
-            ))}
+            {["15000", "50000", "100000"].map((amount) => {
+              const isActive = fiatAmount === amount || parseFloat(fiatAmount || "0") === parseFloat(amount);
+              return (
+                <button
+                  key={amount}
+                  onClick={() => handleAmountSelect(amount)}
+                  className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-colors ${
+                    isActive
+                      ? "bg-[#C7EF6B] text-black"
+                      : "bg-[#1a1a1a] text-white/80 hover:bg-[#2a2a2a]"
+                  }`}
+                >
+                  {currencySymbol}
+                  {formatNumber(amount)}
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -378,7 +384,7 @@ export const DepositPage: React.FC = () => {
       <ErrorDrawer
         isOpen={showErrorDrawer}
         onClose={() => setShowErrorDrawer(false)}
-        title="Payment Error"
+        title="Something went wrong"
         message={errorMessage}
       />
 

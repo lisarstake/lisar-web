@@ -7,6 +7,7 @@ import { delegationService } from "@/services";
 import { Skeleton } from "@/components/ui/skeleton";
 import { priceService } from "@/lib/priceService";
 import { useAuth } from "@/contexts/AuthContext";
+import { formatNumber, parseFormattedNumber } from "@/lib/formatters";
 
 type ForecastOrchestrator = {
   id: string;
@@ -63,14 +64,12 @@ export const ForecastPage: React.FC = () => {
       .slice(0, 30);
   }, [orchestrators]);
 
-  // Initialize default selection when data loads
   useEffect(() => {
     if (!selectedOrchestrator && options.length > 0) {
       setSelectedOrchestrator(options[0]);
     }
   }, [options, selectedOrchestrator]);
 
-  // Close currency dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
@@ -95,20 +94,22 @@ export const ForecastPage: React.FC = () => {
   };
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setDelegationAmount(e.target.value);
+    const rawValue = parseFormattedNumber(e.target.value);
+    const numericValue = rawValue.replace(/[^0-9.]/g, "");
+    setDelegationAmount(numericValue);
   };
 
-  // Calculate returns based on delegation amount and APY (fallback)
   const numericAmount = parseFloat(delegationAmount.replace(/,/g, "")) || 0;
   const apy = selectedOrchestrator?.apy || 0;
-  const fallbackDaily = (numericAmount * apy) / 100 / 365;
-  const fallbackMonthly = fallbackDaily * 30;
-  const fallbackYearly = (numericAmount * apy) / 100;
+  const fallbackDailyEarnings = (numericAmount * apy) / 100 / 365;
+  const fallbackMonthlyEarnings = fallbackDailyEarnings * 30;
+  const fallbackYearlyEarnings = (numericAmount * apy) / 100;
+  const fallbackDailyTotal = numericAmount + fallbackDailyEarnings;
+  const fallbackMonthlyTotal = numericAmount + fallbackMonthlyEarnings;
+  const fallbackYearlyTotal = numericAmount + fallbackYearlyEarnings;
 
-  // Fetch projected yields
   useEffect(() => {
     const run = async () => {
-      // Guard: require selected orchestrator, positive amount, and positive APY
       if (
         !selectedOrchestrator ||
         numericAmount <= 0 ||
@@ -126,7 +127,7 @@ export const ForecastPage: React.FC = () => {
         const res = await delegationService.calculateYield({
           amount: numericAmount,
           apy: `${apy}%`,
-          period: "", // fetch all time periods
+          period: "",
           includeCurrencyConversion: selectedCurrency !== "LPT",
           currency: selectedCurrency,
         });
@@ -140,7 +141,7 @@ export const ForecastPage: React.FC = () => {
         if (Array.isArray(serverProjections)) {
           next = serverProjections.map((p: any) => ({
             period: String(p.period ?? ""),
-            projectedReward: Number(p.projectedReward ?? 0),
+            projectedReward: Number(p.projectedReward ?? 0) + numericAmount,
             currency: p.currency ?? "USD",
           }));
         } else if (serverProjections && typeof serverProjections === "object") {
@@ -148,7 +149,7 @@ export const ForecastPage: React.FC = () => {
             period: k,
             projectedReward: Number(
               serverProjections[k]?.projectedReward ?? serverProjections[k] ?? 0
-            ),
+            ) + numericAmount,
             currency: serverProjections[k]?.currency ?? "USD",
           }));
         }
@@ -261,7 +262,7 @@ export const ForecastPage: React.FC = () => {
           </div>
           <input
             type="text"
-            value={delegationAmount}
+            value={delegationAmount ? formatNumber(delegationAmount) : ""}
             onChange={handleAmountChange}
             className="w-full p-4 bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl text-white focus:border-[#C7EF6B] focus:outline-none"
             placeholder={`Enter amount in ${selectedCurrency}`}
@@ -278,11 +279,12 @@ export const ForecastPage: React.FC = () => {
               {yieldLoading ? (
                 <Skeleton className="h-7 w-10 bg-[#2a2a2a] inline-block align-middle rounded-sm mb-2" />
               ) : (
-                (
+                formatNumber(
                   projections.find((p) =>
                     p.period.toLowerCase().includes("year")
-                  )?.projectedReward ?? fallbackYearly
-                ).toFixed(2)
+                  )?.projectedReward ?? fallbackYearlyTotal,
+                  2
+                )
               )}{" "}
               {selectedCurrency}
             </div>
@@ -300,11 +302,12 @@ export const ForecastPage: React.FC = () => {
                 {yieldLoading ? (
                   <Skeleton className="h-5 w-8 bg-[#2a2a2a] inline-block align-middle rounded-sm mb-1" />
                 ) : (
-                  (
+                  formatNumber(
                     projections.find((p) =>
                       p.period.toLowerCase().includes("day")
-                    )?.projectedReward ?? fallbackDaily
-                  ).toFixed(2)
+                    )?.projectedReward ?? fallbackDailyTotal,
+                    2
+                  )
                 )}{" "}
                 {selectedCurrency}
               </span>
@@ -315,11 +318,12 @@ export const ForecastPage: React.FC = () => {
                 {yieldLoading ? (
                   <Skeleton className="h-5 w-8 bg-[#2a2a2a] inline-block align-middle rounded-sm mb-1" />
                 ) : (
-                  (
+                  formatNumber(
                     projections.find((p) =>
                       p.period.toLowerCase().includes("month")
-                    )?.projectedReward ?? fallbackMonthly
-                  ).toFixed(2)
+                    )?.projectedReward ?? fallbackMonthlyTotal,
+                    2
+                  )
                 )}{" "}
                 {selectedCurrency}
               </span>
@@ -330,11 +334,12 @@ export const ForecastPage: React.FC = () => {
                 {yieldLoading ? (
                   <Skeleton className="h-5 w-8 bg-[#2a2a2a] inline-block align-middle rounded-sm mb-1" />
                 ) : (
-                  (
+                  formatNumber(
                     projections.find((p) =>
                       p.period.toLowerCase().includes("year")
-                    )?.projectedReward ?? fallbackYearly
-                  ).toFixed(2)
+                    )?.projectedReward ?? fallbackYearlyTotal,
+                    2
+                  )
                 )}{" "}
                 {selectedCurrency}
               </span>
@@ -347,11 +352,12 @@ export const ForecastPage: React.FC = () => {
                 {yieldLoading ? (
                   <Skeleton className="h-5 w-8 bg-[#2a2a2a] inline-block align-middle rounded-sm mb-1" />
                 ) : (
-                  (
+                  formatNumber(
                     projections.find((p) =>
                       p.period.toLowerCase().includes("year")
-                    )?.projectedReward ?? fallbackYearly
-                  ).toFixed(2)
+                    )?.projectedReward ?? fallbackYearlyTotal,
+                    2
+                  )
                 )}{" "}
                 {selectedCurrency}
               </span>

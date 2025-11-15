@@ -100,14 +100,22 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
   );
 };
 
-export const SummaryCardSkeleton: React.FC<{ color?: CardColor }> = ({ color = "default" }) => (
-  <Card className={getCardStyles(color)}>
-    <CardContent className="p-3 sm:p-4 relative">
-      <Skeleton className="h-4 w-24 mb-0.5" />
-      <Skeleton className="h-3 w-32 mb-2" />
-      <Skeleton className="h-7 w-32 mt-2" />
-    </CardContent>
-  </Card>
-);
+export const SummaryCardSkeleton: React.FC<{ color?: CardColor }> = ({ color = "default" }) => {
+  const skeletonBgColor = color === "lime" || color === "orange" 
+    ? "bg-[#060E0A]/20" 
+    : color === "default"
+    ? "bg-gray-200"
+    : "bg-white/20";
+    
+  return (
+    <Card className={getCardStyles(color)}>
+      <CardContent className="p-3 sm:p-4 relative">
+        <Skeleton className={`h-4 w-24 mb-0.5 ${skeletonBgColor}`} />
+        <Skeleton className={`h-3 w-32 mb-2 ${skeletonBgColor}`} />
+        <Skeleton className={`h-7 w-32 mt-2 ${skeletonBgColor}`} />
+      </CardContent>
+    </Card>
+  );
+};
 
 
