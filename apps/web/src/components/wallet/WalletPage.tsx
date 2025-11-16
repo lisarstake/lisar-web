@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { OrchestratorList } from "../validator/OrchestratorList";
 import { WalletActionButtons } from "./WalletActionButtons";
@@ -54,6 +54,10 @@ export const WalletPage: React.FC = () => {
     });
   }, [orchestrators, searchQuery]);
 
+  const [fiatValue, setFiatValue] = useState(0);
+  const [walletFiatValue, setWalletFiatValue] = useState(0);
+  const [stakedFiatValue, setStakedFiatValue] = useState(0);
+
   // Calculate combined balance (wallet + staked)
   const combinedBalance = useMemo(() => {
     const walletBalance = wallet?.balanceLpt || 0;
@@ -62,12 +66,6 @@ export const WalletPage: React.FC = () => {
       : 0;
     return walletBalance + stakedBalance;
   }, [wallet?.balanceLpt, delegatorStakeProfile]);
-
-  // Calculate fiat equivalent using price service
-  const fiatValue = useMemo(() => {
-    const fiatCurrency = wallet?.fiatCurrency || state.user?.fiat_type || "USD";
-    return priceService.convertLptToFiat(combinedBalance, fiatCurrency);
-  }, [combinedBalance, wallet?.fiatCurrency, state.user?.fiat_type]);
 
   const fiatSymbol = useMemo(() => {
     const fiatCurrency = wallet?.fiatCurrency || state.user?.fiat_type || "USD";
@@ -84,15 +82,23 @@ export const WalletPage: React.FC = () => {
       : 0;
   }, [delegatorStakeProfile]);
 
-  const walletFiatValue = useMemo(() => {
-    const fiatCurrency = wallet?.fiatCurrency || state.user?.fiat_type || "USD";
-    return priceService.convertLptToFiat(walletBalance, fiatCurrency);
-  }, [walletBalance, wallet?.fiatCurrency, state.user?.fiat_type]);
+  useEffect(() => {
+    const calculateFiatValues = async () => {
+      const fiatCurrency = wallet?.fiatCurrency || state.user?.fiat_type || "USD";
+      
+      const [combinedFiat, walletFiat, stakedFiat] = await Promise.all([
+        priceService.convertLptToFiat(combinedBalance, fiatCurrency),
+        priceService.convertLptToFiat(walletBalance, fiatCurrency),
+        priceService.convertLptToFiat(stakedBalance, fiatCurrency),
+      ]);
 
-  const stakedFiatValue = useMemo(() => {
-    const fiatCurrency = wallet?.fiatCurrency || state.user?.fiat_type || "USD";
-    return priceService.convertLptToFiat(stakedBalance, fiatCurrency);
-  }, [stakedBalance, wallet?.fiatCurrency, state.user?.fiat_type]);
+      setFiatValue(combinedFiat);
+      setWalletFiatValue(walletFiat);
+      setStakedFiatValue(stakedFiat);
+    };
+
+    calculateFiatValues();
+  }, [combinedBalance, walletBalance, stakedBalance, wallet?.fiatCurrency, state.user?.fiat_type]);
 
   const handleStakeClick = () => {
     navigate("/validator");

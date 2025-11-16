@@ -32,7 +32,7 @@ export const ValidatorPage: React.FC = () => {
 
   const handleFilterChange = (filter: FilterType) => {
     setActiveFilter(filter);
-    setSearchParams({ filter });
+    setSearchParams({ filter }, { replace: true });
   };
 
   const sortedOrchestrators = useMemo(() => {
