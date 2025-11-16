@@ -111,7 +111,7 @@ export const LeaderboardPage: React.FC = () => {
                     <div className="flex items-center space-x-3">
                       <div className="w-10 h-10 bg-[#2a2a2a] rounded-full flex items-center justify-center">
                         <span className="text-gray-400 text-sm">
-                          #{entry.rank}
+                          {entry.rank}
                         </span>
                       </div>
                       <div>

@@ -13,7 +13,6 @@ type WalletState = {
   balanceLpt: number;
   fiatCurrency: string;
   fiatSymbol: string;
-  fiatValue: number;
   address?: string;
   walletId?: string;
 };
@@ -55,13 +54,11 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
       const balanceLpt = parseFloat(balanceResp.balance || "0");
       const fiatCurrency = state.user.fiat_type || "USD";
       const fiatSymbol = priceService.getCurrencySymbol(fiatCurrency);
-      const fiatValue = priceService.convertLptToFiat(balanceLpt, fiatCurrency);
 
       setWallet({
         balanceLpt,
         fiatCurrency,
         fiatSymbol,
-        fiatValue,
         address: state.user.wallet_address,
         walletId: state.user.wallet_id,
       });

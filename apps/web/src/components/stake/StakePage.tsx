@@ -187,7 +187,11 @@ export const StakePage: React.FC = () => {
               value={lptAmount ? formatNumber(lptAmount) : ""}
               onChange={(e) => {
                 const rawValue = parseFormattedNumber(e.target.value);
-                const numericValue = rawValue.replace(/[^0-9.]/g, "");
+                let numericValue = rawValue.replace(/[^0-9.]/g, "");
+                const parts = numericValue.split(".");
+                if (parts.length > 2) {
+                  numericValue = parts[0] + "." + parts.slice(1).join("");
+                }
                 setLptAmount(numericValue);
               }}
               placeholder="LPT"

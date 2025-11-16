@@ -10,9 +10,14 @@ export const formatEarnings = (value: number): string => {
     return `${(value / 1000).toFixed(1)}k`;
   } else if (value >= 1000) {
     return `${(value / 1000).toFixed(1)}k`;
+  } else if (value >= 100) {
+    return value.toFixed(2);
+  } else if (value >= 10) {
+    return value.toFixed(3);
+  } else if (value >= 1) {
+    return value.toFixed(3);
   }
-  // For values less than 1000, show 2 decimal places
-  return value.toFixed(2);
+  return value.toFixed(4);
 };
 
 /**
@@ -27,9 +32,14 @@ export const formatLifetime = (value: number): string => {
     return `${(value / 1000).toFixed(2)}k`;
   } else if (value >= 1000) {
     return `${(value / 1000).toFixed(2)}k`;
+  } else if (value >= 100) {
+    return value.toFixed(2);
+  } else if (value >= 10) {
+    return value.toFixed(3);
+  } else if (value >= 1) {
+    return value.toFixed(3);
   }
-  // For values less than 1000, show 2 decimal places
-  return value.toFixed(2);
+  return value.toFixed(4);
 };
 
 /**
@@ -37,11 +47,28 @@ export const formatLifetime = (value: number): string => {
  * Example: 1000 -> "1,000", 1000000 -> "1,000,000"
  */
 export const formatNumber = (value: number | string, decimals: number = 0): string => {
-  const numValue = typeof value === 'string' ? parseFloat(value) || 0 : value;
+  if (typeof value === 'string') {
+    if (value === '' || value === '.') return value;
+    
+    const numValue = parseFloat(value);
+    if (isNaN(numValue)) return '0';
+    
+    if (value.includes('.')) {
+      const [intPart, decPart] = value.split('.');
+      if (decPart !== undefined && (decPart === '' || /^0*$/.test(decPart) || value.length <= 15)) {
+        return value;
+      }
+    }
+    
+    return numValue.toLocaleString('en-US', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: decimals > 0 ? decimals : 10,
+    });
+  }
   
-  if (isNaN(numValue)) return '0';
+  if (isNaN(value)) return '0';
   
-  return numValue.toLocaleString('en-US', {
+  return value.toLocaleString('en-US', {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
   });
