@@ -63,7 +63,7 @@ export const DashboardProvider: React.FC<DashboardProviderProps> = ({
       }
     } catch (err: any) {
       setError(err?.message || "Failed to load dashboard data");
-      console.error("Dashboard fetch error:", err);
+      console.warn("Dashboard fetch error:", err);
     } finally {
       setIsLoading(false);
     }

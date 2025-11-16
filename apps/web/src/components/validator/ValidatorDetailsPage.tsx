@@ -15,6 +15,9 @@ export const ValidatorDetailsPage: React.FC = () => {
   const { validatorId } = useParams<{ validatorId: string }>();
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
   const [showShareDrawer, setShowShareDrawer] = useState(false);
+  const [showUnstakeRestrictionDrawer, setShowUnstakeRestrictionDrawer] =
+    useState(false);
+  const [showMoveStakeDrawer, setShowMoveStakeDrawer] = useState(false);
   const { orchestrators, orchestratorRewards, isLoading, error } =
     useOrchestrators();
   const { userDelegation, delegatorTransactions } = useDelegation();
@@ -27,17 +30,17 @@ export const ValidatorDetailsPage: React.FC = () => {
   // Get the 4 latest rounds for the chart
   const latestRewards = useMemo(() => {
     if (!validatorId || !orchestratorRewards[validatorId]) return [];
-    
+
     const rewards = orchestratorRewards[validatorId].rewards;
     if (!rewards || rewards.length === 0) return [];
-    
+
     // Filter rewards for this validator and sort by round (descending)
     const validatorRewards = rewards
-      .filter(reward => reward.delegate === validatorId)
+      .filter((reward) => reward.delegate === validatorId)
       .sort((a, b) => parseInt(b.round) - parseInt(a.round))
       .slice(0, 4)
       .reverse(); // Reverse to show oldest to newest
-    
+
     return validatorRewards;
   }, [orchestratorRewards, validatorId]);
 
@@ -57,9 +60,29 @@ export const ValidatorDetailsPage: React.FC = () => {
   // Check if user has a stake with validator
   const hasStakeWithValidator = Boolean(
     userDelegation &&
-    userDelegation.delegate.id === validatorId &&
-    parseFloat(userDelegation.bondedAmount) > 0
+      userDelegation.delegate.id === validatorId &&
+      parseFloat(userDelegation.bondedAmount) > 0
   );
+
+  // Check if user just staked (startRound === currentRound)
+  const justStaked = useMemo(() => {
+    if (!userDelegation || !delegatorTransactions || !hasStakeWithValidator) {
+      return false;
+    }
+    const startRound = parseInt(userDelegation.startRound || "0");
+    const currentRound = parseInt(delegatorTransactions.currentRound || "0");
+    return startRound === currentRound;
+  }, [userDelegation, delegatorTransactions, hasStakeWithValidator]);
+
+  // Check if user has a stake with a different validator
+  const hasStakeWithDifferentValidator = useMemo(() => {
+    if (!userDelegation || !validatorId) {
+      return false;
+    }
+    const delegateId = userDelegation.delegate.id;
+    const bondedAmount = parseFloat(userDelegation.bondedAmount || "0");
+    return bondedAmount > 0 && delegateId !== validatorId;
+  }, [userDelegation, validatorId]);
 
   const pendingUnbondingTransactions = validatorTransactions.pending;
   const withdrawableTransactions = validatorTransactions.completed;
@@ -91,7 +114,11 @@ export const ValidatorDetailsPage: React.FC = () => {
   };
 
   const handleStakeClick = () => {
-    navigate(`/stake/${currentValidator?.address}`);
+    if (hasStakeWithDifferentValidator) {
+      setShowMoveStakeDrawer(true);
+    } else {
+      navigate(`/stake/${currentValidator?.address}`);
+    }
   };
 
   const handleWithdrawClick = () => {
@@ -99,7 +126,11 @@ export const ValidatorDetailsPage: React.FC = () => {
   };
 
   const handleUnstakeClick = () => {
-    navigate(`/unstake-amount/${currentValidator?.address}`);
+    if (justStaked) {
+      setShowUnstakeRestrictionDrawer(true);
+    } else {
+      navigate(`/unstake-amount/${currentValidator?.address}`);
+    }
   };
 
   const handleShareClick = () => {
@@ -123,9 +154,13 @@ export const ValidatorDetailsPage: React.FC = () => {
 
         <h1 className="text-lg font-medium text-white">
           {currentValidator?.ensIdentity?.name || currentValidator?.ensName
-            ? (currentValidator?.ensIdentity?.name || currentValidator?.ensName).length > 16
-              ? (currentValidator?.ensIdentity?.name || currentValidator?.ensName).slice(0, 16) + ".."
-              : (currentValidator?.ensIdentity?.name || currentValidator?.ensName)
+            ? (currentValidator?.ensIdentity?.name || currentValidator?.ensName)
+                .length > 16
+              ? (
+                  currentValidator?.ensIdentity?.name ||
+                  currentValidator?.ensName
+                ).slice(0, 16) + ".."
+              : currentValidator?.ensIdentity?.name || currentValidator?.ensName
             : "Unknown V.."}
         </h1>
 
@@ -193,6 +228,29 @@ export const ValidatorDetailsPage: React.FC = () => {
         onClose={() => setShowShareDrawer(false)}
         validatorName={currentValidator?.ensName || "Unknown Validator"}
         validatorId={validatorId || ""}
+      />
+
+      {/* Unstake Restriction Drawer */}
+      <HelpDrawer
+        isOpen={showUnstakeRestrictionDrawer}
+        onClose={() => setShowUnstakeRestrictionDrawer(false)}
+        title="Cannot Unstake Yet"
+        content={[
+          "You just staked in this round and cannot unstake until the next round begins.",
+          "Please wait for the next round to complete before you can unstake your tokens.",
+        ]}
+      />
+
+      {/* Move Stake Drawer */}
+      <HelpDrawer
+        isOpen={showMoveStakeDrawer}
+        onClose={() => setShowMoveStakeDrawer(false)}
+        title="Move Your Stake?"
+        content={[
+          "You already have a stake with another validator. You can only stake to one validator at a time.",
+          "To stake with this validator, you'll need to unstake from your current validator first.",
+          "Once unstaked, you can then stake with this new validator.",
+        ]}
       />
 
       {/* Bottom Navigation */}
