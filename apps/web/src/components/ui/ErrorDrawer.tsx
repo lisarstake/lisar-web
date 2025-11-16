@@ -39,7 +39,7 @@ export const ErrorDrawer: React.FC<ErrorDrawerProps> = ({
         <DrawerHeader className="text-center">
           <div className="flex justify-center mb-4">
             <div className="w-12 h-12 bg-red-500/10 rounded-full flex items-center justify-center">
-              <AlertCircle className="w-6 h-6 text-red-500" />
+              <AlertCircle className="w-6 h-6 text-orange-500" />
             </div>
           </div>
           <DrawerTitle className="text-lg font-bold text-white/90">

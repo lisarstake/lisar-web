@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ChevronLeft, CircleQuestionMark, ArrowLeftRight } from "lucide-react";
+import { ChevronLeft, CircleQuestionMark } from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { useOrchestrators } from "@/contexts/OrchestratorContext";
@@ -8,13 +8,14 @@ import { useDelegation } from "@/contexts/DelegationContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePrices } from "@/hooks/usePrices";
 import { priceService } from "@/lib/priceService";
+import { formatNumber, parseFormattedNumber } from "@/lib/formatters";
 
 export const UnstakeAmountPage: React.FC = () => {
   const navigate = useNavigate();
   const { validatorId } = useParams<{ validatorId: string }>();
-  const [fiatAmount, setFiatAmount] = useState("0");
   const [lptAmount, setLptAmount] = useState("0");
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
+  const [fiatEquivalent, setFiatEquivalent] = useState(0);
   const { orchestrators } = useOrchestrators();
   const { userDelegation } = useDelegation();
   const { state } = useAuth();
@@ -37,19 +38,34 @@ export const UnstakeAmountPage: React.FC = () => {
   const userCurrency = state.user?.fiat_type || "NGN";
   const currencySymbol = priceService.getCurrencySymbol(userCurrency);
 
+  useEffect(() => {
+    const calculateFiat = async () => {
+      const numericAmount = parseFloat(lptAmount.replace(/,/g, "")) || 0;
+      if (numericAmount > 0) {
+        const fiatValue = await priceService.convertLptToFiat(
+          numericAmount,
+          userCurrency
+        );
+        setFiatEquivalent(fiatValue);
+      } else {
+        setFiatEquivalent(0);
+      }
+    };
+    calculateFiat();
+  }, [lptAmount, userCurrency]);
+
 
   const handleBackClick = () => {
     navigate(-1);
   };
 
   const handleAmountSelect = (amount: string) => {
-    const numericAmount = parseInt(amount.replace(/,/g, ""));
-    setLptAmount(amount);
-    const fiatValue = priceService.convertLptToFiat(
-      numericAmount,
-      userCurrency
-    );
-    setFiatAmount(Math.round(fiatValue).toString());
+    const numericAmount = parseFormattedNumber(amount);
+    setLptAmount(numericAmount);
+  };
+
+  const handleMaxClick = () => {
+    setLptAmount(currentStake.toString());
   };
 
   const handleProceed = () => {
@@ -83,93 +99,95 @@ export const UnstakeAmountPage: React.FC = () => {
         </button>
       </div>
 
-      {/* Amount Input Fields */}
-      <div className="px-6 py-6 space-y-2">
-        <div className="bg-[#1a1a1a] rounded-xl p-4">
-          <input
-            type="text"
-            value={`${lptAmount} LPT`}
-            onChange={(e) => {
-              const value = e.target.value.replace(/[^0-9]/g, "");
-              setLptAmount(value);
-              const numericAmount = parseInt(value) || 0;
-              const fiatValue = priceService.convertLptToFiat(
-                numericAmount,
-                userCurrency
-              );
-              setFiatAmount(Math.round(fiatValue).toString());
-            }}
-            className="w-full bg-transparent text-white text-lg font-medium focus:outline-none"
-          />
-        </div>
-
-        {/* Conversion Arrow */}
-        <div className="flex justify-center">
-          <ArrowLeftRight
-            size={20}
-            color="#C7EF6B"
-            className="font-extrabold"
-          />
-        </div>
-
-        {/* Fiat Amount */}
-        <div className="bg-[#1a1a1a] rounded-xl p-4">
-          <input
-            type="text"
-            value={`${currencySymbol} ${fiatAmount}`}
-            readOnly
-            tabIndex={-1}
-            className="w-full bg-transparent text-white text-lg font-medium focus:outline-none"
-          />
-        </div>
-      </div>
-
-      {/* Predefined LPT Amounts */}
-      <div className="px-6 py-4">
-        <div className="flex space-x-3">
-          {["1000", "5000", "10000"].map((amount) => (
+      {/* Scrollable Content */}
+      <div className="flex-1 overflow-y-auto px-6 pb-28 scrollbar-hide">
+        {/* Amount Input Field */}
+        <div className="py-6">
+          <div className="bg-[#1a1a1a] rounded-xl p-4 flex items-center gap-3">
+            <input
+              type="text"
+              value={lptAmount ? formatNumber(lptAmount) : ""}
+              onChange={(e) => {
+                const rawValue = parseFormattedNumber(e.target.value);
+                let numericValue = rawValue.replace(/[^0-9.]/g, "");
+                const parts = numericValue.split(".");
+                if (parts.length > 2) {
+                  numericValue = parts[0] + "." + parts.slice(1).join("");
+                }
+                setLptAmount(numericValue);
+              }}
+              placeholder="LPT"
+              className="flex-1 bg-transparent text-white text-lg font-medium focus:outline-none"
+            />
             <button
-              key={amount}
-              onClick={() => handleAmountSelect(amount)}
-              className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-colors ${
-                lptAmount === amount
-                  ? "bg-[#C7EF6B] text-black"
-                  : "bg-[#1a1a1a] text-white hover:bg-[#2a2a2a]"
-              }`}
+              onClick={handleMaxClick}
+              className="text-[#C7EF6B] text-sm font-medium transition-colors"
             >
-              {amount}
+              Max
             </button>
-          ))}
+          </div>
+          <p className="text-gray-400 text-xs mt-2 pl-2">
+            ≈ {currencySymbol}
+            {fiatEquivalent.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
+          </p>
         </div>
-      </div>
 
-      {/* Current Stake Display */}
-      {hasStakeWithValidator && (
-        <div className="px-6 py-3">
-          <div className="bg-[#1a1a1a] rounded-lg px-4 py-4.5">
-            <div className="flex justify-between items-center">
-              <span className="text-gray-400 text-base">Staked</span>
-              <span className="text-[#C7EF6B] font-medium">
-                {Math.round(currentStake).toLocaleString()} LPT
-              </span>
-            </div>
+        {/* Predefined LPT Amounts */}
+        <div className="pb-4">
+          <div className="flex space-x-3">
+            {["10", "50", "100"].map((amount) => {
+              const isActive = lptAmount === amount || parseFloat(lptAmount || "0") === parseFloat(amount);
+              return (
+                <button
+                  key={amount}
+                  onClick={() => handleAmountSelect(amount)}
+                  className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-colors ${
+                    isActive
+                      ? "bg-[#C7EF6B] text-black"
+                      : "bg-[#1a1a1a] text-white/80 hover:bg-[#2a2a2a]"
+                  }`}
+                >
+                  {formatNumber(amount)} LPT
+                </button>
+              );
+            })}
           </div>
         </div>
-      )}
 
-      {/* Proceed Button */}
-      <div className="flex-1 flex items-end px-6 pb-24">
+        {/* Current Stake Display */}
+        {hasStakeWithValidator && (
+          <div className="py-4">
+            <h3 className="text-base font-medium text-white/90 mb-2">
+              Current stake
+            </h3>
+            <div className="bg-[#1a1a1a] rounded-xl p-4 border border-[#2a2a2a]">
+              <div className="flex justify-between items-center">
+                <span className="text-white font-normal">Staked amount</span>
+                <span className="text-[#C7EF6B] font-medium">
+                  {currentStake.toLocaleString()} LPT
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Proceed Button - Fixed at bottom */}
+      <div className="px-6 py-4 bg-[#050505] pb-24">
         <button
           onClick={handleProceed}
           disabled={
             !lptAmount ||
-            parseInt(lptAmount) > currentStake ||
-            parseInt(lptAmount) <= 0
+            parseFloat(lptAmount) > currentStake ||
+            parseFloat(lptAmount) <= 0
           }
           className={`w-full py-4 rounded-xl font-semibold text-lg transition-colors ${
             lptAmount &&
-            parseInt(lptAmount) <= currentStake &&
-            parseInt(lptAmount) > 0
+            parseFloat(lptAmount) <= currentStake &&
+            parseFloat(lptAmount) > 0
               ? "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
               : "bg-[#636363] text-white cursor-not-allowed"
           }`}
@@ -185,8 +203,8 @@ export const UnstakeAmountPage: React.FC = () => {
         title="Unstaking Guide"
         content={[
           "Choose how much you want to unstake from this validator.",
-          "You can unstake part or all of your stake. You won't earn rewards during the unbonding period.",
-          "Your funds will be available after the unbonding period ends.",
+          "You can unstake part or all of your stake. You won't earn rewards during the unlocking period.",
+          "Your funds will be available after the unlocking period ends.",
         ]}
       />
 

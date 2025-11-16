@@ -143,7 +143,6 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
-  // Initialize auth state on app load
   useEffect(() => {
     const initializeAuth = async () => {
       const token =
@@ -160,7 +159,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         try {
           dispatch({ type: "AUTH_START" });
 
-          // Check if token is expired
           const isExpired = expiry && Date.now() > parseInt(expiry) * 1000;
 
           if (isExpired && refreshToken) {
@@ -255,7 +253,64 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     initializeAuth();
   }, []);
 
-  // Auth Methods
+  useEffect(() => {
+    if (!state.isAuthenticated || !state.session?.refresh_token) return;
+
+    const checkTokenExpiry = async () => {
+      const expiry =
+        localStorage.getItem("auth_expiry") ||
+        sessionStorage.getItem("auth_expiry");
+      const refreshToken =
+        localStorage.getItem("refresh_token") ||
+        sessionStorage.getItem("refresh_token");
+
+      if (!expiry || !refreshToken) return;
+
+      const expiresAt = parseInt(expiry) * 1000;
+      const now = Date.now();
+      const timeUntilExpiry = expiresAt - now;
+      const fiveMinutes = 5 * 60 * 1000;
+
+      if (timeUntilExpiry > 0 && timeUntilExpiry < fiveMinutes) {
+        try {
+          const refreshResponse = await authService.refreshToken({
+            refreshToken,
+          });
+
+          if (refreshResponse.success && refreshResponse.data) {
+            const response = await authService.getCurrentUser();
+
+            if (response.success && response.data) {
+              const wallet: Wallet = {
+                id: response.data.wallet_id || "wallet_id",
+                address: response.data.wallet_address,
+                chain_type: response.data.chain_type || "ethereum",
+              };
+
+              const session: Session = {
+                access_token: refreshResponse.data.access_token,
+                refresh_token: refreshResponse.data.refresh_token,
+                expires_in: refreshResponse.data.expires_in,
+                expires_at: refreshResponse.data.expires_at,
+                token_type: refreshResponse.data.token_type,
+              };
+
+              dispatch({
+                type: "AUTH_SUCCESS",
+                payload: { user: response.data, wallet, session },
+              });
+            }
+          }
+        } catch (error) {
+          console.error("Proactive token refresh failed:", error);
+        }
+      }
+    };
+
+    const interval = setInterval(checkTokenExpiry, 60000);
+    return () => clearInterval(interval);
+  }, [state.isAuthenticated, state.session?.refresh_token]);
+
   const createWallet = async (
     email: string,
     password: string,
@@ -304,7 +359,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const pendingTokens = localStorage.getItem("pending_confirmation_tokens");
 
       if (pendingTokens) {
-        // Use the stored confirmation tokens instead of making API call
+        
         const tokens = JSON.parse(pendingTokens);
 
         // Choose storage based on rememberMe

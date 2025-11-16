@@ -9,15 +9,15 @@ import { isProduction } from "@/lib/utils";
 export const AdminSignup: React.FC = () => {
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (isProduction()) {
-      navigate("/login", { replace: true });
-    }
-  }, [navigate]);
+  // useEffect(() => {
+  //   if (isProduction()) {
+  //     navigate("/login", { replace: true });
+  //   }
+  // }, [navigate]);
 
-  if (isProduction()) {
-    return null;
-  }
+  // if (isProduction()) {
+  //   return null;
+  // }
 
   const { createAdmin } = useAuth();
 
@@ -41,7 +41,7 @@ export const AdminSignup: React.FC = () => {
     if (successOpen) {
       const timer = setTimeout(() => {
         setSuccessOpen(false);
-        navigate("/login");
+        navigate("/login", { state: { fromSignup: true } });
       }, 2000);
       return () => clearTimeout(timer);
     }
@@ -232,7 +232,7 @@ export const AdminSignup: React.FC = () => {
           isOpen={successOpen}
           onClose={() => {
             setSuccessOpen(false);
-            navigate("/login");
+            navigate("/login", { state: { fromSignup: true } });
           }}
           message={successMessage}
         />

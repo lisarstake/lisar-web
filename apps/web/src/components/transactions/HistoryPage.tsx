@@ -49,16 +49,29 @@ export const HistoryPage: React.FC = () => {
       </div>
 
       {/* Transaction List */}
-      <div className="flex-1 overflow-y-auto px-6 pb-20 scrollbar-hide">
-        <TransactionList
-          transactions={transactions}
-          isLoading={isLoading}
-          error={error}
-          onRetry={refetch}
-          onTransactionClick={handleTransactionClick}
-          skeletonCount={5}
-        />
-      </div>
+      {transactions.length === 0 && !isLoading && !error ? (
+        <div className="flex-1 flex flex-col items-center justify-center px-6 mb-32">
+          <TransactionList
+            transactions={transactions}
+            isLoading={isLoading}
+            error={error}
+            onRetry={refetch}
+            onTransactionClick={handleTransactionClick}
+            skeletonCount={5}
+          />
+        </div>
+      ) : (
+        <div className="flex-1 overflow-y-auto px-6 pb-20 scrollbar-hide">
+          <TransactionList
+            transactions={transactions}
+            isLoading={isLoading}
+            error={error}
+            onRetry={refetch}
+            onTransactionClick={handleTransactionClick}
+            skeletonCount={5}
+          />
+        </div>
+      )}
 
       {/* Help Drawer */}
       <HelpDrawer

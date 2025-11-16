@@ -37,7 +37,8 @@ export class AuthService implements IAuthApiService {
   // Helper method for making HTTP requests
   private async makeRequest<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
+    retryOn401: boolean = true
   ): Promise<AuthApiResponse<T>> {
     const url = `${this.baseUrl}${endpoint}`;
 
@@ -63,6 +64,32 @@ export class AuthService implements IAuthApiService {
     try {
       const response = await fetch(url, config);
       const data = await response.json();
+
+      // Handle 401 Unauthorized - Try to refresh token
+      if (response.status === 401 && retryOn401) {
+        const isPublicEndpoint =
+          endpoint.includes("/signin") ||
+          endpoint.includes("/create") ||
+          endpoint.includes("/google") ||
+          endpoint.includes("/forgot-password") ||
+          endpoint.includes("/reset-password") ||
+          endpoint.includes("/refresh");
+
+        if (!isPublicEndpoint) {
+          const refreshToken = this.getStoredRefreshToken();
+          if (refreshToken) {
+            try {
+              const refreshResult = await this.refreshToken({ refreshToken });
+              if (refreshResult.success && refreshResult.data?.access_token) {
+                return this.makeRequest<T>(endpoint, options, false);
+              }
+            } catch (error) {
+              console.error("Token refresh failed during API call:", error);
+            }
+          }
+          this.removeStoredTokens();
+        }
+      }
 
       if (!response.ok) {
         return {
@@ -93,17 +120,6 @@ export class AuthService implements IAuthApiService {
     // Check localStorage first (remembered sessions)
     let token = localStorage.getItem("auth_token");
 
-    // Check if token has expired (if rememberMe was used)
-    const expiry = localStorage.getItem("auth_expiry");
-    if (token && expiry) {
-      const expiryTime = parseInt(expiry) * 1000; // Convert to milliseconds
-      if (Date.now() > expiryTime) {
-        // Token expired, clear it
-        this.removeStoredTokens();
-        return null;
-      }
-    }
-    // If not in localStorage, check sessionStorage
     if (!token) {
       token = sessionStorage.getItem("auth_token");
     }
@@ -111,13 +127,20 @@ export class AuthService implements IAuthApiService {
     return token;
   }
 
+  private getStoredRefreshToken(): string | null {
+    return (
+      localStorage.getItem("refresh_token") ||
+      sessionStorage.getItem("refresh_token")
+    );
+  }
+
   private removeStoredTokens(): void {
-    // Clear from both storages
     localStorage.removeItem("auth_token");
     localStorage.removeItem("refresh_token");
     localStorage.removeItem("auth_expiry");
     sessionStorage.removeItem("auth_token");
     sessionStorage.removeItem("refresh_token");
+    sessionStorage.removeItem("auth_expiry");
   }
 
   // Sign up and create a wallet
@@ -145,7 +168,6 @@ export class AuthService implements IAuthApiService {
       });
 
       if (response.success && response.data?.url) {
-        // Redirect to the Google OAuth URL
         window.location.href = response.data.url;
       }
 
@@ -162,7 +184,6 @@ export class AuthService implements IAuthApiService {
 
   async handleGoogleCallback(): Promise<AuthApiResponse<GoogleOAuthResponse>> {
     try {
-      // Extract tokens from URL hash OR from localStorage if already stored
       const hash = window.location.hash.substring(1);
 
       let access_token: string | null = null;
@@ -180,7 +201,6 @@ export class AuthService implements IAuthApiService {
         expires_in = params.get("expires_in");
         provider_token = params.get("provider_token");
       } else {
-        // Hash is empty, try to read from localStorage (already stored by LoginForm)
         access_token = localStorage.getItem("auth_token");
         refresh_token = localStorage.getItem("refresh_token");
         expires_at = localStorage.getItem("auth_expiry");
@@ -195,7 +215,6 @@ export class AuthService implements IAuthApiService {
         };
       }
 
-      // Call the backend API with access token and refresh token as query parameters
       try {
         const queryParams = new URLSearchParams({
           code: access_token,
@@ -260,7 +279,6 @@ export class AuthService implements IAuthApiService {
     request?: LogoutRequest
   ): Promise<AuthApiResponse<LogoutResponse>> {
     try {
-      // Call the signout endpoint
       const response = await this.makeRequest<LogoutResponse>("/auth/signout", {
         method: "POST",
         body: JSON.stringify(request || {}),
@@ -408,7 +426,7 @@ export class AuthService implements IAuthApiService {
       formData.append("upload_preset", "lisar_profiles");
       formData.append("folder", "lisar-profiles");
 
-      // Upload to Cloudinary
+      
       const response = await fetch(
         "https://api.cloudinary.com/v1_1/dgz4c3ahz/image/upload",
         {
@@ -447,13 +465,23 @@ export class AuthService implements IAuthApiService {
   async refreshToken(
     request: RefreshTokenRequest
   ): Promise<AuthApiResponse<RefreshTokenResponse>> {
+    if (!request.refreshToken) {
+      return {
+        success: false,
+        message: "No refresh token provided",
+        data: null as unknown as RefreshTokenResponse,
+        error: "Missing refresh token",
+      };
+    }
+
     try {
       const response = await this.makeRequest<RefreshTokenResponse>(
         "/auth/refresh",
         {
           method: "POST",
           body: JSON.stringify({ refreshToken: request.refreshToken }),
-        }
+        },
+        false // Don't retry on 401 for refresh endpoint
       );
 
       if (response.success && response.data) {
@@ -467,10 +495,14 @@ export class AuthService implements IAuthApiService {
         if (response.data.expires_at) {
           storage.setItem("auth_expiry", response.data.expires_at.toString());
         }
+      } else {
+        // Refresh failed, clear tokens
+        this.removeStoredTokens();
       }
 
       return response;
     } catch (error) {
+      this.removeStoredTokens();
       return {
         success: false,
         message: "Failed to refresh token",

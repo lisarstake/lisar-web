@@ -1,39 +1,53 @@
-import { Suspense, lazy, type ReactNode } from 'react'
+import { Suspense, type ReactNode } from 'react'
 import { createBrowserRouter } from 'react-router-dom'
 import App from '@/App'
 import { ErrorBoundary } from '@/components/general/ErrorBoundary'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { LoadingSpinner } from '@/components/general/LoadingSpinner'
+import { lazyRetry } from '@/lib/lazyRetry'
 
-const HomePage = lazy(() => import('@/screens/home-page'))
-const SignupPage = lazy(() => import('@/screens/signup-page'))
-const LoginPage = lazy(() => import('@/screens/login-page'))
-const ForgotPasswordPage = lazy(() => import('@/screens/forgot-password-page'))
-const ResetPasswordPage = lazy(() => import('@/screens/reset-password-page'))
-const WalletPage = lazy(() => import('@/screens/wallet-page'))
-const ValidatorPage = lazy(() => import('@/screens/validator-page'))
-const ValidatorDetailsPage = lazy(() => import('@/screens/validator-details-page'))
-const StakePage = lazy(() => import('@/screens/stake-page'))
-const DepositPage = lazy(() => import('@/screens/deposit-page'))
-const WithdrawNetworkPage = lazy(() => import('@/screens/withdraw-network-page'))
-const ConfirmWithdrawalPage = lazy(() => import('@/screens/confirm-withdrawal-page'))
-const UnstakeAmountPage = lazy(() => import('@/screens/unstake-amount-page'))
-const ConfirmUnstakePage = lazy(() => import('@/screens/confirm-unstake-page'))
-const HistoryPage = lazy(() => import('@/screens/history-page'))
-const TransactionDetailPage = lazy(() => import('@/screens/transaction-detail-page'))
-const LearnPage = lazy(() => import('@/screens/learn-page'))
-const LearnDetailPage = lazy(() => import('@/screens/learn-detail-page'))
-const ForecastPage = lazy(() => import('@/screens/forecast-page'))
-const EarnPage = lazy(() => import('@/screens/earn-page'))
-const PortfolioPage = lazy(() => import('@/screens/portfolio-page'))
-const LeaderboardPage = lazy(() => import('@/screens/leaderboard-page'))
-const DashboardPage = lazy(() => import('@/screens/dashboard-page'))
-const ProfilePage = lazy(() => import('@/screens/profile-page'))
-const NotificationsPage = lazy(() => import('@/screens/notifications-page'))
-const NotFoundPage = lazy(() => import('@/screens/NotFoundPage'))
+const HomePage = lazyRetry(() => import('@/screens/home-page'))
+const SignupPage = lazyRetry(() => import('@/screens/signup-page'))
+const LoginPage = lazyRetry(() => import('@/screens/login-page'))
+const ForgotPasswordPage = lazyRetry(() => import('@/screens/forgot-password-page'))
+const ResetPasswordPage = lazyRetry(() => import('@/screens/reset-password-page'))
+const WalletPage = lazyRetry(() => import('@/screens/wallet-page'))
+const ValidatorPage = lazyRetry(() => import('@/screens/validator-page'))
+const ValidatorDetailsPage = lazyRetry(() => import('@/screens/validator-details-page'))
+const StakePage = lazyRetry(() => import('@/screens/stake-page'))
+const DepositPage = lazyRetry(() => import('@/screens/deposit-page'))
+const OnchainDepositPage = lazyRetry(() => import('@/screens/onchain-deposit-page'))
+const WithdrawNetworkPage = lazyRetry(() => import('@/screens/withdraw-network-page'))
+const ConfirmWithdrawalPage = lazyRetry(() => import('@/screens/confirm-withdrawal-page'))
+const UnstakeAmountPage = lazyRetry(() => import('@/screens/unstake-amount-page'))
+const ConfirmUnstakePage = lazyRetry(() => import('@/screens/confirm-unstake-page'))
+const HistoryPage = lazyRetry(() => import('@/screens/history-page'))
+const TransactionDetailPage = lazyRetry(() => import('@/screens/transaction-detail-page'))
+const LearnPage = lazyRetry(() => import('@/screens/learn-page'))
+const LearnDetailPage = lazyRetry(() => import('@/screens/learn-detail-page'))
+const ForecastPage = lazyRetry(() => import('@/screens/forecast-page'))
+const EarnPage = lazyRetry(() => import('@/screens/earn-page'))
+const PortfolioPage = lazyRetry(() => import('@/screens/portfolio-page'))
+const LeaderboardPage = lazyRetry(() => import('@/screens/leaderboard-page'))
+const DashboardPage = lazyRetry(() => import('@/screens/dashboard-page'))
+const ProfilePage = lazyRetry(() => import('@/screens/profile-page'))
+const NotificationsPage = lazyRetry(() => import('@/screens/notifications-page'))
+const NotFoundPage = lazyRetry(() => import('@/screens/NotFoundPage'))
 
 const withSuspense = (element: ReactNode) => (
   <Suspense fallback={<LoadingSpinner />}>{element}</Suspense>
+)
+
+const withErrorBoundary = (element: ReactNode) => (
+  <ErrorBoundary>
+    {element}
+  </ErrorBoundary>
+)
+
+const withSuspenseAndErrorBoundary = (element: ReactNode) => (
+  <ErrorBoundary>
+    <Suspense fallback={<LoadingSpinner />}>{element}</Suspense>
+  </ErrorBoundary>
 )
 
 export const router = createBrowserRouter([
@@ -46,19 +60,19 @@ export const router = createBrowserRouter([
     ),
     children: [
       // Public routes
-      { index: true, element: withSuspense(<HomePage />) },
-      { path: 'login', element: withSuspense(<LoginPage />) },
-      { path: 'signup', element: withSuspense(<SignupPage />) },
-      { path: 'dashboard', element: withSuspense(<DashboardPage />) },
-      { path: 'forgot-password', element: withSuspense(<ForgotPasswordPage />) },
-      { path: 'reset-password', element: withSuspense(<ResetPasswordPage />) },
+      { index: true, element: withSuspenseAndErrorBoundary(<HomePage />) },
+      { path: 'login', element: withSuspenseAndErrorBoundary(<LoginPage />) },
+      { path: 'signup', element: withSuspenseAndErrorBoundary(<SignupPage />) },
+      { path: 'dashboard', element: withSuspenseAndErrorBoundary(<DashboardPage />) },
+      { path: 'forgot-password', element: withSuspenseAndErrorBoundary(<ForgotPasswordPage />) },
+      { path: 'reset-password', element: withSuspenseAndErrorBoundary(<ResetPasswordPage />) },
       
       // Protected routes
       {
         path: 'wallet',
         element: (
           <ProtectedRoute>
-            {withSuspense(<WalletPage />)}
+            {withSuspenseAndErrorBoundary(<WalletPage />)}
           </ProtectedRoute>
         ),
       },
@@ -66,7 +80,7 @@ export const router = createBrowserRouter([
         path: 'validator',
         element: (
           <ProtectedRoute>
-            {withSuspense(<ValidatorPage />)}
+            {withSuspenseAndErrorBoundary(<ValidatorPage />)}
           </ProtectedRoute>
         ),
       },
@@ -74,7 +88,7 @@ export const router = createBrowserRouter([
         path: 'validator-details/:validatorId',
         element: (
           <ProtectedRoute>
-            {withSuspense(<ValidatorDetailsPage />)}
+            {withSuspenseAndErrorBoundary(<ValidatorDetailsPage />)}
           </ProtectedRoute>
         ),
       },
@@ -82,7 +96,15 @@ export const router = createBrowserRouter([
         path: 'stake/:validatorId',
         element: (
           <ProtectedRoute>
-            {withSuspense(<StakePage />)}
+            {withSuspenseAndErrorBoundary(<StakePage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'deposit',
+        element: (
+          <ProtectedRoute>
+            {withSuspenseAndErrorBoundary(<DepositPage />)}
           </ProtectedRoute>
         ),
       },
@@ -90,7 +112,15 @@ export const router = createBrowserRouter([
         path: 'deposit/:validatorId',
         element: (
           <ProtectedRoute>
-            {withSuspense(<DepositPage />)}
+            {withSuspenseAndErrorBoundary(<DepositPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'deposit-address',
+        element: (
+          <ProtectedRoute>
+            {withSuspenseAndErrorBoundary(<OnchainDepositPage />)}
           </ProtectedRoute>
         ),
       },
@@ -98,7 +128,7 @@ export const router = createBrowserRouter([
         path: 'withdraw-network/:validatorId',
         element: (
           <ProtectedRoute>
-            {withSuspense(<WithdrawNetworkPage />)}
+            {withSuspenseAndErrorBoundary(<WithdrawNetworkPage />)}
           </ProtectedRoute>
         ),
       },
@@ -106,7 +136,7 @@ export const router = createBrowserRouter([
         path: 'confirm-withdrawal/:validatorId',
         element: (
           <ProtectedRoute>
-            {withSuspense(<ConfirmWithdrawalPage />)}
+            {withSuspenseAndErrorBoundary(<ConfirmWithdrawalPage />)}
           </ProtectedRoute>
         ),
       },
@@ -114,7 +144,7 @@ export const router = createBrowserRouter([
         path: 'unstake-amount/:validatorId',
         element: (
           <ProtectedRoute>
-            {withSuspense(<UnstakeAmountPage />)}
+            {withSuspenseAndErrorBoundary(<UnstakeAmountPage />)}
           </ProtectedRoute>
         ),
       },
@@ -122,7 +152,7 @@ export const router = createBrowserRouter([
         path: 'confirm-unstake/:validatorId',
         element: (
           <ProtectedRoute>
-            {withSuspense(<ConfirmUnstakePage />)}
+            {withSuspenseAndErrorBoundary(<ConfirmUnstakePage />)}
           </ProtectedRoute>
         ),
       },
@@ -130,7 +160,7 @@ export const router = createBrowserRouter([
         path: 'history',
         element: (
           <ProtectedRoute>
-            {withSuspense(<HistoryPage />)}
+            {withSuspenseAndErrorBoundary(<HistoryPage />)}
           </ProtectedRoute>
         ),
       },
@@ -138,7 +168,7 @@ export const router = createBrowserRouter([
         path: 'transaction-detail/:transactionId',
         element: (
           <ProtectedRoute>
-            {withSuspense(<TransactionDetailPage />)}
+            {withSuspenseAndErrorBoundary(<TransactionDetailPage />)}
           </ProtectedRoute>
         ),
       },
@@ -146,7 +176,7 @@ export const router = createBrowserRouter([
         path: 'learn',
         element: (
           <ProtectedRoute>
-            {withSuspense(<LearnPage />)}
+            {withSuspenseAndErrorBoundary(<LearnPage />)}
           </ProtectedRoute>
         ),
       },
@@ -154,7 +184,7 @@ export const router = createBrowserRouter([
         path: 'learn/:slug',
         element: (
           <ProtectedRoute>
-            {withSuspense(<LearnDetailPage />)}
+            {withSuspenseAndErrorBoundary(<LearnDetailPage />)}
           </ProtectedRoute>
         ),
       },
@@ -162,7 +192,7 @@ export const router = createBrowserRouter([
         path: 'forecast',
         element: (
           <ProtectedRoute>
-            {withSuspense(<ForecastPage />)}
+            {withSuspenseAndErrorBoundary(<ForecastPage />)}
           </ProtectedRoute>
         ),
       },
@@ -170,7 +200,7 @@ export const router = createBrowserRouter([
         path: 'earn',
         element: (
           <ProtectedRoute>
-            {withSuspense(<EarnPage />)}
+            {withSuspenseAndErrorBoundary(<EarnPage />)}
           </ProtectedRoute>
         ),
       },
@@ -178,7 +208,7 @@ export const router = createBrowserRouter([
         path: 'portfolio',
         element: (
           <ProtectedRoute>
-            {withSuspense(<PortfolioPage />)}
+            {withSuspenseAndErrorBoundary(<PortfolioPage />)}
           </ProtectedRoute>
         ),
       },
@@ -186,7 +216,7 @@ export const router = createBrowserRouter([
         path: 'leaderboard',
         element: (
           <ProtectedRoute>
-            {withSuspense(<LeaderboardPage />)}
+            {withSuspenseAndErrorBoundary(<LeaderboardPage />)}
           </ProtectedRoute>
         ),
       },
@@ -194,7 +224,7 @@ export const router = createBrowserRouter([
         path: 'profile',
         element: (
           <ProtectedRoute>
-            {withSuspense(<ProfilePage />)}
+            {withSuspenseAndErrorBoundary(<ProfilePage />)}
           </ProtectedRoute>
         ),
       },
@@ -202,11 +232,11 @@ export const router = createBrowserRouter([
         path: 'notifications',
         element: (
           <ProtectedRoute>
-            {withSuspense(<NotificationsPage />)}
+            {withSuspenseAndErrorBoundary(<NotificationsPage />)}
           </ProtectedRoute>
         ),
       },
-      { path: '*', element: withSuspense(<NotFoundPage />) },
+      { path: '*', element: withSuspenseAndErrorBoundary(<NotFoundPage />) },
     ],
   },
 ])

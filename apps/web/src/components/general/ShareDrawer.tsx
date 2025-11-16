@@ -7,12 +7,6 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import {
-  Twitter,
-  Facebook,
-  Linkedin,
-  MessageCircle,
-} from "lucide-react";
 
 interface ShareDrawerProps {
   isOpen: boolean;
@@ -27,35 +21,12 @@ export const ShareDrawer: React.FC<ShareDrawerProps> = ({
   validatorName,
   validatorId,
 }) => {
-  const [copied, setCopied] = React.useState(false);
-
   const shareUrl = `${window.location.origin}/validator-details/${validatorId}`;
-  const shareText = `Check out ${validatorName} on Lisar! Earn rewards while supporting decentralized video infrastructure. Join the future of Web3 streaming! 🚀`;
-  const shareTitle = `Stake with ${validatorName} on Lisar`;
-
-  const handleCopyLink = async () => {
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error("Failed to copy:", err);
-    }
-  };
+  const shareText = `Check out ${validatorName} on Lisar. You can earn rewards by staking here.`;
 
   const handleTwitterShare = () => {
     const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
     window.open(twitterUrl, "_blank", "width=600,height=400");
-  };
-
-  const handleFacebookShare = () => {
-    const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
-    window.open(facebookUrl, "_blank", "width=600,height=400");
-  };
-
-  const handleLinkedInShare = () => {
-    const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;
-    window.open(linkedinUrl, "_blank", "width=600,height=400");
   };
 
   const handleWhatsAppShare = () => {
@@ -63,56 +34,42 @@ export const ShareDrawer: React.FC<ShareDrawerProps> = ({
     window.open(whatsappUrl, "_blank");
   };
 
-  const handleTelegramShare = () => {
-    const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
-    window.open(telegramUrl, "_blank");
-  };
-
   return (
     <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DrawerContent>
         <DrawerHeader>
-          <DrawerTitle className="text-center text-2xl font-bold text-white">
+          <DrawerTitle className="text-center text-xl font-semibold text-white">
             Share {validatorName}
           </DrawerTitle>
-          <DrawerDescription className="text-center text-white/70 text-base">
-            Help others discover this validator
+          <DrawerDescription className="text-center text-white/70 text-sm">
+            Share this validator with your friends
           </DrawerDescription>
         </DrawerHeader>
 
         <div className="p-4">
-          {/* Social Media Buttons */}
           <div className="grid grid-cols-2 gap-4">
             <button
               onClick={handleTwitterShare}
               className="flex items-center justify-center space-x-3 p-4 bg-[#1a1a1a] rounded-xl border border-[#2a2a2a] hover:border-[#1DA1F2] transition-colors"
             >
-              <Twitter size={18} color="#1DA1F2" />
+              <img 
+                src="/x-logo.png" 
+                alt="X" 
+                className="w-[18px] h-[18px]"
+              />
               <span className="text-white/90 font-normal">Twitter</span>
-            </button>
-
-            <button
-              onClick={handleFacebookShare}
-              className="flex items-center justify-center space-x-3 p-4 bg-[#1a1a1a] rounded-xl border border-[#2a2a2a] hover:border-[#1877F2] transition-colors"
-            >
-              <Facebook size={18} color="#1877F2" />
-              <span className="text-white/90 font-normal">Facebook</span>
-            </button>
-
-            <button
-              onClick={handleLinkedInShare}
-              className="flex items-center justify-center space-x-3 p-4 bg-[#1a1a1a] rounded-xl border border-[#2a2a2a] hover:border-[#0077B5] transition-colors"
-            >
-              <Linkedin size={18} color="#0077B5" />
-              <span className="text-white/90 font-normal">LinkedIn</span>
             </button>
 
             <button
               onClick={handleWhatsAppShare}
               className="flex items-center justify-center space-x-3 p-4 bg-[#1a1a1a] rounded-xl border border-[#2a2a2a] hover:border-[#25D366] transition-colors"
             >
-              <MessageCircle size={18} color="#25D366" />
-              <span className="text-white/90 font-normal">WhatsApp</span>
+              <img 
+                src="/whatsapp.png" 
+                alt="WhatsApp" 
+                className="w-[18px] h-[18px]"
+              />
+               <span className="text-white/90 font-normal">WhatsApp</span>
             </button>
           </div>
         </div>

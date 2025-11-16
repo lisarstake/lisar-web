@@ -6,7 +6,7 @@ import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { useAuth } from "@/contexts/AuthContext";
 
-export const DepositPage: React.FC = () => {
+export const OnchainDepositPage: React.FC = () => {
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
@@ -64,7 +64,7 @@ export const DepositPage: React.FC = () => {
           <ChevronLeft color="#C7EF6B" />
         </button>
 
-        <h1 className="text-lg font-medium text-white">Deposit</h1>
+        <h1 className="text-lg font-medium text-white">Deposit Address</h1>
 
         <button
           onClick={handleHelpClick}
@@ -146,3 +146,4 @@ export const DepositPage: React.FC = () => {
     </div>
   );
 };
+

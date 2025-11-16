@@ -35,7 +35,7 @@ export const OrchestratorItem: React.FC<OrchestratorItemProps> = ({
     if (!orchestrator || !qrCanvasRef.current) return;
 
     const avatar = orchestrator?.avatar || orchestrator?.ensIdentity?.avatar;
-    if (avatar && !avatarError) return; // Don't generate QR if avatar exists and loaded
+    if (avatar && !avatarError) return;
 
     const address = orchestrator.address;
     if (!address) return;
@@ -97,7 +97,6 @@ export const OrchestratorItem: React.FC<OrchestratorItemProps> = ({
             alt={displayName}
             className="w-12 h-12 rounded-full object-cover"
             onError={() => {
-              // Fallback to QR code if avatar fails to load
               setAvatarError(true);
             }}
           />

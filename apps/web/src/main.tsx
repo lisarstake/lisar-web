@@ -6,6 +6,25 @@ import { router } from '@/routes/router'
 import { queryClient } from '@/providers/queryClient'
 import './styles/index.css'
 
+// Handle chunk loading errors globally
+window.addEventListener('error', (event) => {
+  // Check if it's a chunk loading error
+  if (
+    event.message.includes('Failed to fetch dynamically imported module') ||
+    event.message.includes('Importing a module script failed') ||
+    event.message.includes('error loading dynamically imported module')
+  ) {
+    const hasReloaded = sessionStorage.getItem('chunk-error-reloaded')
+    
+    if (!hasReloaded) {
+      sessionStorage.setItem('chunk-error-reloaded', 'true')
+      window.location.reload()
+    } else {
+      sessionStorage.removeItem('chunk-error-reloaded')
+    }
+  }
+})
+
 const rootElement = document.getElementById('root')
 if (!rootElement) {
   throw new Error('Root element with id "root" not found')

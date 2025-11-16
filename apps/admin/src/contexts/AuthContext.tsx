@@ -173,6 +173,54 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     initializeAuth();
   }, []);
 
+  useEffect(() => {
+    if (!state.isAuthenticated || !state.token) return;
+
+    const checkTokenExpiry = async () => {
+      const expiry =
+        localStorage.getItem("auth_expiry") ||
+        sessionStorage.getItem("auth_expiry");
+      const refreshToken =
+        localStorage.getItem("refresh_token") ||
+        sessionStorage.getItem("refresh_token");
+
+      if (!expiry || !refreshToken) return;
+
+      const expiresAt = parseInt(expiry) * 1000;
+      const now = Date.now();
+      const timeUntilExpiry = expiresAt - now;
+      const fiveMinutes = 5 * 60 * 1000;
+
+      if (timeUntilExpiry > 0 && timeUntilExpiry < fiveMinutes) {
+        try {
+          const refreshResponse = await authService.refreshToken({
+            refreshToken,
+          });
+
+          if (refreshResponse.success && refreshResponse.data) {
+            const response = await authService.getCurrentUser();
+
+            if (response.success && response.data) {
+              const updatedToken =
+                localStorage.getItem("auth_token") ||
+                sessionStorage.getItem("auth_token") ||
+                "";
+              dispatch({
+                type: "AUTH_SUCCESS",
+                payload: { user: response.data, token: updatedToken },
+              });
+            }
+          }
+        } catch (error) {
+          console.error("Proactive token refresh failed:", error);
+        }
+      }
+    };
+
+    const interval = setInterval(checkTokenExpiry, 60000);
+    return () => clearInterval(interval);
+  }, [state.isAuthenticated, state.token]);
+
   const createAdmin = async (
     email: string,
     password: string,

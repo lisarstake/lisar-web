@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronDown } from "lucide-react";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { useLeaderboard } from "@/contexts/LeaderboardContext";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatEarnings } from "@/lib/formatters";
 
 export const LeaderboardPage: React.FC = () => {
   const navigate = useNavigate();
@@ -110,7 +111,7 @@ export const LeaderboardPage: React.FC = () => {
                     <div className="flex items-center space-x-3">
                       <div className="w-10 h-10 bg-[#2a2a2a] rounded-full flex items-center justify-center">
                         <span className="text-gray-400 text-sm">
-                          #{entry.rank}
+                          {entry.rank}
                         </span>
                       </div>
                       <div>
@@ -121,7 +122,7 @@ export const LeaderboardPage: React.FC = () => {
                     </div>
                     <div className="text-right">
                       <p className="text-[#C7EF6B] text-xs">
-                        {displayEarned} LPT
+                        {formatEarnings(Number(displayEarned))} LPT
                       </p>
                     </div>
                   </div>

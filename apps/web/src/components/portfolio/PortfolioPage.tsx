@@ -16,6 +16,7 @@ import { useOrchestrators } from "@/contexts/OrchestratorContext";
 import { useDelegation } from "@/contexts/DelegationContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { PortfolioSkeleton } from "./PortfolioSkeleton";
+import { formatEarnings, formatLifetime } from "@/lib/formatters";
 
 interface StakeEntry {
   id: string;
@@ -35,24 +36,6 @@ export const PortfolioPage: React.FC = () => {
     useDelegation();
   const { state } = useAuth();
 
-  const formatEarnings = (value: number): string => {
-    if (value >= 100000) {
-      return `${Math.round(value / 1000)}k`;
-    } else if (value >= 10000) {
-      return `${(value / 1000).toFixed(1)}k`;
-    }
-    return value.toLocaleString();
-  };
-
-  const formatLifetime = (value: number): string => {
-    if (value >= 100000) {
-      return `${(value / 1000).toFixed(2)}k`;
-    } else if (value >= 10000) {
-      return `${(value / 1000).toFixed(2)}k`;
-    }
-    return value.toLocaleString();
-  };
-
   // Calculate next payout progress using protocol status
   const nextPayoutProgress = useMemo(() => {
     if (!protocolStatus) return { progress: 85, timeRemaining: "22 hrs" };
@@ -66,75 +49,88 @@ export const PortfolioPage: React.FC = () => {
   }, [protocolStatus]);
 
   const portfolioData = useMemo(() => {
-    if (!userDelegation || !orchestrators.length || !delegatorStakeProfile) {
-      return {
-        totalStake: 0,
-        currentStake: 0,
-        lifetimeRewards: 0,
-        lifetimeUnbonded: 0,
-        dailyEarnings: 0,
-        weeklyEarnings: 0,
-        monthlyEarnings: 0,
-        stakeEntries: [],
-      };
+    // Initialize defaults
+    let totalStake = 0;
+    let currentStake = 0;
+    let lifetimeRewards = 0;
+    let lifetimeUnbonded = 0;
+    let dailyEarnings = 0;
+    let weeklyEarnings = 0;
+    let monthlyEarnings = 0;
+    const stakeEntries: StakeEntry[] = [];
+
+    // Handle delegatorStakeProfile data (if available)
+    if (delegatorStakeProfile) {
+      totalStake = parseFloat(delegatorStakeProfile.currentStake) || 0;
+      currentStake = totalStake;
+      lifetimeRewards = parseFloat(delegatorStakeProfile.lifetimeRewards) || 0;
+      lifetimeUnbonded =
+        parseFloat(delegatorStakeProfile.lifetimeUnbonded) || 0;
     }
 
-    // Use currentStake from stake profile
-    const currentStakeValue = parseFloat(delegatorStakeProfile.currentStake);
-    const lifetimeRewardsValue = parseFloat(
-      delegatorStakeProfile.lifetimeRewards
-    );
-    const lifetimeUnbondedValue = parseFloat(
-      delegatorStakeProfile.lifetimeUnbonded
-    );
+    // Handle userDelegation and orchestrators data (if available)
+    if (userDelegation) {
+      const bondedAmount = parseFloat(userDelegation.bondedAmount) || 0;
+      const delegateId = userDelegation.delegate?.id || "";
 
-    const bondedAmount = parseFloat(userDelegation.bondedAmount);
-    const delegateId = userDelegation.delegate.id;
-    const orchestrator = orchestrators.find(
-      (orch) => orch.address === delegateId
-    );
-    const orchestratorName = orchestrator?.ensName || "Unknown Orchestrator";
-    const apyValue = orchestrator?.apy;
-    // Handle APY as string (e.g., "15%") or number (e.g., 15)
-    let apyPercentage = 0;
-    if (apyValue) {
-      if (typeof apyValue === "string") {
-        apyPercentage = parseFloat(apyValue.replace("%", "")) || 0;
-      } else {
-        apyPercentage = typeof apyValue === "number" ? apyValue : 0;
+      // Find orchestrator if orchestrators list is available
+      const orchestrator =
+        orchestrators.length > 0
+          ? orchestrators.find((orch) => orch.address === delegateId)
+          : null;
+
+      const orchestratorName =
+        orchestrator?.ensName ||
+        userDelegation.delegate?.id ||
+        "Unknown Orchestrator";
+
+      // Handle APY as string (e.g., "15%") or number (e.g., 15)
+      let apyPercentage = 0;
+      if (orchestrator?.apy) {
+        const apyValue = orchestrator.apy;
+        if (typeof apyValue === "string") {
+          apyPercentage = parseFloat(apyValue.replace("%", "")) || 0;
+        } else {
+          apyPercentage = typeof apyValue === "number" ? apyValue : 0;
+        }
+      }
+
+      const rewardCutPercentage = orchestrator?.reward
+        ? parseFloat(orchestrator.reward) / 10000
+        : 0;
+      const rewardCutDecimal = rewardCutPercentage / 100;
+
+      // Calculate earnings if we have bonded amount and APY
+      if (bondedAmount > 0 && apyPercentage > 0) {
+        const grossDailyEarnings = (bondedAmount * apyPercentage) / (100 * 365);
+        const grossWeeklyEarnings = grossDailyEarnings * 7;
+        const grossMonthlyEarnings = grossDailyEarnings * 30;
+
+        dailyEarnings = grossDailyEarnings * (1 - rewardCutDecimal);
+        weeklyEarnings = grossWeeklyEarnings * (1 - rewardCutDecimal);
+        monthlyEarnings = grossMonthlyEarnings * (1 - rewardCutDecimal);
+      }
+
+      // Add stake entry if we have delegation data
+      if (delegateId) {
+        stakeEntries.push({
+          id: delegateId,
+          name: orchestratorName,
+          yourStake: bondedAmount,
+          apy: apyPercentage / 100,
+          fee: rewardCutPercentage,
+        });
       }
     }
-    const rewardCutPercentage = orchestrator?.reward
-      ? parseFloat(orchestrator.reward) / 10000
-      : 0;
-    const rewardCutDecimal = rewardCutPercentage / 100;
-
-    const grossDailyEarnings = (bondedAmount * apyPercentage) / (100 * 365);
-    const grossWeeklyEarnings = grossDailyEarnings * 7;
-    const grossMonthlyEarnings = grossDailyEarnings * 30;
-
-    const dailyEarnings = grossDailyEarnings * (1 - rewardCutDecimal);
-    const weeklyEarnings = grossWeeklyEarnings * (1 - rewardCutDecimal);
-    const monthlyEarnings = grossMonthlyEarnings * (1 - rewardCutDecimal);
-
-    const stakeEntries: StakeEntry[] = [
-      {
-        id: delegateId,
-        name: orchestratorName,
-        yourStake: Math.round(bondedAmount),
-        apy: apyPercentage / 100,
-        fee: rewardCutPercentage,
-      },
-    ];
 
     return {
-      totalStake: Math.round(currentStakeValue),
-      currentStake: Math.round(currentStakeValue),
-      lifetimeRewards: Math.round(lifetimeRewardsValue),
-      lifetimeUnbonded: Math.round(lifetimeUnbondedValue),
-      dailyEarnings: Math.round(dailyEarnings),
-      weeklyEarnings: Math.round(weeklyEarnings),
-      monthlyEarnings: Math.round(monthlyEarnings),
+      totalStake,
+      currentStake,
+      lifetimeRewards,
+      lifetimeUnbonded,
+      dailyEarnings,
+      weeklyEarnings,
+      monthlyEarnings,
       stakeEntries,
     };
   }, [userDelegation, orchestrators, delegatorStakeProfile]);
@@ -244,7 +240,6 @@ export const PortfolioPage: React.FC = () => {
             style={{ flex: "4" }}
           >
             <p className="text-gray-400 text-sm font-medium mb-3 flex gap-1 items-center">
-             
               <span>
                 <CircleDollarSign size={16} />
               </span>
@@ -359,7 +354,7 @@ export const PortfolioPage: React.FC = () => {
                     </div>
                     <div className="text-right">
                       <p className="text-[#C7EF6B] font-medium text-sm">
-                        APY: {Math.round(entry.apy * 100)}%
+                        APY: {entry.apy * 100}%
                       </p>
                       <p className="text-gray-400 text-xs">
                         Fee: {entry.fee.toFixed(1)}%

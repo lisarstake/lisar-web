@@ -73,7 +73,7 @@ export interface ValidatorConfig {
 
 export const VALIDATOR_CONFIG: ValidatorConfig = {
   baseUrl: env.VITE_API_BASE_URL,
-  timeout: 30000,
+  timeout: 100000,
   retryAttempts: 3,
 };
 

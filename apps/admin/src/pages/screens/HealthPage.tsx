@@ -95,9 +95,9 @@ export const HealthPage: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3x">
         {isLoading ? (
           <>
-            <SummaryCardSkeleton />
-            <SummaryCardSkeleton />
-            <SummaryCardSkeleton />
+            <SummaryCardSkeleton color="green" />
+            <SummaryCardSkeleton color="lime" />
+            <SummaryCardSkeleton color="orange" />
           </>
         ) : (
           <>
