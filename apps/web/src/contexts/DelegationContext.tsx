@@ -62,8 +62,8 @@ export const DelegationProvider: React.FC<DelegationProviderProps> = ({
       setIsLoading(true);
       setError(null);
 
-      // const delegatorAddress = state.user?.wallet_address;
-      const delegatorAddress = "0x20B5ba0c3221700a83B4d74d32240e496C3EcAc7";
+      const delegatorAddress = state.user?.wallet_address;
+      // const delegatorAddress = "0x20B5ba0c3221700a83B4d74d32240e496C3EcAc7";
 
       // Fetch user delegation data (current stakes for portfolio)
       try {
