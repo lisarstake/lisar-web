@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ChevronLeft, CircleQuestionMark } from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
@@ -35,10 +35,19 @@ export const ConfirmUnstakePage: React.FC = () => {
   );
   const fiatCurrency = state.user?.fiat_type || "USD";
   const fiatSymbol = priceService.getCurrencySymbol(fiatCurrency);
-  const fiatAmountNum = priceService.convertLptToFiat(
-    unstakeAmountNum,
-    fiatCurrency
-  );
+  const [fiatAmountNum, setFiatAmountNum] = useState(0);
+
+  useEffect(() => {
+    const calculateFiat = async () => {
+      const fiatValue = await priceService.convertLptToFiat(
+        unstakeAmountNum,
+        fiatCurrency
+      );
+      setFiatAmountNum(fiatValue);
+    };
+    calculateFiat();
+  }, [unstakeAmountNum, fiatCurrency]);
+
   const fiatAmount = useMemo(
     () => fiatAmountNum.toLocaleString(),
     [fiatAmountNum]

@@ -80,7 +80,7 @@ export const OrchestratorProvider: React.FC<OrchestratorProviderProps> = ({
         //   // Continue without ENS data if it fails
         // }
         
-        // Filter out orchestrators whose names start with "0x" (addresses without proper names)
+        // Filter out orchestrators whose names start with "0x" 
         fetchedOrchestrators = filterOrchestratorsWithoutNames(fetchedOrchestrators);
         
         setOrchestrators(fetchedOrchestrators);

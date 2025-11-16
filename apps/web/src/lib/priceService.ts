@@ -1,6 +1,3 @@
-// Price service for fetching cryptocurrency prices
-// This service handles all external price API calls
-
 export interface PriceData {
   sol: number;
   lpt: number;
@@ -22,17 +19,15 @@ export interface CoinGeckoResponse {
   };
 }
 
-// Fallback prices
 const FALLBACK_PRICES: PriceData = {
-  sol: 230,
-  lpt: 6.5,
+  sol: 140,
+  lpt: 5,
   usdc: 1,
-  ngn: 1500, // 1 USD = 1500 NGN
-  eur: 0.85, // 1 USD = 0.85 EUR
-  gbp: 0.75, // 1 USD = 0.75 GBP
+  ngn: 1450,
+  eur: 0.85,
+  gbp: 0.75,
 };
 
-// Supported fiat currencies
 export const SUPPORTED_CURRENCIES: FiatCurrency[] = [
   { code: "USD", symbol: "$", name: "US Dollar" },
   { code: "NGN", symbol: "₦", name: "Nigerian Naira" },
@@ -44,7 +39,7 @@ class PriceService {
   private static instance: PriceService;
   private cache: PriceData | null = null;
   private lastFetch: number = 0;
-  private readonly CACHE_DURATION = 1800000; // 30 minutes
+  private readonly CACHE_DURATION = 300000;
   private pendingFetch: Promise<PriceData> | null = null;
 
   private constructor() {}
@@ -56,24 +51,17 @@ class PriceService {
     return PriceService.instance;
   }
 
-  /**
-   * Fetch current cryptocurrency prices
-   * Uses caching to avoid excessive API calls
-   */
   async getPrices(): Promise<PriceData> {
     const now = Date.now();
 
-    // Return cached data if still valid
     if (this.cache && now - this.lastFetch < this.CACHE_DURATION) {
       return this.cache;
     }
 
-    // If there's already a pending fetch, return that promise
     if (this.pendingFetch) {
       return this.pendingFetch;
     }
 
-    // Start a new fetch
     this.pendingFetch = this.fetchPricesFromAPI()
       .then((prices) => {
         this.cache = prices;
@@ -94,22 +82,16 @@ class PriceService {
     return this.pendingFetch;
   }
 
-  /**
-   * Fetch prices from CoinGecko API and exchange rates
-   * @private
-   */
   private async fetchPricesFromAPI(): Promise<PriceData> {
     const [cryptoResponse, fiatResponse] = await Promise.all([
-      // Fetch crypto prices
       fetch(
         "https://api.coingecko.com/api/v3/simple/price?ids=solana,livepeer&vs_currencies=usd"
       ),
-      // Fetch fiat exchange rates
       fetch("https://api.exchangerate-api.com/v4/latest/USD"),
     ]);
 
     if (!cryptoResponse.ok || !fiatResponse.ok) {
-      throw new Error("Failed to fetch price data");
+      throw new Error(`Failed to fetch price data: Crypto=${cryptoResponse.status}, Fiat=${fiatResponse.status}`);
     }
 
     const [cryptoData, fiatData] = await Promise.all([
@@ -117,9 +99,13 @@ class PriceService {
       fiatResponse.json() as Promise<{ rates: { [key: string]: number } }>,
     ]);
 
+    if (!cryptoData.livepeer?.usd) {
+      throw new Error("LPT price not found in API response");
+    }
+
     return {
       sol: cryptoData.solana?.usd || FALLBACK_PRICES.sol,
-      lpt: cryptoData.livepeer?.usd || FALLBACK_PRICES.lpt,
+      lpt: cryptoData.livepeer.usd,
       usdc: 1,
       ngn: fiatData.rates?.NGN || FALLBACK_PRICES.ngn,
       eur: fiatData.rates?.EUR || FALLBACK_PRICES.eur,
@@ -127,70 +113,52 @@ class PriceService {
     };
   }
 
-  /**
-   * Clear cache to force fresh data on next request
-   */
   clearCache(): void {
     this.cache = null;
     this.lastFetch = 0;
     this.pendingFetch = null;
   }
 
-  /**
-   * Get cached prices without making API calls
-   * Returns fallback prices if no cached data available
-   */
   getCachedPrices(): PriceData {
     return this.cache || FALLBACK_PRICES;
   }
 
-  /**
-   * Convert LPT amount to fiat currency
-   * Uses cached prices to avoid API calls
-   */
-  convertLptToFiat(lptAmount: number, fiatCode: string): number {
-    const prices = this.getCachedPrices();
-    const lptPrice = prices.lpt;
+  async convertLptToFiat(lptAmount: number, fiatCode: string): Promise<number> {
+    const prices = await this.getPrices();
+    const lptPriceInUsd = prices.lpt;
 
     switch (fiatCode.toUpperCase()) {
       case "USD":
-        return lptAmount * lptPrice;
+        return lptAmount * lptPriceInUsd;
       case "NGN":
-        return lptAmount * lptPrice * prices.ngn;
+        return (lptAmount * lptPriceInUsd) * prices.ngn;
       case "EUR":
-        return lptAmount * lptPrice * prices.eur;
+        return (lptAmount * lptPriceInUsd) * prices.eur;
       case "GBP":
-        return lptAmount * lptPrice * prices.gbp;
+        return (lptAmount * lptPriceInUsd) * prices.gbp;
       default:
-        return lptAmount * lptPrice; // Default to USD
+        return lptAmount * lptPriceInUsd;
     }
   }
 
-  /**
-   * Convert fiat amount to LPT
-   * Uses cached prices to avoid API calls
-   */
-  convertFiatToLpt(fiatAmount: number, fiatCode: string): number {
-    const prices = this.getCachedPrices();
-    const lptPrice = prices.lpt;
+  async convertFiatToLpt(fiatAmount: number, fiatCode: string): Promise<number> {
+    const prices = await this.getPrices();
+    const lptPriceInUsd = prices.lpt;
 
     switch (fiatCode.toUpperCase()) {
       case "USD":
-        return fiatAmount / lptPrice;
+        return fiatAmount / lptPriceInUsd;
       case "NGN":
-        return fiatAmount / (lptPrice * prices.ngn);
+        return fiatAmount / (lptPriceInUsd * prices.ngn);
       case "EUR":
-        return fiatAmount / (lptPrice * prices.eur);
+        return fiatAmount / (lptPriceInUsd * prices.eur);
       case "GBP":
-        return fiatAmount / (lptPrice * prices.gbp);
+        return fiatAmount / (lptPriceInUsd * prices.gbp);
       default:
-        return fiatAmount / lptPrice; // Default to USD
+        return fiatAmount / lptPriceInUsd;
     }
   }
 
-  /**
-   * Get currency symbol for fiat code
-   */
   getCurrencySymbol(fiatCode: string): string {
     const currency = SUPPORTED_CURRENCIES.find(
       (c) => c.code === fiatCode.toUpperCase()

@@ -19,7 +19,7 @@ export const EarnPage: React.FC = () => {
     {
       id: "1",
       title: "Invite Friends",
-      description: "Earn inviting your friend to Lisar",
+      description: "Earn inviting your friends to Lisar",
       image: "/earn1.jpeg",
       buttonText: "Coming soon",
       isComingSoon: true,

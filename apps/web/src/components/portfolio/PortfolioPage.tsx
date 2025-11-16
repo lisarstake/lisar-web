@@ -354,7 +354,7 @@ export const PortfolioPage: React.FC = () => {
                     </div>
                     <div className="text-right">
                       <p className="text-[#C7EF6B] font-medium text-sm">
-                        APY: {Math.round(entry.apy * 100)}%
+                        APY: {entry.apy * 100}%
                       </p>
                       <p className="text-gray-400 text-xs">
                         Fee: {entry.fee.toFixed(1)}%

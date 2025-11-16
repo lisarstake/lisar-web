@@ -1,7 +1,17 @@
-import React, { createContext, useContext, useEffect, useMemo, useState, ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  ReactNode,
+} from "react";
 import { leaderboardService } from "@/services";
 import { useAuth } from "./AuthContext";
-import type { EarnerEntry, EarnerLeaderboardData } from "@/services/leaderboard";
+import type {
+  EarnerEntry,
+  EarnerLeaderboardData,
+} from "@/services/leaderboard";
 
 type Period = "Daily" | "Weekly" | "Monthly";
 
@@ -15,16 +25,22 @@ interface LeaderboardContextType {
   refetch: () => Promise<void>;
 }
 
-const LeaderboardContext = createContext<LeaderboardContextType | undefined>(undefined);
+const LeaderboardContext = createContext<LeaderboardContextType | undefined>(
+  undefined
+);
 
 interface LeaderboardProviderProps {
   children: ReactNode;
 }
 
-export const LeaderboardProvider: React.FC<LeaderboardProviderProps> = ({ children }) => {
+export const LeaderboardProvider: React.FC<LeaderboardProviderProps> = ({
+  children,
+}) => {
   const { state } = useAuth();
   const [entries, setEntries] = useState<EarnerEntry[]>([]);
-  const [pagination, setPagination] = useState<EarnerLeaderboardData["pagination"] | null>(null);
+  const [pagination, setPagination] = useState<
+    EarnerLeaderboardData["pagination"] | null
+  >(null);
   const [selectedPeriod, setSelectedPeriod] = useState<Period>("Weekly");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,11 +48,17 @@ export const LeaderboardProvider: React.FC<LeaderboardProviderProps> = ({ childr
   const [limit] = useState<number>(50);
   const [offset] = useState<number>(0);
 
-  const apiTimePeriod = useMemo(() => selectedPeriod.toLowerCase() as "daily" | "weekly" | "monthly", [selectedPeriod]);
+  const apiTimePeriod = useMemo(
+    () => selectedPeriod.toLowerCase() as "daily" | "weekly" | "monthly",
+    [selectedPeriod]
+  );
 
   const fetchLeaderboard = async () => {
-    // Only fetch if user is authenticated and auth state is loaded
-    if (!state.isAuthenticated || state.isLoading || !state.session?.access_token) {
+    if (
+      !state.isAuthenticated ||
+      state.isLoading ||
+      !state.session?.access_token
+    ) {
       setEntries([]);
       setPagination(null);
       setIsLoading(false);
@@ -75,12 +97,20 @@ export const LeaderboardProvider: React.FC<LeaderboardProviderProps> = ({ childr
   };
 
   useEffect(() => {
-    // Only fetch when auth is ready and user is authenticated
-    if (!state.isLoading && state.isAuthenticated && state.session?.access_token) {
+    if (
+      !state.isLoading &&
+      state.isAuthenticated &&
+      state.session?.access_token
+    ) {
       fetchLeaderboard();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [apiTimePeriod, state.isAuthenticated, state.isLoading, state.session?.access_token]);
+  }, [
+    apiTimePeriod,
+    state.isAuthenticated,
+    state.isLoading,
+    state.session?.access_token,
+  ]);
 
   const setPeriod = (p: Period) => {
     setSelectedPeriod(p);
@@ -97,14 +127,15 @@ export const LeaderboardProvider: React.FC<LeaderboardProviderProps> = ({ childr
   };
 
   return (
-    <LeaderboardContext.Provider value={value}>{children}</LeaderboardContext.Provider>
+    <LeaderboardContext.Provider value={value}>
+      {children}
+    </LeaderboardContext.Provider>
   );
 };
 
 export const useLeaderboard = (): LeaderboardContextType => {
   const ctx = useContext(LeaderboardContext);
-  if (!ctx) throw new Error("useLeaderboard must be used within a LeaderboardProvider");
+  if (!ctx)
+    throw new Error("useLeaderboard must be used within a LeaderboardProvider");
   return ctx;
 };
-
-

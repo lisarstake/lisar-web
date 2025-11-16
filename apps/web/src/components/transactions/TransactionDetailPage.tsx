@@ -136,7 +136,7 @@ export const TransactionDetailPage: React.FC = () => {
         </div>
         <div className="flex flex-col items-center justify-center flex-1">
           <div className="w-8 h-8 border-2 border-[#C7EF6B] border-t-transparent rounded-full animate-spin mb-4"></div>
-          <p className="text-gray-400">Loading transaction...</p>
+          <p className="text-gray-400">Loading transaction..</p>
         </div>
       </div>
     );
@@ -156,8 +156,8 @@ export const TransactionDetailPage: React.FC = () => {
           <div className="w-8 h-8"></div>
         </div>
         <div className="flex flex-col items-center justify-center flex-1 px-6">
-          <div className="w-16 h-16 bg-gray-100/10 rounded-full flex items-center justify-center mb-6">
-            <AlertCircle className="w-8 h-8 text-gray-400" />
+          <div className="w-12 h-12 bg-gray-100/10 rounded-full flex items-center justify-center mb-6">
+            <AlertCircle className="w-6 h-6 text-gray-400" />
           </div>
           <h3 className="text-xl font-semibold text-white mb-2">Error</h3>
           <p className="text-gray-400 text-center mb-6 max-w-sm">
@@ -238,7 +238,7 @@ export const TransactionDetailPage: React.FC = () => {
               </span>
             </div>
 
-            <div className="flex items-center justify-between">
+            {/* <div className="flex items-center justify-between">
               <span className="text-gray-400">Token Address</span>
               <span className="text-white font-medium text-xs">
                 {transaction.token_address.slice(0, 8)}...{transaction.token_address.slice(-8)}
@@ -250,7 +250,7 @@ export const TransactionDetailPage: React.FC = () => {
               <span className="text-white font-medium capitalize">
                 {transaction.source}
               </span>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

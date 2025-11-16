@@ -101,12 +101,10 @@ export const ForecastPage: React.FC = () => {
 
   const numericAmount = parseFloat(delegationAmount.replace(/,/g, "")) || 0;
   const apy = selectedOrchestrator?.apy || 0;
-  const fallbackDailyEarnings = (numericAmount * apy) / 100 / 365;
-  const fallbackMonthlyEarnings = fallbackDailyEarnings * 30;
-  const fallbackYearlyEarnings = (numericAmount * apy) / 100;
-  const fallbackDailyTotal = numericAmount + fallbackDailyEarnings;
-  const fallbackMonthlyTotal = numericAmount + fallbackMonthlyEarnings;
-  const fallbackYearlyTotal = numericAmount + fallbackYearlyEarnings;
+  const fallbackDailyYield = (numericAmount * apy) / 100 / 365;
+  const fallbackMonthlyYield = fallbackDailyYield * 30;
+  const fallbackYearlyYield = (numericAmount * apy) / 100;
+  const fallbackYearlyTotal = numericAmount + fallbackYearlyYield;
 
   useEffect(() => {
     const run = async () => {
@@ -273,7 +271,7 @@ export const ForecastPage: React.FC = () => {
         <div className="mb-8">
           <div className="bg-[#1a1a1a] rounded-xl p-6 text-center">
             <h2 className="text-gray-400 text-sm font-medium mb-2">
-              Projected Annual Earnings
+              Projected Annual Earning
             </h2>
             <div className="text-3xl font-bold text-white/90 mb-1">
               {yieldLoading ? (
@@ -303,9 +301,9 @@ export const ForecastPage: React.FC = () => {
                   <Skeleton className="h-5 w-8 bg-[#2a2a2a] inline-block align-middle rounded-sm mb-1" />
                 ) : (
                   formatNumber(
-                    projections.find((p) =>
+                    (projections.find((p) =>
                       p.period.toLowerCase().includes("day")
-                    )?.projectedReward ?? fallbackDailyTotal,
+                    )?.projectedReward ?? (numericAmount + fallbackDailyYield)) - numericAmount,
                     2
                   )
                 )}{" "}
@@ -319,9 +317,9 @@ export const ForecastPage: React.FC = () => {
                   <Skeleton className="h-5 w-8 bg-[#2a2a2a] inline-block align-middle rounded-sm mb-1" />
                 ) : (
                   formatNumber(
-                    projections.find((p) =>
+                    (projections.find((p) =>
                       p.period.toLowerCase().includes("month")
-                    )?.projectedReward ?? fallbackMonthlyTotal,
+                    )?.projectedReward ?? (numericAmount + fallbackMonthlyYield)) - numericAmount,
                     2
                   )
                 )}{" "}
@@ -335,9 +333,9 @@ export const ForecastPage: React.FC = () => {
                   <Skeleton className="h-5 w-8 bg-[#2a2a2a] inline-block align-middle rounded-sm mb-1" />
                 ) : (
                   formatNumber(
-                    projections.find((p) =>
+                    (projections.find((p) =>
                       p.period.toLowerCase().includes("year")
-                    )?.projectedReward ?? fallbackYearlyTotal,
+                    )?.projectedReward ?? fallbackYearlyTotal) - numericAmount,
                     2
                   )
                 )}{" "}
@@ -346,7 +344,7 @@ export const ForecastPage: React.FC = () => {
             </div>
             <div className="flex justify-between items-center border-t border-[#2a2a2a] pt-3">
               <span className="text-white font-medium">
-                Total Annual Earnings
+                Total Annual Earning
               </span>
               <span className="text-white/90 font-bold">
                 {yieldLoading ? (
