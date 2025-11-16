@@ -17,7 +17,26 @@ export const formatEarnings = (value: number): string => {
   } else if (value >= 1) {
     return value.toFixed(3);
   }
-  return value.toFixed(4);
+  const fourDecimals = value.toFixed(4);
+  const decimalPart = fourDecimals.split('.')[1];
+  const thirdDecimal = decimalPart && decimalPart.length >= 3 ? decimalPart[2] : '0';
+  const fourthDecimal = decimalPart && decimalPart.length >= 4 ? decimalPart[3] : '0';
+  
+  if (thirdDecimal === '0' && fourthDecimal === '0') {
+    return value.toFixed(2);
+  }
+  
+  const result = parseFloat(fourDecimals).toString();
+  if (!result.includes('.')) {
+    return result;
+  }
+  
+  const [intPart, decPart] = result.split('.');
+  if (decPart && decPart.length === 1 && parseFloat(decPart) === 0) {
+    return value.toFixed(2);
+  }
+  
+  return result;
 };
 
 /**
@@ -39,7 +58,26 @@ export const formatLifetime = (value: number): string => {
   } else if (value >= 1) {
     return value.toFixed(3);
   }
-  return value.toFixed(4);
+  const fourDecimals = value.toFixed(4);
+  const decimalPart = fourDecimals.split('.')[1];
+  const thirdDecimal = decimalPart && decimalPart.length >= 3 ? decimalPart[2] : '0';
+  const fourthDecimal = decimalPart && decimalPart.length >= 4 ? decimalPart[3] : '0';
+  
+  if (thirdDecimal === '0' && fourthDecimal === '0') {
+    return value.toFixed(2);
+  }
+  
+  const result = parseFloat(fourDecimals).toString();
+  if (!result.includes('.')) {
+    return result;
+  }
+  
+  const [intPart, decPart] = result.split('.');
+  if (decPart && decPart.length === 1 && parseFloat(decPart) === 0) {
+    return value.toFixed(2);
+  }
+  
+  return result;
 };
 
 /**
@@ -81,4 +119,5 @@ export const formatNumber = (value: number | string, decimals: number = 0): stri
 export const parseFormattedNumber = (value: string): string => {
   return value.replace(/,/g, '');
 };
+
 

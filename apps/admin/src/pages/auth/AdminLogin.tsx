@@ -139,10 +139,10 @@ export const AdminLogin: React.FC = () => {
                     type="checkbox"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    className="w-4 h-4 text-[#235538] bg-gray-50 border-gray-300 rounded focus:ring-[#235538] focus:ring-2"
+                    className="w-4 h-4 text-[#235538] bg-gray-50 border-gray-300 rounded"
                   />
                   <span className="ml-2 text-gray-900 text-sm">
-                    Remember for 30 days
+                    Remember me
                   </span>
                 </label>
                 <Link
@@ -167,26 +167,29 @@ export const AdminLogin: React.FC = () => {
               </button>
 
               {/* Divider (no Google for admin) */}
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-200"></div>
+              {isProduction() && (
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-gray-200"></div>
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="px-2 bg-white text-gray-500">Or</span>
+                  </div>
                 </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">Or</span>
-                </div>
-              </div>
+              )}
             </form>
 
             {/* Footer Link */}
-
-            <div className="text-center mt-8">
-              <p className="text-gray-900">
-                Don't have an admin account?{" "}
-                <Link to="/signup" className="text-[#235538] hover:underline">
-                  Create admin
-                </Link>
-              </p>
-            </div>
+            {isProduction() && (
+              <div className="text-center mt-8">
+                <p className="text-gray-900">
+                  Don't have an admin account?{" "}
+                  <Link to="/signup" className="text-[#235538] hover:underline">
+                    Create admin
+                  </Link>
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>

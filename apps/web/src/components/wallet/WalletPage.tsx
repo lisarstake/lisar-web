@@ -8,6 +8,7 @@ import { useOrchestrators } from "@/contexts/OrchestratorContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWallet } from "@/contexts/WalletContext";
 import { useDelegation } from "@/contexts/DelegationContext";
+import { useNotification } from "@/contexts/NotificationContext";
 import { priceService } from "@/lib/priceService";
 import { formatEarnings } from "@/lib/formatters";
 import { Search, Bell, CircleQuestionMark } from "lucide-react";
@@ -21,6 +22,7 @@ export const WalletPage: React.FC = () => {
   const { wallet, isLoading: walletLoading } = useWallet();
   const { delegatorStakeProfile, isLoading: delegationLoading } =
     useDelegation();
+  const { unreadCount } = useNotification();
 
   const filteredOrchestrators = useMemo(() => {
     if (!searchQuery.trim()) {
@@ -170,9 +172,14 @@ export const WalletPage: React.FC = () => {
         <div className="flex items-center space-x-2">
           <button
             onClick={handleNotificationsClick}
-            className="w-12 h-12 bg-[#2a2a2a] rounded-full flex items-center justify-center hover:bg-[#3a3a3a] transition-colors cursor-pointer"
+            className="relative w-10 h-10 bg-[#2a2a2a] rounded-full flex items-center justify-center hover:bg-[#3a3a3a] transition-colors cursor-pointer"
           >
-            <Bell size={20} color="#86B3F7" />
+            <Bell size={16} color="#86B3F7" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-semibold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </span>
+            )}
           </button>
         </div>
       </div>

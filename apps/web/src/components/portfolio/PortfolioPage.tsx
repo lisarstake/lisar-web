@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ChevronLeft,
@@ -9,6 +9,7 @@ import {
   Info,
   CircleDollarSign,
 } from "lucide-react";
+import QRCode from "qrcode";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { EmptyState } from "@/components/general/EmptyState";
@@ -17,6 +18,88 @@ import { useDelegation } from "@/contexts/DelegationContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { PortfolioSkeleton } from "./PortfolioSkeleton";
 import { formatEarnings, formatLifetime } from "@/lib/formatters";
+import { getColorForAddress } from "@/lib/qrcode";
+
+interface StakeEntryItemProps {
+  entry: StakeEntry;
+  onClick: () => void;
+}
+
+const StakeEntryItem: React.FC<StakeEntryItemProps> = ({ entry, onClick }) => {
+  const qrCanvasRef = useRef<HTMLCanvasElement>(null);
+  const [avatarError, setAvatarError] = useState(false);
+
+  const avatar =
+    entry.orchestrator?.avatar || entry.orchestrator?.ensIdentity?.avatar;
+
+  useEffect(() => {
+    if (!entry.id || !qrCanvasRef.current) return;
+
+    if (avatar && !avatarError) return;
+
+    const qrColor = getColorForAddress(entry.id);
+
+    QRCode.toCanvas(
+      qrCanvasRef.current,
+      entry.id,
+      {
+        width: 40,
+        margin: 1,
+        color: {
+          dark: qrColor,
+          light: "#1a1a1a",
+        },
+      },
+      (error) => {
+        if (error) console.error("QR Code generation error:", error);
+      }
+    );
+  }, [entry.id, avatar, avatarError]);
+
+  return (
+    <div
+      className="bg-[#1a1a1a] rounded-xl p-4 cursor-pointer hover:bg-[#2a2a2a] transition-colors"
+      onClick={onClick}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          {avatar && !avatarError ? (
+            <img
+              src={avatar}
+              alt={entry.name}
+              className="w-10 h-10 rounded-full object-cover"
+              onError={() => {
+                setAvatarError(true);
+              }}
+            />
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-[#1a1a1a] flex items-center justify-center overflow-hidden">
+              <canvas ref={qrCanvasRef} className="w-full h-full rounded-full" />
+            </div>
+          )}
+          <div>
+            <p className="text-gray-100 font-medium">
+              {entry.name.length > 20
+                ? `${entry.name.substring(0, 16)}..`
+                : entry.name}
+            </p>
+            <p className="text-gray-400 text-xs">
+              Staked: {formatEarnings(entry.yourStake)} LPT
+            </p>
+          </div>
+        </div>
+        <div className="text-right">
+          <p className="text-[#C7EF6B] font-medium text-sm">
+            APY: {entry.apy * 100}%
+          </p>
+          <p className="text-gray-400 text-xs">
+            Fee: {entry.fee.toFixed(1)}%
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 interface StakeEntry {
   id: string;
@@ -24,6 +107,7 @@ interface StakeEntry {
   yourStake: number;
   apy: number;
   fee: number;
+  orchestrator?: any;
 }
 
 export const PortfolioPage: React.FC = () => {
@@ -80,6 +164,7 @@ export const PortfolioPage: React.FC = () => {
           : null;
 
       const orchestratorName =
+        orchestrator?.ensIdentity?.name ||
         orchestrator?.ensName ||
         userDelegation.delegate?.id ||
         "Unknown Orchestrator";
@@ -119,6 +204,7 @@ export const PortfolioPage: React.FC = () => {
           yourStake: bondedAmount,
           apy: apyPercentage / 100,
           fee: rewardCutPercentage,
+          orchestrator: orchestrator || null,
         });
       }
     }
@@ -331,37 +417,11 @@ export const PortfolioPage: React.FC = () => {
           ) : (
             <div className="space-y-3">
               {stakeEntries.map((entry) => (
-                <div
+                <StakeEntryItem
                   key={entry.id}
-                  className="bg-[#1a1a1a] rounded-xl p-4 cursor-pointer hover:bg-[#2a2a2a] transition-colors"
+                  entry={entry}
                   onClick={() => handleStakeClick(entry.id)}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 rounded-full bg-[#2a2a2a] flex items-center justify-center">
-                        <span className="text-[#C7EF6B] font-bold text-sm">
-                          {entry.name.charAt(0).toUpperCase()}
-                        </span>
-                      </div>
-                      <div>
-                        <p className="text-gray-100 font-medium">
-                          {entry.name}
-                        </p>
-                        <p className="text-gray-400 text-xs">
-                          Staked: {entry.yourStake} LPT
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-[#C7EF6B] font-medium text-sm">
-                        APY: {entry.apy * 100}%
-                      </p>
-                      <p className="text-gray-400 text-xs">
-                        Fee: {entry.fee.toFixed(1)}%
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                />
               ))}
             </div>
           )}
