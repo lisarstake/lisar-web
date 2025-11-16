@@ -31,9 +31,9 @@ export const TransactionList: React.FC<TransactionListProps> = ({
   const getTransactionIcon = (type: TransactionType) => {
     switch (type) {
       case "deposit":
-        return <ArrowUp size={20} color="#C7EF6B" />;
+        return <ArrowDown size={20} color="#C7EF6B" />;
       case "withdrawal":
-        return <ArrowDown size={20} color="#FF6B6B" />;
+        return <ArrowUp size={20} color="#FF6B6B" />;
       case "delegation":
         return <ChartSpline size={20} color="#C7EF6B" />;
       case "undelegation":
