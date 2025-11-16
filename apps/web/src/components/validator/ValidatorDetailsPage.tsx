@@ -9,6 +9,8 @@ import { ValidatorActionButtons } from "@/components/validator/ValidatorActionBu
 import { ValidatorAboutSection } from "@/components/validator/ValidatorAboutSection";
 import { useOrchestrators } from "@/contexts/OrchestratorContext";
 import { useDelegation } from "@/contexts/DelegationContext";
+import { useTransactions } from "@/contexts/TransactionContext";
+import { TransactionData } from "@/services/transactions/types";
 
 export const ValidatorDetailsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -21,6 +23,7 @@ export const ValidatorDetailsPage: React.FC = () => {
   const { orchestrators, orchestratorRewards, isLoading, error } =
     useOrchestrators();
   const { userDelegation, delegatorTransactions } = useDelegation();
+  const { transactions } = useTransactions();
 
   // Find the orchestrator by address
   const currentValidator = orchestrators.find(
@@ -64,15 +67,46 @@ export const ValidatorDetailsPage: React.FC = () => {
       parseFloat(userDelegation.bondedAmount) > 0
   );
 
-  // Check if user just staked (startRound === currentRound)
   const justStaked = useMemo(() => {
-    if (!userDelegation || !delegatorTransactions || !hasStakeWithValidator) {
+    if (!hasStakeWithValidator) {
       return false;
     }
-    const startRound = parseInt(userDelegation.startRound || "0");
-    const currentRound = parseInt(delegatorTransactions.currentRound || "0");
-    return startRound === currentRound;
-  }, [userDelegation, delegatorTransactions, hasStakeWithValidator]);
+
+    // Compare startRound with currentRound
+    if (userDelegation && delegatorTransactions) {
+      const startRound = parseInt(userDelegation.startRound || "0");
+      const currentRound = parseInt(delegatorTransactions.currentRound || "0");
+      if (startRound === currentRound) {
+        return true;
+      }
+    }
+
+    // Look for stake transactions within the last 24 hours
+    if (transactions && transactions.length > 0) {
+      const now = new Date();
+      const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+      const recentStakeTransaction = transactions.find(
+        (tx: TransactionData) => {
+          if (tx.transaction_type !== "delegation") return false;
+
+          const txDate = new Date(tx.created_at);
+          return txDate >= twentyFourHoursAgo;
+        }
+      );
+
+      if (recentStakeTransaction) {
+        return true;
+      }
+    }
+
+    return false;
+  }, [
+    userDelegation,
+    delegatorTransactions,
+    hasStakeWithValidator,
+    transactions,
+  ]);
 
   // Check if user has a stake with a different validator
   const hasStakeWithDifferentValidator = useMemo(() => {
@@ -103,7 +137,6 @@ export const ValidatorDetailsPage: React.FC = () => {
     0
   );
 
-  // If not found, redirect back to validator page
   if (!isLoading && !currentValidator && !error) {
     navigate("/validator");
     return null;
