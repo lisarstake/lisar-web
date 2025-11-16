@@ -194,21 +194,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 throw new Error("Failed to get user after refresh");
               }
             } else {
-              // Refresh failed, clear tokens
               throw new Error("Token refresh failed");
             }
           } else {
             // Token not expired, validate it
             const response = await authService.getCurrentUser();
             if (response.success && response.data) {
-              // Get wallet info from user data
               const wallet: Wallet = {
                 id: response.data.wallet_id || "wallet_id",
                 address: response.data.wallet_address,
                 chain_type: response.data.chain_type || "ethereum",
               };
 
-              // Create session from stored tokens
               const session: Session = {
                 access_token: token,
                 refresh_token: refreshToken || "",
@@ -224,7 +221,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 payload: { user: response.data, wallet, session },
               });
             } else {
-              // Token is invalid, clear it and set as not authenticated
               localStorage.removeItem("auth_token");
               localStorage.removeItem("refresh_token");
               localStorage.removeItem("auth_expiry");
@@ -235,7 +231,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             }
           }
         } catch (error) {
-          // Token validation/refresh failed, clear it and set as not authenticated
           localStorage.removeItem("auth_token");
           localStorage.removeItem("refresh_token");
           localStorage.removeItem("auth_expiry");
@@ -245,12 +240,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           dispatch({ type: "AUTH_LOGOUT" });
         }
       } else {
-        // No token found,  set as not authenticated
         dispatch({ type: "AUTH_LOGOUT" });
       }
     };
 
     initializeAuth();
+  }, []);
+
+  // Listen for logout events from HTTP interceptor
+  useEffect(() => {
+    const handleLogout = () => {
+      dispatch({ type: "AUTH_LOGOUT" });
+    };
+
+    window.addEventListener("auth:logout", handleLogout);
+    return () => window.removeEventListener("auth:logout", handleLogout);
   }, []);
 
   useEffect(() => {
@@ -359,7 +363,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const pendingTokens = localStorage.getItem("pending_confirmation_tokens");
 
       if (pendingTokens) {
-        
         const tokens = JSON.parse(pendingTokens);
 
         // Choose storage based on rememberMe
@@ -435,8 +438,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           storage.setItem("auth_token", response.data.session.access_token);
           storage.setItem("refresh_token", response.data.session.refresh_token);
 
-          console.log("auth token", response.data.session.access_token);
-
           // Store expiration if rememberMe is true
           if (rememberMe && response.data.session.expires_at) {
             storage.setItem(
@@ -445,7 +446,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             );
           }
 
-          // Get fresh user data from the profile endpoint
+          // Get user data from the profile endpoint
           const userResponse = await authService.getCurrentUser();
 
           if (userResponse && userResponse.success && userResponse.data) {

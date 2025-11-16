@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ChevronLeft, CircleQuestionMark, AlertCircle, RefreshCw } from "lucide-react";
+import { ChevronLeft, CircleQuestionMark, AlertCircle, RefreshCw, ExternalLink } from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { transactionService } from "@/services";
 import { TransactionData, TransactionType } from "@/services/transactions/types";
+import { getArbitrumScanUrl } from "@/lib/utils";
 
 export const TransactionDetailPage: React.FC = () => {
   const navigate = useNavigate();
@@ -226,9 +227,19 @@ export const TransactionDetailPage: React.FC = () => {
 
             <div className="flex items-center justify-between">
               <span className="text-gray-400">Transaction Hash</span>
-              <span className="text-white font-medium text-xs">
-                {transaction.transaction_hash.slice(0, 8)}...{transaction.transaction_hash.slice(-8)}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-white font-medium text-xs">
+                  {transaction.transaction_hash.slice(0, 8)}...{transaction.transaction_hash.slice(-8)}
+                </span>
+                <a
+                  href={getArbitrumScanUrl(transaction.transaction_hash)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#86B3F7] hover:text-[#96C3F7] transition-colors"
+                >
+                  <ExternalLink size={16} />
+                </a>
+              </div>
             </div>
 
             <div className="flex items-center justify-between">

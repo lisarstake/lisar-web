@@ -7,6 +7,7 @@ import { ErrorDrawer } from "@/components/ui/ErrorDrawer";
 import { SuccessDrawer } from "@/components/ui/SuccessDrawer";
 import { useOrchestrators } from "@/contexts/OrchestratorContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useDelegation } from "@/contexts/DelegationContext";
 import { delegationService } from "@/services";
 import { StakeRequest } from "@/services/delegation/types";
 import { priceService } from "@/lib/priceService";
@@ -39,6 +40,7 @@ export const StakePage: React.FC = () => {
   const { orchestrators } = useOrchestrators();
   const { state } = useAuth();
   const { wallet } = useWallet();
+  const { refetch: refetchDelegation } = useDelegation();
 
   // Find the orchestrator by address (validatorId is the address)
   const currentValidator = orchestrators.find(
@@ -132,7 +134,9 @@ export const StakePage: React.FC = () => {
         setSuccessMessage("Staking successful! Your tokens have been staked.");
         setShowSuccessDrawer(true);
       } else {
-        setErrorMessage("Staking failed. Please check your balance and try again.");
+        setErrorMessage(
+          "Staking failed. Please check your balance and try again."
+        );
         setShowErrorDrawer(true);
       }
     } catch (error) {
@@ -217,7 +221,9 @@ export const StakePage: React.FC = () => {
         <div className="pb-4">
           <div className="flex space-x-3">
             {["10", "50", "100"].map((amount) => {
-              const isActive = lptAmount === amount || parseFloat(lptAmount || "0") === parseFloat(amount);
+              const isActive =
+                lptAmount === amount ||
+                parseFloat(lptAmount || "0") === parseFloat(amount);
               return (
                 <button
                   key={amount}
@@ -273,10 +279,10 @@ export const StakePage: React.FC = () => {
           }`}
         >
           {isStaking
-            ? "Processing..."
+            ? "Staking.."
             : hasInsufficientFunds
               ? "Proceed to Deposit"
-              : "Proceed to Stake"}
+              : "Stake"}
         </button>
       </div>
 
@@ -303,9 +309,10 @@ export const StakePage: React.FC = () => {
       {/* Success Drawer */}
       <SuccessDrawer
         isOpen={showSuccessDrawer}
-        onClose={() => {
+        onClose={async () => {
+          await refetchDelegation();
           setShowSuccessDrawer(false);
-          navigate("/wallet");
+          navigate("/portfolio");
         }}
         title="Staking Successful!"
         message={successMessage}

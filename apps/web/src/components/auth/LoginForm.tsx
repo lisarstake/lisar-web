@@ -70,7 +70,7 @@ export const LoginForm: React.FC = () => {
           JSON.stringify(tokens)
         );
 
-        // Show success message that email is confirmed
+       
         setSuccessDrawer({
           isOpen: true,
           title: "Email Confirmed!",
@@ -85,7 +85,6 @@ export const LoginForm: React.FC = () => {
     try {
       setIsSubmitting(true);
 
-      // Store tokens in localStorage
       localStorage.setItem("auth_token", tokens.access_token);
       localStorage.setItem("refresh_token", tokens.refresh_token);
 
@@ -105,7 +104,6 @@ export const LoginForm: React.FC = () => {
           details: "",
         });
 
-        // Wait for state to update, then redirect based on onboarding status
         setTimeout(() => {
           if (state.user?.is_onboarded === false) {
             navigate("/learn/what-is-lisar", { replace: true });
@@ -152,7 +150,6 @@ export const LoginForm: React.FC = () => {
       );
 
       if (response.success) {
-        // redirect based on onboarding status
         setTimeout(() => {
           if (state.user?.is_onboarded === false) {
             navigate("/learn/what-is-lisar", { replace: true });
@@ -161,7 +158,6 @@ export const LoginForm: React.FC = () => {
           }
         }, 100);
       } else {
-        // Show error in drawer
         setErrorDrawer({
           isOpen: true,
           title: "Something went wrong",
@@ -170,7 +166,6 @@ export const LoginForm: React.FC = () => {
         });
       }
     } catch (error) {
-      // Show error in drawer
       setErrorDrawer({
         isOpen: true,
         title: "Something went wrong",
@@ -281,10 +276,10 @@ export const LoginForm: React.FC = () => {
                 type="checkbox"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
-                className="w-4 h-4 text-[#C7EF6B] bg-[#121212] border-[#121212] rounded focus:ring-[#C7EF6B] focus:ring-2"
+                className="w-4 h-4 text-[#C7EF6B] bg-[#121212] border-[#121212] rounded "
               />
               <span className="ml-2 text-white text-sm">
-                Remember for 30 days
+                Remember me
               </span>
             </label>
             <Link
@@ -364,10 +359,6 @@ export const LoginForm: React.FC = () => {
         title={errorDrawer.title}
         message={errorDrawer.message}
         details={errorDrawer.details}
-        onRetry={() => {
-          setErrorDrawer({ ...errorDrawer, isOpen: false });
-          // User can manually retry by clicking submit again
-        }}
       />
 
       {/* Success Drawer */}
