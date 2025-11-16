@@ -116,7 +116,7 @@ export const LeaderboardPage: React.FC = () => {
                       </div>
                       <div>
                         <p className="text-[#86B3F7] font-medium">
-                          {shortAddress} ⭐
+                          {shortAddress} 
                         </p>
                       </div>
                     </div>

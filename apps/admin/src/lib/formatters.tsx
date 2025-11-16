@@ -178,3 +178,7 @@ export const getInitials = (
       .slice(0, 2) || "U"
   );
 };
+
+export const getArbitrumScanUrl = (hash: string): string => {
+  return `https://arbiscan.io/tx/${hash}`;
+};

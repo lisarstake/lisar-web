@@ -14,6 +14,7 @@ import {
   getStatusColor,
   getStatusIcon,
   getInitials,
+  getArbitrumScanUrl,
 } from "@/lib/formatters";
 
 const copyToClipboard = (text: string) => {
@@ -98,7 +99,7 @@ export const TransactionDetailPage: React.FC = () => {
     transaction.users?.wallet_address || transaction.wallet_address;
   const initials = getInitials(walletAddress);
 
-  const ethScanUrl = `https://etherscan.io/tx/${transaction.transaction_hash}`;
+  const arbitrumScanUrl = getArbitrumScanUrl(transaction.transaction_hash);
 
   return (
     <div className="space-y-6">
@@ -176,7 +177,7 @@ export const TransactionDetailPage: React.FC = () => {
                   <Button
                     variant="ghost"
                     size="lg"
-                    onClick={() => window.open(ethScanUrl, "_blank")}
+                    onClick={() => window.open(arbitrumScanUrl, "_blank")}
                     className="shrink-0"
                   >
                     <ExternalLink className="w-4 h-4" />

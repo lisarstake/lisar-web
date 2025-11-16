@@ -38,7 +38,7 @@ export interface OrchestratorResponse {
   activeSince: string;
   description: string;
   yieldSource?: string;
-  ensIdentity?: EnsIdentity; // ENS identity data
+  ensIdentity?: EnsIdentity; 
 }
 
 // Stake Types

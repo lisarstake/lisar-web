@@ -160,8 +160,6 @@ export const UserDetailPage: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="space-y-6">
-      
-
         {/* User Information Card */}
         <Card>
           <CardHeader>
@@ -195,7 +193,10 @@ export const UserDetailPage: React.FC = () => {
             <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">User ID</span>
-                <span className="text-sm font-mono text-gray-900 max-w-[180px] truncate overflow-hidden inline-block align-middle" title={selectedUser.user_id}>
+                <span
+                  className="text-sm font-mono text-gray-900 max-w-[180px] truncate overflow-hidden inline-block align-middle"
+                  title={selectedUser.user_id}
+                >
                   {selectedUser.user_id}
                 </span>
               </div>
@@ -218,13 +219,6 @@ export const UserDetailPage: React.FC = () => {
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Fiat Balance</span>
-                <span className="text-sm text-gray-900">
-                  {formatAmount(selectedUser.fiat_balance)}{" "}
-                  {selectedUser.fiat_type || "USD"}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Created Date</span>
                 <span className="text-sm text-gray-900">
                   {formatDate(selectedUser.created_date, { includeTime: true })}
@@ -244,7 +238,9 @@ export const UserDetailPage: React.FC = () => {
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Suspended At</span>
                   <span className="text-sm text-gray-900">
-                    {formatDate(selectedUser.suspended_at, { includeTime: true })}
+                    {formatDate(selectedUser.suspended_at, {
+                      includeTime: true,
+                    })}
                   </span>
                 </div>
               )}
@@ -252,8 +248,8 @@ export const UserDetailPage: React.FC = () => {
           </CardContent>
         </Card>
 
-          {/* Transaction Stats Card */}
-          {selectedUser.transactionStats && (
+        {/* Transaction Stats Card */}
+        {selectedUser.transactionStats && (
           <Card>
             <CardHeader>
               <CardTitle>Transaction Statistics</CardTitle>
