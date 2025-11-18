@@ -43,3 +43,36 @@ export const shortenHash = (hash: string): string => {
 export const getArbitrumScanUrl = (hash: string): string => {
   return `https://arbiscan.io/tx/${hash}`;
 };
+
+/**
+ * Extract first 6 letters from email (avoiding @, gmail, and numbers)
+ */
+export const getEmailDisplayName = (email: string | undefined | null): string | null => {
+  if (!email || !email.trim()) {
+    return null;
+  }
+
+  // Extract part before @
+  const emailPart = email.split('@')[0];
+  // Remove all non-alphabetic characters (numbers, dots, etc.) and "gmail"
+  const lettersOnly = emailPart
+    .replace(/[^a-zA-Z]/g, '')
+    .replace(/gmail/gi, '');
+  // Take first 6 letters
+  return lettersOnly.slice(0, 6) || emailPart.slice(0, 6);
+};
+
+/**
+ * Get display name for leaderboard entry (email or fallback to shortened address)
+ */
+export const getLeaderboardDisplayName = (
+  email: string | undefined | null,
+  address: string
+): string => {
+  const emailDisplay = getEmailDisplayName(email);
+  if (emailDisplay) {
+    return emailDisplay;
+  }
+  // Fallback to shortened address
+  return shortenHash(address);
+};

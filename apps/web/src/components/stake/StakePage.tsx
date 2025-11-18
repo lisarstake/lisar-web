@@ -8,6 +8,7 @@ import { SuccessDrawer } from "@/components/ui/SuccessDrawer";
 import { useOrchestrators } from "@/contexts/OrchestratorContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDelegation } from "@/contexts/DelegationContext";
+import { useTransactions } from "@/contexts/TransactionContext";
 import { delegationService } from "@/services";
 import { StakeRequest } from "@/services/delegation/types";
 import { priceService } from "@/lib/priceService";
@@ -41,6 +42,7 @@ export const StakePage: React.FC = () => {
   const { state } = useAuth();
   const { wallet } = useWallet();
   const { refetch: refetchDelegation } = useDelegation();
+  const { refetch: refetchTransactions } = useTransactions();
 
   // Find the orchestrator by address (validatorId is the address)
   const currentValidator = orchestrators.find(
@@ -84,7 +86,10 @@ export const StakePage: React.FC = () => {
   };
 
   const handleMaxClick = () => {
-    setLptAmount(walletBalanceLpt.toString());
+    // Leave a small balance to avoid transaction issues (0.01%)
+    const buffer = Math.max(0.001, walletBalanceLpt * 0.0001);
+    const maxAmount = Math.max(0, walletBalanceLpt - buffer);
+    setLptAmount(maxAmount.toString());
   };
 
   const handleProceed = async () => {
@@ -133,6 +138,10 @@ export const StakePage: React.FC = () => {
       if (response.success) {
         setSuccessMessage("Staking successful! Your tokens have been staked.");
         setShowSuccessDrawer(true);
+
+        // Refetch delegation and transaction data
+        refetchDelegation();
+        refetchTransactions();
       } else {
         setErrorMessage(
           "Staking failed. Please check your balance and try again."
@@ -309,8 +318,7 @@ export const StakePage: React.FC = () => {
       {/* Success Drawer */}
       <SuccessDrawer
         isOpen={showSuccessDrawer}
-        onClose={async () => {
-          await refetchDelegation();
+        onClose={() => {
           setShowSuccessDrawer(false);
           navigate("/portfolio");
         }}
