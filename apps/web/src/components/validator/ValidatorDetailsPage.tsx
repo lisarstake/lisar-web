@@ -10,7 +10,6 @@ import { ValidatorAboutSection } from "@/components/validator/ValidatorAboutSect
 import { useOrchestrators } from "@/contexts/OrchestratorContext";
 import { useDelegation } from "@/contexts/DelegationContext";
 import { useTransactions } from "@/contexts/TransactionContext";
-import { TransactionData } from "@/services/transactions/types";
 
 export const ValidatorDetailsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -67,46 +66,24 @@ export const ValidatorDetailsPage: React.FC = () => {
       parseFloat(userDelegation.bondedAmount) > 0
   );
 
+  // check if user has just staked
   const justStaked = useMemo(() => {
     if (!hasStakeWithValidator) {
       return false;
     }
 
-    // Compare startRound with currentRound
+    // User can only unstake if currentRound >= startRound
     if (userDelegation && delegatorTransactions) {
       const startRound = parseInt(userDelegation.startRound || "0");
       const currentRound = parseInt(delegatorTransactions.currentRound || "0");
-      if (startRound === currentRound) {
-        return true;
-      }
-    }
 
-    // Look for stake transactions within the last 24 hours
-    if (transactions && transactions.length > 0) {
-      const now = new Date();
-      const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-
-      const recentStakeTransaction = transactions.find(
-        (tx: TransactionData) => {
-          if (tx.transaction_type !== "delegation") return false;
-
-          const txDate = new Date(tx.created_at);
-          return txDate >= twentyFourHoursAgo;
-        }
-      );
-
-      if (recentStakeTransaction) {
+      if (currentRound < startRound) {
         return true;
       }
     }
 
     return false;
-  }, [
-    userDelegation,
-    delegatorTransactions,
-    hasStakeWithValidator,
-    transactions,
-  ]);
+  }, [userDelegation, delegatorTransactions, hasStakeWithValidator]);
 
   // Check if user has a stake with a different validator
   const hasStakeWithDifferentValidator = useMemo(() => {
@@ -267,10 +244,11 @@ export const ValidatorDetailsPage: React.FC = () => {
       <HelpDrawer
         isOpen={showUnstakeRestrictionDrawer}
         onClose={() => setShowUnstakeRestrictionDrawer(false)}
-        title="Cannot Unstake Yet"
+        title="Cannot unstake yet"
         content={[
           "You just staked in this round and cannot unstake until the next round begins.",
-          "Please wait for the next round to complete before you can unstake your tokens.",
+          "Please wait for the next round before you can unstake your tokens.",
+          "You can see the current round (payout time) in the portfolio page.",
         ]}
       />
 
@@ -278,7 +256,7 @@ export const ValidatorDetailsPage: React.FC = () => {
       <HelpDrawer
         isOpen={showMoveStakeDrawer}
         onClose={() => setShowMoveStakeDrawer(false)}
-        title="Move Your Stake?"
+        title="Move your stake?"
         content={[
           "You already have a stake with another validator. You can only stake to one validator at a time.",
           "To stake with this validator, you'll need to unstake from your current validator first.",
