@@ -11,10 +11,13 @@ const SignupPage = lazyRetry(() => import('@/screens/signup-page'))
 const LoginPage = lazyRetry(() => import('@/screens/login-page'))
 const ForgotPasswordPage = lazyRetry(() => import('@/screens/forgot-password-page'))
 const ResetPasswordPage = lazyRetry(() => import('@/screens/reset-password-page'))
+const OTPPage = lazyRetry(() => import('@/screens/otp-page'))
+const TOTPSetupPage = lazyRetry(() => import('@/screens/totp-setup-page'))
 const WalletPage = lazyRetry(() => import('@/screens/wallet-page'))
 const ValidatorPage = lazyRetry(() => import('@/screens/validator-page'))
 const ValidatorDetailsPage = lazyRetry(() => import('@/screens/validator-details-page'))
 const StakePage = lazyRetry(() => import('@/screens/stake-page'))
+const WithdrawPage = lazyRetry(() => import('@/screens/withdraw-page'))
 const DepositPage = lazyRetry(() => import('@/screens/deposit-page'))
 const OnchainDepositPage = lazyRetry(() => import('@/screens/onchain-deposit-page'))
 const WithdrawNetworkPage = lazyRetry(() => import('@/screens/withdraw-network-page'))
@@ -63,6 +66,8 @@ export const router = createBrowserRouter([
       { index: true, element: withSuspenseAndErrorBoundary(<HomePage />) },
       { path: 'login', element: withSuspenseAndErrorBoundary(<LoginPage />) },
       { path: 'signup', element: withSuspenseAndErrorBoundary(<SignupPage />) },
+      { path: 'verify-otp', element: withSuspenseAndErrorBoundary(<OTPPage />) },
+      { path: 'setup-otp', element: withSuspenseAndErrorBoundary(<TOTPSetupPage />) },
       { path: 'dashboard', element: withSuspenseAndErrorBoundary(<DashboardPage />) },
       { path: 'forgot-password', element: withSuspenseAndErrorBoundary(<ForgotPasswordPage />) },
       { path: 'reset-password', element: withSuspenseAndErrorBoundary(<ResetPasswordPage />) },
@@ -100,6 +105,14 @@ export const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
+      // {
+      //   path: 'withdraw',
+      //   element: (
+      //     <ProtectedRoute>
+      //       {withSuspenseAndErrorBoundary(<WithdrawPage />)}
+      //     </ProtectedRoute>
+      //   ),
+      // },
       {
         path: 'deposit',
         element: (

@@ -9,6 +9,9 @@ export * from './delegation';
 // Export auth services
 export * from './auth';
 
+// Export TOTP (2FA) services
+export * from './totp';
+
 // Export transaction services
 export * from './transactions';
 // Export wallet services

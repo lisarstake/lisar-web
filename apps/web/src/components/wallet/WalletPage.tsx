@@ -86,8 +86,9 @@ export const WalletPage: React.FC = () => {
 
   useEffect(() => {
     const calculateFiatValues = async () => {
-      const fiatCurrency = wallet?.fiatCurrency || state.user?.fiat_type || "USD";
-      
+      const fiatCurrency =
+        wallet?.fiatCurrency || state.user?.fiat_type || "USD";
+
       const [combinedFiat, walletFiat, stakedFiat] = await Promise.all([
         priceService.convertLptToFiat(combinedBalance, fiatCurrency),
         priceService.convertLptToFiat(walletBalance, fiatCurrency),
@@ -100,7 +101,13 @@ export const WalletPage: React.FC = () => {
     };
 
     calculateFiatValues();
-  }, [combinedBalance, walletBalance, stakedBalance, wallet?.fiatCurrency, state.user?.fiat_type]);
+  }, [
+    combinedBalance,
+    walletBalance,
+    stakedBalance,
+    wallet?.fiatCurrency,
+    state.user?.fiat_type,
+  ]);
 
   const handleStakeClick = () => {
     navigate("/validator");
@@ -203,7 +210,8 @@ export const WalletPage: React.FC = () => {
         ) : (
           <>
             <h1 className="text-3xl font-semibold text-gray-300 mb-2">
-              {formatEarnings(combinedBalance)} LPT
+              {formatEarnings(combinedBalance)}{" "}
+              <span className="text-sm">LPT</span>
             </h1>
             <p className="text-white/70 text-base">
               ≈{fiatSymbol}

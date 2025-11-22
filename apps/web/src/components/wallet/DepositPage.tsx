@@ -6,6 +6,7 @@ import {
   ChevronRight,
   CreditCard,
   ScanQrCode,
+  LoaderCircle,
 } from "lucide-react";
 import { OnrampWebSDK } from "@onramp.money/onramp-web-sdk";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
@@ -270,7 +271,9 @@ export const DepositPage: React.FC = () => {
         <div className="pb-4">
           <div className="flex space-x-3">
             {["15000", "50000", "100000"].map((amount) => {
-              const isActive = fiatAmount === amount || parseFloat(fiatAmount || "0") === parseFloat(amount);
+              const isActive =
+                fiatAmount === amount ||
+                parseFloat(fiatAmount || "0") === parseFloat(amount);
               return (
                 <button
                   key={amount}
@@ -292,7 +295,7 @@ export const DepositPage: React.FC = () => {
         {/* Payment Method Selection */}
         <div className="py-4">
           <h3 className="text-base font-medium text-white/90 mb-2">
-            Preferred Method
+            Preferred method
           </h3>
 
           <div className="space-y-3">
@@ -311,7 +314,7 @@ export const DepositPage: React.FC = () => {
                     selectedPaymentMethod === "fiat" ? "#C7EF6B" : "#86B3F7"
                   }
                 />
-                <span className="text-white font-normal">Fiat payment</span>
+                <span className="text-white font-normal">Fiat deposit</span>
               </div>
               <ChevronRight
                 size={20}
@@ -335,7 +338,7 @@ export const DepositPage: React.FC = () => {
                   }
                 />
                 <span className="text-white font-normal">
-                  On-Chain transfer
+                  On-Chain deposit
                 </span>
               </div>
               <ChevronRight
@@ -350,7 +353,7 @@ export const DepositPage: React.FC = () => {
       </div>
 
       {/* Proceed Button - Fixed at bottom */}
-      <div className="px-6 py-4 bg-[#050505] pb-24">
+      <div className="px-6 py-4 bg-[#050505] pb-32">
         <button
           onClick={handleProceed}
           disabled={
@@ -368,7 +371,14 @@ export const DepositPage: React.FC = () => {
               : "bg-[#636363] text-white cursor-not-allowed"
           }`}
         >
-          {isStaking ? "Processing..." : "Proceed to Deposit"}
+          {isStaking ? (
+            <span className="flex items-center justify-center gap-2">
+              <LoaderCircle className="animate-spin h-5 w-5 text-white" />
+              Processing...
+            </span>
+          ) : (
+            "Proceed to Deposit"
+          )}
         </button>
       </div>
 

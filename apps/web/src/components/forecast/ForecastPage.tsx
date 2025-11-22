@@ -145,9 +145,12 @@ export const ForecastPage: React.FC = () => {
         } else if (serverProjections && typeof serverProjections === "object") {
           next = Object.keys(serverProjections).map((k) => ({
             period: k,
-            projectedReward: Number(
-              serverProjections[k]?.projectedReward ?? serverProjections[k] ?? 0
-            ) + numericAmount,
+            projectedReward:
+              Number(
+                serverProjections[k]?.projectedReward ??
+                  serverProjections[k] ??
+                  0
+              ) + numericAmount,
             currency: serverProjections[k]?.currency ?? "USD",
           }));
         }
@@ -167,9 +170,13 @@ export const ForecastPage: React.FC = () => {
       {/* Content - Scrollable */}
       <div className="flex-1 overflow-y-auto px-6 pb-20 scrollbar-hide">
         {/* Header - Scrollable */}
-        <div className="flex items-center justify-between py-8">
-          <h1 className="text-lg font-medium text-white">Yield Calculator</h1>
-
+        <div className="flex items-start justify-between py-8">
+          <div>
+            <h1 className="text-lg font-medium text-white">Yield Calculator</h1>
+            <p className="text-xs text-gray-500">
+              Calculate your potential rewards
+            </p>
+          </div>
           <button
             onClick={handleHelpClick}
             className="w-8 h-8 bg-[#2a2a2a] rounded-full flex items-center justify-center"
@@ -303,7 +310,8 @@ export const ForecastPage: React.FC = () => {
                   formatNumber(
                     (projections.find((p) =>
                       p.period.toLowerCase().includes("day")
-                    )?.projectedReward ?? (numericAmount + fallbackDailyYield)) - numericAmount,
+                    )?.projectedReward ?? numericAmount + fallbackDailyYield) -
+                      numericAmount,
                     2
                   )
                 )}{" "}
@@ -319,7 +327,8 @@ export const ForecastPage: React.FC = () => {
                   formatNumber(
                     (projections.find((p) =>
                       p.period.toLowerCase().includes("month")
-                    )?.projectedReward ?? (numericAmount + fallbackMonthlyYield)) - numericAmount,
+                    )?.projectedReward ??
+                      numericAmount + fallbackMonthlyYield) - numericAmount,
                     2
                   )
                 )}{" "}

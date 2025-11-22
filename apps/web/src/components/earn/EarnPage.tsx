@@ -49,15 +49,19 @@ export const EarnPage: React.FC = () => {
       {/* Content - Scrollable */}
       <div className="flex-1 overflow-y-auto px-6 pb-20 scrollbar-hide">
         {/* Header - Scrollable */}
-        <div className="flex items-center justify-between py-8">
-          <h1 className="text-lg font-medium text-white">Earn on Lisar</h1>
-
+        <div className="flex items-start justify-between py-8">
+          <div>
+            <h1 className="text-lg font-medium text-white">Earn on Lisar</h1>
+            <p className="text-xs text-gray-500">
+              Get paid creating content or inviting friends
+            </p>
+          </div>
           <button
-          onClick={handleHelpClick}
-          className="w-8 h-8 bg-[#2a2a2a] rounded-full flex items-center justify-center"
-        >
-          <CircleQuestionMark color="#86B3F7" size={16} />
-        </button>
+            onClick={handleHelpClick}
+            className="w-8 h-8 bg-[#2a2a2a] rounded-full flex items-center justify-center"
+          >
+            <CircleQuestionMark color="#86B3F7" size={16} />
+          </button>
         </div>
 
         {/* Earn Cards */}
@@ -110,7 +114,7 @@ export const EarnPage: React.FC = () => {
         title="Earning Guide"
         content={[
           "Earn money referring friends to Lisar or creating content for Lisar.",
-          "Currently coming soon, stay tuned for updates."
+          "Currently coming soon, stay tuned for updates.",
         ]}
       />
 

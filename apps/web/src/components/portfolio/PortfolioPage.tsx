@@ -74,7 +74,10 @@ const StakeEntryItem: React.FC<StakeEntryItemProps> = ({ entry, onClick }) => {
             />
           ) : (
             <div className="w-10 h-10 rounded-full bg-[#1a1a1a] flex items-center justify-center overflow-hidden">
-              <canvas ref={qrCanvasRef} className="w-full h-full rounded-full" />
+              <canvas
+                ref={qrCanvasRef}
+                className="w-full h-full rounded-full"
+              />
             </div>
           )}
           <div>
@@ -92,9 +95,7 @@ const StakeEntryItem: React.FC<StakeEntryItemProps> = ({ entry, onClick }) => {
           <p className="text-[#C7EF6B] font-medium text-sm">
             APY: {entry.apy * 100}%
           </p>
-          <p className="text-gray-400 text-xs">
-            Fee: {entry.fee.toFixed(1)}%
-          </p>
+          <p className="text-gray-400 text-xs">Fee: {entry.fee.toFixed(1)}%</p>
         </div>
       </div>
     </div>
@@ -276,7 +277,7 @@ export const PortfolioPage: React.FC = () => {
           <div className="bg-[#C7EF6B] rounded-xl p-4">
             <p className="text-black text-sm font-medium my-1">Total stake</p>
             <p className="text-black text-2xl font-semibold">
-              {formatEarnings(totalStake)} LPT
+              {formatEarnings(totalStake)} <span className="text-sm">LPT</span>
             </p>
           </div>
 
@@ -315,7 +316,7 @@ export const PortfolioPage: React.FC = () => {
                 : selectedPeriod === "Monthly"
                   ? formatEarnings(monthlyEarnings)
                   : formatEarnings(monthlyEarnings * 12)}{" "}
-              LPT
+              <span className="text-sm">LPT</span>
             </p>
           </div>
         </div>
@@ -388,7 +389,8 @@ export const PortfolioPage: React.FC = () => {
                   Lifetime Rewards
                 </p>
                 <p className="text-[#C7EF6B] text-xl font-semibold">
-                  {formatLifetime(lifetimeRewards)} LPT
+                  {formatLifetime(lifetimeRewards)}{" "}
+                  <span className="text-sm">LPT</span>
                 </p>
               </div>
 
@@ -397,7 +399,8 @@ export const PortfolioPage: React.FC = () => {
                   Lifetime Withdrawn
                 </p>
                 <p className="text-[#FF6B6B] text-xl font-semibold">
-                  {formatLifetime(lifetimeUnbonded)} LPT
+                  {formatLifetime(lifetimeUnbonded)}{" "}
+                  <span className="text-sm">LPT</span>
                 </p>
               </div>
             </div>

@@ -13,6 +13,10 @@ import {
   UnbondResponse,
   WithdrawStakeRequest,
   WithdrawStakeResponse,
+  RebondRequest,
+  RebondResponse,
+  MoveStakeRequest,
+  MoveStakeResponse,
   DelegationResponse,
   DelegatorTransactionsResponse,
   DelegatorRewardsResponse,
@@ -248,6 +252,84 @@ export class DelegationService implements IDelegationApiService {
         success: false,
         error: error.response?.data?.error || error.message || "Unknown error",
         message: error.response?.data?.message || "Failed to withdraw stake",
+      };
+    }
+  }
+
+  // Rebond an unbonding lock to a delegate
+  async rebond(request: RebondRequest): Promise<RebondResponse> {
+    const token = this.getStoredToken();
+    if (!token) {
+      return {
+        success: false,
+        error: "Provide walletId and Authorization header",
+        message: "Authentication required",
+      };
+    }
+
+    try {
+      const headers = {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      };
+
+      const response = await http.request({
+        url: `${this.baseUrl}/delegation/rebond`,
+        method: "POST",
+        headers,
+        data: request,
+        timeout: this.timeout,
+      });
+
+      return {
+        success: true,
+        txHash: response.data.txHash || response.data.data?.txHash,
+        message: response.data.message,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.response?.data?.error || error.message || "Provide walletId and Authorization header",
+        message: error.response?.data?.message || "Failed to rebond",
+      };
+    }
+  }
+
+  // Move (redelegate) stake from one orchestrator to another
+  async moveStake(request: MoveStakeRequest): Promise<MoveStakeResponse> {
+    const token = this.getStoredToken();
+    if (!token) {
+      return {
+        success: false,
+        error: "Provide walletId and Authorization header",
+        message: "Authentication required",
+      };
+    }
+
+    try {
+      const headers = {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      };
+
+      const response = await http.request({
+        url: `${this.baseUrl}/delegation/move-stake`,
+        method: "POST",
+        headers,
+        data: request,
+        timeout: this.timeout,
+      });
+
+      return {
+        success: true,
+        txHash: response.data.txHash || response.data.data?.txHash,
+        message: response.data.message,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.response?.data?.error || error.message || "Provide walletId and Authorization header",
+        message: error.response?.data?.message || "Failed to move stake",
       };
     }
   }

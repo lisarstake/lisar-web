@@ -12,6 +12,10 @@ import {
   DelegatorStakeProfileResponse,
   WithdrawStakeRequest,
   WithdrawStakeResponse,
+  RebondRequest,
+  RebondResponse,
+  MoveStakeRequest,
+  MoveStakeResponse,
   OrchestratorQueryParams,
   ProtocolStatusResponse,
   CalculateYieldRequest,
@@ -36,6 +40,12 @@ export interface IDelegationApiService {
   
   // Withdraw Stake
   withdrawStake(request: WithdrawStakeRequest): Promise<WithdrawStakeResponse>;
+
+  // Rebond
+  rebond(request: RebondRequest): Promise<RebondResponse>;
+
+  // Move Stake
+  moveStake(request: MoveStakeRequest): Promise<MoveStakeResponse>;
 
   // Protocol Status
   getProtocolStatus(): Promise<ProtocolStatusResponse>;
