@@ -2,15 +2,19 @@ import React, { useState, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ChevronLeft, CircleQuestionMark } from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
+import { ActionDrawer } from "@/components/general/ActionDrawer";
 import { ShareDrawer } from "@/components/general/ShareDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { ValidatorRewardsChart } from "@/components/validator/ValidatorRewardsChart";
 import { ValidatorActionButtons } from "@/components/validator/ValidatorActionButtons";
 import { ValidatorAboutSection } from "@/components/validator/ValidatorAboutSection";
+import { SuccessDrawer } from "@/components/ui/SuccessDrawer";
+import { ErrorDrawer } from "@/components/ui/ErrorDrawer";
 import { useOrchestrators } from "@/contexts/OrchestratorContext";
 import { useDelegation } from "@/contexts/DelegationContext";
 import { useTransactions } from "@/contexts/TransactionContext";
-import { TransactionData } from "@/services/transactions/types";
+import { useAuth } from "@/contexts/AuthContext";
+import { delegationService } from "@/services";
 
 export const ValidatorDetailsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -20,10 +24,18 @@ export const ValidatorDetailsPage: React.FC = () => {
   const [showUnstakeRestrictionDrawer, setShowUnstakeRestrictionDrawer] =
     useState(false);
   const [showMoveStakeDrawer, setShowMoveStakeDrawer] = useState(false);
+  const [showWithdrawConfirmDrawer, setShowWithdrawConfirmDrawer] =
+    useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [showSuccessDrawer, setShowSuccessDrawer] = useState(false);
+  const [showErrorDrawer, setShowErrorDrawer] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
   const { orchestrators, orchestratorRewards, isLoading, error } =
     useOrchestrators();
-  const { userDelegation, delegatorTransactions } = useDelegation();
+  const { userDelegation, delegatorTransactions, refetch } = useDelegation();
   const { transactions } = useTransactions();
+  const { state } = useAuth();
 
   // Find the orchestrator by address
   const currentValidator = orchestrators.find(
@@ -67,46 +79,24 @@ export const ValidatorDetailsPage: React.FC = () => {
       parseFloat(userDelegation.bondedAmount) > 0
   );
 
+  // check if user has just staked
   const justStaked = useMemo(() => {
     if (!hasStakeWithValidator) {
       return false;
     }
 
-    // Compare startRound with currentRound
+    // User can only unstake if currentRound >= startRound
     if (userDelegation && delegatorTransactions) {
       const startRound = parseInt(userDelegation.startRound || "0");
       const currentRound = parseInt(delegatorTransactions.currentRound || "0");
-      if (startRound === currentRound) {
-        return true;
-      }
-    }
 
-    // Look for stake transactions within the last 24 hours
-    if (transactions && transactions.length > 0) {
-      const now = new Date();
-      const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-
-      const recentStakeTransaction = transactions.find(
-        (tx: TransactionData) => {
-          if (tx.transaction_type !== "delegation") return false;
-
-          const txDate = new Date(tx.created_at);
-          return txDate >= twentyFourHoursAgo;
-        }
-      );
-
-      if (recentStakeTransaction) {
+      if (currentRound < startRound) {
         return true;
       }
     }
 
     return false;
-  }, [
-    userDelegation,
-    delegatorTransactions,
-    hasStakeWithValidator,
-    transactions,
-  ]);
+  }, [userDelegation, delegatorTransactions, hasStakeWithValidator]);
 
   // Check if user has a stake with a different validator
   const hasStakeWithDifferentValidator = useMemo(() => {
@@ -155,7 +145,7 @@ export const ValidatorDetailsPage: React.FC = () => {
   };
 
   const handleWithdrawClick = () => {
-    navigate(`/withdraw-network/${currentValidator?.address}`);
+    setShowWithdrawConfirmDrawer(true);
   };
 
   const handleUnstakeClick = () => {
@@ -172,6 +162,108 @@ export const ValidatorDetailsPage: React.FC = () => {
 
   const handleHelpClick = () => {
     setShowHelpDrawer(true);
+  };
+
+  // Handle rebond - restake withdrawable tokens
+  const handleRebond = async () => {
+    if (
+      !state.user?.wallet_id ||
+      !state.user?.wallet_address ||
+      !validatorId
+    ) {
+      setErrorMessage("Missing wallet information");
+      setShowErrorDrawer(true);
+      return;
+    }
+
+    // Get the first withdrawable transaction to rebond
+    const withdrawableTransaction = withdrawableTransactions[0];
+    if (!withdrawableTransaction || !withdrawableTransaction.unbondingLockId) {
+      setErrorMessage("No withdrawable tokens found");
+      setShowErrorDrawer(true);
+      return;
+    }
+
+    setIsProcessing(true);
+
+    try {
+      const response = await delegationService.rebond({
+        delegatorAddress: state.user.wallet_address,
+        unbondingLockId: withdrawableTransaction.unbondingLockId,
+        newPosPrev: "0",
+        newPosNext: "0",
+        walletId: state.user.wallet_id,
+      });
+
+      if (response.success) {
+        setSuccessMessage("Your tokens have been restaked successfully and will start earning rewards again.");
+        setShowSuccessDrawer(true);
+        setShowWithdrawConfirmDrawer(false);
+        // Refetch delegation data
+        await refetch();
+      } else {
+        setErrorMessage(response.message || "Failed to restake tokens");
+        setShowErrorDrawer(true);
+        setShowWithdrawConfirmDrawer(false);
+      }
+    } catch (error: any) {
+      setErrorMessage(error.message || "Failed to restake tokens");
+      setShowErrorDrawer(true);
+      setShowWithdrawConfirmDrawer(false);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // Handle move stake - move stake to a new validator
+  const handleMoveStake = async () => {
+    if (
+      !state.user?.wallet_id ||
+      !state.user?.wallet_address ||
+      !validatorId ||
+      !userDelegation?.delegate.id
+    ) {
+      setErrorMessage("Missing required information");
+      setShowErrorDrawer(true);
+      return;
+    }
+
+    const bondedAmount = userDelegation.bondedAmount;
+    if (!bondedAmount || parseFloat(bondedAmount) <= 0) {
+      setErrorMessage("No stake to move");
+      setShowErrorDrawer(true);
+      return;
+    }
+
+    setIsProcessing(true);
+
+    try {
+      const response = await delegationService.moveStake({
+        walletId: state.user.wallet_id,
+        walletAddress: state.user.wallet_address,
+        oldDelegate: userDelegation.delegate.id,
+        newDelegate: validatorId,
+        amount: bondedAmount,
+      });
+
+      if (response.success) {
+        setSuccessMessage("Your stake has been successfully moved to the new validator.");
+        setShowSuccessDrawer(true);
+        setShowMoveStakeDrawer(false);
+        // Refetch delegation data
+        await refetch();
+      } else {
+        setErrorMessage(response.message || "Failed to move stake");
+        setShowErrorDrawer(true);
+        setShowMoveStakeDrawer(false);
+      }
+    } catch (error: any) {
+      setErrorMessage(error.message || "Failed to move stake");
+      setShowErrorDrawer(true);
+      setShowMoveStakeDrawer(false);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
@@ -267,23 +359,91 @@ export const ValidatorDetailsPage: React.FC = () => {
       <HelpDrawer
         isOpen={showUnstakeRestrictionDrawer}
         onClose={() => setShowUnstakeRestrictionDrawer(false)}
-        title="Cannot Unstake Yet"
+        title="Cannot unstake yet"
         content={[
           "You just staked in this round and cannot unstake until the next round begins.",
-          "Please wait for the next round to complete before you can unstake your tokens.",
+          "Please wait for the next round before you can unstake your tokens.",
+          "You can see the current round (payout time) in the portfolio page.",
         ]}
       />
 
       {/* Move Stake Drawer */}
-      <HelpDrawer
+      <ActionDrawer
         isOpen={showMoveStakeDrawer}
-        onClose={() => setShowMoveStakeDrawer(false)}
-        title="Move Your Stake?"
+        onClose={() => !isProcessing && setShowMoveStakeDrawer(false)}
+        title="Move your stake?"
         content={[
           "You already have a stake with another validator. You can only stake to one validator at a time.",
-          "To stake with this validator, you'll need to unstake from your current validator first.",
-          "Once unstaked, you can then stake with this new validator.",
+          "To stake with this validator, you'll need to move your stake from your current validator.",
         ]}
+        actions={[
+          {
+            label: "Move stake",
+            onClick: handleMoveStake,
+            confirmation: {
+              title: "Are you sure?",
+              message:
+                "Are you sure you want to move your stake? This will move your tokens to this new validator.",
+              confirmLabel: "Yes, move stake",
+              cancelLabel: "Go back",
+            },
+          },
+          {
+            label: "Got it",
+            onClick: () => setShowMoveStakeDrawer(false),
+            variant: "secondary",
+          },
+        ]}
+        isProcessing={isProcessing}
+      />
+
+      {/* Withdraw Confirm Drawer */}
+      <ActionDrawer
+        isOpen={showWithdrawConfirmDrawer}
+        onClose={() => !isProcessing && setShowWithdrawConfirmDrawer(false)}
+        title="Withdraw or restake?"
+        content={[
+          "You have unstaked tokens ready to withdraw.",
+          "You can proceed to withdraw them to your wallet, or restake them with this validator to continue earning rewards.",
+        ]}
+        actions={[
+          {
+            label: "Proceed to withdraw",
+            onClick: () => {
+              setShowWithdrawConfirmDrawer(false);
+              navigate(`/withdraw-network/${currentValidator?.address}`);
+            },
+          },
+          {
+            label: "Restake",
+            onClick: handleRebond,
+            variant: "secondary",
+            confirmation: {
+              title: "Are you sure?",
+              message:
+                "Are you sure you want to restake your tokens with this validator? They will be staked again and start earning rewards.",
+              confirmLabel: "Yes, restake",
+              cancelLabel: "Go back",
+            },
+          },
+        ]}
+        isProcessing={isProcessing}
+      />
+
+      {/* Success Drawer */}
+      <SuccessDrawer
+        isOpen={showSuccessDrawer}
+        onClose={() => setShowSuccessDrawer(false)}
+        title="Success!"
+        message={successMessage}
+      />
+
+      {/* Error Drawer */}
+      <ErrorDrawer
+        isOpen={showErrorDrawer}
+        onClose={() => setShowErrorDrawer(false)}
+        title="Something went wrong"
+        message={errorMessage}
       />
 
       {/* Bottom Navigation */}

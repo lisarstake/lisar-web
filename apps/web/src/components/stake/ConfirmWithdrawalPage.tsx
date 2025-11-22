@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { ChevronLeft, CircleQuestionMark } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams, useSearchParams, useLocation } from "react-router-dom";
+import { ChevronLeft, CircleQuestionMark, LoaderCircle } from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { SuccessDrawer } from "@/components/ui/SuccessDrawer";
@@ -11,6 +11,7 @@ import { delegationService } from "@/services";
 
 export const ConfirmWithdrawalPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { validatorId } = useParams<{ validatorId: string }>();
   const [searchParams] = useSearchParams();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -71,11 +72,42 @@ export const ConfirmWithdrawalPage: React.FC = () => {
   const conversionFee = isCrossChain ? "0.5%" : "0%";
   const networkFee = isCrossChain ? "0.5 LPT" : "0 LPT";
 
+  // Check if returning from OTP verification
+  useEffect(() => {
+    const state = location.state as { fromOTP?: boolean } | null;
+    if (state?.fromOTP) {
+      const otpVerified = sessionStorage.getItem("otp_verified");
+      const otpAction = sessionStorage.getItem("otp_action");
+      const verificationTime = otpVerified ? parseInt(otpVerified) : 0;
+      const isRecent = Date.now() - verificationTime < 60000; // 1 minute validity
+      
+      if (isRecent && otpAction === "withdraw") {
+        // Clear the OTP verification
+        sessionStorage.removeItem("otp_verified");
+        sessionStorage.removeItem("otp_action");
+        // Proceed with withdrawal
+        handleWithdraw();
+      }
+    }
+  }, [location.state]);
+
   const handleBackClick = () => {
     navigate(-1);
   };
 
-  const handleProceed = async () => {
+  const handleProceed = () => {
+    // Navigate to OTP verification page before withdrawal
+    const currentPath = `/confirm-withdrawal/${validatorId}?network=${selectedNetwork}&amount=${withdrawalAmount}&validatorName=${validatorDisplayName}&unbondingLockIds=${encodeURIComponent(JSON.stringify(unbondingLockIds))}`;
+    
+    navigate("/verify-otp", {
+      state: {
+        action: "withdraw",
+        returnTo: currentPath,
+      },
+    });
+  };
+
+  const handleWithdraw = async () => {
     if (!walletId || !walletAddress || unbondingLockIds.length === 0) {
       const errorMsg = "Missing wallet information or unbonding lock ID";
       setError(errorMsg);
@@ -223,7 +255,14 @@ export const ConfirmWithdrawalPage: React.FC = () => {
               : "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
           }`}
         >
-          {isProcessing ? "Processing..." : "Proceed to withdrawal"}
+          {isProcessing ? (
+            <span className="flex items-center justify-center gap-2">
+               <LoaderCircle className="animate-spin h-5 w-5 text-white" />
+              Processing...
+            </span>
+          ) : (
+            "Withdraw"
+          )}
         </button>
       </div>
 
@@ -234,7 +273,7 @@ export const ConfirmWithdrawalPage: React.FC = () => {
         title="Withdrawal Guide"
         content={[
           "Review your withdrawal details including token, amount, network, and fees before confirming.",
-          "Conversion fees apply when converting between different tokens, network fees cover transaction processing.",
+          "Network fees apply when converting between different tokens.",
           "Check the summary to see exactly what you'll receive after all fees.",
         ]}
       />

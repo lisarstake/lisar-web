@@ -192,7 +192,7 @@ export const UnstakeAmountPage: React.FC = () => {
               : "bg-[#636363] text-white cursor-not-allowed"
           }`}
         >
-          Proceed to Unstake
+           Proceed to Unstake
         </button>
       </div>
 

@@ -5,6 +5,7 @@ import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { useLeaderboard } from "@/contexts/LeaderboardContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatEarnings } from "@/lib/formatters";
+import { getLeaderboardDisplayName } from "@/lib/utils";
 
 export const LeaderboardPage: React.FC = () => {
   const navigate = useNavigate();
@@ -15,7 +16,6 @@ export const LeaderboardPage: React.FC = () => {
     isLoading: loading,
     error,
   } = useLeaderboard();
-
 
   const handleBackClick = () => {
     navigate(-1);
@@ -69,7 +69,10 @@ export const LeaderboardPage: React.FC = () => {
         {loading && (
           <div className="space-y-3">
             {Array.from({ length: 8 }).map((_, index) => (
-              <div key={`lb-skel-${index}`} className="bg-[#1a1a1a] rounded-xl p-4">
+              <div
+                key={`lb-skel-${index}`}
+                className="bg-[#1a1a1a] rounded-xl p-4"
+              >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <Skeleton className="w-10 h-10 rounded-full bg-[#2a2a2a]" />
@@ -98,10 +101,12 @@ export const LeaderboardPage: React.FC = () => {
               const displayEarned = Number.isFinite(earned)
                 ? earned.toLocaleString(undefined, { maximumFractionDigits: 6 })
                 : "0";
-              const shortAddress =
-                entry.address.length > 10
-                  ? `${entry.address.slice(0, 6)}...${entry.address.slice(-4)}`
-                  : entry.address;
+
+              const displayName = getLeaderboardDisplayName(
+                entry.email,
+                entry.address
+              );
+
               return (
                 <div
                   key={`${entry.address}-${entry.rank}`}
@@ -116,7 +121,7 @@ export const LeaderboardPage: React.FC = () => {
                       </div>
                       <div>
                         <p className="text-[#86B3F7] font-medium">
-                          {shortAddress} 
+                          {displayName}
                         </p>
                       </div>
                     </div>

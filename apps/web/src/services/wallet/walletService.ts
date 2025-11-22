@@ -9,6 +9,10 @@ import {
   WalletData,
   BalanceResponse,
   ExportResponse,
+  SendLptRequest,
+  SendLptResponse,
+  ApproveLptRequest,
+  ApproveLptResponse,
   WALLET_CONFIG,
 } from "./types";
 import { http } from "@/lib/http";
@@ -171,6 +175,84 @@ export class WalletService implements IWalletApiService {
       return {
         success: false,
         privateKey: "",
+      };
+    }
+  }
+
+  // Send LPT from a Privy-managed wallet to another address
+  async sendLpt(request: SendLptRequest): Promise<SendLptResponse> {
+    const token = this.getStoredToken();
+    if (!token) {
+      return {
+        success: false,
+        error: "Authentication required",
+        message: "No authentication token found",
+      };
+    }
+
+    try {
+      const headers = {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      };
+
+      const response = await http.request({
+        url: `${this.baseUrl}/wallet/send-lpt`,
+        method: "POST",
+        headers,
+        data: request,
+        timeout: this.timeout,
+      });
+
+      return {
+        success: true,
+        txHash: response.data.txHash,
+        message: response.data.message,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.response?.data?.error || error.message || "Unknown error",
+        message: error.response?.data?.message || "Failed to send LPT",
+      };
+    }
+  }
+
+  // Approve LPT allowance for a spender from a Privy-managed wallet
+  async approveLpt(request: ApproveLptRequest): Promise<ApproveLptResponse> {
+    const token = this.getStoredToken();
+    if (!token) {
+      return {
+        success: false,
+        error: "Authentication required",
+        message: "No authentication token found",
+      };
+    }
+
+    try {
+      const headers = {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      };
+
+      const response = await http.request({
+        url: `${this.baseUrl}/wallet/approve-lpt`,
+        method: "POST",
+        headers,
+        data: request,
+        timeout: this.timeout,
+      });
+
+      return {
+        success: true,
+        txHash: response.data.txHash,
+        message: response.data.message,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.response?.data?.error || error.message || "Unknown error",
+        message: error.response?.data?.message || "Failed to approve LPT",
       };
     }
   }

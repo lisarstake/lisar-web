@@ -86,34 +86,7 @@ export const getPlatform = (): 'android' | 'ios' | 'windows' | 'other' => {
 
 // Get platform-specific icon path
 export const getPlatformIcon = (size: number): string => {
-  const platform = getPlatform();
-  
-  switch (platform) {
-    case 'android':
-      if (size <= 48) return '/android/android-launchericon-48-48.png';
-      if (size <= 72) return '/android/android-launchericon-72-72.png';
-      if (size <= 96) return '/android/android-launchericon-96-96.png';
-      if (size <= 144) return '/android/android-launchericon-144-144.png';
-      if (size <= 192) return '/android/android-launchericon-192-192.png';
-      return '/android/android-launchericon-512-512.png';
-      
-    case 'ios':
-      if (size <= 60) return '/ios/60.png';
-      if (size <= 76) return '/ios/76.png';
-      if (size <= 120) return '/ios/120.png';
-      if (size <= 152) return '/ios/152.png';
-      if (size <= 180) return '/ios/180.png';
-      if (size <= 192) return '/ios/192.png';
-      return '/ios/512.png';
-      
-    case 'windows':
-      if (size <= 44) return '/windows11/Square44x44Logo.scale-100.png';
-      if (size <= 150) return '/windows11/Square150x150Logo.scale-100.png';
-      return '/windows11/LargeTile.scale-100.png';
-      
-    default:
-      return '/android/android-launchericon-192-192.png';
-  }
+  return '/lisar.png';
 };
 
 // Get PWA display mode

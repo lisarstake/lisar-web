@@ -102,18 +102,18 @@ export const WithdrawNetworkPage: React.FC = () => {
         .filter((id): id is number => id !== undefined);
 
       // Calculate total amount and create withdrawal details
-      const withdrawalDetails = {
-        validatorAddress: currentValidator.address,
-        validatorName: currentValidator.ensName || "Unknown Validator",
-        network: selectedNetwork,
-        amount: totalWithdrawableAmount,
-        unbondingLockIds: unbondingLockIds,
-        transactions: withdrawableTransactions.map((tx) => ({
-          id: tx.id,
-          amount: parseFloat(tx.amount),
-          unbondingLockId: tx.unbondingLockId,
-        })),
-      };
+      // const withdrawalDetails = {
+      //   validatorAddress: currentValidator.address,
+      //   validatorName: currentValidator.ensName || "Unknown Validator",
+      //   network: selectedNetwork,
+      //   amount: totalWithdrawableAmount,
+      //   unbondingLockIds: unbondingLockIds,
+      //   transactions: withdrawableTransactions.map((tx) => ({
+      //     id: tx.id,
+      //     amount: parseFloat(tx.amount),
+      //     unbondingLockId: tx.unbondingLockId,
+      //   })),
+      // };
 
       // Encode the withdrawal details as URL parameters
       const params = new URLSearchParams({

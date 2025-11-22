@@ -46,6 +46,36 @@ export interface ExportResponse {
   privateKey: string;
 }
 
+// Send LPT Types
+export interface SendLptRequest {
+  walletId: string;
+  walletAddress: string;
+  to: string;
+  amount: string;
+}
+
+export interface SendLptResponse {
+  success: boolean;
+  txHash?: string;
+  message?: string;
+  error?: string;
+}
+
+// Approve LPT Types
+export interface ApproveLptRequest {
+  walletId: string;
+  walletAddress: string;
+  spender: string;
+  amount: string;
+}
+
+export interface ApproveLptResponse {
+  success: boolean;
+  txHash?: string;
+  message?: string;
+  error?: string;
+}
+
 // Request Types
 export interface GetWalletRequest {
   walletId: string;
