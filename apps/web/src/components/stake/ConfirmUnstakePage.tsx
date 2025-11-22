@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { ChevronLeft, CircleQuestionMark } from "lucide-react";
+import { useNavigate, useParams, useSearchParams, useLocation } from "react-router-dom";
+import { ChevronLeft, CircleQuestionMark, LoaderCircle } from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { SuccessDrawer } from "@/components/ui/SuccessDrawer";
@@ -13,6 +13,7 @@ import { UnbondRequest } from "@/services/delegation/types";
 
 export const ConfirmUnstakePage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { validatorId } = useParams<{ validatorId: string }>();
   const [searchParams] = useSearchParams();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -53,11 +54,40 @@ export const ConfirmUnstakePage: React.FC = () => {
     [fiatAmountNum]
   );
 
+  // Check if returning from OTP verification
+  useEffect(() => {
+    const state = location.state as { fromOTP?: boolean } | null;
+    if (state?.fromOTP) {
+      const otpVerified = sessionStorage.getItem("otp_verified");
+      const otpAction = sessionStorage.getItem("otp_action");
+      const verificationTime = otpVerified ? parseInt(otpVerified) : 0;
+      const isRecent = Date.now() - verificationTime < 60000; // 1 minute validity
+      
+      if (isRecent && otpAction === "unstake") {
+        // Clear the OTP verification
+        sessionStorage.removeItem("otp_verified");
+        sessionStorage.removeItem("otp_action");
+        // Proceed with unstaking
+        handleUnstake();
+      }
+    }
+  }, [location.state]);
+
   const handleBackClick = () => {
     navigate(-1);
+  }; 
+
+  const handleProceed = () => {
+    // Navigate to OTP verification page before unstaking
+    navigate("/verify-otp", {
+      state: {
+        action: "unstake",
+        returnTo: `/confirm-unstake/${validatorId}?amount=${unstakeAmount}`,
+      },
+    });
   };
 
-  const handleProceed = async () => {
+  const handleUnstake = async () => {
     if (!currentValidator) return;
     const walletId = state.user?.wallet_id;
     const walletAddress = state.user?.wallet_address;
@@ -171,7 +201,14 @@ export const ConfirmUnstakePage: React.FC = () => {
               : "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
           }`}
         >
-          {isProcessing ? "Processing..." : "Proceed to Unstake"}
+          {isProcessing ? (
+            <span className="flex items-center justify-center gap-2">
+               <LoaderCircle className="animate-spin h-5 w-5 text-white" />
+              Processing...
+            </span>
+          ) : (
+            "Unstake"
+          )}
         </button>
       </div>
 

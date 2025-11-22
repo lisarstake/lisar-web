@@ -29,9 +29,9 @@ export default function NotFoundPage() {
         <div className="flex justify-center mb-6">
           <div className="relative">
             {/* Large circle background */}
-            <div className="w-24 h-24 bg-[#1a1a1a] rounded-full flex items-center justify-center border-2 border-[#2a2a2a]">
+            <div className="w-16 h-16 bg-[#1a1a1a] rounded-full flex items-center justify-center border-2 border-[#2a2a2a]">
               {/* 404 text */}
-              <span className="text-3xl font-bold text-[#C7EF6B]">404</span>
+              <span className="text-base font-bold text-[#C7EF6B]">404</span>
             </div>
             {/* Decorative rings */}
             <div className="absolute -top-2 -right-2 w-6 h-6 border-2 border-[#C7EF6B]/30 rounded-full"></div>
@@ -40,10 +40,10 @@ export default function NotFoundPage() {
         </div>
 
         {/* Message */}
-        <h1 className="text-2xl md:text-3xl font-bold text-white mb-3">
+        <h1 className="text-base md:text-lg font-bold text-white mb-3">
           Page Not Found
         </h1>
-        <p className="text-gray-400 text-base mb-8 leading-relaxed">
+        <p className="text-gray-400 text-sm mb-8 leading-relaxed">
           The page you're looking for doesn't exist or has been moved.
         </p>
 

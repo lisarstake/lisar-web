@@ -83,6 +83,38 @@ export interface WithdrawStakeResponse {
   error?: string;
 }
 
+// Rebond Types
+export interface RebondRequest {
+  delegatorAddress: string;
+  unbondingLockId: number;
+  newPosPrev: string;
+  newPosNext: string;
+  walletId: string;
+}
+
+export interface RebondResponse {
+  success: boolean;
+  txHash?: string;
+  message?: string;
+  error?: string;
+}
+
+// Move Stake Types
+export interface MoveStakeRequest {
+  walletId: string;
+  walletAddress: string;
+  oldDelegate: string;
+  newDelegate: string;
+  amount: string;
+}
+
+export interface MoveStakeResponse {
+  success: boolean;
+  txHash?: string;
+  message?: string;
+  error?: string;
+}
+
 // Delegation Types
 export interface DelegationData {
   bondedAmount: string;

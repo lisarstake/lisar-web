@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { CircleQuestionMark, Play } from "lucide-react";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
-import { mockLearnContent, LearnContent } from "@/mock/learn";
+import { mockLearnContent } from "@/mock/learn";
 import { extractVimeoId, getVimeoThumbnail } from "@/lib/vimeo";
 import { HelpDrawer } from "../general/HelpDrawer";
 
@@ -36,15 +36,19 @@ export const LearnPage: React.FC = () => {
       {/* Content List - Scrollable */}
       <div className="flex-1 overflow-y-auto px-6 pb-28 scrollbar-hide">
         {/* Header - Now scrollable */}
-        <div className="flex items-center justify-between py-8">
-          <h1 className="text-lg font-medium text-white">Lisar Academy</h1>
-
+        <div className="flex items-start justify-between py-8">
+          <div>
+            <h1 className="text-lg font-medium text-white">Lisar Academy</h1>
+            <p className="text-xs text-gray-500">
+              Get familiar with Lisar and crypto basics
+            </p>
+          </div>
           <button
-          onClick={handleHelpClick}
-          className="w-8 h-8 bg-[#2a2a2a] rounded-full flex items-center justify-center"
-        >
-          <CircleQuestionMark color="#86B3F7" size={16} />
-        </button>
+            onClick={handleHelpClick}
+            className="w-8 h-8 bg-[#2a2a2a] rounded-full flex items-center justify-center"
+          >
+            <CircleQuestionMark color="#86B3F7" size={16} />
+          </button>
         </div>
 
         {/* Video Content */}

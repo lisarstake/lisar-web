@@ -7,7 +7,11 @@ import {
   WalletApiResponse,
   WalletData,
   BalanceResponse,
-  ExportResponse
+  ExportResponse,
+  SendLptRequest,
+  SendLptResponse,
+  ApproveLptRequest,
+  ApproveLptResponse
 } from './types';
 
 export interface IWalletApiService {
@@ -19,4 +23,10 @@ export interface IWalletApiService {
   
   // Export wallet private key
   exportWallet(walletId: string): Promise<ExportResponse>;
+
+  // Send LPT
+  sendLpt(request: SendLptRequest): Promise<SendLptResponse>;
+
+  // Approve LPT
+  approveLpt(request: ApproveLptRequest): Promise<ApproveLptResponse>;
 }
