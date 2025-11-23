@@ -18,7 +18,7 @@ export default function OTPScreen() {
   } | null;
 
   const action = state?.action || "verify";
-  const returnTo = state?.returnTo || "/wallet";
+  const returnTo = state?.returnTo;
   const isSetup = state?.fromSetup === true;
 
   const handleVerify = async (code: string) => {
@@ -33,16 +33,21 @@ export default function OTPScreen() {
   };
 
   const handleSuccess = () => {
-    const { action: _, returnTo: __, ...preservedState } = state || {};
-    navigate(returnTo, {
-      state: {
-        ...preservedState,
-        fromOTP: true,
-
-        ...(state?.keepExportDrawerOpen && { keepExportDrawerOpen: true }),
-      },
-      replace: true,
-    });
+    if (returnTo) {
+      // If returnTo is provided, navigate to it with preserved state
+      const { action: _, returnTo: __, ...preservedState } = state || {};
+      navigate(returnTo, {
+        state: {
+          ...preservedState,
+          fromOTP: true,
+          ...(state?.keepExportDrawerOpen && { keepExportDrawerOpen: true }),
+        },
+        replace: true,
+      });
+    } else {
+      // If no returnTo, go back in browser history
+      navigate(-1);
+    }
   };
 
   return (

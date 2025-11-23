@@ -14,12 +14,14 @@ interface TOTPSetupPageProps {
   onComplete?: () => void;
   redirectOnComplete?: string;
   redirectOnCancel?: string;
+  preserveState?: Record<string, any>;
 }
 
 export const TOTPSetupPage: React.FC<TOTPSetupPageProps> = ({
   onComplete,
   redirectOnComplete = "/verify-otp",
   redirectOnCancel = "/profile",
+  preserveState,
 }) => {
   const navigate = useNavigate();
 
@@ -64,7 +66,12 @@ export const TOTPSetupPage: React.FC<TOTPSetupPageProps> = ({
   };
 
   const handleBackClick = () => {
-    navigate(-1);
+    // If coming from export drawer, go back to the returnTo path instead of history
+    if (preserveState?.keepExportDrawerOpen && preserveState?.returnTo) {
+      navigate(preserveState.returnTo, { replace: true });
+    } else {
+      navigate(-1);
+    }
   };
 
   const handleCopyUrl = async () => {
@@ -87,9 +94,24 @@ export const TOTPSetupPage: React.FC<TOTPSetupPageProps> = ({
     if (onComplete) {
       onComplete();
     } else {
-      navigate(redirectOnComplete, {
-        state: { fromSetup: true }
-      });
+      // If coming from export drawer, return directly to the drawer (skip verify-otp)
+      if (preserveState?.keepExportDrawerOpen) {
+        navigate(redirectOnComplete, {
+          state: {
+            ...preserveState,
+            fromSetup: true,
+          },
+          replace: true, // Replace to prevent back button loops
+        });
+      } else {
+        // Normal flow: go to verify-otp page
+        navigate(redirectOnComplete, {
+          state: {
+            fromSetup: true,
+            ...(preserveState && { ...preserveState }),
+          },
+        });
+      }
     }
   };
 
@@ -165,7 +187,7 @@ export const TOTPSetupPage: React.FC<TOTPSetupPageProps> = ({
                 </code>
                 <button
                   onClick={handleCopyUrl}
-                  className="flex-shrink-0 p-2 hover:bg-[#2a2a2a] rounded transition-colors"
+                  className="shrink-0 p-2 hover:bg-[#2a2a2a] rounded transition-colors"
                 >
                   {copied ? (
                     <Check size={18} color="#C7EF6B" />
@@ -184,7 +206,9 @@ export const TOTPSetupPage: React.FC<TOTPSetupPageProps> = ({
             onClick={handleContinue}
             className="w-full py-3 rounded-xl font-semibold text-lg bg-[#C7EF6B] text-black hover:bg-[#B8E55A] transition-colors"
           >
-            Continue to Verification
+            {preserveState?.keepExportDrawerOpen
+              ? "Return to Export"
+              : "Continue to Verification"}
           </button>
 
           {/* Help Text */}
