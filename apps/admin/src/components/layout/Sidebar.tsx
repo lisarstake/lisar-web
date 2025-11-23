@@ -9,6 +9,7 @@ import {
   Activity,
   CircleUser,
   LogOut,
+  Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -37,6 +38,11 @@ const menuItems = [
     label: "Health",
     path: "/health",
     icon: Activity,
+  },
+  {
+    label: "Settings",
+    path: "/settings",
+    icon: Settings,
   },
 ];
 

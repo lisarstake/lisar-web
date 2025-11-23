@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { ChevronLeft, CircleQuestionMark, LoaderCircle, Wallet2 } from "lucide-react";
+import {
+  ChevronLeft,
+  CircleQuestionMark,
+  LoaderCircle,
+  Wallet2,
+} from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { ActionDrawer } from "@/components/general/ActionDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
@@ -26,12 +31,14 @@ export const StakePage: React.FC = () => {
     return state?.lptAmount || "0";
   });
 
+  // Only set amount from state on initial mount, not on every state change
+  // This prevents loops when navigating back from deposit page
   useEffect(() => {
     const state = location.state as { lptAmount?: string } | null;
-    if (state?.lptAmount) {
+    if (state?.lptAmount && lptAmount === "0") {
       setLptAmount(state.lptAmount);
     }
-  }, [location.state]);
+  }, []); // Empty dependency array - only run on mount
 
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
   const [showConfirmDrawer, setShowConfirmDrawer] = useState(false);
@@ -42,7 +49,7 @@ export const StakePage: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const { orchestrators } = useOrchestrators();
   const { state } = useAuth();
-  const { wallet } = useWallet();
+  const { wallet, refetch: refetchWallet } = useWallet();
   const { refetch: refetchDelegation } = useDelegation();
   const { refetch: refetchTransactions } = useTransactions();
 
@@ -104,65 +111,100 @@ export const StakePage: React.FC = () => {
       return;
     }
 
-    handleStake();
+    setShowConfirmDrawer(true);
   };
 
   const handleStake = async () => {
+    setIsStaking(true);
+
     if (!currentValidator) {
       setErrorMessage("Validator not found. Please try again.");
       setShowErrorDrawer(true);
+      setIsStaking(false);
       return;
     }
 
     if (!lptAmount || parseFloat(lptAmount.replace(/,/g, "")) <= 0) {
       setErrorMessage("Please enter a valid amount to stake.");
       setShowErrorDrawer(true);
+      setIsStaking(false);
       return;
     }
 
     if (!state.user) {
       setErrorMessage("User not authenticated. Please log in and try again.");
       setShowErrorDrawer(true);
+      setIsStaking(false);
       return;
     }
 
-    setIsStaking(true);
-    try {
-      const stakeRequest: StakeRequest = {
-        walletId: state.user.wallet_id,
-        walletAddress: state.user.wallet_address,
-        orchestratorAddress: currentValidator.address,
-        amount: lptAmount.replace(/,/g, ""), // Remove commas from amount
-      };
+    const stakeRequest: StakeRequest = {
+      walletId: state.user.wallet_id,
+      walletAddress: state.user.wallet_address,
+      orchestratorAddress: currentValidator.address,
+      amount: lptAmount.replace(/,/g, ""), // Remove commas from amount
+    };
 
-      const response = await delegationService.stake(stakeRequest);
+    // Retry logic: temporary fix until error fixed
+    let lastError: Error | null = null;
+    let lastResponse: {
+      success: boolean;
+      message?: string;
+      error?: string;
+    } | null = null;
 
-      if (response.success) {
-        setSuccessMessage("Staking successful! Your tokens have been staked.");
-        setShowSuccessDrawer(true);
-        setShowConfirmDrawer(false);
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const response = await delegationService.stake(stakeRequest);
 
-        // Refetch delegation and transaction data
-        refetchDelegation();
-        refetchTransactions();
-      } else {
-        setErrorMessage(
-          "Staking failed. Please check your balance and try again."
-        );
-        setShowErrorDrawer(true);
-        setShowConfirmDrawer(false);
+        if (response.success) {
+          // Success - proceed with success flow
+          setSuccessMessage(
+            "Staking successful! Your tokens have been staked."
+          );
+          setShowSuccessDrawer(true);
+          setShowConfirmDrawer(false);
+
+          await refetchWallet();
+          refetchDelegation();
+          refetchTransactions();
+          setIsStaking(false);
+          return;
+        } else {
+          lastResponse = response;
+        }
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
       }
-    } catch (error) {
+
+      if (
+        attempt === 0 &&
+        (lastError || (lastResponse && !lastResponse.success))
+      ) {
+        continue;
+      }
+    }
+
+    setIsStaking(false);
+    setShowConfirmDrawer(false);
+
+    if (lastError) {
       const errorMsg =
-        error instanceof Error
-          ? error.message
+        lastError instanceof Error
+          ? lastError.message
           : "An error occurred while staking. Please try again.";
       setErrorMessage(errorMsg);
-      setShowErrorDrawer(true);
-      setShowConfirmDrawer(false);
-    } finally {
-      setIsStaking(false);
+    } else if (lastResponse) {
+      setErrorMessage(
+        lastResponse.error ||
+          lastResponse.message ||
+          "Staking failed. Please check your balance and try again."
+      );
+    } else {
+      setErrorMessage("Staking failed. Please try again.");
     }
+
+    setShowErrorDrawer(true);
   };
 
   const handleHelpClick = () => {
@@ -294,7 +336,7 @@ export const StakePage: React.FC = () => {
         >
           {isStaking ? (
             <span className="flex items-center justify-center gap-2">
-               <LoaderCircle className="animate-spin h-5 w-5 text-white" />
+              <LoaderCircle className="animate-spin h-5 w-5 text-white" />
               Processing..
             </span>
           ) : hasInsufficientFunds ? (
@@ -337,17 +379,18 @@ export const StakePage: React.FC = () => {
       />
 
       {/* Confirm Stake Drawer */}
-      {/* <ActionDrawer
+      <ActionDrawer
         isOpen={showConfirmDrawer}
         onClose={() => !isStaking && setShowConfirmDrawer(false)}
         title="Proceed to Stake"
         content={[
           `You are about to stake ${formatNumber(parseFloat(lptAmount.replace(/,/g, "")))} LPT to ${currentValidator?.ensName || "this validator"}.`,
-          "Once confirmed, your tokens will be staked and you will start earning rewards!",
+          "Once confirmed, your tokens will be staked and you will start earning rewards! 💲",
+          "You can unstake your tokens at anytime.",
         ]}
         actions={[
           {
-            label: "Confirm stake",
+            label: "Stake",
             onClick: handleStake,
           },
           {
@@ -357,7 +400,7 @@ export const StakePage: React.FC = () => {
           },
         ]}
         isProcessing={isStaking}
-      /> */}
+      />
 
       {/* Bottom Navigation */}
       <BottomNavigation />

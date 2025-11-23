@@ -6,20 +6,31 @@ import { TransactionProvider } from './contexts/TransactionContext'
 import { HealthProvider } from './contexts/HealthContext'
 import { UserProvider } from './contexts/UserContext'
 import { AppRouter } from './routes/router'
+import { ErrorBoundary } from './components/general/ErrorBoundary'
 
 export const App: React.FC = () => {
   return (
-    <AuthProvider>
-      <ValidatorProvider>
-        <TransactionProvider>
-          <UserProvider>
-            <HealthProvider>
-              <AppRouter />
-              <Toaster position="top-right" />
-            </HealthProvider>
-          </UserProvider>
-        </TransactionProvider>
-      </ValidatorProvider>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <ErrorBoundary>
+          <ValidatorProvider>
+            <ErrorBoundary>
+              <TransactionProvider>
+                <ErrorBoundary>
+                  <UserProvider>
+                    <ErrorBoundary>
+                      <HealthProvider>
+                        <AppRouter />
+                        <Toaster position="top-right" />
+                      </HealthProvider>
+                    </ErrorBoundary>
+                  </UserProvider>
+                </ErrorBoundary>
+              </TransactionProvider>
+            </ErrorBoundary>
+          </ValidatorProvider>
+        </ErrorBoundary>
+      </AuthProvider>
+    </ErrorBoundary>
   )
 }

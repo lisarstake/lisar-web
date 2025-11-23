@@ -277,7 +277,8 @@ export const PortfolioPage: React.FC = () => {
           <div className="bg-[#C7EF6B] rounded-xl p-4">
             <p className="text-black text-sm font-medium my-1">Total stake</p>
             <p className="text-black text-2xl font-semibold">
-              {formatEarnings(totalStake)} <span className="text-sm">LPT</span>
+              {formatEarnings(totalStake)}
+              <span className="text-sm ml-0.5">LPT</span>
             </p>
           </div>
 
@@ -311,12 +312,14 @@ export const PortfolioPage: React.FC = () => {
               </div>
             </div>
             <p className="text-white text-2xl font-semibold">
-              {selectedPeriod === "Weekly"
-                ? formatEarnings(weeklyEarnings)
-                : selectedPeriod === "Monthly"
+              <span className="inline-flex items-baseline gap-0.5">
+                {selectedPeriod === "Weekly"
+                  ? formatEarnings(weeklyEarnings)
+                  : selectedPeriod === "Monthly"
                   ? formatEarnings(monthlyEarnings)
-                  : formatEarnings(monthlyEarnings * 12)}{" "}
-              <span className="text-sm">LPT</span>
+                  : formatEarnings(monthlyEarnings * 12)}
+                <span className="text-sm ml-0.1">LPT</span>
+              </span>
             </p>
           </div>
         </div>
@@ -389,8 +392,10 @@ export const PortfolioPage: React.FC = () => {
                   Lifetime Rewards
                 </p>
                 <p className="text-[#C7EF6B] text-xl font-semibold">
-                  {formatLifetime(lifetimeRewards)}{" "}
-                  <span className="text-sm">LPT</span>
+                  <span className="inline-flex items-baseline gap-0.5">
+                    {formatLifetime(lifetimeRewards)}
+                    <span className="text-sm ml-0.1">LPT</span>
+                  </span>
                 </p>
               </div>
 
@@ -399,8 +404,10 @@ export const PortfolioPage: React.FC = () => {
                   Lifetime Withdrawn
                 </p>
                 <p className="text-[#FF6B6B] text-xl font-semibold">
-                  {formatLifetime(lifetimeUnbonded)}{" "}
-                  <span className="text-sm">LPT</span>
+                  <span className="inline-flex items-baseline gap-0.5">
+                    {formatLifetime(lifetimeUnbonded)}
+                    <span className="text-sm ml-0.1">LPT</span>
+                  </span>
                 </p>
               </div>
             </div>

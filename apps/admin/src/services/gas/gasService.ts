@@ -41,15 +41,41 @@ export class GasService implements IGasApiService {
       signal: AbortSignal.timeout(this.timeout),
     };
 
-    const response = await fetch(url, config);
-    const data = await response.json().catch(() => ({}));
+    try {
+      const response = await fetch(url, config);
+      const data = await response.json().catch(() => ({}));
 
-    return {
-      success: response.ok,
-      message: data.message,
-      data: data.data ?? data,
-      error: response.ok ? undefined : data.error,
-    } as T;
+      if (!response.ok) {
+        return {
+          success: false,
+          message: data.message || data.error || `HTTP ${response.status}: ${response.statusText}`,
+          error: data.error || data.message || `Request failed with status ${response.status}`,
+          data: data.data,
+        } as T;
+      }
+
+      return {
+        success: true,
+        message: data.message,
+        data: data.data,
+        error: undefined,
+      } as T;
+    } catch (error: any) {
+      // Handle network errors, timeouts, etc.
+      if (error.name === 'AbortError' || error.name === 'TimeoutError') {
+        return {
+          success: false,
+          message: "Request timeout. Please try again.",
+          error: "Request timeout",
+        } as T;
+      }
+      
+      return {
+        success: false,
+        message: error.message || "Network error. Please check your connection and try again.",
+        error: error.message || "Network error",
+      } as T;
+    }
   }
 
   // Token helper
@@ -70,18 +96,19 @@ export class GasService implements IGasApiService {
       };
     }
 
-    try {
-      return await this.makeRequest<GasTopupResponse>("/admin/gas-topup", {
-        method: "POST",
-        body: JSON.stringify(request),
-      });
-    } catch (error: any) {
+    // Validate request
+    if (!request.amount || parseFloat(request.amount) <= 0) {
       return {
         success: false,
-        message: "Failed to top up gas",
-        error: error.message || "Unknown error",
+        message: "Invalid amount. Please provide a valid positive number.",
+        error: "Invalid amount",
       };
     }
+
+    return await this.makeRequest<GasTopupResponse>("/admin/gas-topup", {
+      method: "POST",
+      body: JSON.stringify(request),
+    });
   }
 }
 
