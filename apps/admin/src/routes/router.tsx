@@ -3,6 +3,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { LoadingSpinner } from "@/components/general/LoadingSpinner";
+import { ErrorBoundary } from "@/components/general/ErrorBoundary";
 
 // Lazy load pages - handle both named and default exports
 const OverviewPage = lazy(() => 
@@ -35,6 +36,12 @@ const HealthPage = lazy(() =>
 const AdminPage = lazy(() => 
   import("@/pages/screens/AdminPage").then(module => ({ default: module.AdminPage }))
 );
+const SettingsPage = lazy(() => 
+  import("@/pages/screens/SettingsPage").then(module => ({ default: module.SettingsPage }))
+);
+const NotFoundPage = lazy(() => 
+  import("@/pages/screens/NotFoundPage").then(module => ({ default: module.NotFoundPage }))
+);
 const AdminLogin = lazy(() => 
   import("@/pages/auth/AdminLogin").then(module => ({ default: module.AdminLogin }))
 );
@@ -48,38 +55,52 @@ const withSuspense = (element: ReactNode) => (
   <Suspense fallback={<LoadingSpinner />}>{element}</Suspense>
 );
 
+const withErrorBoundary = (element: ReactNode) => (
+  <ErrorBoundary>
+    {element}
+  </ErrorBoundary>
+);
+
+const withSuspenseAndErrorBoundary = (element: ReactNode) => (
+  <ErrorBoundary>
+    <Suspense fallback={<LoadingSpinner />}>{element}</Suspense>
+  </ErrorBoundary>
+);
+
 const router = createBrowserRouter([
   // Public routes (auth pages)
   {
     path: "/login",
-    element: withSuspense(<AdminLogin />),
+    element: withSuspenseAndErrorBoundary(<AdminLogin />),
   },
   {
     path: "/signup",
-    element: withSuspense(<AdminSignup />),
+    element: withSuspenseAndErrorBoundary(<AdminSignup />),
   },
   {
     path: "/forgot-password",
-    element: withSuspense(<ForgotPasswordPage />),
+    element: withSuspenseAndErrorBoundary(<ForgotPasswordPage />),
   },
   {
     path: "/reset-password",
-    element: withSuspense(<ResetPasswordPage />),
+    element: withSuspenseAndErrorBoundary(<ResetPasswordPage />),
   },
   // Protected routes (require authentication)
   {
     path: "/",
     element: (
-      <ProtectedRoute>
-        <Layout />
-      </ProtectedRoute>
+      <ErrorBoundary>
+        <ProtectedRoute>
+          <Layout />
+        </ProtectedRoute>
+      </ErrorBoundary>
     ),
     children: [
       {
         index: true,
         element: (
           <ProtectedRoute>
-            {withSuspense(<OverviewPage />)}
+            {withSuspenseAndErrorBoundary(<OverviewPage />)}
           </ProtectedRoute>
         ),
       },
@@ -87,7 +108,7 @@ const router = createBrowserRouter([
         path: "users",
         element: (
           <ProtectedRoute>
-            {withSuspense(<UsersPage />)}
+            {withSuspenseAndErrorBoundary(<UsersPage />)}
           </ProtectedRoute>
         ),
       },
@@ -95,7 +116,7 @@ const router = createBrowserRouter([
         path: "users/:userId",
         element: (
           <ProtectedRoute>
-            {withSuspense(<UserDetailPage />)}
+            {withSuspenseAndErrorBoundary(<UserDetailPage />)}
           </ProtectedRoute>
         ),
       },
@@ -103,7 +124,7 @@ const router = createBrowserRouter([
         path: "transactions",
         element: (
           <ProtectedRoute>
-            {withSuspense(<TransactionsPage />)}
+            {withSuspenseAndErrorBoundary(<TransactionsPage />)}
           </ProtectedRoute>
         ),
       },
@@ -111,7 +132,7 @@ const router = createBrowserRouter([
         path: "transactions/:transactionId",
         element: (
           <ProtectedRoute>
-            {withSuspense(<TransactionDetailPage />)}
+            {withSuspenseAndErrorBoundary(<TransactionDetailPage />)}
           </ProtectedRoute>
         ),
       },
@@ -119,7 +140,7 @@ const router = createBrowserRouter([
         path: "validators",
         element: (
           <ProtectedRoute>
-            {withSuspense(<ValidatorsPage />)}
+            {withSuspenseAndErrorBoundary(<ValidatorsPage />)}
           </ProtectedRoute>
         ),
       },
@@ -127,7 +148,7 @@ const router = createBrowserRouter([
         path: "validators/create",
         element: (
           <ProtectedRoute>
-            {withSuspense(<CreateValidatorPage />)}
+            {withSuspenseAndErrorBoundary(<CreateValidatorPage />)}
           </ProtectedRoute>
         ),
       },
@@ -135,7 +156,7 @@ const router = createBrowserRouter([
         path: "validators/:validatorId",
         element: (
           <ProtectedRoute>
-            {withSuspense(<ValidatorDetailPage />)}
+            {withSuspenseAndErrorBoundary(<ValidatorDetailPage />)}
           </ProtectedRoute>
         ),
       },
@@ -143,7 +164,7 @@ const router = createBrowserRouter([
         path: "health",
         element: (
           <ProtectedRoute>
-            {withSuspense(<HealthPage />)}
+            {withSuspenseAndErrorBoundary(<HealthPage />)}
           </ProtectedRoute>
         ),
       },
@@ -151,11 +172,24 @@ const router = createBrowserRouter([
         path: "admin",
         element: (
           <ProtectedRoute>
-            {withSuspense(<AdminPage />)}
+            {withSuspenseAndErrorBoundary(<AdminPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "settings",
+        element: (
+          <ProtectedRoute>
+            {withSuspenseAndErrorBoundary(<SettingsPage />)}
           </ProtectedRoute>
         ),
       },
     ],
+  },
+  // 404 page - outside Layout so it doesn't show sidebar/header
+  {
+    path: "*",
+    element: withSuspenseAndErrorBoundary(<NotFoundPage />),
   },
 ]);
 

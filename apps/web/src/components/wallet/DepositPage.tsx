@@ -97,13 +97,9 @@ export const DepositPage: React.FC = () => {
   }, []);
 
   const handleBackClick = () => {
-    if (returnTo && preservedAmount) {
-      navigate(returnTo, {
-        state: { lptAmount: preservedAmount },
-      });
-    } else {
-      navigate(-1);
-    }
+    // Always use browser history to avoid navigation loops
+    // If we navigate with state, it preserves the amount and causes loops
+    navigate(-1);
   };
 
   const handleAmountSelect = (amount: string) => {
@@ -353,7 +349,7 @@ export const DepositPage: React.FC = () => {
       </div>
 
       {/* Proceed Button - Fixed at bottom */}
-      <div className="px-6 py-4 bg-[#050505] pb-32">
+      <div className="px-6 py-4 bg-[#050505] pb-36">
         <button
           onClick={handleProceed}
           disabled={

@@ -210,8 +210,8 @@ export const WalletPage: React.FC = () => {
         ) : (
           <>
             <h1 className="text-3xl font-semibold text-gray-300 mb-2">
-              {formatEarnings(combinedBalance)}{" "}
-              <span className="text-sm">LPT</span>
+              {formatEarnings(combinedBalance)}
+              <span className="text-sm ml-0.5">LPT</span>
             </h1>
             <p className="text-white/70 text-base">
               ≈{fiatSymbol}

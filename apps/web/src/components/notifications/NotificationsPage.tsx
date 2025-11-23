@@ -81,7 +81,7 @@ export const NotificationsPage: React.FC = () => {
             icon={Info}
             iconColor="#86B3F7"
             iconBgColor="#2a2a2a"
-            title="No notifications yet"
+            title="No notifications"
             description="You'll see notifications here when you have activity on your account."
           />
         </div>

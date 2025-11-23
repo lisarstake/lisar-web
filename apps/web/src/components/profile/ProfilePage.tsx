@@ -41,6 +41,24 @@ export const ProfilePage: React.FC = () => {
   const [addressCopied, setAddressCopied] = useState(false);
   const [isHoveringCopy, setIsHoveringCopy] = useState(false);
 
+  // Check if we should reopen export drawer after returning from OTP setup
+  useEffect(() => {
+    const locationState = location.state as {
+      keepExportDrawerOpen?: boolean;
+      fromOTP?: boolean;
+      fromSetup?: boolean;
+    } | null;
+
+    // Check if returning from OTP setup or verification with export drawer flag
+    if (locationState?.keepExportDrawerOpen && (locationState?.fromOTP || locationState?.fromSetup)) {
+      setShowExportDrawer(true);
+      // Clear the state immediately to prevent loops
+      if (locationState) {
+        navigate(location.pathname, { replace: true, state: {} });
+      }
+    }
+  }, [location.state, location.pathname, navigate]);
+
   // Load user data on component mount
   useEffect(() => {
     const loadUserData = async () => {
@@ -228,7 +246,7 @@ export const ProfilePage: React.FC = () => {
           <h1 className="text-lg font-bold text-gray-100">User Profile</h1>
         </div>
         <button
-          // onClick={() => setShowExportDrawer(true)}
+          onClick={() => setShowExportDrawer(true)}
           className="w-8 h-8 bg-[#2a2a2a] rounded-full flex items-center justify-center"
           aria-label="Help & Export"
         >

@@ -17,12 +17,31 @@ export interface GasTopupRequest {
   amount: string;
 }
 
+// Gas Topup Wallet Detail
+export interface GasTopupWalletDetail {
+  user_id: string;
+  wallet_id: string;
+  wallet_address: string;
+  balanceWei: string;
+  neededWei: string;
+  topUpPerformed: boolean;
+  txHash: string | null;
+  error?: string;
+}
+
+// Gas Topup Response Data
+export interface GasTopupResponseData {
+  details: GasTopupWalletDetail[];
+  totalChecked: number;
+  totalToppedUp: number;
+}
+
 // Gas Topup Response
 export interface GasTopupResponse {
   success: boolean;
   message?: string;
   error?: string;
-  data?: any;
+  data?: GasTopupResponseData;
 }
 
 // API Configuration
