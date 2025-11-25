@@ -31,7 +31,7 @@ export const WithdrawPage: React.FC = () => {
 
   const [withdrawalAddress, setWithdrawalAddress] = useState("");
   const [isWithdrawalLaunched, setIsWithdrawalLaunched] = useState(false);
-  const network = "Arbitrum"; // Fixed network, users can't change it
+  const network = "Arbitrum";
 
   useEffect(() => {
     const state = location.state as { lptAmount?: string } | null;
@@ -181,7 +181,8 @@ export const WithdrawPage: React.FC = () => {
       coinCode: "lpt",
       network: "arbitrum",
       coinAmount: "0",
-      fiatType: fiatType.toString(),
+      fiatType: "6",
+      // fiatType: fiatType.toString(),
     });
 
     const offrampUrl = `https://onramp.money/main/sell/?${params.toString()}`;
@@ -231,7 +232,7 @@ export const WithdrawPage: React.FC = () => {
           <h3 className="text-base font-medium text-white/90 mb-2">
             Withdrawal Address
           </h3>
-          <div className="bg-[#1a1a1a] rounded-xl p-4 border border-[#2a2a2a] relative">
+          <div className="bg-[#1a1a1a] rounded-lg p-3 border border-[#2a2a2a] relative">
             <input
               type="text"
               value={withdrawalAddress}
@@ -262,7 +263,7 @@ export const WithdrawPage: React.FC = () => {
         {/* Network Input */}
         <div className="pt-4">
           <h3 className="text-base font-medium text-white/90 mb-2">Network</h3>
-          <div className="bg-[#1a1a1a] rounded-xl p-4 border border-[#2a2a2a]">
+          <div className="bg-[#1a1a1a] rounded-lg p-3 border border-[#2a2a2a]">
             <input
               type="text"
               value={network}
@@ -275,7 +276,7 @@ export const WithdrawPage: React.FC = () => {
         {/* Amount Input Field */}
         <div className="py-2">
           <h3 className="text-base font-medium text-white/90 mb-2">Amount</h3>
-          <div className="bg-[#1a1a1a] rounded-xl p-4 flex items-center gap-3">
+          <div className="bg-[#1a1a1a] rounded-lg p-3 flex items-center gap-3">
             <input
               type="text"
               value={lptAmount ? formatNumber(lptAmount) : ""}
@@ -311,7 +312,7 @@ export const WithdrawPage: React.FC = () => {
         </div>
 
         {/* Predefined LPT Amounts */}
-        {/* <div className="py-4">
+        <div className="py-4">
           <div className="flex space-x-3">
             {["10", "50", "100"].map((amount) => {
               const isActive =
@@ -322,7 +323,7 @@ export const WithdrawPage: React.FC = () => {
                   key={amount}
                   onClick={() => handleAmountSelect(amount)}
                   disabled={!isWithdrawalLaunched}
-                  className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-colors ${
+                  className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-colors ${
                     !isWithdrawalLaunched
                       ? "bg-[#1a1a1a] text-white/30 cursor-not-allowed"
                       : isActive
@@ -335,14 +336,14 @@ export const WithdrawPage: React.FC = () => {
               );
             })}
           </div>
-        </div> */}
+        </div>
 
         {/* Wallet Balance Info */}
         <div className="py-4">
           <h3 className="text-base font-medium text-white/90 mb-2">
             Available balance
           </h3>
-          <div className="bg-[#1a1a1a] rounded-xl p-4 border border-[#2a2a2a]">
+          <div className="bg-[#1a1a1a] rounded-lg p-4 border border-[#2a2a2a]">
             <div className="flex items-center space-x-3">
               <Wallet2 size={20} color="#86B3F7" />
               <div className="flex-1">
@@ -363,8 +364,8 @@ export const WithdrawPage: React.FC = () => {
           <div className="mt-3 p-3 bg-[#1a1a1a] rounded-lg border border-[#2a2a2a]">
             <p className="text-gray-400 text-xs leading-relaxed">
               To withdraw, initiate a withdrawal on onramp and get the
-              withdrawal address. Then make payment to the address
-              to complete withdrawal.
+              withdrawal address. Then make payment to the address to complete
+              withdrawal.
             </p>
           </div>
         </div>
@@ -375,7 +376,7 @@ export const WithdrawPage: React.FC = () => {
         {!isWithdrawalLaunched ? (
           <button
             onClick={handleLaunchWithdrawal}
-            className="w-full py-4 rounded-xl font-semibold text-lg bg-[#C7EF6B] text-black hover:bg-[#B8E55A] transition-colors"
+            className="w-full py-4 rounded-lg font-semibold text-lg bg-[#C7EF6B] text-black hover:bg-[#B8E55A] transition-colors"
           >
             Get Address
           </button>
@@ -390,7 +391,7 @@ export const WithdrawPage: React.FC = () => {
               hasInsufficientFunds ||
               isWithdrawing
             }
-            className={`w-full py-4 rounded-xl font-semibold text-lg transition-colors ${
+            className={`w-full py-4 rounded-lg font-semibold text-lg transition-colors ${
               lptAmount &&
               parseFloat(lptAmount) > 0 &&
               withdrawalAddress &&

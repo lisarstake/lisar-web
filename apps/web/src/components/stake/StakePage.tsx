@@ -240,7 +240,7 @@ export const StakePage: React.FC = () => {
       <div className="flex-1 overflow-y-auto px-6 pb-28 scrollbar-hide">
         {/* Amount Input Field */}
         <div className="py-6">
-          <div className="bg-[#1a1a1a] rounded-xl p-4 flex items-center gap-3">
+          <div className="bg-[#1a1a1a] rounded-lg p-3 flex items-center gap-3">
             <input
               type="text"
               value={lptAmount ? formatNumber(lptAmount) : ""}
@@ -283,7 +283,7 @@ export const StakePage: React.FC = () => {
                 <button
                   key={amount}
                   onClick={() => handleAmountSelect(amount)}
-                  className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-colors ${
+                  className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-colors ${
                     isActive
                       ? "bg-[#C7EF6B] text-black"
                       : "bg-[#1a1a1a] text-white/80 hover:bg-[#2a2a2a]"
@@ -301,7 +301,7 @@ export const StakePage: React.FC = () => {
           <h3 className="text-base font-medium text-white/90 mb-2">
             Payment method
           </h3>
-          <div className="bg-[#1a1a1a] rounded-xl p-4 border border-[#2a2a2a]">
+          <div className="bg-[#1a1a1a] rounded-lg p-4 border border-[#2a2a2a]">
             <div className="flex items-center space-x-3">
               <Wallet2 size={20} color="#86B3F7" />
               <div className="flex-1">
@@ -327,7 +327,7 @@ export const StakePage: React.FC = () => {
         <button
           onClick={handleProceed}
           disabled={!lptAmount || parseFloat(lptAmount) <= 0 || isStaking}
-          className={`w-full py-4 rounded-xl font-semibold text-lg transition-colors ${
+          className={`w-full py-4 rounded-lg font-semibold text-lg transition-colors ${
             lptAmount && parseFloat(lptAmount) > 0 && !isStaking
               ? "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
               : "bg-[#636363] text-white cursor-not-allowed"

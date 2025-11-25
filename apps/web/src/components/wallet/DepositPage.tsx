@@ -236,7 +236,7 @@ export const DepositPage: React.FC = () => {
       <div className="flex-1 overflow-y-auto px-6 pb-28 scrollbar-hide">
         {/* Amount Input Field */}
         <div className="py-6">
-          <div className="bg-[#1a1a1a] rounded-xl p-4">
+          <div className="bg-[#1a1a1a] rounded-lg p-3">
             <input
               type="text"
               value={fiatAmount ? formatNumber(fiatAmount) : ""}
@@ -274,7 +274,7 @@ export const DepositPage: React.FC = () => {
                 <button
                   key={amount}
                   onClick={() => handleAmountSelect(amount)}
-                  className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-colors ${
+                  className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-colors ${
                     isActive
                       ? "bg-[#C7EF6B] text-black"
                       : "bg-[#1a1a1a] text-white/80 hover:bg-[#2a2a2a]"
@@ -297,7 +297,7 @@ export const DepositPage: React.FC = () => {
           <div className="space-y-3">
             <button
               onClick={() => handlePaymentMethodSelect("fiat")}
-              className={`w-full flex items-center justify-between p-4 rounded-xl transition-colors ${
+              className={`w-full flex items-center justify-between p-4 rounded-lg transition-colors ${
                 selectedPaymentMethod === "fiat"
                   ? "bg-[#C7EF6B]/10 border border-[#C7EF6B]"
                   : "bg-[#1a1a1a] border border-[#2a2a2a] hover:bg-[#2a2a2a]"
@@ -320,7 +320,7 @@ export const DepositPage: React.FC = () => {
 
             <button
               onClick={() => handlePaymentMethodSelect("onchain")}
-              className={`w-full flex items-center justify-between p-4 rounded-xl transition-colors ${
+              className={`w-full flex items-center justify-between p-4 rounded-lg transition-colors ${
                 selectedPaymentMethod === "onchain"
                   ? "bg-[#C7EF6B]/10 border border-[#C7EF6B]"
                   : "bg-[#1a1a1a] border border-[#2a2a2a] hover:bg-[#2a2a2a]"
@@ -358,7 +358,7 @@ export const DepositPage: React.FC = () => {
             parseFloat(fiatAmount) <= 0 ||
             isStaking
           }
-          className={`w-full py-4 rounded-xl font-semibold text-lg transition-colors ${
+          className={`w-full py-4 rounded-lg font-semibold text-lg transition-colors ${
             selectedPaymentMethod &&
             fiatAmount &&
             parseFloat(fiatAmount) > 0 &&
