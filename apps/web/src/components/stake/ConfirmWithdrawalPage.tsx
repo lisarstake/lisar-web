@@ -1,23 +1,25 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate, useParams, useSearchParams, useLocation } from "react-router-dom";
+import React, { useState } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ChevronLeft, CircleQuestionMark, LoaderCircle } from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { SuccessDrawer } from "@/components/ui/SuccessDrawer";
 import { ErrorDrawer } from "@/components/ui/ErrorDrawer";
+import { OTPVerificationDrawer } from "@/components/auth/OTPVerificationDrawer";
 import { useOrchestrators } from "@/contexts/OrchestratorContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { delegationService } from "@/services";
+import { totpService } from "@/services/totp";
 
 export const ConfirmWithdrawalPage: React.FC = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { validatorId } = useParams<{ validatorId: string }>();
   const [searchParams] = useSearchParams();
   const [isProcessing, setIsProcessing] = useState(false);
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
   const [showSuccessDrawer, setShowSuccessDrawer] = useState(false);
   const [showErrorDrawer, setShowErrorDrawer] = useState(false);
+  const [showOTPDrawer, setShowOTPDrawer] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string>("");
   const [errorMessage, setErrorMessage] = useState<string>("");
@@ -59,7 +61,7 @@ export const ConfirmWithdrawalPage: React.FC = () => {
       case "lisk":
         return { token: "LSK", network: "Arbitrum One" };
       case "base":
-        return { token: "LPT", network: "Base" };
+        return { token: "ETH", network: "Ethereum" };
       default:
         return { token: "LPT", network: "Arbitrum One" };
     }
@@ -72,39 +74,30 @@ export const ConfirmWithdrawalPage: React.FC = () => {
   const conversionFee = isCrossChain ? "0.5%" : "0%";
   const networkFee = isCrossChain ? "0.5 LPT" : "0 LPT";
 
-  // Check if returning from OTP verification
-  useEffect(() => {
-    const state = location.state as { fromOTP?: boolean } | null;
-    if (state?.fromOTP) {
-      const otpVerified = sessionStorage.getItem("otp_verified");
-      const otpAction = sessionStorage.getItem("otp_action");
-      const verificationTime = otpVerified ? parseInt(otpVerified) : 0;
-      const isRecent = Date.now() - verificationTime < 60000; // 1 minute validity
-      
-      if (isRecent && otpAction === "withdraw") {
-        // Clear the OTP verification
-        sessionStorage.removeItem("otp_verified");
-        sessionStorage.removeItem("otp_action");
-        // Proceed with withdrawal
-        handleWithdraw();
-      }
-    }
-  }, [location.state]);
-
   const handleBackClick = () => {
     navigate(-1);
   };
 
   const handleProceed = () => {
-    // Navigate to OTP verification page before withdrawal
-    const currentPath = `/confirm-withdrawal/${validatorId}?network=${selectedNetwork}&amount=${withdrawalAmount}&validatorName=${validatorDisplayName}&unbondingLockIds=${encodeURIComponent(JSON.stringify(unbondingLockIds))}`;
-    
-    navigate("/verify-otp", {
-      state: {
-        action: "withdraw",
-        returnTo: currentPath,
-      },
-    });
+    // Open OTP verification drawer before withdrawal
+    setShowOTPDrawer(true);
+  };
+
+  const handleOTPVerify = async (code: string) => {
+    const response = await totpService.verify({ token: code });
+
+    if (response.success) {
+      sessionStorage.setItem("otp_verified", Date.now().toString());
+      sessionStorage.setItem("otp_action", "withdraw");
+    }
+
+    return response;
+  };
+
+  const handleOTPSuccess = () => {
+    setShowOTPDrawer(false);
+    // Proceed with withdrawal after OTP verification
+    handleWithdraw();
   };
 
   const handleWithdraw = async () => {
@@ -295,6 +288,14 @@ export const ConfirmWithdrawalPage: React.FC = () => {
         onClose={() => setShowErrorDrawer(false)}
         title="Something went wrong"
         message={errorMessage}
+      />
+
+      {/* OTP Verification Drawer */}
+      <OTPVerificationDrawer
+        isOpen={showOTPDrawer}
+        onClose={() => setShowOTPDrawer(false)}
+        onVerify={handleOTPVerify}
+        onSuccess={handleOTPSuccess}
       />
 
       {/* Bottom Navigation */}

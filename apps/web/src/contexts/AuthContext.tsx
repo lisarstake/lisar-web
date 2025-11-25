@@ -58,6 +58,7 @@ interface AuthContextType {
   ) => Promise<AuthApiResponse<any>>;
   updateProfile: (data: {
     full_name?: string;
+    username?: string;
     email?: string;
     img?: string;
     DOB?: string;
@@ -523,6 +524,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const user: User = {
           user_id: data.user.id,
           email: data.user.email,
+          username: data.user.email.split("@")[0],
           full_name: data.user.user_metadata?.full_name || "",
           wallet_address:
             data.user.user_metadata?.wallet_address ||
@@ -536,6 +538,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           created_date: data.user.created_at,
           updated_at: data.user.updated_at,
           img: avatarUrl,
+          is_totp_enabled: false,
         };
 
         const wallet: Wallet = {
@@ -637,6 +640,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     country?: string;
     state?: string;
     fiat_type?: string;
+    username?: string;
   }): Promise<AuthApiResponse<User>> => {
     try {
       const response = await authService.updateProfile(data);

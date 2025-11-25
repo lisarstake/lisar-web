@@ -98,6 +98,8 @@ export interface ResetPasswordResponse {
 
 // User Profile Types 
 export interface User {
+  username?: string;
+  is_totp_enabled?: boolean;
   user_id: string;
   email: string;
   full_name: string;

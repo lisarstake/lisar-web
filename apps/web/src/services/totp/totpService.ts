@@ -114,13 +114,13 @@ export class TotpService implements ITotpApiService {
 
       return {
         success: true,
-        message: response.data.message || "2FA enabled successfully",
+        message: response.data.message || "OTP verified successfully",
       };
     } catch (error: any) {
       return {
         success: false,
         error: error.response?.data?.error || error.message || "Unknown error",
-        message: error.response?.data?.message || "Failed to verify TOTP code",
+        message: error.response?.data?.message || "Failed to verify OTP code",
       };
     }
   }

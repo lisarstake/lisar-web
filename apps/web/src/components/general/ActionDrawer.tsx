@@ -115,7 +115,7 @@ export const ActionDrawer: React.FC<ActionDrawerProps> = ({
                 {isProcessing ? (
                   <span className="flex items-center justify-center gap-2">
                     <LoaderCircle className="animate-spin h-5 w-5 text-white" />
-                    Processing...
+                    Processing..
                   </span>
                 ) : (
                   pendingAction.confirmation.confirmLabel || "Yes, proceed"
@@ -134,20 +134,34 @@ export const ActionDrawer: React.FC<ActionDrawerProps> = ({
               </button>
             </>
           ) : (
-            actions.map((action, index) => (
-              <button
-                key={index}
-                onClick={() => handleActionClick(action)}
-                disabled={isProcessing}
-                className={`w-full py-3 rounded-xl font-semibold text-lg transition-colors ${
-                  action.variant === "secondary"
-                    ? "bg-[#2a2a2a] text-white hover:bg-[#3a3a3a]"
-                    : "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
-                }`}
-              >
-                {action.label}
-              </button>
-            ))
+            actions.map((action, index) => {
+              const isPrimaryAction = action.variant !== "secondary";
+              const isProcessingThisAction = isProcessing && isPrimaryAction;
+
+              return (
+                <button
+                  key={index}
+                  onClick={() => handleActionClick(action)}
+                  disabled={isProcessingThisAction}
+                  className={`w-full py-3 rounded-xl font-semibold text-lg transition-colors ${
+                    action.variant === "secondary"
+                      ? "bg-[#2a2a2a] text-white hover:bg-[#3a3a3a]"
+                      : isProcessingThisAction
+                        ? "bg-[#A8CF5B] text-black cursor-not-allowed opacity-70"
+                        : "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
+                  }`}
+                >
+                  {isProcessingThisAction ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <LoaderCircle className="animate-spin h-5 w-5 text-white" />
+                      Processing..
+                    </span>
+                  ) : (
+                    action.label
+                  )}
+                </button>
+              );
+            })
           )}
         </DrawerFooter>
       </DrawerContent>
