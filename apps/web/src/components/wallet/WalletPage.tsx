@@ -113,8 +113,8 @@ export const WalletPage: React.FC = () => {
     navigate("/validator");
   };
 
-  const handleHistoryClick = () => {
-    navigate("/history");
+  const handleNotificationClick = () => {
+    navigate("/notifications");
   };
 
   const handleDepositClick = () => {
@@ -178,7 +178,7 @@ export const WalletPage: React.FC = () => {
         </div>
         <div className="flex items-center space-x-2">
           <button
-            onClick={handleWithdrawClick}
+            onClick={handleNotificationClick}
             className="relative w-10 h-10 bg-[#2a2a2a] rounded-full flex items-center justify-center hover:bg-[#3a3a3a] transition-colors cursor-pointer"
           >
             <Bell size={16} color="#86B3F7" />

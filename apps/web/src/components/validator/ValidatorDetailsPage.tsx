@@ -363,7 +363,7 @@ export const ValidatorDetailsPage: React.FC = () => {
       <ValidatorActionButtons
         validator={currentValidator}
         hasStakeWithValidator={hasStakeWithValidator}
-        hasWithdrawableAmount={true}
+        hasWithdrawableAmount={hasWithdrawableAmount}
         onStakeClick={handleStakeClick}
         onUnstakeClick={handleUnstakeClick}
         onWithdrawClick={handleWithdrawClick}
