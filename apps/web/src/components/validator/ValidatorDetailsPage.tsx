@@ -203,19 +203,23 @@ export const ValidatorDetailsPage: React.FC = () => {
         );
         setShowSuccessDrawer(true);
         setShowWithdrawConfirmDrawer(false);
+        setPendingAction(null);
         // Refetch delegation data
         await refetch();
       } else {
         setErrorMessage(response.message || "Failed to restake tokens");
         setShowErrorDrawer(true);
         setShowWithdrawConfirmDrawer(false);
+        setPendingAction(null);
       }
     } catch (error: any) {
       setErrorMessage(error.message || "Failed to restake tokens");
       setShowErrorDrawer(true);
       setShowWithdrawConfirmDrawer(false);
+      setPendingAction(null);
     } finally {
       setIsProcessing(false);
+      setPendingAction(null);
     }
   };
 
@@ -288,19 +292,23 @@ export const ValidatorDetailsPage: React.FC = () => {
         );
         setShowSuccessDrawer(true);
         setShowMoveStakeDrawer(false);
+        setPendingAction(null);
         // Refetch delegation data
         await refetch();
       } else {
         setErrorMessage(response.message || "Failed to move stake");
         setShowErrorDrawer(true);
         setShowMoveStakeDrawer(false);
+        setPendingAction(null);
       }
     } catch (error: any) {
       setErrorMessage(error.message || "Failed to move stake");
       setShowErrorDrawer(true);
       setShowMoveStakeDrawer(false);
+      setPendingAction(null);
     } finally {
       setIsProcessing(false);
+      setPendingAction(null);
     }
   };
 

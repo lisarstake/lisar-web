@@ -43,6 +43,7 @@ export const OTPVerificationDrawer: React.FC<OTPVerificationDrawerProps> = ({
   const [code, setCode] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
   const [error, setError] = useState(false);
+  const [hasVerified, setHasVerified] = useState(false);
   const [showSetupDrawer, setShowSetupDrawer] = useState(false);
   const [errorDrawer, setErrorDrawer] = useState({
     isOpen: false,
@@ -65,6 +66,7 @@ export const OTPVerificationDrawer: React.FC<OTPVerificationDrawerProps> = ({
       setCode("");
       setError(false);
       setIsVerifying(false);
+      setHasVerified(false);
 
       setTimeout(() => {
         if (inputRef.current) {
@@ -104,25 +106,29 @@ export const OTPVerificationDrawer: React.FC<OTPVerificationDrawerProps> = ({
 
   // Auto-submit when 6 digits are entered
   useEffect(() => {
-    if (code.length === 6 && !isVerifying && isOpen) {
+    if (code.length === 6 && !isVerifying && !hasVerified && isOpen) {
       handleSubmit(code);
     }
-  }, [code, isOpen]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [code, isOpen, hasVerified]);
 
   const handleSubmit = async (codeToVerify?: string) => {
     const verificationCode = codeToVerify || code;
-    if (verificationCode.length !== 6 || isVerifying) return;
+    if (verificationCode.length !== 6 || isVerifying || hasVerified) return;
 
     setIsVerifying(true);
     setError(false);
 
     try {
-      // If onVerify prop is provided, use it; otherwise use TOTP service
+     
       const response = onVerify
         ? await onVerify(verificationCode)
         : await totpService.verify({ token: verificationCode });
 
       if (response.success) {
+        setIsVerifying(false);
+        setHasVerified(true); 
+        setCode(""); 
         if (onSuccess) {
           onSuccess();
         }
@@ -246,8 +252,8 @@ export const OTPVerificationDrawer: React.FC<OTPVerificationDrawerProps> = ({
         </DrawerContent>
       </Drawer>
 
-       {/* TOTP Setup Drawer */}
-       <TOTPSetupDrawer
+      {/* TOTP Setup Drawer */}
+      <TOTPSetupDrawer
         isOpen={showSetupDrawer}
         onClose={() => setShowSetupDrawer(false)}
         onComplete={handleSetupComplete}
