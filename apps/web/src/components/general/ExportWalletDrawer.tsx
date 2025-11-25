@@ -20,7 +20,7 @@ import { authService } from "@/services/auth";
 import { walletService } from "@/services";
 import { useAuth } from "@/contexts/AuthContext";
 import { totpService } from "@/services/totp";
-import { useNavigate } from "react-router-dom";
+import { TOTPSetupDrawer } from "@/components/auth/TOTPSetupDrawer";
 
 interface ExportWalletDrawerProps {
   isOpen: boolean;
@@ -32,7 +32,6 @@ export const ExportWalletDrawer: React.FC<ExportWalletDrawerProps> = ({
   onClose,
 }) => {
   const { state } = useAuth();
-  const navigate = useNavigate();
   const otpInputRef = useRef<HTMLInputElement>(null);
   const [exportStep, setExportStep] = useState<
     "intro" | "confirm" | "otp" | "result"
@@ -46,6 +45,7 @@ export const ExportWalletDrawer: React.FC<ExportWalletDrawerProps> = ({
   const [privateKey, setPrivateKey] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showSetupDrawer, setShowSetupDrawer] = useState(false);
 
   // Auto-submit OTP when 6 digits are entered
   useEffect(() => {
@@ -55,7 +55,6 @@ export const ExportWalletDrawer: React.FC<ExportWalletDrawerProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [otpCode, exportStep, isVerifyingOTP]);
 
-  // Focus OTP input when step changes to OTP
   useEffect(() => {
     if (exportStep === "otp" && isOpen) {
       setTimeout(() => {
@@ -94,7 +93,7 @@ export const ExportWalletDrawer: React.FC<ExportWalletDrawerProps> = ({
         setExportError(loginResp.message || "Incorrect password.");
         return;
       }
-      // Password verified, proceed to OTP step
+
       setExportStep("otp");
       setExportError("");
     } catch (e) {
@@ -124,7 +123,6 @@ export const ExportWalletDrawer: React.FC<ExportWalletDrawerProps> = ({
       const response = await totpService.verify({ token: otpCode });
 
       if (response.success) {
-        // OTP verified, proceed to export
         handleExport();
       } else {
         setExportError(
@@ -144,14 +142,20 @@ export const ExportWalletDrawer: React.FC<ExportWalletDrawerProps> = ({
     }
   };
 
-  const handleSetupOTP = () => {
-    const currentPath = window.location.pathname;
-    navigate("/setup-otp", {
-      state: {
-        returnTo: currentPath,
-        keepExportDrawerOpen: true,
-      },
-    });
+  const handleSetupOTP = (
+    e: React.MouseEvent<HTMLElement> | React.KeyboardEvent<HTMLElement>
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.nativeEvent) {
+      e.nativeEvent.stopImmediatePropagation();
+    }
+    setShowSetupDrawer(true);
+    return false;
+  };
+
+  const handleSetupComplete = () => {
+    setShowSetupDrawer(false);
   };
 
   const handleExport = async () => {
@@ -176,8 +180,14 @@ export const ExportWalletDrawer: React.FC<ExportWalletDrawerProps> = ({
     }
   };
 
+  const handleDrawerOpenChange = (open: boolean) => {
+    if (!open && !showSetupDrawer) {
+      handleClose();
+    }
+  };
+
   return (
-    <Drawer open={isOpen} onOpenChange={(open) => !open && handleClose()}>
+    <Drawer open={isOpen} onOpenChange={handleDrawerOpenChange}>
       <DrawerContent>
         <DrawerHeader>
           <DrawerTitle className="text-center text-xl font-semibold text-white">
@@ -255,6 +265,12 @@ export const ExportWalletDrawer: React.FC<ExportWalletDrawerProps> = ({
                       setOtpCode(value);
                       setExportError("");
                     }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }
+                    }}
                     placeholder=""
                     disabled={isVerifyingOTP}
                     className={`w-full px-4 py-3 rounded-lg text-white text-lg tracking-widest bg-[#1a1a1a] border transition-colors ${
@@ -264,6 +280,7 @@ export const ExportWalletDrawer: React.FC<ExportWalletDrawerProps> = ({
                     } focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed`}
                   />
                   <button
+                    type="button"
                     onClick={handleOTPPaste}
                     disabled={isVerifyingOTP}
                     className="absolute right-4 top-1/2 -translate-y-1/2 text-[#C7EF6B] text-sm font-medium hover:text-[#B8E55A] disabled:opacity-50 disabled:cursor-not-allowed"
@@ -278,12 +295,20 @@ export const ExportWalletDrawer: React.FC<ExportWalletDrawerProps> = ({
                 )}
               </div>
               <div className="text-start">
-                <button
+                <div
+                  role="button"
+                  tabIndex={0}
                   onClick={handleSetupOTP}
-                  className="text-[#C7EF6B] text-sm font-medium hover:underline"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      handleSetupOTP(e as any);
+                    }
+                  }}
+                  className="text-[#C7EF6B] text-sm font-medium hover:underline cursor-pointer"
                 >
                   No authenticator app? Setup a new one.
-                </button>
+                </div>
               </div>
             </div>
           )}
@@ -303,6 +328,7 @@ export const ExportWalletDrawer: React.FC<ExportWalletDrawerProps> = ({
                     className="flex-1 px-4 py-3 bg-[#121212] border border-[#2a2a2a] rounded-lg text-gray-100"
                   />
                   <button
+                    type="button"
                     onClick={() => {
                       navigator.clipboard.writeText(privateKey);
                       setCopied(true);
@@ -332,6 +358,7 @@ export const ExportWalletDrawer: React.FC<ExportWalletDrawerProps> = ({
         <DrawerFooter>
           {exportStep === "intro" && (
             <button
+              type="button"
               onClick={() => setExportStep("confirm")}
               className="w-full py-4 rounded-xl font-semibold text-lg bg-[#C7EF6B] text-black hover:bg-[#B8E55A] transition-colors"
             >
@@ -341,6 +368,7 @@ export const ExportWalletDrawer: React.FC<ExportWalletDrawerProps> = ({
 
           {exportStep === "confirm" && (
             <button
+              type="button"
               disabled={isVerifying || isExporting}
               onClick={handlePasswordConfirm}
               className={`w-full py-4 rounded-xl font-semibold text-lg transition-colors ${
@@ -367,6 +395,7 @@ export const ExportWalletDrawer: React.FC<ExportWalletDrawerProps> = ({
 
           {exportStep === "otp" && (
             <button
+              type="button"
               disabled={otpCode.length !== 6 || isVerifyingOTP || isExporting}
               onClick={handleOTPVerify}
               className={`w-full py-4 rounded-xl font-semibold text-lg transition-colors ${
@@ -393,6 +422,7 @@ export const ExportWalletDrawer: React.FC<ExportWalletDrawerProps> = ({
 
           {exportStep === "result" && (
             <button
+              type="button"
               onClick={handleClose}
               className="w-full py-4 rounded-xl font-semibold text-lg bg-[#C7EF6B] text-black hover:bg-[#B8E55A] transition-colors"
             >
@@ -401,6 +431,14 @@ export const ExportWalletDrawer: React.FC<ExportWalletDrawerProps> = ({
           )}
         </DrawerFooter>
       </DrawerContent>
+
+      {/* TOTP Setup Drawer */}
+      <TOTPSetupDrawer
+        isOpen={showSetupDrawer}
+        onClose={() => setShowSetupDrawer(false)}
+        onComplete={handleSetupComplete}
+        preserveState={{ keepExportDrawerOpen: true }}
+      />
     </Drawer>
   );
 };

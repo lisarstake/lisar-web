@@ -5,6 +5,7 @@ import {
   CircleQuestionMark,
   LoaderCircle,
   Wallet2,
+  Copy,
 } from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
@@ -17,6 +18,7 @@ import { priceService } from "@/lib/priceService";
 import { useWallet } from "@/contexts/WalletContext";
 import { formatNumber, parseFormattedNumber } from "@/lib/formatters";
 import { walletService } from "@/services/wallet";
+import { getFiatType } from "@/lib/onramp";
 
 export const WithdrawPage: React.FC = () => {
   const navigate = useNavigate();
@@ -28,6 +30,8 @@ export const WithdrawPage: React.FC = () => {
   });
 
   const [withdrawalAddress, setWithdrawalAddress] = useState("");
+  const [isWithdrawalLaunched, setIsWithdrawalLaunched] = useState(false);
+  const network = "Arbitrum"; // Fixed network, users can't change it
 
   useEffect(() => {
     const state = location.state as { lptAmount?: string } | null;
@@ -54,7 +58,7 @@ export const WithdrawPage: React.FC = () => {
   // User's wallet balance
   const walletBalanceLpt = wallet?.balanceLpt || 0;
 
-  const pageTitle = "Send";
+  const pageTitle = "Withdraw";
 
   const handleBackClick = () => {
     navigate(-1);
@@ -168,6 +172,32 @@ export const WithdrawPage: React.FC = () => {
     setShowHelpDrawer(true);
   };
 
+  const handleLaunchWithdrawal = () => {
+    const appId = import.meta.env.VITE_ONRAMP_APP_ID || "1674103";
+    const fiatType = getFiatType(userCurrency);
+
+    const params = new URLSearchParams({
+      appId: appId.toString(),
+      coinCode: "lpt",
+      network: "arbitrum",
+      coinAmount: "0",
+      fiatType: fiatType.toString(),
+    });
+
+    const offrampUrl = `https://onramp.money/main/sell/?${params.toString()}`;
+    window.open(offrampUrl, "_blank");
+    setIsWithdrawalLaunched(true);
+  };
+
+  const handlePasteAddress = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      setWithdrawalAddress(text.trim());
+    } catch (err) {
+      console.error("Failed to paste:", err);
+    }
+  };
+
   // Check if user has insufficient funds
   const numericAmount = parseFloat(lptAmount.replace(/,/g, "")) || 0;
   const hasInsufficientFunds =
@@ -197,17 +227,47 @@ export const WithdrawPage: React.FC = () => {
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto px-6 pb-28 scrollbar-hide">
         {/* Withdrawal Address Input */}
-        <div className="pt-4">
+        <div className="pt-1">
           <h3 className="text-base font-medium text-white/90 mb-2">
-            Destination address
+            Withdrawal Address
           </h3>
-          <div className="bg-[#1a1a1a] rounded-xl p-4 border border-[#2a2a2a]">
+          <div className="bg-[#1a1a1a] rounded-xl p-4 border border-[#2a2a2a] relative">
             <input
               type="text"
               value={withdrawalAddress}
               onChange={(e) => setWithdrawalAddress(e.target.value)}
-              placeholder="0x738...3652"
-              className="w-full bg-transparent text-white text-base font-normal focus:outline-none placeholder-gray-500"
+              placeholder="0x738....3652"
+              disabled={!isWithdrawalLaunched}
+              className={`w-full bg-transparent text-base font-normal focus:outline-none placeholder-gray-500 pr-12 ${
+                !isWithdrawalLaunched
+                  ? "text-white/50 cursor-not-allowed"
+                  : "text-white"
+              }`}
+            />
+            <button
+              type="button"
+              onClick={handlePasteAddress}
+              disabled={!isWithdrawalLaunched}
+              className={`absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium transition-colors ${
+                !isWithdrawalLaunched
+                  ? "text-gray-500 cursor-not-allowed"
+                  : "text-[#C7EF6B] hover:text-[#B8E55A]"
+              }`}
+            >
+              Paste
+            </button>
+          </div>
+        </div>
+
+        {/* Network Input */}
+        <div className="pt-4">
+          <h3 className="text-base font-medium text-white/90 mb-2">Network</h3>
+          <div className="bg-[#1a1a1a] rounded-xl p-4 border border-[#2a2a2a]">
+            <input
+              type="text"
+              value={network}
+              disabled
+              className="w-full bg-transparent text-white text-base font-normal focus:outline-none opacity-60 cursor-not-allowed"
             />
           </div>
         </div>
@@ -229,11 +289,21 @@ export const WithdrawPage: React.FC = () => {
                 setLptAmount(numericValue);
               }}
               placeholder="LPT"
-              className="flex-1 bg-transparent text-white text-base font-medium focus:outline-none"
+              disabled={!isWithdrawalLaunched}
+              className={`flex-1 bg-transparent text-base font-medium focus:outline-none ${
+                !isWithdrawalLaunched
+                  ? "text-white/50 cursor-not-allowed"
+                  : "text-white"
+              }`}
             />
             <button
               onClick={handleMaxClick}
-              className="text-[#C7EF6B] text-sm font-medium transition-colors"
+              disabled={!isWithdrawalLaunched}
+              className={`text-sm font-medium transition-colors ${
+                !isWithdrawalLaunched
+                  ? "text-gray-500 cursor-not-allowed"
+                  : "text-[#C7EF6B] hover:text-[#B8E55A]"
+              }`}
             >
               Max
             </button>
@@ -241,7 +311,7 @@ export const WithdrawPage: React.FC = () => {
         </div>
 
         {/* Predefined LPT Amounts */}
-        <div className="py-4">
+        {/* <div className="py-4">
           <div className="flex space-x-3">
             {["10", "50", "100"].map((amount) => {
               const isActive =
@@ -251,10 +321,13 @@ export const WithdrawPage: React.FC = () => {
                 <button
                   key={amount}
                   onClick={() => handleAmountSelect(amount)}
+                  disabled={!isWithdrawalLaunched}
                   className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-colors ${
-                    isActive
-                      ? "bg-[#C7EF6B] text-black"
-                      : "bg-[#1a1a1a] text-white/80 hover:bg-[#2a2a2a]"
+                    !isWithdrawalLaunched
+                      ? "bg-[#1a1a1a] text-white/30 cursor-not-allowed"
+                      : isActive
+                        ? "bg-[#C7EF6B] text-black"
+                        : "bg-[#1a1a1a] text-white/80 hover:bg-[#2a2a2a]"
                   }`}
                 >
                   {formatNumber(amount)} <span className="text-xs">LPT</span>
@@ -262,7 +335,7 @@ export const WithdrawPage: React.FC = () => {
               );
             })}
           </div>
-        </div>
+        </div> */}
 
         {/* Wallet Balance Info */}
         <div className="py-4">
@@ -282,45 +355,62 @@ export const WithdrawPage: React.FC = () => {
             </div>
           </div>
           {hasInsufficientFunds && (
-            <p className="text-gray-400 text-xs mt-2 pl-2">
+            <p className="text-red-300 text-xs mt-2 pl-2">
               Insufficient funds, ensure you have enough LPT in your wallet
             </p>
           )}
+          {/* Guide */}
+          <div className="mt-3 p-3 bg-[#1a1a1a] rounded-lg border border-[#2a2a2a]">
+            <p className="text-gray-400 text-xs leading-relaxed">
+              To withdraw, initiate a withdrawal on onramp and get the
+              withdrawal address. Then make payment to the address
+              to complete withdrawal.
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* Proceed Button - Fixed at bottom */}
-      <div className="px-6 py-4 bg-[#050505] pb-24">
-        <button
-          onClick={handleProceed}
-          disabled={
-            !lptAmount ||
-            parseFloat(lptAmount) <= 0 ||
-            !withdrawalAddress ||
-            withdrawalAddress.trim() === "" ||
-            hasInsufficientFunds ||
-            isWithdrawing
-          }
-          className={`w-full py-4 rounded-xl font-semibold text-lg transition-colors ${
-            lptAmount &&
-            parseFloat(lptAmount) > 0 &&
-            withdrawalAddress &&
-            withdrawalAddress.trim() !== "" &&
-            !hasInsufficientFunds &&
-            !isWithdrawing
-              ? "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
-              : "bg-[#636363] text-white cursor-not-allowed"
-          }`}
-        >
-          {isWithdrawing ? (
-            <span className="flex items-center justify-center gap-2">
-              <LoaderCircle className="animate-spin h-5 w-5 text-white" />
-              Processing..
-            </span>
-          ) : (
-            "Send"
-          )}
-        </button>
+      {/* Action Buttons - Fixed at bottom */}
+      <div className="px-6 py-4 bg-[#050505] pb-24 space-y-3">
+        {!isWithdrawalLaunched ? (
+          <button
+            onClick={handleLaunchWithdrawal}
+            className="w-full py-4 rounded-xl font-semibold text-lg bg-[#C7EF6B] text-black hover:bg-[#B8E55A] transition-colors"
+          >
+            Get Address
+          </button>
+        ) : (
+          <button
+            onClick={handleProceed}
+            disabled={
+              !lptAmount ||
+              parseFloat(lptAmount) <= 0 ||
+              !withdrawalAddress ||
+              withdrawalAddress.trim() === "" ||
+              hasInsufficientFunds ||
+              isWithdrawing
+            }
+            className={`w-full py-4 rounded-xl font-semibold text-lg transition-colors ${
+              lptAmount &&
+              parseFloat(lptAmount) > 0 &&
+              withdrawalAddress &&
+              withdrawalAddress.trim() !== "" &&
+              !hasInsufficientFunds &&
+              !isWithdrawing
+                ? "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
+                : "bg-[#636363] text-white cursor-not-allowed"
+            }`}
+          >
+            {isWithdrawing ? (
+              <span className="flex items-center justify-center gap-2">
+                <LoaderCircle className="animate-spin h-5 w-5 text-white" />
+                Processing..
+              </span>
+            ) : (
+              "Withdraw"
+            )}
+          </button>
+        )}
       </div>
 
       {/* Help Drawer */}

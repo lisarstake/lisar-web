@@ -1,25 +1,27 @@
 import React, { useMemo, useState, useEffect } from "react";
-import { useNavigate, useParams, useSearchParams, useLocation } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ChevronLeft, CircleQuestionMark, LoaderCircle } from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { SuccessDrawer } from "@/components/ui/SuccessDrawer";
 import { ErrorDrawer } from "@/components/ui/ErrorDrawer";
+import { OTPVerificationDrawer } from "@/components/auth/OTPVerificationDrawer";
 import { useOrchestrators } from "@/contexts/OrchestratorContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { priceService } from "@/lib/priceService";
 import { delegationService } from "@/services";
+import { totpService } from "@/services/totp";
 import { UnbondRequest } from "@/services/delegation/types";
 
 export const ConfirmUnstakePage: React.FC = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { validatorId } = useParams<{ validatorId: string }>();
   const [searchParams] = useSearchParams();
   const [isProcessing, setIsProcessing] = useState(false);
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
   const [showSuccessDrawer, setShowSuccessDrawer] = useState(false);
   const [showErrorDrawer, setShowErrorDrawer] = useState(false);
+  const [showOTPDrawer, setShowOTPDrawer] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
   const { orchestrators } = useOrchestrators();
   const { state } = useAuth();
@@ -54,37 +56,30 @@ export const ConfirmUnstakePage: React.FC = () => {
     [fiatAmountNum]
   );
 
-  // Check if returning from OTP verification
-  useEffect(() => {
-    const state = location.state as { fromOTP?: boolean } | null;
-    if (state?.fromOTP) {
-      const otpVerified = sessionStorage.getItem("otp_verified");
-      const otpAction = sessionStorage.getItem("otp_action");
-      const verificationTime = otpVerified ? parseInt(otpVerified) : 0;
-      const isRecent = Date.now() - verificationTime < 60000; // 1 minute validity
-      
-      if (isRecent && otpAction === "unstake") {
-        // Clear the OTP verification
-        sessionStorage.removeItem("otp_verified");
-        sessionStorage.removeItem("otp_action");
-        // Proceed with unstaking
-        handleUnstake();
-      }
-    }
-  }, [location.state]);
-
   const handleBackClick = () => {
     navigate(-1);
   }; 
 
   const handleProceed = () => {
-    // Navigate to OTP verification page before unstaking
-    navigate("/verify-otp", {
-      state: {
-        action: "unstake",
-        returnTo: `/confirm-unstake/${validatorId}?amount=${unstakeAmount}`,
-      },
-    });
+    // Open OTP verification drawer before unstaking
+    setShowOTPDrawer(true);
+  };
+
+  const handleOTPVerify = async (code: string) => {
+    const response = await totpService.verify({ token: code });
+
+    if (response.success) {
+      sessionStorage.setItem("otp_verified", Date.now().toString());
+      sessionStorage.setItem("otp_action", "unstake");
+    }
+
+    return response;
+  };
+
+  const handleOTPSuccess = () => {
+    setShowOTPDrawer(false);
+    // Proceed with unstaking after OTP verification
+    handleUnstake();
   };
 
   const handleUnstake = async () => {
@@ -246,6 +241,14 @@ export const ConfirmUnstakePage: React.FC = () => {
           handleProceed();
         }}
         retryText="Try Again"
+      />
+
+      {/* OTP Verification Drawer */}
+      <OTPVerificationDrawer
+        isOpen={showOTPDrawer}
+        onClose={() => setShowOTPDrawer(false)}
+        onVerify={handleOTPVerify}
+        onSuccess={handleOTPSuccess}
       />
 
       {/* Bottom Navigation */}

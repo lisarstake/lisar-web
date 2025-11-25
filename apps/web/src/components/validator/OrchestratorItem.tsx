@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import QRCode from "qrcode";
 import { OrchestratorResponse } from "@/services/delegation/types";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getColorForAddress } from "@/lib/qrcode";
+import { getSubtleColorForAddress } from "@/lib/qrcode";
 
 interface OrchestratorItemProps {
   orchestrator?: OrchestratorResponse;
@@ -40,7 +40,7 @@ export const OrchestratorItem: React.FC<OrchestratorItemProps> = ({
     const address = orchestrator.address;
     if (!address) return;
 
-    const qrColor = getColorForAddress(address);
+    const subtleColor = getSubtleColorForAddress(address);
 
     QRCode.toCanvas(
       qrCanvasRef.current,
@@ -49,8 +49,8 @@ export const OrchestratorItem: React.FC<OrchestratorItemProps> = ({
         width: 48,
         margin: 1,
         color: {
-          dark: qrColor,
-          light: "#1a1a1a",
+          dark: subtleColor,
+          light: "#2a2a2a",
         },
       },
       (error) => {

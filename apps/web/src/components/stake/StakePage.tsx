@@ -158,7 +158,6 @@ export const StakePage: React.FC = () => {
         const response = await delegationService.stake(stakeRequest);
 
         if (response.success) {
-          // Success - proceed with success flow
           setSuccessMessage(
             "Staking successful! Your tokens have been staked."
           );
@@ -384,9 +383,9 @@ export const StakePage: React.FC = () => {
         onClose={() => !isStaking && setShowConfirmDrawer(false)}
         title="Proceed to Stake"
         content={[
-          `You are about to stake ${formatNumber(parseFloat(lptAmount.replace(/,/g, "")))} LPT to ${currentValidator?.ensName || "this validator"}.`,
+          `You are about to stake ${formatNumber(lptAmount.replace(/,/g, ""))} LPT to ${currentValidator?.ensName || "this validator"}.`,
           "Once confirmed, your tokens will be staked and you will start earning rewards! 💲",
-          "You can unstake your tokens at anytime.",
+          "You can unstake at anytime.",
         ]}
         actions={[
           {
