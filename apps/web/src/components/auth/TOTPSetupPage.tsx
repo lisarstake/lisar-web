@@ -10,24 +10,14 @@ import { ErrorDrawer } from "@/components/ui/ErrorDrawer";
 import { LoadingSpinner } from "@/components/general/LoadingSpinner";
 import { totpService } from "@/services/totp";
 
-interface TOTPSetupPageProps {
-  onComplete?: () => void;
-  redirectOnComplete?: string;
-  redirectOnCancel?: string;
-  preserveState?: Record<string, any>;
-}
 
-export const TOTPSetupPage: React.FC<TOTPSetupPageProps> = ({
-  onComplete,
-  redirectOnComplete = "/verify-otp",
-  redirectOnCancel = "/profile",
-  preserveState,
-}) => {
+export const TOTPSetupPage: React.FC = () => {
   const navigate = useNavigate();
 
   const [isLoading, setIsLoading] = useState(true);
   const [qrCode, setQrCode] = useState("");
   const [otpauthUrl, setOtpauthUrl] = useState("");
+  const [secret, setSecret] = useState("");
   const [copied, setCopied] = useState(false);
   const [errorDrawer, setErrorDrawer] = useState({
     isOpen: false,
@@ -45,8 +35,17 @@ export const TOTPSetupPage: React.FC<TOTPSetupPageProps> = ({
       const response = await totpService.setup();
 
       if (response.success) {
+        // Extract and decode the secret from otpauth URL
+        const secretMatch = response.otpauth_url.match(/secret=([^&]+)/);
+        const extractedSecret =
+          secretMatch && secretMatch[1]
+            ? decodeURIComponent(secretMatch[1])
+            : "";
+
+        // Store in state
         setQrCode(response.qr);
         setOtpauthUrl(response.otpauth_url);
+        setSecret(extractedSecret);
       } else {
         setErrorDrawer({
           isOpen: true,
@@ -58,7 +57,8 @@ export const TOTPSetupPage: React.FC<TOTPSetupPageProps> = ({
       setErrorDrawer({
         isOpen: true,
         title: "Something went wrong",
-        message: error.message || "An error occurred during setup. Please try again.",
+        message:
+          error.message || "An error occurred during setup. Please try again.",
       });
     } finally {
       setIsLoading(false);
@@ -66,20 +66,12 @@ export const TOTPSetupPage: React.FC<TOTPSetupPageProps> = ({
   };
 
   const handleBackClick = () => {
-    // If coming from export drawer, go back to the returnTo path instead of history
-    if (preserveState?.keepExportDrawerOpen && preserveState?.returnTo) {
-      navigate(preserveState.returnTo, { replace: true });
-    } else {
-      navigate(-1);
-    }
+    // Go back to profile, replacing setup in history to prevent loops
+    navigate("/profile", { replace: true });
   };
 
-  const handleCopyUrl = async () => {
+  const handleCopySecret = async () => {
     try {
-      // Extract the secret from the otpauth URL
-      const secretMatch = otpauthUrl.match(/secret=([^&]+)/);
-      const secret = secretMatch ? secretMatch[1] : "";
-
       if (secret) {
         await navigator.clipboard.writeText(secret);
         setCopied(true);
@@ -91,28 +83,7 @@ export const TOTPSetupPage: React.FC<TOTPSetupPageProps> = ({
   };
 
   const handleContinue = () => {
-    if (onComplete) {
-      onComplete();
-    } else {
-      // If coming from export drawer, return directly to the drawer (skip verify-otp)
-      if (preserveState?.keepExportDrawerOpen) {
-        navigate(redirectOnComplete, {
-          state: {
-            ...preserveState,
-            fromSetup: true,
-          },
-          replace: true, // Replace to prevent back button loops
-        });
-      } else {
-        // Normal flow: go to verify-otp page
-        navigate(redirectOnComplete, {
-          state: {
-            fromSetup: true,
-            ...(preserveState && { ...preserveState }),
-          },
-        });
-      }
-    }
+    navigate("/verify-otp");
   };
 
   if (isLoading) {
@@ -150,7 +121,8 @@ export const TOTPSetupPage: React.FC<TOTPSetupPageProps> = ({
               Step 1: Download an Authenticator App
             </h2>
             <p className="text-gray-400 text-sm">
-              Download and install an authenticator app like Google Authenticator, Authy, or Microsoft Authenticator.
+              Download and install an authenticator app like Google
+              Authenticator.
             </p>
           </div>
 
@@ -167,11 +139,7 @@ export const TOTPSetupPage: React.FC<TOTPSetupPageProps> = ({
             {qrCode && (
               <div className="flex justify-center py-6">
                 <div className="bg-white p-4 rounded-lg">
-                  <img
-                    src={qrCode}
-                    alt="QR Code"
-                    className="w-48 h-48"
-                  />
+                  <img src={qrCode} alt="QR Code" className="w-48 h-48" />
                 </div>
               </div>
             )}
@@ -183,11 +151,12 @@ export const TOTPSetupPage: React.FC<TOTPSetupPageProps> = ({
               </p>
               <div className="flex items-center gap-2 p-3 bg-[#1a1a1a] rounded-lg border border-[#2a2a2a]">
                 <code className="flex-1 text-[#C7EF6B] text-sm font-mono break-all">
-                  {otpauthUrl.match(/secret=([^&]+)/)?.[1] || ""}
+                  {secret || ""}
                 </code>
                 <button
-                  onClick={handleCopyUrl}
-                  className="shrink-0 p-2 hover:bg-[#2a2a2a] rounded transition-colors"
+                  onClick={handleCopySecret}
+                  disabled={!secret}
+                  className="shrink-0 p-2 hover:bg-[#2a2a2a] rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {copied ? (
                     <Check size={18} color="#C7EF6B" />
@@ -199,24 +168,13 @@ export const TOTPSetupPage: React.FC<TOTPSetupPageProps> = ({
             </div>
           </div>
 
-        
-
           {/* Continue Button */}
           <button
             onClick={handleContinue}
             className="w-full py-3 rounded-xl font-semibold text-lg bg-[#C7EF6B] text-black hover:bg-[#B8E55A] transition-colors"
           >
-            {preserveState?.keepExportDrawerOpen
-              ? "Return to Export"
-              : "Continue to Verification"}
+            Continue to Verification
           </button>
-
-          {/* Help Text */}
-          <div className="text-center">
-            <p className="text-gray-500 text-xs">
-              Keep your authenticator app secure and backed up
-            </p>
-          </div>
         </div>
       </div>
 
@@ -234,4 +192,3 @@ export const TOTPSetupPage: React.FC<TOTPSetupPageProps> = ({
     </div>
   );
 };
-

@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { ChevronLeft, CircleQuestionMark } from "lucide-react";
+import { ChevronDown, ChevronLeft, CircleQuestionMark } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { HelpDrawer } from "../general/HelpDrawer";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const PortfolioSkeleton: React.FC = () => {
   const navigate = useNavigate();
@@ -36,43 +37,50 @@ export const PortfolioSkeleton: React.FC = () => {
 
       {/* Stats Cards Skeleton */}
       <div className="grid grid-cols-2 gap-4 mb-6 px-6">
-        <div className="bg-gray-700 rounded-xl p-4 animate-pulse">
-          <div className="h-4 bg-gray-600 rounded w-20 mb-2"></div>
-          <div className="h-8 bg-gray-600 rounded w-24"></div>
+        <div className="bg-[#1a1a1a] rounded-xl p-4 border border-[#2a2a2a]">
+          <Skeleton className="h-4 w-20 mb-2 bg-[#2a2a2a]" />
+          <Skeleton className="h-8 w-24 bg-[#2a2a2a]" />
         </div>
-        <div className="bg-gray-700 rounded-xl p-4 animate-pulse">
-          <div className="h-4 bg-gray-600 rounded w-16 mb-2"></div>
-          <div className="h-8 bg-gray-600 rounded w-20"></div>
+        <div className="bg-[#1a1a1a] rounded-xl p-4 border border-[#2a2a2a]">
+          <Skeleton className="h-4 w-16 mb-2 bg-[#2a2a2a]" />
+          <Skeleton className="h-8 w-20 bg-[#2a2a2a]" />
         </div>
       </div>
 
       {/* Next Payout Section Skeleton */}
       <div className="flex space-x-2 mb-6 px-6">
         <div
-          className="bg-gray-700 rounded-xl p-4 flex-1 animate-pulse"
+          className="bg-[#1a1a1a] rounded-xl p-4 border border-[#2a2a2a] flex-1"
           style={{ flex: "4" }}
         >
-          <div className="h-4 bg-gray-600 rounded w-24 mb-3"></div>
+          <Skeleton className="h-4 w-24 mb-3 bg-[#2a2a2a]" />
           <div className="flex items-center space-x-3">
-            <div className="flex-1 bg-gray-600 rounded-full h-3"></div>
-            <div className="h-4 bg-gray-600 rounded w-12"></div>
+            <Skeleton className="flex-1 h-3 rounded-full bg-[#2a2a2a]" />
+            <Skeleton className="h-4 w-12 bg-[#2a2a2a]" />
           </div>
         </div>
         <div
-          className="bg-gray-700 rounded-xl p-4 flex items-center justify-center animate-pulse"
+          className="bg-[#1a1a1a] rounded-xl p-4 border border-[#2a2a2a] flex items-center justify-center"
           style={{ flex: "1" }}
         >
           <div className="text-center">
-            <div className="w-8 h-8 bg-gray-600 rounded mb-2"></div>
-            <div className="h-3 bg-gray-600 rounded w-16"></div>
+            <Skeleton className="w-8 h-8 rounded mb-2 bg-[#2a2a2a]" />
+            <Skeleton className="h-3 w-16 bg-[#2a2a2a]" />
           </div>
         </div>
       </div>
 
       {/* Analytics Header Skeleton */}
       <div className="flex items-center justify-between mb-5 px-6">
-        <div className="h-4 bg-gray-700 rounded w-24 animate-pulse"></div>
-        <div className="w-6 h-6 bg-gray-700 rounded animate-pulse"></div>
+        <span className="text-base font-medium text-white/50">
+          View summary
+        </span>
+        <button
+          className="relative flex items-center justify-center p-1 rounded hover:bg-[#232323] transition-colors"
+          type="button"
+        >
+          <ChevronDown size={16} color="gray" />
+        </button>
       </div>
 
       {/* Current Stake Section - Always visible */}
@@ -82,19 +90,19 @@ export const PortfolioSkeleton: React.FC = () => {
           {Array.from({ length: 2 }).map((_, index) => (
             <div
               key={index}
-              className="bg-gray-700 rounded-xl p-4 animate-pulse"
+              className="bg-[#1a1a1a] rounded-xl p-4 border border-[#2a2a2a]"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-gray-600 rounded-full"></div>
+                  <Skeleton className="w-10 h-10 rounded-full bg-[#2a2a2a]" />
                   <div className="space-y-2">
-                    <div className="h-4 bg-gray-600 rounded w-24"></div>
-                    <div className="h-3 bg-gray-600 rounded w-20"></div>
+                    <Skeleton className="h-4 w-24 bg-[#2a2a2a]" />
+                    <Skeleton className="h-3 w-20 bg-[#2a2a2a]" />
                   </div>
                 </div>
-                <div className="text-right">
-                  <div className="h-4 bg-gray-600 rounded w-16 mb-1"></div>
-                  <div className="h-3 bg-gray-600 rounded w-12"></div>
+                <div className="text-right space-y-2">
+                  <Skeleton className="h-4 w-16 bg-[#2a2a2a] ml-auto" />
+                  <Skeleton className="h-3 w-12 bg-[#2a2a2a] ml-auto" />
                 </div>
               </div>
             </div>

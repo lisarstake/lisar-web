@@ -102,10 +102,11 @@ export const LeaderboardPage: React.FC = () => {
                 ? earned.toLocaleString(undefined, { maximumFractionDigits: 6 })
                 : "0";
 
-              const displayName = getLeaderboardDisplayName(
-                entry.email,
-                entry.address
-              );
+              const displayName = entry.email
+                ? entry.email.split("@")[0].replace(/[^a-zA-Z.]/g, "")
+                : entry.address
+                  ? `${entry.address.slice(0, 6)}...${entry.address.slice(-4)}`
+                  : "Unknown";
 
               return (
                 <div

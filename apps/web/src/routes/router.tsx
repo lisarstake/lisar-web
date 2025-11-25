@@ -105,14 +105,14 @@ export const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
-      // {
-      //   path: 'withdraw',
-      //   element: (
-      //     <ProtectedRoute>
-      //       {withSuspenseAndErrorBoundary(<WithdrawPage />)}
-      //     </ProtectedRoute>
-      //   ),
-      // },
+      {
+        path: 'withdraw',
+        element: (
+          <ProtectedRoute>
+            {withSuspenseAndErrorBoundary(<WithdrawPage />)}
+          </ProtectedRoute>
+        ),
+      },
       {
         path: 'deposit',
         element: (

@@ -14,6 +14,7 @@ import { ErrorDrawer } from "../ui/ErrorDrawer";
 import { ExportWalletDrawer } from "../general/ExportWalletDrawer";
 import { useAuth } from "@/contexts/AuthContext";
 import { authService } from "@/services/auth";
+import { LoadingSpinner } from "../general/LoadingSpinner";
 
 export const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
@@ -21,7 +22,7 @@ export const ProfilePage: React.FC = () => {
   const { state, logout, updateProfile, refreshUser } = useAuth();
 
   const [formData, setFormData] = useState({
-    username: "",
+    // username: "",
     fullName: "",
     depositAddress: "",
     preferredCurrency: "USD",
@@ -29,6 +30,7 @@ export const ProfilePage: React.FC = () => {
     dateOfBirth: "",
     country: "",
     state: "",
+    is_totp_enabled: false,
   });
 
   const [isLoading, setIsLoading] = useState(true);
@@ -41,25 +43,6 @@ export const ProfilePage: React.FC = () => {
   const [addressCopied, setAddressCopied] = useState(false);
   const [isHoveringCopy, setIsHoveringCopy] = useState(false);
 
-  // Check if we should reopen export drawer after returning from OTP setup
-  useEffect(() => {
-    const locationState = location.state as {
-      keepExportDrawerOpen?: boolean;
-      fromOTP?: boolean;
-      fromSetup?: boolean;
-    } | null;
-
-    // Check if returning from OTP setup or verification with export drawer flag
-    if (locationState?.keepExportDrawerOpen && (locationState?.fromOTP || locationState?.fromSetup)) {
-      setShowExportDrawer(true);
-      // Clear the state immediately to prevent loops
-      if (locationState) {
-        navigate(location.pathname, { replace: true, state: {} });
-      }
-    }
-  }, [location.state, location.pathname, navigate]);
-
-  // Load user data on component mount
   useEffect(() => {
     const loadUserData = async () => {
       try {
@@ -69,7 +52,7 @@ export const ProfilePage: React.FC = () => {
 
         if (state.user) {
           setFormData({
-            username: state.user.email ? state.user.email.split("@")[0] : "", // Use email prefix as username
+            // username: state.user.username || "",
             fullName: state.user.full_name || "",
             depositAddress: state.user.wallet_address || "",
             preferredCurrency: state.user.fiat_type || "USD",
@@ -77,10 +60,11 @@ export const ProfilePage: React.FC = () => {
             dateOfBirth: state.user.DOB || "",
             country: state.user.country || "",
             state: state.user.state || "",
+            is_totp_enabled: state.user.is_totp_enabled || false,
           });
           setIsLoading(false);
         } else if (state.isAuthenticated) {
-          // If authenticated but no user data, try to refresh
+          // If authenticated but no user data, refresh
           await refreshUser();
           setIsLoading(false);
         } else {
@@ -100,7 +84,6 @@ export const ProfilePage: React.FC = () => {
     refreshUser,
     navigate,
   ]);
-
 
   const handleBackClick = () => {
     navigate(-1);
@@ -122,6 +105,7 @@ export const ProfilePage: React.FC = () => {
       const response = await updateProfile({
         full_name: formData.fullName,
         img: formData.profileImage,
+        // username: formData.username,
         DOB: formData.dateOfBirth,
         country: formData.country,
         state: formData.state,
@@ -222,14 +206,7 @@ export const ProfilePage: React.FC = () => {
   };
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C7EF6B] mx-auto mb-4"></div>
-          <p className="text-white">Loading profile...</p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner message="Setting up authenticator..." />;
   }
 
   return (
@@ -279,7 +256,7 @@ export const ProfilePage: React.FC = () => {
               <span className="text-black text-4xl font-bold">
                 {formData.fullName
                   ? formData.fullName.charAt(0).toUpperCase()
-                  : formData.username.charAt(0).toUpperCase()}
+                  : "User"}
               </span>
             </div>
           </div>
@@ -387,7 +364,11 @@ export const ProfilePage: React.FC = () => {
                 {addressCopied ? (
                   <Check size={18} color="#C7EF6B" className="transition-all" />
                 ) : (
-                  <Copy size={18} color={isHoveringCopy ? "#C7EF6B" : "#636363"} className="transition-all" />
+                  <Copy
+                    size={18}
+                    color={isHoveringCopy ? "#C7EF6B" : "#636363"}
+                    className="transition-all"
+                  />
                 )}
               </button>
             </div>
@@ -424,6 +405,17 @@ export const ProfilePage: React.FC = () => {
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"
               />
             </div>
+
+            {/* 2 FA Status  */}
+            {!formData.is_totp_enabled && (
+              <div
+                onClick={() => navigate("/setup-otp")}
+                className="text-[#C7EF6B] text-[13px] font-normal my-3 cursor-pointer hover:underline"
+              >
+                2 factor authentication is not setup. Click to setup 2FA to make
+                your account more secure.
+              </div>
+            )}
           </div>
         </div>
 

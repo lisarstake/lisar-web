@@ -10,11 +10,13 @@ import { ValidatorActionButtons } from "@/components/validator/ValidatorActionBu
 import { ValidatorAboutSection } from "@/components/validator/ValidatorAboutSection";
 import { SuccessDrawer } from "@/components/ui/SuccessDrawer";
 import { ErrorDrawer } from "@/components/ui/ErrorDrawer";
+import { OTPVerificationDrawer } from "@/components/auth/OTPVerificationDrawer";
 import { useOrchestrators } from "@/contexts/OrchestratorContext";
 import { useDelegation } from "@/contexts/DelegationContext";
 import { useTransactions } from "@/contexts/TransactionContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { delegationService } from "@/services";
+import { totpService } from "@/services/totp";
 
 export const ValidatorDetailsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -26,6 +28,10 @@ export const ValidatorDetailsPage: React.FC = () => {
   const [showMoveStakeDrawer, setShowMoveStakeDrawer] = useState(false);
   const [showWithdrawConfirmDrawer, setShowWithdrawConfirmDrawer] =
     useState(false);
+  const [showOTPDrawer, setShowOTPDrawer] = useState(false);
+  const [pendingAction, setPendingAction] = useState<
+    "moveStake" | "rebond" | null
+  >(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSuccessDrawer, setShowSuccessDrawer] = useState(false);
   const [showErrorDrawer, setShowErrorDrawer] = useState(false);
@@ -166,11 +172,7 @@ export const ValidatorDetailsPage: React.FC = () => {
 
   // Handle rebond - restake withdrawable tokens
   const handleRebond = async () => {
-    if (
-      !state.user?.wallet_id ||
-      !state.user?.wallet_address ||
-      !validatorId
-    ) {
+    if (!state.user?.wallet_id || !state.user?.wallet_address || !validatorId) {
       setErrorMessage("Missing wallet information");
       setShowErrorDrawer(true);
       return;
@@ -196,7 +198,9 @@ export const ValidatorDetailsPage: React.FC = () => {
       });
 
       if (response.success) {
-        setSuccessMessage("Your tokens have been restaked successfully and will start earning rewards again.");
+        setSuccessMessage(
+          "Your tokens have been restaked successfully and will start earning rewards again."
+        );
         setShowSuccessDrawer(true);
         setShowWithdrawConfirmDrawer(false);
         // Refetch delegation data
@@ -213,6 +217,38 @@ export const ValidatorDetailsPage: React.FC = () => {
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  // Handle OTP verification for actions
+  const handleOTPVerify = async (code: string) => {
+    const response = await totpService.verify({ token: code });
+
+    if (response.success) {
+      sessionStorage.setItem("otp_verified", Date.now().toString());
+      sessionStorage.setItem("otp_action", pendingAction || "");
+    }
+
+    return response;
+  };
+
+  const handleOTPSuccess = () => {
+    setShowOTPDrawer(false);
+    // Proceed with the pending action after OTP verification
+    if (pendingAction === "moveStake") {
+      handleMoveStake();
+    } else if (pendingAction === "rebond") {
+      handleRebond();
+    }
+  };
+
+  const handleMoveStakeWithOTP = () => {
+    setPendingAction("moveStake");
+    setShowOTPDrawer(true);
+  };
+
+  const handleRebondWithOTP = () => {
+    setPendingAction("rebond");
+    setShowOTPDrawer(true);
   };
 
   // Handle move stake - move stake to a new validator
@@ -247,7 +283,9 @@ export const ValidatorDetailsPage: React.FC = () => {
       });
 
       if (response.success) {
-        setSuccessMessage("Your stake has been successfully moved to the new validator.");
+        setSuccessMessage(
+          "Your stake has been successfully moved to the new validator."
+        );
         setShowSuccessDrawer(true);
         setShowMoveStakeDrawer(false);
         // Refetch delegation data
@@ -317,7 +355,7 @@ export const ValidatorDetailsPage: React.FC = () => {
       <ValidatorActionButtons
         validator={currentValidator}
         hasStakeWithValidator={hasStakeWithValidator}
-        hasWithdrawableAmount={hasWithdrawableAmount}
+        hasWithdrawableAmount={true}
         onStakeClick={handleStakeClick}
         onUnstakeClick={handleUnstakeClick}
         onWithdrawClick={handleWithdrawClick}
@@ -379,7 +417,7 @@ export const ValidatorDetailsPage: React.FC = () => {
         actions={[
           {
             label: "Move stake",
-            onClick: handleMoveStake,
+            onClick: handleMoveStakeWithOTP,
             confirmation: {
               title: "Are you sure?",
               message:
@@ -416,7 +454,7 @@ export const ValidatorDetailsPage: React.FC = () => {
           },
           {
             label: "Restake",
-            onClick: handleRebond,
+            onClick: handleRebondWithOTP,
             variant: "secondary",
             confirmation: {
               title: "Are you sure?",
@@ -444,6 +482,17 @@ export const ValidatorDetailsPage: React.FC = () => {
         onClose={() => setShowErrorDrawer(false)}
         title="Something went wrong"
         message={errorMessage}
+      />
+
+      {/* OTP Verification Drawer */}
+      <OTPVerificationDrawer
+        isOpen={showOTPDrawer}
+        onClose={() => {
+          setShowOTPDrawer(false);
+          setPendingAction(null);
+        }}
+        onVerify={handleOTPVerify}
+        onSuccess={handleOTPSuccess}
       />
 
       {/* Bottom Navigation */}

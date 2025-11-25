@@ -138,7 +138,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
         icon={Info}
         iconColor="#86B3F7"
         iconBgColor="#2a2a2a"
-        title="No Transactions"
+        title="No transactions"
         description="You haven't made any transactions yet."
       />
     );

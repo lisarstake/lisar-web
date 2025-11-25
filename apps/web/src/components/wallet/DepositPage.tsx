@@ -139,7 +139,7 @@ export const DepositPage: React.FC = () => {
       const fiatType = getFiatType(userCurrency);
 
       const onramp = new OnrampWebSDK({
-        appId: import.meta.env.VITE_ONRAMP_APP_ID || 1674103,
+        appId: import.meta.env.VITE_ONRAMP_APP_ID,
         walletAddress: state.user.wallet_address,
         flowType: 1,
         fiatType: fiatType,
@@ -214,7 +214,7 @@ export const DepositPage: React.FC = () => {
   return (
     <div className="h-screen bg-[#050505] text-white flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-8">
+      <div className="flex items-center justify-between px-6 pt-8 pb-4">
         <button
           onClick={handleBackClick}
           className="w-8 h-8 flex items-center justify-center"
@@ -310,7 +310,7 @@ export const DepositPage: React.FC = () => {
                     selectedPaymentMethod === "fiat" ? "#C7EF6B" : "#86B3F7"
                   }
                 />
-                <span className="text-white font-normal">Fiat deposit</span>
+                <span className="text-white font-normal">{userCurrency} deposit</span>
               </div>
               <ChevronRight
                 size={20}
