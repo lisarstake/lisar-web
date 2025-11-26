@@ -485,8 +485,7 @@ export class AuthService implements IAuthApiService {
       );
 
       if (response.success && response.data) {
-        // Update stored tokens
-        const storage = localStorage.getItem("auth_token")
+        const storage = localStorage.getItem("refresh_token")
           ? localStorage
           : sessionStorage;
         storage.setItem("auth_token", response.data.access_token);
@@ -496,7 +495,6 @@ export class AuthService implements IAuthApiService {
           storage.setItem("auth_expiry", response.data.expires_at.toString());
         }
       } else {
-        // Refresh failed, clear tokens
         this.removeStoredTokens();
       }
 

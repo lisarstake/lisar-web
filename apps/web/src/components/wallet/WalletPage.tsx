@@ -9,6 +9,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useWallet } from "@/contexts/WalletContext";
 import { useDelegation } from "@/contexts/DelegationContext";
 import { useNotification } from "@/contexts/NotificationContext";
+import { useGuidedTour } from "@/hooks/useGuidedTour";
+import { WALLET_TOUR_ID } from "@/lib/tourConfig";
 import { priceService } from "@/lib/priceService";
 import { formatEarnings } from "@/lib/formatters";
 import { Search, Bell, CircleQuestionMark } from "lucide-react";
@@ -20,9 +22,22 @@ export const WalletPage: React.FC = () => {
   const { orchestrators, isLoading, error, refetch } = useOrchestrators();
   const { state } = useAuth();
   const { wallet, isLoading: walletLoading } = useWallet();
-  const { delegatorStakeProfile, isLoading: delegationLoading } =
-    useDelegation();
+  const {
+    delegatorStakeProfile,
+    delegatorTransactions,
+    isLoading: delegationLoading,
+  } = useDelegation();
   const { unreadCount } = useNotification();
+
+  // Start tour for non-onboarded users
+  const shouldAutoStart = useMemo(() => {
+    return state.user?.is_onboarded === false && !state.isLoading;
+  }, [state.user?.is_onboarded, state.isLoading]);
+
+  const { isCompleted: isTourCompleted, startTour } = useGuidedTour({
+    tourId: WALLET_TOUR_ID,
+    autoStart: shouldAutoStart,
+  });
 
   const filteredOrchestrators = useMemo(() => {
     if (!searchQuery.trim()) {
@@ -57,8 +72,6 @@ export const WalletPage: React.FC = () => {
   }, [orchestrators, searchQuery]);
 
   const [fiatValue, setFiatValue] = useState(0);
-  const [walletFiatValue, setWalletFiatValue] = useState(0);
-  const [stakedFiatValue, setStakedFiatValue] = useState(0);
 
   // Calculate combined balance (wallet + staked)
   const combinedBalance = useMemo(() => {
@@ -84,37 +97,37 @@ export const WalletPage: React.FC = () => {
       : 0;
   }, [delegatorStakeProfile]);
 
+  const unbondingBalance = useMemo(() => {
+    if (!delegatorTransactions?.pendingStakeTransactions?.length) return 0;
+    return delegatorTransactions.pendingStakeTransactions.reduce(
+      (total, tx) => {
+        const value = parseFloat(tx.amount || "0");
+        return total + (isNaN(value) ? 0 : value);
+      },
+      0
+    );
+  }, [delegatorTransactions]);
+
   useEffect(() => {
     const calculateFiatValues = async () => {
       const fiatCurrency =
         wallet?.fiatCurrency || state.user?.fiat_type || "USD";
-
-      const [combinedFiat, walletFiat, stakedFiat] = await Promise.all([
-        priceService.convertLptToFiat(combinedBalance, fiatCurrency),
-        priceService.convertLptToFiat(walletBalance, fiatCurrency),
-        priceService.convertLptToFiat(stakedBalance, fiatCurrency),
-      ]);
-
+      const combinedFiat = await priceService.convertLptToFiat(
+        combinedBalance,
+        fiatCurrency
+      );
       setFiatValue(combinedFiat);
-      setWalletFiatValue(walletFiat);
-      setStakedFiatValue(stakedFiat);
     };
 
     calculateFiatValues();
-  }, [
-    combinedBalance,
-    walletBalance,
-    stakedBalance,
-    wallet?.fiatCurrency,
-    state.user?.fiat_type,
-  ]);
+  }, [combinedBalance, wallet?.fiatCurrency, state.user?.fiat_type]);
 
   const handleStakeClick = () => {
     navigate("/validator");
   };
 
-  const handleHistoryClick = () => {
-    navigate("/history");
+  const handleNotificationClick = () => {
+    navigate("/notifications");
   };
 
   const handleDepositClick = () => {
@@ -178,7 +191,7 @@ export const WalletPage: React.FC = () => {
         </div>
         <div className="flex items-center space-x-2">
           <button
-            onClick={handleWithdrawClick}
+            onClick={handleNotificationClick}
             className="relative w-10 h-10 bg-[#2a2a2a] rounded-full flex items-center justify-center hover:bg-[#3a3a3a] transition-colors cursor-pointer"
           >
             <Bell size={16} color="#86B3F7" />
@@ -192,36 +205,41 @@ export const WalletPage: React.FC = () => {
       </div>
 
       {/* Wallet Balance */}
-      <div className="text-center px-6 py-4">
+      <div className="text-center px-6 py-4" data-tour="wallet-balance">
         <div className="flex items-center justify-center space-x-2 mb-2">
           <span className="text-white/70 text-sm">Total balance</span>
           <button
             onClick={() => setShowBalanceDrawer(true)}
+            data-tour="wallet-help-icon"
             className="shrink-0 cursor-pointer hover:opacity-70 transition-opacity"
           >
             <CircleQuestionMark size={16} color="#636363" />
           </button>
         </div>
-        {walletLoading || delegationLoading || !wallet ? (
-          <div className="space-y-2">
-            <div className="h-12 bg-[#2a2a2a] rounded-lg animate-pulse w-38 mx-auto"></div>
-            <div className="h-6 bg-[#2a2a2a] rounded-lg animate-pulse w-28 mx-auto"></div>
-          </div>
-        ) : (
-          <>
-            <h1 className="text-3xl font-semibold text-gray-300 mb-2">
-              {formatEarnings(combinedBalance)}
-              <span className="text-sm ml-0.5">LPT</span>
-            </h1>
-            <p className="text-white/70 text-base">
-              ≈{fiatSymbol}
-              {fiatValue.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
-            </p>
-          </>
-        )}
+        <div
+          className={
+            walletLoading || delegationLoading || !wallet ? "animate-pulse" : ""
+          }
+        >
+          <h1 className="text-3xl font-semibold text-gray-300 mb-1.5">
+            {walletLoading || delegationLoading || !wallet
+              ? "0.00"
+              : formatEarnings(combinedBalance)}
+            <span className="text-sm ml-0.5">LPT</span>
+          </h1>
+          <p
+            className={`text-white/70 text-base ${walletLoading || delegationLoading || !wallet ? "mr-4" : "mr-2"}`}
+          >
+            ≈{fiatSymbol}
+            {(walletLoading || delegationLoading || !wallet
+              ? 0
+              : fiatValue
+            ).toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
+          </p>
+        </div>
       </div>
 
       {/* Action Buttons */}
@@ -240,7 +258,7 @@ export const WalletPage: React.FC = () => {
           </div>
           <input
             type="text"
-            placeholder="Search orchestrator"
+            placeholder="Search validators"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-10 pr-4 py-3 bg-[#1a1a1a] border border-[#2a2a2a] text-sm rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-[#C7EF6B]"
@@ -268,28 +286,16 @@ export const WalletPage: React.FC = () => {
         onClose={() => setShowBalanceDrawer(false)}
         title="Balance Information"
         content={[
-          `Your total balance is a combination of your unstaked balance and staked balance.`,
-          `Unstaked Balance: ${formatEarnings(walletBalance)} LPT (≈${fiatSymbol}${walletFiatValue.toLocaleString(
-            undefined,
-            {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            }
-          )})`,
-          `Staked Balance: ${formatEarnings(stakedBalance)} LPT (≈${fiatSymbol}${stakedFiatValue.toLocaleString(
-            undefined,
-            {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            }
-          )})`,
-          `Total Balance: ${formatEarnings(combinedBalance)} LPT (≈${fiatSymbol}${fiatValue.toLocaleString(
-            undefined,
-            {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            }
-          )})`,
+          "Your total balance is a combination of your:",
+          `Unstaked: Available tokens in your wallet not yet staked (${formatEarnings(
+            walletBalance
+          )} LPT)`,
+          `Staked: Token currently staked and earning rewards with a validator (${formatEarnings(
+            stakedBalance
+          )} LPT)`,
+          `Unbonding: Tokens being withdrawn back to your wallet (${formatEarnings(
+            unbondingBalance
+          )} LPT) `,
         ]}
       />
     </div>

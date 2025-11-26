@@ -179,7 +179,7 @@ export class WalletService implements IWalletApiService {
     }
   }
 
-  // Send LPT from a Privy-managed wallet to another address
+  // Send LPT from wallet to another address
   async sendLpt(request: SendLptRequest): Promise<SendLptResponse> {
     const token = this.getStoredToken();
     if (!token) {
@@ -218,7 +218,7 @@ export class WalletService implements IWalletApiService {
     }
   }
 
-  // Approve LPT allowance for a spender from a Privy-managed wallet
+  // Approve LPT allowance for a spender 
   async approveLpt(request: ApproveLptRequest): Promise<ApproveLptResponse> {
     const token = this.getStoredToken();
     if (!token) {
@@ -237,7 +237,7 @@ export class WalletService implements IWalletApiService {
 
       const response = await http.request({
         url: `${this.baseUrl}/wallet/approve-lpt`,
-        method: "POST",
+        method: "GET",
         headers,
         data: request,
         timeout: this.timeout,
