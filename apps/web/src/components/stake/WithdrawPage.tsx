@@ -330,7 +330,7 @@ export const WithdrawPage: React.FC = () => {
         </div>
 
         {/* Predefined LPT Amounts */}
-        {/* <div className="py-4">
+        <div className="py-4">
           <div className="flex space-x-3">
             {["10", "50", "100"].map((amount) => {
               const isActive =
@@ -354,7 +354,7 @@ export const WithdrawPage: React.FC = () => {
               );
             })}
           </div>
-        </div> */}
+        </div>
 
         {/* Wallet Balance Info */}
         <div className="py-4">
