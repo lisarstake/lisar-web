@@ -38,23 +38,14 @@ export const LoginForm: React.FC = () => {
     details: "",
   });
 
+  const fromSignup = location.state?.fromSignup;
+
   useEffect(() => {
-    const fromSignup = location.state?.fromSignup;
 
     if (!state.isLoading && state.isAuthenticated && !fromSignup) {
-      if (state.user?.is_onboarded === false) {
-        navigate("/learn/what-is-lisar", { replace: true });
-      } else {
-        navigate("/wallet", { replace: true });
-      }
+      navigate("/wallet", { replace: true });
     }
-  }, [
-    state.isLoading,
-    state.isAuthenticated,
-    state.user?.is_onboarded,
-    navigate,
-    location.state,
-  ]);
+  }, [state.isLoading, state.isAuthenticated, navigate, location.state]);
 
   useEffect(() => {
     const tokens = extractTokensFromHash();
@@ -70,7 +61,6 @@ export const LoginForm: React.FC = () => {
           JSON.stringify(tokens)
         );
 
-       
         setSuccessDrawer({
           isOpen: true,
           title: "Email Confirmed!",
@@ -151,11 +141,7 @@ export const LoginForm: React.FC = () => {
 
       if (response.success) {
         setTimeout(() => {
-          if (state.user?.is_onboarded === false) {
-            navigate("/learn/what-is-lisar", { replace: true });
-          } else {
-            navigate("/wallet", { replace: true });
-          }
+          navigate("/wallet", { replace: true });
         }, 100);
       } else {
         setErrorDrawer({
@@ -193,7 +179,7 @@ export const LoginForm: React.FC = () => {
 
   const isFormValid = formData.email && formData.password;
 
-  if (state.isLoading && !isSubmitting) {
+  if (!fromSignup && state.isLoading && !isSubmitting) {
     return <LoadingSpinner message="Checking session..." />;
   }
 
@@ -278,9 +264,7 @@ export const LoginForm: React.FC = () => {
                 onChange={(e) => setRememberMe(e.target.checked)}
                 className="w-4 h-4 text-[#C7EF6B] bg-[#121212] border-[#121212] rounded "
               />
-              <span className="ml-2 text-white text-sm">
-                Remember me
-              </span>
+              <span className="ml-2 text-white text-sm">Remember me</span>
             </label>
             <Link
               to="/forgot-password"

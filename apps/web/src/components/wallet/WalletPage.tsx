@@ -9,6 +9,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useWallet } from "@/contexts/WalletContext";
 import { useDelegation } from "@/contexts/DelegationContext";
 import { useNotification } from "@/contexts/NotificationContext";
+import { useGuidedTour } from "@/hooks/useGuidedTour";
+import { WALLET_TOUR_ID } from "@/lib/tourConfig";
 import { priceService } from "@/lib/priceService";
 import { formatEarnings } from "@/lib/formatters";
 import { Search, Bell, CircleQuestionMark } from "lucide-react";
@@ -26,6 +28,16 @@ export const WalletPage: React.FC = () => {
     isLoading: delegationLoading,
   } = useDelegation();
   const { unreadCount } = useNotification();
+
+  // Start tour for non-onboarded users
+  const shouldAutoStart = useMemo(() => {
+    return state.user?.is_onboarded === false && !state.isLoading;
+  }, [state.user?.is_onboarded, state.isLoading]);
+
+  const { isCompleted: isTourCompleted, startTour } = useGuidedTour({
+    tourId: WALLET_TOUR_ID,
+    autoStart: shouldAutoStart,
+  });
 
   const filteredOrchestrators = useMemo(() => {
     if (!searchQuery.trim()) {
@@ -87,10 +99,13 @@ export const WalletPage: React.FC = () => {
 
   const unbondingBalance = useMemo(() => {
     if (!delegatorTransactions?.pendingStakeTransactions?.length) return 0;
-    return delegatorTransactions.pendingStakeTransactions.reduce((total, tx) => {
-      const value = parseFloat(tx.amount || "0");
-      return total + (isNaN(value) ? 0 : value);
-    }, 0);
+    return delegatorTransactions.pendingStakeTransactions.reduce(
+      (total, tx) => {
+        const value = parseFloat(tx.amount || "0");
+        return total + (isNaN(value) ? 0 : value);
+      },
+      0
+    );
   }, [delegatorTransactions]);
 
   useEffect(() => {
@@ -105,11 +120,7 @@ export const WalletPage: React.FC = () => {
     };
 
     calculateFiatValues();
-  }, [
-    combinedBalance,
-    wallet?.fiatCurrency,
-    state.user?.fiat_type,
-  ]);
+  }, [combinedBalance, wallet?.fiatCurrency, state.user?.fiat_type]);
 
   const handleStakeClick = () => {
     navigate("/validator");
@@ -194,24 +205,31 @@ export const WalletPage: React.FC = () => {
       </div>
 
       {/* Wallet Balance */}
-      <div className="text-center px-6 py-4">
+      <div className="text-center px-6 py-4" data-tour="wallet-balance">
         <div className="flex items-center justify-center space-x-2 mb-2">
           <span className="text-white/70 text-sm">Total balance</span>
           <button
             onClick={() => setShowBalanceDrawer(true)}
+            data-tour="wallet-help-icon"
             className="shrink-0 cursor-pointer hover:opacity-70 transition-opacity"
           >
             <CircleQuestionMark size={16} color="#636363" />
           </button>
         </div>
-        <div className={walletLoading || delegationLoading || !wallet ? "animate-pulse" : ""}>
+        <div
+          className={
+            walletLoading || delegationLoading || !wallet ? "animate-pulse" : ""
+          }
+        >
           <h1 className="text-3xl font-semibold text-gray-300 mb-1.5">
             {walletLoading || delegationLoading || !wallet
               ? "0.00"
               : formatEarnings(combinedBalance)}
             <span className="text-sm ml-0.5">LPT</span>
           </h1>
-          <p className={`text-white/70 text-base ${walletLoading || delegationLoading || !wallet ? "mr-4" : "mr-2"}`}>
+          <p
+            className={`text-white/70 text-base ${walletLoading || delegationLoading || !wallet ? "mr-4" : "mr-2"}`}
+          >
             ≈{fiatSymbol}
             {(walletLoading || delegationLoading || !wallet
               ? 0
@@ -240,7 +258,7 @@ export const WalletPage: React.FC = () => {
           </div>
           <input
             type="text"
-            placeholder="Search orchestrator"
+            placeholder="Search validators"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-10 pr-4 py-3 bg-[#1a1a1a] border border-[#2a2a2a] text-sm rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-[#C7EF6B]"
@@ -268,7 +286,7 @@ export const WalletPage: React.FC = () => {
         onClose={() => setShowBalanceDrawer(false)}
         title="Balance Information"
         content={[
-          'Your total balance is a combination of your:',
+          "Your total balance is a combination of your:",
           `Unstaked: Available tokens in your wallet not yet staked (${formatEarnings(
             walletBalance
           )} LPT)`,
