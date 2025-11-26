@@ -76,6 +76,7 @@ export const OnchainDepositPage: React.FC = () => {
 
       {/* QR Code and Address Section */}
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-8">
+        <p className="text-xl font-semibold text-gray-100 mb-3">Livepeer token (LPT)</p>
         {/* QR Code */}
         <div className="bg-white rounded-xl p-2 mb-6">
           <div className="w-48 h-48 bg-white rounded-lg flex items-center justify-center">
@@ -103,7 +104,7 @@ export const OnchainDepositPage: React.FC = () => {
         <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4 mb-8 max-w-sm">
           <p className="text-yellow-400 text-xs text-center">
             Scan the QR code or copy the address to deposit. Always ensure you
-            are depositing to the correct network.
+            are depositing the correct token and network.
           </p>
         </div>
       </div>

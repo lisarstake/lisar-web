@@ -312,7 +312,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     };
 
-    const interval = setInterval(checkTokenExpiry, 60000);
+    const interval = setInterval(checkTokenExpiry, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, [state.isAuthenticated, state.session?.refresh_token]);
 

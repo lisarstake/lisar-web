@@ -101,12 +101,14 @@ export const NotificationsPage: React.FC = () => {
               Mark all
             </button>
           )}
-          <button
-            onClick={handleHelpClick}
-            className="w-8 h-8 bg-[#2a2a2a] rounded-full flex items-center justify-center"
-          >
-            <CircleQuestionMark color="#86B3F7" size={16} />
-          </button>
+          {viewMode === "history" && (
+            <button
+              onClick={handleHelpClick}
+              className="w-8 h-8 bg-[#2a2a2a] rounded-full flex items-center justify-center"
+            >
+              <CircleQuestionMark color="#86B3F7" size={16} />
+            </button>
+          )}
         </div>
       </div>
 
@@ -267,30 +269,18 @@ export const NotificationsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Help Drawer */}
-      <HelpDrawer
-        isOpen={showHelpDrawer}
-        onClose={() => setShowHelpDrawer(false)}
-        title={
-          viewMode === "notifications"
-            ? "Notifications Guide"
-            : "History Guide"
-        }
-        content={
-          viewMode === "notifications"
-            ? [
-                "Stay updated with all your account activities and important alerts.",
-                "Unread notifications are highlighted with a green border and red dot indicator.",
-                "Mark notifications as read individually or mark all as read at once.",
-                "Delete notifications you no longer need to keep your list organized.",
-              ]
-            : [
-                "View all your staking activities and transactions in one place.",
-                "Green arrows show money coming in, red arrows show money going out.",
-                "Click any transaction to see details like date, amount, and status.",
-              ]
-        }
-      />
+      {viewMode === "history" && (
+        <HelpDrawer
+          isOpen={showHelpDrawer}
+          onClose={() => setShowHelpDrawer(false)}
+          title="History Guide"
+          content={[
+            "View all your staking activities and transactions in one place.",
+            "Green arrows show money coming in, red arrows show money going out.",
+            "Click any transaction to see details like date, amount, and status.",
+          ]}
+        />
+      )}
     </div>
   );
 };

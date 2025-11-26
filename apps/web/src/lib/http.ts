@@ -7,13 +7,19 @@ export const http = axios.create({
 })
 
 const getStoredToken = (): string | null => {
+  if (isRefreshing) {
+    return localStorage.getItem("auth_token") || sessionStorage.getItem("auth_token");
+  }
+
   let token = localStorage.getItem("auth_token");
   const expiry = localStorage.getItem("auth_expiry");
   
   if (token && expiry) {
     const expiryTime = parseInt(expiry) * 1000;
     if (Date.now() > expiryTime) {
-      removeStoredTokens();
+      if (!isRefreshing) {
+        removeStoredTokens();
+      }
       return null;
     }
   }
@@ -133,8 +139,8 @@ http.interceptors.response.use(
       }
 
       try {
-        const refreshResponse = await axios.post(
-          `${env.VITE_API_BASE_URL}/auth/refresh`,
+        const refreshResponse = await http.post(
+          "/auth/refresh",
           { refreshToken },
           {
             headers: {

@@ -20,8 +20,11 @@ export const WalletPage: React.FC = () => {
   const { orchestrators, isLoading, error, refetch } = useOrchestrators();
   const { state } = useAuth();
   const { wallet, isLoading: walletLoading } = useWallet();
-  const { delegatorStakeProfile, isLoading: delegationLoading } =
-    useDelegation();
+  const {
+    delegatorStakeProfile,
+    delegatorTransactions,
+    isLoading: delegationLoading,
+  } = useDelegation();
   const { unreadCount } = useNotification();
 
   const filteredOrchestrators = useMemo(() => {
@@ -57,8 +60,6 @@ export const WalletPage: React.FC = () => {
   }, [orchestrators, searchQuery]);
 
   const [fiatValue, setFiatValue] = useState(0);
-  const [walletFiatValue, setWalletFiatValue] = useState(0);
-  const [stakedFiatValue, setStakedFiatValue] = useState(0);
 
   // Calculate combined balance (wallet + staked)
   const combinedBalance = useMemo(() => {
@@ -84,27 +85,28 @@ export const WalletPage: React.FC = () => {
       : 0;
   }, [delegatorStakeProfile]);
 
+  const unbondingBalance = useMemo(() => {
+    if (!delegatorTransactions?.pendingStakeTransactions?.length) return 0;
+    return delegatorTransactions.pendingStakeTransactions.reduce((total, tx) => {
+      const value = parseFloat(tx.amount || "0");
+      return total + (isNaN(value) ? 0 : value);
+    }, 0);
+  }, [delegatorTransactions]);
+
   useEffect(() => {
     const calculateFiatValues = async () => {
       const fiatCurrency =
         wallet?.fiatCurrency || state.user?.fiat_type || "USD";
-
-      const [combinedFiat, walletFiat, stakedFiat] = await Promise.all([
-        priceService.convertLptToFiat(combinedBalance, fiatCurrency),
-        priceService.convertLptToFiat(walletBalance, fiatCurrency),
-        priceService.convertLptToFiat(stakedBalance, fiatCurrency),
-      ]);
-
+      const combinedFiat = await priceService.convertLptToFiat(
+        combinedBalance,
+        fiatCurrency
+      );
       setFiatValue(combinedFiat);
-      setWalletFiatValue(walletFiat);
-      setStakedFiatValue(stakedFiat);
     };
 
     calculateFiatValues();
   }, [
     combinedBalance,
-    walletBalance,
-    stakedBalance,
     wallet?.fiatCurrency,
     state.user?.fiat_type,
   ]);
@@ -202,26 +204,24 @@ export const WalletPage: React.FC = () => {
             <CircleQuestionMark size={16} color="#636363" />
           </button>
         </div>
-        {walletLoading || delegationLoading || !wallet ? (
-          <div className="space-y-2">
-            <div className="h-12 bg-[#2a2a2a] rounded-lg animate-pulse w-38 mx-auto"></div>
-            <div className="h-6 bg-[#2a2a2a] rounded-lg animate-pulse w-28 mx-auto"></div>
-          </div>
-        ) : (
-          <>
-            <h1 className="text-3xl font-semibold text-gray-300 mb-2">
-              {formatEarnings(combinedBalance)}
-              <span className="text-sm ml-0.5">LPT</span>
-            </h1>
-            <p className="text-white/70 text-base">
-              ≈{fiatSymbol}
-              {fiatValue.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
-            </p>
-          </>
-        )}
+        <div className={walletLoading || delegationLoading || !wallet ? "animate-pulse" : ""}>
+          <h1 className="text-3xl font-semibold text-gray-300 mb-1.5">
+            {walletLoading || delegationLoading || !wallet
+              ? "0.00"
+              : formatEarnings(combinedBalance)}
+            <span className="text-sm ml-0.5">LPT</span>
+          </h1>
+          <p className={`text-white/70 text-base ${walletLoading || delegationLoading || !wallet ? "mr-4" : "mr-2"}`}>
+            ≈{fiatSymbol}
+            {(walletLoading || delegationLoading || !wallet
+              ? 0
+              : fiatValue
+            ).toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
+          </p>
+        </div>
       </div>
 
       {/* Action Buttons */}
@@ -268,28 +268,16 @@ export const WalletPage: React.FC = () => {
         onClose={() => setShowBalanceDrawer(false)}
         title="Balance Information"
         content={[
-          `Your total balance is a combination of your unstaked balance and staked balance.`,
-          `Unstaked Balance: ${formatEarnings(walletBalance)} LPT (≈${fiatSymbol}${walletFiatValue.toLocaleString(
-            undefined,
-            {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            }
-          )})`,
-          `Staked Balance: ${formatEarnings(stakedBalance)} LPT (≈${fiatSymbol}${stakedFiatValue.toLocaleString(
-            undefined,
-            {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            }
-          )})`,
-          `Total Balance: ${formatEarnings(combinedBalance)} LPT (≈${fiatSymbol}${fiatValue.toLocaleString(
-            undefined,
-            {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            }
-          )})`,
+          'Your total balance is a combination of your:',
+          `Unstaked: Available tokens in your wallet not yet staked (${formatEarnings(
+            walletBalance
+          )} LPT)`,
+          `Staked: Token currently staked and earning rewards with a validator (${formatEarnings(
+            stakedBalance
+          )} LPT)`,
+          `Unbonding: Tokens being withdrawn back to your wallet (${formatEarnings(
+            unbondingBalance
+          )} LPT) `,
         ]}
       />
     </div>

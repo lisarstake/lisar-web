@@ -46,6 +46,7 @@ export const WithdrawPage: React.FC = () => {
   const [showSuccessDrawer, setShowSuccessDrawer] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [fiatEquivalent, setFiatEquivalent] = useState(0);
   const { state } = useAuth();
   const { wallet } = useWallet();
   const { refetch: refetchDelegation } = useDelegation();
@@ -68,6 +69,22 @@ export const WithdrawPage: React.FC = () => {
     const numericAmount = parseFormattedNumber(amount);
     setLptAmount(numericAmount);
   };
+
+  useEffect(() => {
+    const calculateFiat = async () => {
+      const numericAmount = parseFloat(lptAmount.replace(/,/g, "")) || 0;
+      if (numericAmount > 0) {
+        const fiatValue = await priceService.convertLptToFiat(
+          numericAmount,
+          userCurrency
+        );
+        setFiatEquivalent(fiatValue);
+      } else {
+        setFiatEquivalent(0);
+      }
+    };
+    calculateFiat();
+  }, [lptAmount, userCurrency]);
 
   const handleMaxClick = () => {
     setLptAmount(walletBalanceLpt.toString());
@@ -104,17 +121,11 @@ export const WithdrawPage: React.FC = () => {
       return;
     }
 
-    if (!state.user.wallet_id || !state.user.wallet_address) {
-      setErrorMessage("Wallet information not found. Please try again.");
-      setShowErrorDrawer(true);
-      return;
-    }
-
     setIsWithdrawing(true);
     try {
       const numericAmount = lptAmount.replace(/,/g, "");
 
-      // Step 1: Approve LPT for the withdrawal address
+      //approve withdrawal
       const approveResponse = await walletService.approveLpt({
         walletId: state.user.wallet_id,
         walletAddress: state.user.wallet_address,
@@ -132,7 +143,7 @@ export const WithdrawPage: React.FC = () => {
         return;
       }
 
-      // Step 2: Send LPT to the destination address
+      // send lpt
       const sendResponse = await walletService.sendLpt({
         walletId: state.user.wallet_id,
         walletAddress: state.user.wallet_address,
@@ -260,7 +271,7 @@ export const WithdrawPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Network Input */}
+        {/* Network Input
         <div className="pt-4">
           <h3 className="text-base font-medium text-white/90 mb-2">Network</h3>
           <div className="bg-[#1a1a1a] rounded-lg p-3 border border-[#2a2a2a]">
@@ -271,7 +282,7 @@ export const WithdrawPage: React.FC = () => {
               className="w-full bg-transparent text-white text-base font-normal focus:outline-none opacity-60 cursor-not-allowed"
             />
           </div>
-        </div>
+        </div> */}
 
         {/* Amount Input Field */}
         <div className="py-2">
@@ -309,10 +320,17 @@ export const WithdrawPage: React.FC = () => {
               Max
             </button>
           </div>
+          <p className="text-gray-400 text-xs mt-2 pl-2">
+            ≈ {currencySymbol}
+            {fiatEquivalent.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
+          </p>
         </div>
 
         {/* Predefined LPT Amounts */}
-        <div className="py-4">
+        {/* <div className="py-4">
           <div className="flex space-x-3">
             {["10", "50", "100"].map((amount) => {
               const isActive =
@@ -336,7 +354,7 @@ export const WithdrawPage: React.FC = () => {
               );
             })}
           </div>
-        </div>
+        </div> */}
 
         {/* Wallet Balance Info */}
         <div className="py-4">
@@ -362,11 +380,17 @@ export const WithdrawPage: React.FC = () => {
           )}
           {/* Guide */}
           <div className="mt-3 p-3 bg-[#1a1a1a] rounded-lg border border-[#2a2a2a]">
-            <p className="text-gray-400 text-xs leading-relaxed">
-              To withdraw, initiate a withdrawal on onramp and get the
-              withdrawal address. Then make payment to the address to complete
-              withdrawal.
-            </p>
+            <div className="text-gray-400 text-xs leading-relaxed space-y-2">
+              <p className="font-medium mb-2">To withdraw:</p>
+              <div className="space-y-1.5">
+                <p>1. Click "Get Address" to initiate withdrawal</p>
+                <p>2. Complete the details and copy the address provided</p>
+                <p>
+                  3. Paste the address, exact amount and send to complete the
+                  withdrawal
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>

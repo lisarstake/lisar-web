@@ -8,6 +8,7 @@ import { ErrorDrawer } from "@/components/ui/ErrorDrawer";
 import { OTPVerificationDrawer } from "@/components/auth/OTPVerificationDrawer";
 import { useOrchestrators } from "@/contexts/OrchestratorContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useWallet } from "@/contexts/WalletContext";
 import { priceService } from "@/lib/priceService";
 import { delegationService } from "@/services";
 import { totpService } from "@/services/totp";
@@ -25,8 +26,8 @@ export const ConfirmUnstakePage: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState<string>("");
   const { orchestrators } = useOrchestrators();
   const { state } = useAuth();
+  const { refetch: refetchWallet } = useWallet();
 
-  // Find the orchestrator by address (validatorId is the address)
   const currentValidator = orchestrators.find(
     (orch) => orch.address === validatorId
   );
@@ -61,7 +62,6 @@ export const ConfirmUnstakePage: React.FC = () => {
   }; 
 
   const handleProceed = () => {
-    // Open OTP verification drawer before unstaking
     setShowOTPDrawer(true);
   };
 
@@ -78,11 +78,13 @@ export const ConfirmUnstakePage: React.FC = () => {
 
   const handleOTPSuccess = () => {
     setShowOTPDrawer(false);
-    // Proceed with unstaking after OTP verification
-    handleUnstake();
+    if (!isProcessing) {
+      handleUnstake();
+    }
   };
 
   const handleUnstake = async () => {
+    if (isProcessing) return;
     if (!currentValidator) return;
     const walletId = state.user?.wallet_id;
     const walletAddress = state.user?.wallet_address;
@@ -99,6 +101,7 @@ export const ConfirmUnstakePage: React.FC = () => {
       const response = await delegationService.unbond(unbondRequest);
 
       if (response.success) {
+        await refetchWallet();
         setShowSuccessDrawer(true);
       } else {
         setErrorMessage("Failed to unstake. Please try again.");
@@ -227,7 +230,7 @@ export const ConfirmUnstakePage: React.FC = () => {
           navigate("/wallet");
         }}
         title="Unstake Successful!"
-        message="Your unstaking request has been processed successfully. Your funds will be available after the unbonding period."
+        message="You've unstaked successfully and your funds will be available after the unbonding period."
       />
 
       {/* Error Drawer */}
