@@ -5,13 +5,24 @@ import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { mockLearnContent } from "@/mock/learn";
 import { extractVimeoId, getVimeoThumbnail } from "@/lib/vimeo";
 import { HelpDrawer } from "../general/HelpDrawer";
+import { useGuidedTour } from "@/hooks/useGuidedTour";
+import { LEARN_TOUR_ID } from "@/lib/tourConfig";
+import { useAuth } from "@/contexts/AuthContext";
 
 export const LearnPage: React.FC = () => {
   const navigate = useNavigate();
+  const { state } = useAuth();
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<
     "mandatory" | "academy"
-  >("academy");
+  >("mandatory");
+
+  // Start tour automatically only for non-onboarded users
+  const shouldAutoStart = state.user?.is_onboarded === false;
+  useGuidedTour({
+    tourId: LEARN_TOUR_ID,
+    autoStart: shouldAutoStart,
+  });
 
   const learnContent = mockLearnContent;
 
@@ -45,6 +56,7 @@ export const LearnPage: React.FC = () => {
           </div>
           <button
             onClick={handleHelpClick}
+            data-tour="learn-help-icon"
             className="w-8 h-8 bg-[#2a2a2a] rounded-full flex items-center justify-center"
           >
             <CircleQuestionMark color="#86B3F7" size={16} />
@@ -53,18 +65,21 @@ export const LearnPage: React.FC = () => {
 
         {/* Video Content */}
         <div className="space-y-4">
-          {filteredContent.map((content) => (
+          {filteredContent.map((content, index) => (
             <div
               key={content.id}
               onClick={() => handleContentClick(content.slug)}
+              data-tour={index === 0 ? "learn-video-card" : undefined}
               className="bg-[#1a1a1a] rounded-xl overflow-hidden cursor-pointer hover:bg-[#2a2a2a] transition-colors"
             >
               {/* Video Thumbnail */}
               <div className="w-full h-44 bg-black relative overflow-hidden">
                 {(() => {
                   const vimeoId = extractVimeoId(content.videoUrl);
-                  const thumbnailUrl = vimeoId ? getVimeoThumbnail(vimeoId) : null;
-                  
+                  const thumbnailUrl = vimeoId
+                    ? getVimeoThumbnail(vimeoId)
+                    : null;
+
                   return thumbnailUrl ? (
                     <img
                       src={thumbnailUrl}
@@ -86,8 +101,8 @@ export const LearnPage: React.FC = () => {
               {/* Content Info */}
               <div className="p-4">
                 <h3 className="text-white font-medium text-lg mb-2">
-                    {content.title}
-                  </h3>
+                  {content.title}
+                </h3>
 
                 <p className="text-gray-500 text-xs leading-relaxed">
                   {content.brief}
@@ -126,15 +141,15 @@ export const LearnPage: React.FC = () => {
         </div>
       </div>
 
-        {/* Help Drawer */}
-        <HelpDrawer
+      {/* Help Drawer */}
+      <HelpDrawer
         isOpen={showHelpDrawer}
         onClose={() => setShowHelpDrawer(false)}
         title="Learning Guide"
         content={[
           "Learn about Lisar and crypto through our academy videos.",
           "Watch the videos and follow along with the highlighted script to learn about Lisar and crypto.",
-          "You can read the script without watching the video if you prefer."
+          "You can read the script without watching the video if you prefer.",
         ]}
       />
 
