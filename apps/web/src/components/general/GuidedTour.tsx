@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useGuidedTourContext } from "@/contexts/GuidedTourContext";
@@ -19,7 +19,48 @@ interface TooltipPosition {
   bottom?: number;
   left?: number;
   right?: number;
+  transform?: string;
+  width?: number;
 }
+
+
+const isMobileDevice = () => {
+  return window.innerWidth < 768 || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+};
+
+
+const getViewportHeight = () => {
+
+  if (window.visualViewport) {
+    return window.visualViewport.height;
+  }
+  return window.innerHeight;
+};
+
+
+const getViewportWidth = () => {
+  if (window.visualViewport) {
+    return window.visualViewport.width;
+  }
+  return window.innerWidth;
+};
+
+const getVisibleElement = (selector: string): HTMLElement | null => {
+  const elements = document.querySelectorAll<HTMLElement>(selector);
+  for (const element of elements) {
+    const style = window.getComputedStyle(element);
+    const rect = element.getBoundingClientRect();
+    const hasSize = rect.width > 0 || rect.height > 0;
+    const isHidden =
+      style.display === "none" ||
+      style.visibility === "hidden" ||
+      parseFloat(style.opacity || "1") === 0;
+    if (!isHidden && hasSize) {
+      return element;
+    }
+  }
+  return null;
+};
 
 export const GuidedTour: React.FC = () => {
   const navigate = useNavigate();
@@ -31,13 +72,15 @@ export const GuidedTour: React.FC = () => {
   const [tooltipPosition, setTooltipPosition] = useState<TooltipPosition>({});
   const [currentStep, setCurrentStep] = useState<TourStep | null>(null);
   const [showSkipConfirmation, setShowSkipConfirmation] = useState(false);
+  const rafIdRef = useRef<number | null>(null);
+  const scrollContainersRef = useRef<Element[]>([]);
 
   useEffect(() => {
     setShowSkipConfirmation(false);
   }, [tourState.currentStepIndex, tourState.tourId]);
 
   const calculatePositions = useCallback((step: TourStep) => {
-    const element = document.querySelector(step.target);
+    const element = getVisibleElement(step.target);
     if (!element) {
       console.warn(`Tour target not found: ${step.target}`);
       return;
@@ -46,15 +89,18 @@ export const GuidedTour: React.FC = () => {
     const rect = element.getBoundingClientRect();
     const padding = step.highlightPadding || 8;
 
-    // Add scroll offset
-    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-    const scrollLeft =
-      window.pageXOffset || document.documentElement.scrollLeft;
 
-    // Spotlight position (fixed to viewport)
+    const viewportHeight = getViewportHeight();
+    const viewportWidth = getViewportWidth();
+    
+   
+    const viewportOffsetTop = window.visualViewport?.offsetTop || 0;
+    const viewportOffsetLeft = window.visualViewport?.offsetLeft || 0;
+
+ 
     const spotlight: SpotlightPosition = {
-      top: rect.top - padding,
-      left: rect.left - padding,
+      top: rect.top - padding - viewportOffsetTop,
+      left: rect.left - padding - viewportOffsetLeft,
       width: rect.width + padding * 2,
       height: rect.height + padding * 2,
     };
@@ -64,47 +110,67 @@ export const GuidedTour: React.FC = () => {
     // Tooltip position based on preferred position
     const tooltip: TooltipPosition = {};
     const tooltipOffset = 20;
-    const tooltipWidth = 300;
+    const isMobile = isMobileDevice();
+    const horizontalMargin = isMobile ? 12 : 16;
+    const tooltipWidth = isMobile
+      ? Math.min(360, viewportWidth - horizontalMargin * 2)
+      : 320;
+    tooltip.width = tooltipWidth;
 
     switch (step.position) {
       case "top":
-        tooltip.bottom = window.innerHeight - rect.top + tooltipOffset;
+        tooltip.bottom = viewportHeight - (rect.top - viewportOffsetTop) + tooltipOffset;
         tooltip.left = Math.max(
           16,
           Math.min(
-            rect.left + rect.width / 2 - tooltipWidth / 2,
-            window.innerWidth - tooltipWidth - 16
+            rect.left - viewportOffsetLeft + rect.width / 2 - tooltipWidth / 2,
+            viewportWidth - tooltipWidth - 16
           )
         );
         break;
       case "bottom":
-        tooltip.top = rect.bottom + tooltipOffset;
+        tooltip.top = rect.bottom - viewportOffsetTop + tooltipOffset;
         tooltip.left = Math.max(
           16,
           Math.min(
-            rect.left + rect.width / 2 - tooltipWidth / 2,
-            window.innerWidth - tooltipWidth - 16
+            rect.left - viewportOffsetLeft + rect.width / 2 - tooltipWidth / 2,
+            viewportWidth - tooltipWidth - 16
           )
         );
         break;
       case "left":
-        tooltip.top = Math.max(16, rect.top + rect.height / 2 - 80);
-        tooltip.right = window.innerWidth - rect.left + tooltipOffset;
+        tooltip.top = Math.max(16, rect.top - viewportOffsetTop + rect.height / 2 - 80);
+        tooltip.left =
+          rect.left -
+          viewportOffsetLeft -
+          tooltipWidth -
+          tooltipOffset;
         break;
       case "right":
-        tooltip.top = Math.max(16, rect.top + rect.height / 2 - 80);
-        tooltip.left = rect.right + tooltipOffset;
+        tooltip.top = Math.max(16, rect.top - viewportOffsetTop + rect.height / 2 - 80);
+        tooltip.left = rect.right - viewportOffsetLeft + tooltipOffset;
         break;
       default:
         // Default to bottom
-        tooltip.top = rect.bottom + tooltipOffset;
+        tooltip.top = rect.bottom - viewportOffsetTop + tooltipOffset;
         tooltip.left = Math.max(
           16,
           Math.min(
-            rect.left + rect.width / 2 - tooltipWidth / 2,
-            window.innerWidth - tooltipWidth - 16
+            rect.left - viewportOffsetLeft + rect.width / 2 - tooltipWidth / 2,
+            viewportWidth - tooltipWidth - 16
           )
         );
+    }
+
+    if (isMobile) {
+      const centeredLeft = viewportWidth / 2 - viewportOffsetLeft;
+      tooltip.left = centeredLeft;
+      tooltip.transform = "translateX(-50%)";
+    } else if (tooltip.left !== undefined) {
+      tooltip.left = Math.max(
+        horizontalMargin,
+        Math.min(tooltip.left, viewportWidth - tooltipWidth - horizontalMargin)
+      );
     }
 
     setTooltipPosition(tooltip);
@@ -123,14 +189,41 @@ export const GuidedTour: React.FC = () => {
     const step = tourConfig.steps[tourState.currentStepIndex];
     setCurrentStep(step);
 
-    // Small delay to ensure DOM is ready, then try multiple times to find element
+    // Small delay to ensure DOM is ready
     let attemptCount = 0;
-    const maxAttempts = 10;
+    const maxAttempts = 15;
 
     const tryCalculate = () => {
-      const element = document.querySelector(step.target);
+      const element = getVisibleElement(step.target);
       if (element) {
-        calculatePositions(step);
+       
+        const rect = element.getBoundingClientRect();
+        const viewportHeight = getViewportHeight();
+        const viewportWidth = getViewportWidth();
+        
+        // Check if element is outside the visible viewport
+        const isOutOfView = 
+          rect.bottom < 0 || 
+          rect.top > viewportHeight || 
+          rect.right < 0 || 
+          rect.left > viewportWidth;
+        
+        if (isOutOfView || isMobileDevice()) {
+          // Scroll element into view with smooth behavior
+          // Use 'nearest' to minimize scrolling - only scroll if necessary
+          element.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+            inline: 'nearest'
+          });
+          
+          // Wait for scroll to complete before calculating positions
+          setTimeout(() => {
+            calculatePositions(step);
+          }, 350); // Allow time for smooth scroll
+        } else {
+          calculatePositions(step);
+        }
       } else if (attemptCount < maxAttempts) {
         attemptCount++;
         setTimeout(tryCalculate, 100);
@@ -151,19 +244,122 @@ export const GuidedTour: React.FC = () => {
     calculatePositions,
   ]);
 
-  // Recalculate on resize or scroll
+  // Recalculate on resize, scroll, or viewport changes
   useEffect(() => {
     if (!currentStep) return;
 
-    const handleResize = () => calculatePositions(currentStep);
-    const handleScroll = () => calculatePositions(currentStep);
+    const handleUpdate = () => {
+      // Cancel any pending RAF to avoid duplicate calculations
+      if (rafIdRef.current) {
+        cancelAnimationFrame(rafIdRef.current);
+      }
+      rafIdRef.current = requestAnimationFrame(() => {
+        calculatePositions(currentStep);
+      });
+    };
 
-    window.addEventListener("resize", handleResize);
-    window.addEventListener("scroll", handleScroll, true);
+    // Find all scrollable containers in the DOM that might contain tour targets
+    const findScrollContainers = () => {
+      const containers: Element[] = [];
+      
+      // Add common scroll containers
+      const appMain = document.querySelector('.app-main');
+      if (appMain) containers.push(appMain);
+      
+      // Mobile preview container (desktop view)
+      const mobilePreview = document.getElementById('mobile-preview-container');
+      if (mobilePreview) {
+        containers.push(mobilePreview);
+        const mainInPreview = mobilePreview.querySelector('main');
+        if (mainInPreview) containers.push(mainInPreview);
+      }
+      
+      // Find the target element and traverse up to find scrollable parents
+      const targetElement = getVisibleElement(currentStep.target);
+      if (targetElement) {
+        let parent = targetElement.parentElement;
+        while (parent && parent !== document.body) {
+          const style = window.getComputedStyle(parent);
+          const overflowY = style.overflowY;
+          const overflowX = style.overflowX;
+          if (overflowY === 'auto' || overflowY === 'scroll' || 
+              overflowX === 'auto' || overflowX === 'scroll') {
+            if (!containers.includes(parent)) {
+              containers.push(parent);
+            }
+          }
+          parent = parent.parentElement;
+        }
+      }
+      
+      return containers;
+    };
+
+    // Attach scroll listeners to all scroll containers
+    scrollContainersRef.current = findScrollContainers();
+    
+    // Window events
+    window.addEventListener("resize", handleUpdate);
+    window.addEventListener("scroll", handleUpdate, true);
+    
+    // Add listeners to all found scroll containers
+    scrollContainersRef.current.forEach(container => {
+      container.addEventListener("scroll", handleUpdate, { passive: true });
+    });
+
+    // Listen to visual viewport changes on mobile (handles keyboard, address bar)
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", handleUpdate);
+      window.visualViewport.addEventListener("scroll", handleUpdate);
+    }
+
+    // On mobile, use RAF loop to continuously update positions
+    // This catches any edge cases where scroll events might be missed
+    let mobileRafId: number | null = null;
+    if (isMobileDevice()) {
+      let lastTop = 0;
+      let lastLeft = 0;
+      
+      const checkPosition = () => {
+        const element = getVisibleElement(currentStep.target);
+        if (element) {
+          const rect = element.getBoundingClientRect();
+          // Only recalculate if position actually changed
+          if (Math.abs(rect.top - lastTop) > 1 || Math.abs(rect.left - lastLeft) > 1) {
+            lastTop = rect.top;
+            lastLeft = rect.left;
+            calculatePositions(currentStep);
+          }
+        }
+        mobileRafId = requestAnimationFrame(checkPosition);
+      };
+      
+      mobileRafId = requestAnimationFrame(checkPosition);
+    }
+
+    // Initial position calculation
+    handleUpdate();
 
     return () => {
-      window.removeEventListener("resize", handleResize);
-      window.removeEventListener("scroll", handleScroll, true);
+      window.removeEventListener("resize", handleUpdate);
+      window.removeEventListener("scroll", handleUpdate, true);
+      
+      scrollContainersRef.current.forEach(container => {
+        container.removeEventListener("scroll", handleUpdate);
+      });
+      
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener("resize", handleUpdate);
+        window.visualViewport.removeEventListener("scroll", handleUpdate);
+      }
+      
+      if (rafIdRef.current) {
+        cancelAnimationFrame(rafIdRef.current);
+      }
+      
+      if (mobileRafId) {
+        cancelAnimationFrame(mobileRafId);
+      }
     };
   }, [currentStep, calculatePositions]);
 
@@ -277,11 +473,17 @@ export const GuidedTour: React.FC = () => {
 
       {/* Tooltip */}
       <div
-        className="fixed bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-5 shadow-2xl max-w-[300px] transition-all duration-300"
+        className="fixed bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-5 shadow-2xl transition-all duration-300"
         style={{
           zIndex: 10000,
           ...tooltipPosition,
-          pointerEvents: 'auto',
+          pointerEvents: "auto",
+          maxWidth:
+            tooltipPosition.width !== undefined
+              ? undefined
+              : isMobileDevice()
+              ? "calc(100vw - 24px)"
+              : "300px",
         }}
         onClick={(e) => e.stopPropagation()}
       >

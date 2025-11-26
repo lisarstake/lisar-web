@@ -12,9 +12,9 @@ export const walletTourConfig: TourConfig = {
       target: '[data-tour="wallet-balance"]',
       title: "Welcome to Lisar 👋",
       description:
-        "Your wallet shows your total balance including both unstaked and staked tokens. Let's explore what you can do here.",
+        "Your wallet shows your total balance including both unstaked and staked tokens. Let's explore other sections.",
       position: "bottom",
-      highlightPadding: 0,
+      highlightPadding: -5,
     },
     {
       id: "wallet-help",

@@ -50,8 +50,6 @@ export const ProfilePage: React.FC = () => {
           return;
         }
 
-        console.log(state.user);
-
         if (state.user) {
           setFormData({
             // username: state.user.username || "",
