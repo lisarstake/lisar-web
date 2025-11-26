@@ -27,7 +27,6 @@ export const ConfirmWithdrawalPage: React.FC = () => {
   const { orchestrators } = useOrchestrators();
   const { state } = useAuth();
 
-  // Get validator data
   const currentValidator = orchestrators.find(
     (orch) => orch.address === validatorId
   );
@@ -40,12 +39,10 @@ export const ConfirmWithdrawalPage: React.FC = () => {
     "Unknown Validator";
   const unbondingLockIdsParam = searchParams.get("unbondingLockIds");
 
-  // Parse unbondingLockIds
   const unbondingLockIds: number[] = unbondingLockIdsParam
     ? JSON.parse(unbondingLockIdsParam)
     : [];
 
-  // Get wallet data
   const walletId = state.user?.wallet_id || "";
   const walletAddress = state.user?.wallet_address || "";
 
@@ -79,7 +76,6 @@ export const ConfirmWithdrawalPage: React.FC = () => {
   };
 
   const handleProceed = () => {
-    // Open OTP verification drawer before withdrawal
     setShowOTPDrawer(true);
   };
 
@@ -96,11 +92,13 @@ export const ConfirmWithdrawalPage: React.FC = () => {
 
   const handleOTPSuccess = () => {
     setShowOTPDrawer(false);
-    // Proceed with withdrawal after OTP verification
-    handleWithdraw();
+    if (!isProcessing) {
+      handleWithdraw();
+    }
   };
 
   const handleWithdraw = async () => {
+    if (isProcessing) return;
     if (!walletId || !walletAddress || unbondingLockIds.length === 0) {
       const errorMsg = "Missing wallet information or unbonding lock ID";
       setError(errorMsg);
@@ -109,7 +107,6 @@ export const ConfirmWithdrawalPage: React.FC = () => {
       return;
     }
 
-    // Prepare withdrawal request params
     const unbondingLockId = unbondingLockIds[0];
     const withdrawalParams = {
       walletId,

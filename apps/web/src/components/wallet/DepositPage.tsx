@@ -14,6 +14,7 @@ import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { ErrorDrawer } from "@/components/ui/ErrorDrawer";
 import { SuccessDrawer } from "@/components/ui/SuccessDrawer";
 import { useAuth } from "@/contexts/AuthContext";
+import { useWallet } from "@/contexts/WalletContext";
 import { priceService } from "@/lib/priceService";
 import { getFiatType } from "@/lib/onramp";
 import { formatNumber, parseFormattedNumber } from "@/lib/formatters";
@@ -42,6 +43,7 @@ export const DepositPage: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const onrampInstanceRef = useRef<OnrampWebSDK | null>(null);
   const { state } = useAuth();
+  const { refetch: refetchWallet } = useWallet();
 
   // Get user's preferred currency
   const userCurrency = state.user?.fiat_type || "NGN";
@@ -89,16 +91,13 @@ export const DepositPage: React.FC = () => {
       if (onrampInstanceRef.current) {
         try {
           onrampInstanceRef.current.close();
-        } catch (error) {
-          console.error("Error closing onramp widget:", error);
-        }
+          refetchWallet();
+        } catch {}
       }
     };
-  }, []);
+  }, [refetchWallet]);
 
   const handleBackClick = () => {
-    // Always use browser history to avoid navigation loops
-    // If we navigate with state, it preserves the amount and causes loops
     navigate(-1);
   };
 
@@ -163,37 +162,32 @@ export const DepositPage: React.FC = () => {
         isRestricted: true,
       });
 
-      onramp.on("TX_EVENTS", async (e) => {
-        switch (e.type) {
-          case "ONRAMP_WIDGET_TX_COMPLETED":
-            setSuccessMessage(
-              "Payment completed successfully! Your LPT tokens will be sent to your wallet shortly."
-            );
-            setShowSuccessDrawer(true);
-            break;
+      // onramp.on("TX_EVENTS", async (e) => {
+      //   switch (e.type) {
+      //     case "ONRAMP_WIDGET_TX_COMPLETED":
+      //       setSuccessMessage(
+      //         "Payment completed successfully! Your LPT tokens will be sent to your wallet shortly."
+      //       );
+      //       setShowSuccessDrawer(true);
+      //       break;
 
-          case "ONRAMP_WIDGET_TX_SENDING_FAILED":
-          case "ONRAMP_WIDGET_TX_PURCHASING_FAILED":
-          case "ONRAMP_WIDGET_TX_FINDING_FAILED":
-            setErrorMessage(
-              "Payment failed. Please try again or contact support if the issue persists."
-            );
-            setShowErrorDrawer(true);
-            break;
-        }
-      });
+      //     case "ONRAMP_WIDGET_TX_SENDING_FAILED":
+      //     case "ONRAMP_WIDGET_TX_PURCHASING_FAILED":
+      //     case "ONRAMP_WIDGET_TX_FINDING_FAILED":
+      //       setErrorMessage(
+      //         "Payment failed. Please try again or contact support if the issue persists."
+      //       );
+      //       setShowErrorDrawer(true);
+      //       break;
+      //   }
+      // });
 
-      onramp.on("WIDGET_EVENTS", async (e) => {
-        switch (e.type) {
-          case "ONRAMP_WIDGET_CLOSE_REQUEST_CONFIRMED":
-            setErrorMessage("Payment cancelled, please try again.");
-            setShowErrorDrawer(true);
-            break;
-
-          case "ONRAMP_WIDGET_FAILED":
-            setErrorMessage("Payment widget failed to load. Please try again.");
-            setShowErrorDrawer(true);
-            break;
+      onramp.on("WIDGET_EVENTS", async (event) => {
+        if (
+          event.type === "ONRAMP_WIDGET_CLOSE_REQUEST_CONFIRMED" ||
+          event.type === "ONRAMP_WIDGET_CLOSE"
+        ) {
+          await refetchWallet();
         }
       });
 
@@ -310,7 +304,9 @@ export const DepositPage: React.FC = () => {
                     selectedPaymentMethod === "fiat" ? "#C7EF6B" : "#86B3F7"
                   }
                 />
-                <span className="text-white font-normal">{userCurrency} deposit</span>
+                <span className="text-white font-normal">
+                  {userCurrency} deposit
+                </span>
               </div>
               <ChevronRight
                 size={20}
@@ -333,9 +329,7 @@ export const DepositPage: React.FC = () => {
                     selectedPaymentMethod === "onchain" ? "#C7EF6B" : "#86B3F7"
                   }
                 />
-                <span className="text-white font-normal">
-                  On-Chain deposit
-                </span>
+                <span className="text-white font-normal">On-Chain deposit</span>
               </div>
               <ChevronRight
                 size={20}

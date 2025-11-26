@@ -27,6 +27,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
         {/* Home */}
         <Link
           to="/wallet"
+          data-tour="nav-wallet"
           className={`flex flex-col items-center py-2 px-3 ${
             isActive("/wallet") ? "text-[#C7EF6B]" : "text-gray-400"
           }`}
@@ -43,6 +44,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
         {/* Forecast */}
         <Link
           to="/forecast"
+          data-tour="nav-forecast"
           className={`flex flex-col items-center py-2 px-3 ${
             isActive("/forecast") ? "text-[#C7EF6B]" : "text-gray-400"
           }`}
@@ -57,6 +59,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
         {/* Learn */}
         <Link
           to="/learn"
+          data-tour="nav-learn"
           className={`flex flex-col items-center py-2 px-3 ${
             isActive("/learn") ? "text-[#C7EF6B]" : "text-gray-400"
           }`}
@@ -72,6 +75,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
         {/* Earn */}
         <Link
           to="/earn"
+          data-tour="nav-earn"
           className={`flex flex-col items-center py-2 px-3 ${
             isActive("/earn") ? "text-[#C7EF6B]" : "text-gray-400"
           }`}

@@ -9,6 +9,8 @@ import { DelegationProvider } from "@/contexts/DelegationContext";
 import { LeaderboardProvider } from "@/contexts/LeaderboardContext";
 import { DashboardProvider } from "@/contexts/DashboardContext";
 import { NotificationProvider } from "@/contexts/NotificationContext";
+import { GuidedTourProvider } from "@/contexts/GuidedTourContext";
+import { GuidedTour } from "@/components/general/GuidedTour";
 
 export default function App() {
   const location = useLocation();
@@ -42,22 +44,23 @@ export default function App() {
   return (
     <ErrorBoundary>
       <AuthProvider>
-        <Toaster position="top-right" />
-        <ErrorBoundary>
-          <DashboardProvider>
-            <ErrorBoundary>
-              <OrchestratorProvider>
-                <ErrorBoundary>
-                  <WalletProvider>
-                    <ErrorBoundary>
-                      <TransactionProvider>
-                        <ErrorBoundary>
-                          <DelegationProvider>
-                            <ErrorBoundary>
-                              <LeaderboardProvider>
-                                <ErrorBoundary>
-                                  <NotificationProvider>
-                                    <div className="min-h-screen bg-white">
+        <GuidedTourProvider>
+          <Toaster position="top-right" />
+          <ErrorBoundary>
+            <DashboardProvider>
+              <ErrorBoundary>
+                <OrchestratorProvider>
+                  <ErrorBoundary>
+                    <WalletProvider>
+                      <ErrorBoundary>
+                        <TransactionProvider>
+                          <ErrorBoundary>
+                            <DelegationProvider>
+                              <ErrorBoundary>
+                                <LeaderboardProvider>
+                                  <ErrorBoundary>
+                                    <NotificationProvider>
+                                    <div className="min-h-screen bg-white relative">
                                       {useDesktopView ? (
                                         <main className="app-main">
                                           <Outlet />
@@ -65,7 +68,7 @@ export default function App() {
                                       ) : (
                                         <>
                                           <div className="hidden md:flex md:items-center md:justify-center md:h-screen md:bg-[#0a0a0a]">
-                                            <div className="relative w-full max-w-[390px] h-full max-h-[99vh] shadow-2xl overflow-hidden">
+                                            <div id="mobile-preview-container" className="relative w-full max-w-[390px] h-full max-h-[99vh] shadow-2xl overflow-hidden">
                                               <main
                                                 className={`app-main h-full overflow-y-auto ${hasBottomNav ? "with-bottom-nav" : ""}`}
                                               >
@@ -83,21 +86,23 @@ export default function App() {
                                           </div>
                                         </>
                                       )}
+                                      <GuidedTour />
                                     </div>
-                                  </NotificationProvider>
-                                </ErrorBoundary>
-                              </LeaderboardProvider>
-                            </ErrorBoundary>
-                          </DelegationProvider>
-                        </ErrorBoundary>
-                      </TransactionProvider>
-                    </ErrorBoundary>
-                  </WalletProvider>
-                </ErrorBoundary>
-              </OrchestratorProvider>
-            </ErrorBoundary>
-          </DashboardProvider>
-        </ErrorBoundary>
+                                    </NotificationProvider>
+                                  </ErrorBoundary>
+                                </LeaderboardProvider>
+                              </ErrorBoundary>
+                            </DelegationProvider>
+                          </ErrorBoundary>
+                        </TransactionProvider>
+                      </ErrorBoundary>
+                    </WalletProvider>
+                  </ErrorBoundary>
+                </OrchestratorProvider>
+              </ErrorBoundary>
+            </DashboardProvider>
+          </ErrorBoundary>
+        </GuidedTourProvider>
       </AuthProvider>
     </ErrorBoundary>
   );

@@ -122,11 +122,13 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
+  // Allow wallet page for non-onboarded users (tour will guide them)
+  const isWalletRoute = location.pathname.startsWith("/wallet");
   const isLearnRoute = location.pathname.startsWith("/learn");
 
-  if (!isLearnRoute && state.user?.is_onboarded === false) {
-    const nextVideo = getNextIncompleteVideo();
-    return <Navigate to={`/learn/${nextVideo}`} replace />;
+  if (!isLearnRoute && !isWalletRoute && state.user?.is_onboarded === false) {
+    // Redirect to wallet where tour will start
+    return <Navigate to="/wallet" replace />;
   }
 
   return <>{children}</>;

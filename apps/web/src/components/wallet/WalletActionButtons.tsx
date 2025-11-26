@@ -17,6 +17,7 @@ export const WalletActionButtons: React.FC<WalletActionButtonsProps> = ({
   return (
     <div className="flex items-center justify-around px-6 py-6">
       <button
+        data-tour="deposit-button"
         onClick={onDepositClick}
         className="flex flex-col items-center justify-center space-y-2 w-20 h-20 bg-[#2a2a2a] rounded-xl"
       >
@@ -25,6 +26,7 @@ export const WalletActionButtons: React.FC<WalletActionButtonsProps> = ({
       </button>
 
       <button
+        data-tour="stake-button"
         onClick={onStakeClick}
         className="flex flex-col items-center justify-center space-y-2 w-20 h-20 bg-[#2a2a2a] rounded-xl"
       >
@@ -33,6 +35,7 @@ export const WalletActionButtons: React.FC<WalletActionButtonsProps> = ({
       </button>
 
       <button
+        data-tour="portfolio-button"
         onClick={onPortfolioClick}
         className="flex flex-col items-center justify-center space-y-2 w-20 h-20 bg-[#2a2a2a] rounded-xl"
       >
@@ -41,6 +44,7 @@ export const WalletActionButtons: React.FC<WalletActionButtonsProps> = ({
       </button>
 
       <button
+        data-tour="withdraw-button"
         onClick={onWithdrawClick}
         className="flex flex-col items-center justify-center space-y-2 w-20 h-20 bg-[#2a2a2a] rounded-xl"
       >

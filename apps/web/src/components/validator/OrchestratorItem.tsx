@@ -9,12 +9,14 @@ interface OrchestratorItemProps {
   orchestrator?: OrchestratorResponse;
   onClick?: () => void;
   isLoading?: boolean;
+  tourId?: string;
 }
 
 export const OrchestratorItem: React.FC<OrchestratorItemProps> = ({
   orchestrator,
   onClick,
   isLoading = false,
+  tourId,
 }) => {
   const navigate = useNavigate();
   const qrCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -61,7 +63,10 @@ export const OrchestratorItem: React.FC<OrchestratorItemProps> = ({
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-between p-4 bg-[#1a1a1a] rounded-xl border border-[#2a2a2a]">
+      <div
+        className="flex items-center justify-between p-4 bg-[#1a1a1a] rounded-xl border border-[#2a2a2a]"
+        data-tour={tourId}
+      >
         <div className="flex items-center space-x-3">
           <Skeleton className="w-12 h-12 rounded-full bg-[#2a2a2a]" />
           <div className="space-y-2">
@@ -89,6 +94,7 @@ export const OrchestratorItem: React.FC<OrchestratorItemProps> = ({
     <div
       className="flex items-center justify-between p-4 bg-[#1a1a1a] rounded-xl border border-[#2a2a2a] hover:border-[#C7EF6B]/30 transition-colors cursor-pointer"
       onClick={handleClick}
+      data-tour={tourId}
     >
       <div className="flex items-center space-x-3">
         {avatar && !avatarError ? (

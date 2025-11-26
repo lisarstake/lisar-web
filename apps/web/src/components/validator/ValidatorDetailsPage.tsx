@@ -43,7 +43,6 @@ export const ValidatorDetailsPage: React.FC = () => {
   const { transactions } = useTransactions();
   const { state } = useAuth();
 
-  // Find the orchestrator by address
   const currentValidator = orchestrators.find(
     (orch) => orch.address === validatorId
   );
@@ -120,7 +119,6 @@ export const ValidatorDetailsPage: React.FC = () => {
   const hasWithdrawableAmount = withdrawableTransactions.length > 0;
   const hasPendingUnbonding = pendingUnbondingTransactions.length > 0;
 
-  // Calculate total amounts
   const totalStakedAmount = hasStakeWithValidator
     ? parseFloat(userDelegation?.bondedAmount || "0")
     : 0;
@@ -170,15 +168,14 @@ export const ValidatorDetailsPage: React.FC = () => {
     setShowHelpDrawer(true);
   };
 
-  // Handle rebond - restake withdrawable tokens
   const handleRebond = async () => {
+    if (isProcessing) return;
     if (!state.user?.wallet_id || !state.user?.wallet_address || !validatorId) {
       setErrorMessage("Missing wallet information");
       setShowErrorDrawer(true);
       return;
     }
 
-    // Get the first withdrawable transaction to rebond
     const withdrawableTransaction = withdrawableTransactions[0];
     if (!withdrawableTransaction || !withdrawableTransaction.unbondingLockId) {
       setErrorMessage("No withdrawable tokens found");
@@ -204,7 +201,6 @@ export const ValidatorDetailsPage: React.FC = () => {
         setShowSuccessDrawer(true);
         setShowWithdrawConfirmDrawer(false);
         setPendingAction(null);
-        // Refetch delegation data
         await refetch();
       } else {
         setErrorMessage(response.message || "Failed to restake tokens");
@@ -223,7 +219,6 @@ export const ValidatorDetailsPage: React.FC = () => {
     }
   };
 
-  // Handle OTP verification for actions
   const handleOTPVerify = async (code: string) => {
     const response = await totpService.verify({ token: code });
 
@@ -237,11 +232,12 @@ export const ValidatorDetailsPage: React.FC = () => {
 
   const handleOTPSuccess = () => {
     setShowOTPDrawer(false);
-    // Proceed with the pending action after OTP verification
-    if (pendingAction === "moveStake") {
-      handleMoveStake();
-    } else if (pendingAction === "rebond") {
-      handleRebond();
+    if (!isProcessing) {
+      if (pendingAction === "moveStake") {
+        handleMoveStake();
+      } else if (pendingAction === "rebond") {
+        handleRebond();
+      }
     }
   };
 
@@ -255,8 +251,8 @@ export const ValidatorDetailsPage: React.FC = () => {
     setShowOTPDrawer(true);
   };
 
-  // Handle move stake - move stake to a new validator
   const handleMoveStake = async () => {
+    if (isProcessing) return;
     if (
       !state.user?.wallet_id ||
       !state.user?.wallet_address ||
@@ -293,7 +289,6 @@ export const ValidatorDetailsPage: React.FC = () => {
         setShowSuccessDrawer(true);
         setShowMoveStakeDrawer(false);
         setPendingAction(null);
-        // Refetch delegation data
         await refetch();
       } else {
         setErrorMessage(response.message || "Failed to move stake");

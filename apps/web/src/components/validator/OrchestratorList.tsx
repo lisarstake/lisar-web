@@ -47,13 +47,15 @@ export const OrchestratorList: React.FC<OrchestratorListProps> = ({
           <OrchestratorItem
             key={`skeleton-${index}`}
             isLoading={true}
+            tourId={index === 0 ? "orchestrator-highlight" : undefined}
           />
         ))
       ) : (
-        orchestrators.map((orchestrator) => (
+        orchestrators.map((orchestrator, index) => (
           <OrchestratorItem
             key={orchestrator.address}
             orchestrator={orchestrator}
+            tourId={index === 0 ? "orchestrator-highlight" : undefined}
           />
         ))
       )}
