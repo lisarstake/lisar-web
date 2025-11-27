@@ -153,6 +153,10 @@ export interface DelegatorTransaction {
   };
   unbondingLockId?: number;
   withdrawRound?: string;
+  roundsRemaining?: number;
+  daysRemaining?: number;
+  timeRemainingFormatted?: string;
+  estimatedAvailableDate?: string;
 }
 
 export interface DelegatorTransactionsData {

@@ -8,54 +8,14 @@ export interface LearnContent {
   fullContent: string;
   s_factor: number;
   duration: number;
-  category: "mandatory" | "academy";
+  category: "how-to-guides" | "academy";
 }
 
 export const mockLearnContent: LearnContent[] = [
+  
+
   {
     id: "1",
-    slug: "what-is-lisar",
-    title: "What is Lisar?",
-    subtitle: "Introduction to Lisar and how it works",
-    videoUrl: "https://vimeo.com/1131302750?share=copy&fl=sv&fe=ci",
-    brief:
-      "Learn what Lisar is and how it helps you earn extra income securing blockchain networks with zero crypto knowledge required.",
-    fullContent:
-      "Hello, my name is Jude and it's nice to have you try out Lisar! So let's quickly get you up to speed so you can navigate easily. Lisar lets anyone earn extra income by securing blockchain networks. Your earnings depend on your stake, it could be a few dollars or thousands. Now why does this matter? Earning can feel unpredictable at times. Some days it's great, other times it slows down. Lisar helps balance that out by giving you a steady source of income in the background. Think of it as setting up a smart salary for yourself that runs 24/7. Now what makes Lisar special? With Lisar you get all the benefits of crypto staking using your local currency with zero crypto knowledge required. No gas fees, no complex tokens, no confusing steps. Lisar handles everything behind the scenes while you earn massive rewards on your stakes, rewards up to 68% APY. Your stake helps secure the blockchain, promoting decentralisation, and you get rewarded. Getting started is simple: Deposit fiat or crypto, pick a validator, stake, and start earning automatically. And your funds are always available to withdraw whenever you want to. Welcome to Lisar where money truly works for you.",
-    s_factor: 1.05,
-    duration: 69,
-    category: "mandatory",
-  },
-  {
-    id: "2",
-    slug: "where-do-rewards-come-from",
-    title: "Where do the rewards come from?",
-    subtitle: "Understanding the legitimacy of staking rewards",
-    videoUrl: "https://vimeo.com/1131306496?fl=ip&fe=ec",
-    brief:
-      "Discover how blockchain rewards work and why staking is a legitimate way to earn income through network security.",
-    fullContent:
-      "I know you're probably asking yourself, where do these rewards come from? Is this legitimate and how does it actually work? These are smart questions, and I'm glad you're asking them. Now let's dive right in. Blockchains typically come in two major variants. Proof of Work and Proof of Stake. In POW new transactions are validated by doing energy intensive tasks essentially solving complex cryptographic puzzles. This has a major downside because it is energy intensive and most time inefficient. POS systems on the other hand validate transactions by having token holders lock up their tokens otherwise known as staking. This helps secure the network and protect it from malicious actors who might seek to corrupt the system and incentivize validators to do honest work. The greater the staked tokens, the more secure the network becomes. Now here's where it gets interesting. To incentivize token holders to stake their tokens and secure the network, POS chains pay out inflationary rewards to these stakers as compensation for their service. The rewards varies significantly from chain to chain. Some offer 6.7% APY, while others provide as high as 78% APY. Picture it like how traditional financial systems work. Think of your bank, You save your money with them, they lend it out to generate profits, and give you a small cut as interest afterwards. Similarly, when you stake through Lisar, your tokens are helping operate and secure the Livepeer network, and in returns you're getting rewarded for that contribution. These rewards come directly from the protocol itself. It's built into the blockchain's economics, making it a legitimate and sustainable income source.",
-    s_factor: 1,
-    duration: 86,
-    category: "mandatory",
-  },
-  {
-    id: "3",
-    slug: "risks-of-using-lisar",
-    title: "What are the risks of using Lisar?",
-    subtitle: "Transparent discussion about potential risks",
-    videoUrl: "https://vimeo.com/1131320308?fl=ip&fe=ec",
-    brief:
-      "Learn about the risks involved with staking and how Lisar works to manage and minimize them for your safety.",
-    fullContent:
-      "In the last video, we covered where rewards come from and we answered the question of legitimacy. But let's be completely honest here. No financial system is completely risk free, and that includes Lisar. In this video, we'll be covering the possible risks involved and, more importantly, how we work to manage those risks. Counterparty risk. By using Lisar, you're trusting us to operate efficiently, ensuring your funds are secured and always available when you need them. This is the same type of risk you take while using any financial platform including your bank, investment app, even PayPal. We take this responsibility very seriously and have implemented various security measures and audits to maintain your trust. Volatility risk. LPT the native token on the Livepeer network is not a stablecoin, meaning its value can fluctuate anytime, going higher sometimes dropping lower other times. In a worst case scenario, it's value might drop significantly, potentially affecting your principal capital and the rewards you've earned. However, historically, productive staking assets tend to appreciate over time as the networks they secure grow in value. Orchestrator actions. The rewards you earn on your stake are determined by several factors, including orchestrator reward cuts, fee percentages, and how often they call rewards. Orchestrators operate independently of Lisar and can choose to modify their parameters, which might affect your final earned rewards. We actively monitor orchestrator performance and can recommend switches where necessary. Governance and smart contract risk. Governance on Livepeer network happens through self executing smart contracts, with token holders voting on network proposals. A majority vote could potentially change the current reward structure. Additionally, no smart contract is 100% immune to bugs or exploits, and in the rare case of a critical vulnerability, funds might be at risk. We're incredibly serious about user safety and confidence, which is why we believe in complete transparency about every possible risk involved. Knowledge is power, and we want you to make informed decisions concerning your financial future.",
-    s_factor: 1.03,
-    duration: 128,
-    category: "mandatory",
-  },
-  {
-    id: "4",
     slug: "crypto-for-beginners",
     title: "Crypto for beginners",
     subtitle: "Understanding cryptocurrency fundamentals",
@@ -70,10 +30,24 @@ export const mockLearnContent: LearnContent[] = [
     duration: 90,
     category: "academy",
   },
+  // {
+  //   id: "2",
+  //   slug: "what-is-lisar",
+  //   title: "What is Lisar?",
+  //   subtitle: "Introduction to Lisar and how it works",
+  //   videoUrl: "https://vimeo.com/1131302750?share=copy&fl=sv&fe=ci",
+  //   brief:
+  //     "Learn what Lisar is and how it helps you earn extra income securing blockchain networks with zero crypto knowledge required.",
+  //   fullContent:
+  //     "Hello, my name is Jude and it's nice to have you try out Lisar! So let's quickly get you up to speed so you can navigate easily. Lisar lets anyone earn extra income by securing blockchain networks. Your earnings depend on your stake, it could be a few dollars or thousands. Now why does this matter? Earning can feel unpredictable at times. Some days it's great, other times it slows down. Lisar helps balance that out by giving you a steady source of income in the background. Think of it as setting up a smart salary for yourself that runs 24/7. Now what makes Lisar special? With Lisar you get all the benefits of crypto staking using your local currency with zero crypto knowledge required. No gas fees, no complex tokens, no confusing steps. Lisar handles everything behind the scenes while you earn massive rewards on your stakes, rewards up to 68% APY. Your stake helps secure the blockchain, promoting decentralisation, and you get rewarded. Getting started is simple: Deposit fiat or crypto, pick a validator, stake, and start earning automatically. And your funds are always available to withdraw whenever you want to. Welcome to Lisar where money truly works for you.",
+  //   s_factor: 1.05,
+  //   duration: 69,
+  //   category: "academy",
+  // },
   {
-    id: "5",
+    id: "3",
     slug: "what-is-lisar-in-depth",
-    title: "What is Lisar? (In-depth)",
+    title: "What is Lisar? ",
     subtitle: "Deep dive into Lisar's mission and technology",
     videoUrl: "https://vimeo.com/1131343545?share=copy&fl=sv&fe=ci",
     brief:
@@ -84,22 +58,36 @@ export const mockLearnContent: LearnContent[] = [
     duration: 155,
     category: "academy",
   },
+  // {
+  //   id: "4",
+  //   slug: "intro-to-staking-and-yields",
+  //   title: "Intro to staking and yields",
+  //   subtitle: "Understanding how staking generates returns",
+  //   videoUrl: "https://vimeo.com/1131333997?fl=ip&fe=ec",
+  //   brief:
+  //     "Learn the mechanics of staking, how yields work, and why staking is a powerful way to generate consistent returns.",
+  //   fullContent:
+  //     "Let's demystify staking and how it helps you earn consistent yields. This is where the magic happens What exactly is staking? is like putting your money to work, but instead of a bank using your money to make loans, your tokens helps secure and operate a blockchain network and in return you earn rewards, simple. Now there are different types of crypto yields. You have the staking rewards. Which is what Lisar focuses on. You have lending yields, liquidity mining and yield farming but staking is the most direct and reliable. So why do this rewards exist. Blockchains need security to function properly. Instead of hiring security companies, they rewards token holders to do that. The more people who stake, the more secure the network becomes. APY means annual percentage yield,  if you stake $1000 at 68% APY, you could earn $680 in rewards over a year, though it can fluctuate based on network activity, and here's the magic. Compounding, as your rewards grow they earn even more rewards automatically. That's exactly how staking multiples over time. With Lisar it's fully passive. We handle validator selection and management while you earn, on Livepeer rewards are roughly distributed every 20 to 24 hours. The amount depends on orchestrator's performance and network growth. Bottomline staking turns idle tokens into productive capital helping secure decentralised networks while you earn, through Lisar you're not just investing, you're owing a part of the future.",
+  //   s_factor: 1.1,
+  //   duration: 90,
+  //   category: "academy",
+  // },
   {
-    id: "6",
-    slug: "intro-to-staking-and-yields",
-    title: "Intro to staking and yields",
-    subtitle: "Understanding how staking generates returns",
-    videoUrl: "https://vimeo.com/1131333997?fl=ip&fe=ec",
+    id: "5",
+    slug: "where-do-rewards-come-from",
+    title: "Where do the rewards come from?",
+    subtitle: "Understanding the legitimacy of staking rewards",
+    videoUrl: "https://vimeo.com/1131306496?fl=ip&fe=ec",
     brief:
-      "Learn the mechanics of staking, how yields work, and why staking is a powerful way to generate consistent returns.",
+      "Discover how blockchain rewards work and why staking is a legitimate way to earn income through network security.",
     fullContent:
-      "Let's demystify staking and how it helps you earn consistent yields. This is where the magic happens What exactly is staking? is like putting your money to work, but instead of a bank using your money to make loans, your tokens helps secure and operate a blockchain network and in return you earn rewards, simple. Now there are different types of crypto yields. You have the staking rewards. Which is what Lisar focuses on. You have lending yields, liquidity mining and yield farming but staking is the most direct and reliable. So why do this rewards exist. Blockchains need security to function properly. Instead of hiring security companies, they rewards token holders to do that. The more people who stake, the more secure the network becomes. APY means annual percentage yield,  if you stake $1000 at 68% APY, you could earn $680 in rewards over a year, though it can fluctuate based on network activity, and here's the magic. Compounding, as your rewards grow they earn even more rewards automatically. That's exactly how staking multiples over time. With Lisar it's fully passive. We handle validator selection and management while you earn, on Livepeer rewards are roughly distributed every 20 to 24 hours. The amount depends on orchestrator's performance and network growth. Bottomline staking turns idle tokens into productive capital helping secure decentralised networks while you earn, through Lisar you're not just investing, you're owing a part of the future.",
-    s_factor: 1.1,
-    duration: 90,
+      "I know you're probably asking yourself, where do these rewards come from? Is this legitimate and how does it actually work? These are smart questions, and I'm glad you're asking them. Now let's dive right in. Blockchains typically come in two major variants. Proof of Work and Proof of Stake. In POW new transactions are validated by doing energy intensive tasks essentially solving complex cryptographic puzzles. This has a major downside because it is energy intensive and most time inefficient. POS systems on the other hand validate transactions by having token holders lock up their tokens otherwise known as staking. This helps secure the network and protect it from malicious actors who might seek to corrupt the system and incentivize validators to do honest work. The greater the staked tokens, the more secure the network becomes. Now here's where it gets interesting. To incentivize token holders to stake their tokens and secure the network, POS chains pay out inflationary rewards to these stakers as compensation for their service. The rewards varies significantly from chain to chain. Some offer 6.7% APY, while others provide as high as 78% APY. Picture it like how traditional financial systems work. Think of your bank, You save your money with them, they lend it out to generate profits, and give you a small cut as interest afterwards. Similarly, when you stake through Lisar, your tokens are helping operate and secure the Livepeer network, and in returns you're getting rewarded for that contribution. These rewards come directly from the protocol itself. It's built into the blockchain's economics, making it a legitimate and sustainable income source.",
+    s_factor: 1,
+    duration: 86,
     category: "academy",
   },
   {
-    id: "7",
+    id: "6",
     slug: "risks-associated-with-staking",
     title: "Risks associated with staking",
     subtitle: "Comprehensive risk analysis for informed decisions",
@@ -112,6 +100,21 @@ export const mockLearnContent: LearnContent[] = [
     duration: 78,
     category: "academy",
   },
+  // {
+  //   id: "7",
+  //   slug: "risks-of-using-lisar",
+  //   title: "What are the risks of using Lisar?",
+  //   subtitle: "Transparent discussion about potential risks",
+  //   videoUrl: "https://vimeo.com/1131320308?fl=ip&fe=ec",
+  //   brief:
+  //     "Learn about the risks involved with staking and how Lisar works to manage and minimize them for your safety.",
+  //   fullContent:
+  //     "In the last video, we covered where rewards come from and we answered the question of legitimacy. But let's be completely honest here. No financial system is completely risk free, and that includes Lisar. In this video, we'll be covering the possible risks involved and, more importantly, how we work to manage those risks. Counterparty risk. By using Lisar, you're trusting us to operate efficiently, ensuring your funds are secured and always available when you need them. This is the same type of risk you take while using any financial platform including your bank, investment app, even PayPal. We take this responsibility very seriously and have implemented various security measures and audits to maintain your trust. Volatility risk. LPT the native token on the Livepeer network is not a stablecoin, meaning its value can fluctuate anytime, going higher sometimes dropping lower other times. In a worst case scenario, it's value might drop significantly, potentially affecting your principal capital and the rewards you've earned. However, historically, productive staking assets tend to appreciate over time as the networks they secure grow in value. Orchestrator actions. The rewards you earn on your stake are determined by several factors, including orchestrator reward cuts, fee percentages, and how often they call rewards. Orchestrators operate independently of Lisar and can choose to modify their parameters, which might affect your final earned rewards. We actively monitor orchestrator performance and can recommend switches where necessary. Governance and smart contract risk. Governance on Livepeer network happens through self executing smart contracts, with token holders voting on network proposals. A majority vote could potentially change the current reward structure. Additionally, no smart contract is 100% immune to bugs or exploits, and in the rare case of a critical vulnerability, funds might be at risk. We're incredibly serious about user safety and confidence, which is why we believe in complete transparency about every possible risk involved. Knowledge is power, and we want you to make informed decisions concerning your financial future.",
+  //   s_factor: 1.03,
+  //   duration: 128,
+  //   category: "academy",
+  // },
+
   {
     id: "8",
     slug: "conclusion-and-community-links",
@@ -126,4 +129,60 @@ export const mockLearnContent: LearnContent[] = [
     duration: 63,
     category: "academy",
   },
+  {
+    id: "9",
+    slug: "how-to-deposit",
+    title: "How to Deposit",
+    subtitle: "Learn how to add funds to your Lisar wallet",
+    videoUrl: "https://vimeo.com/1141206170?fl=ip&fe=ec",
+    brief:
+      "A quick guide on depositing funds into your Lisar wallet to get started.",
+    fullContent:
+      "Learn how to easily deposit funds into your Lisar wallet. Navigate to your wallet, click the deposit button, and choose your preferred payment method. You can deposit using crypto from another wallet or buy directly with fiat currency through our integrated onramp partners. Follow the simple on-screen instructions to complete your deposit and start earning yields.",
+    s_factor: 1.02,
+    duration: 45,
+    category: "how-to-guides",
+  },
+  {
+    id: "10",
+    slug: "how-to-stake",
+    title: "How to Stake on Lisar",
+    subtitle: "Step-by-step guide to staking your LPT",
+    videoUrl: "https://vimeo.com/1141206477?fl=ip&fe=ec",
+    brief:
+      "Learn how to stake your LPT tokens and start earning rewards.",
+    fullContent:
+      "Staking your LPT is simple. Go to the Stake section, choose a validator from our curated list, enter the amount you want to stake, and confirm. Your tokens will be delegated to the validator, and you'll start earning rewards immediately. You can track your staked balance and rewards in real-time from your portfolio page.",
+    s_factor: 1.02,
+    duration: 48,
+    category: "how-to-guides",
+  },
+  {
+    id: "11",
+    slug: "how-to-unstake",
+    title: "How to Unstake on Lisar",
+    subtitle: "Understand the unstaking process and unbonding period",
+    videoUrl: "https://vimeo.com/1141206670?fl=ip&fe=ec",
+    brief:
+      "Learn how to unstake your staked LPT tokens from a validator.",
+    fullContent:
+      "When you're ready to unstake, navigate to your staked position and click Unstake. Enter the amount you want to unstake and confirm. Remember, there's a 7-day unbonding period before your tokens become available. During this time, your tokens won't earn rewards. You can track the unbonding progress in your portfolio page.",
+    s_factor: 1.02,
+    duration: 41,
+    category: "how-to-guides",
+  },
+  // {
+  //   id: "12",
+  //   slug: "how-to-withdraw",
+  //   title: "How to Withdraw",
+  //   subtitle: "Withdraw your funds from Lisar to your external wallet",
+  //   videoUrl: "https://vimeo.com/1131329056?fl=ip&fe=ec",
+  //   brief:
+  //     "A simple guide to withdrawing your tokens from Lisar to your bank account.",
+  //   fullContent:
+  //     "Withdrawing is straightforward. Go to your wallet, click Withdraw, from the withdraw page click get address to initiate the withdrawal, complete the process on our onramp partners and enter the destination address and amount, then confirm the transaction. Your tokens will be withdrawn directly to your bank account.",
+  //   s_factor: 1.02,
+  //   duration: 45,
+  //   category: "how-to-guides",
+  // },
 ];

@@ -218,7 +218,7 @@ export class WalletService implements IWalletApiService {
     }
   }
 
-  // Approve LPT allowance for a spender 
+  // Approve LPT allowance for a spender
   async approveLpt(request: ApproveLptRequest): Promise<ApproveLptResponse> {
     const token = this.getStoredToken();
     if (!token) {
@@ -237,7 +237,7 @@ export class WalletService implements IWalletApiService {
 
       const response = await http.request({
         url: `${this.baseUrl}/wallet/approve-lpt`,
-        method: "GET",
+        method: "POST",
         headers,
         data: request,
         timeout: this.timeout,

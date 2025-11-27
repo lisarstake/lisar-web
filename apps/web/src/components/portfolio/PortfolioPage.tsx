@@ -19,6 +19,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { PortfolioSkeleton } from "./PortfolioSkeleton";
 import { formatEarnings, formatLifetime } from "@/lib/formatters";
 import { getColorForAddress } from "@/lib/qrcode";
+import { getEarliestUnbondingTime } from "@/lib/unbondingTime";
 
 interface StakeEntryItemProps {
   entry: StakeEntry;
@@ -117,18 +118,40 @@ export const PortfolioPage: React.FC = () => {
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
   const { orchestrators } = useOrchestrators();
-  const { userDelegation, delegatorStakeProfile, protocolStatus, isLoading } =
-    useDelegation();
+  const {
+    userDelegation,
+    delegatorTransactions,
+    delegatorStakeProfile,
+    protocolStatus,
+    isLoading,
+  } = useDelegation();
   const { state } = useAuth();
 
   // Calculate next payout progress using protocol status
   const nextPayoutProgress = useMemo(() => {
     if (!protocolStatus) return { progress: 85, timeRemaining: "22 hrs" };
 
-    const { roundLength, blocksIntoRound, blocksRemaining } = protocolStatus;
+    const { roundLength, blocksIntoRound, blocksRemaining, estimatedHours } =
+      protocolStatus;
     const progress =
       roundLength > 0 ? (blocksIntoRound / roundLength) * 100 : 85;
-    const timeRemaining = protocolStatus.estimatedHoursHuman || "22 hrs";
+
+    // Format time remaining - show minutes when less than 1 hour
+    let timeRemaining: string;
+    if (
+      estimatedHours !== undefined &&
+      estimatedHours < 1 &&
+      estimatedHours > 0
+    ) {
+      // Convert hours to minutes (approximately 2 seconds per block on Arbitrum)
+      const minutes = Math.round(estimatedHours * 60);
+      timeRemaining =
+        minutes > 0
+          ? `${minutes} min${minutes !== 1 ? "s" : ""}`
+          : "Less than 1 min";
+    } else {
+      timeRemaining = protocolStatus.estimatedHoursHuman || "22 hrs";
+    }
 
     return { progress: Math.min(progress, 100), timeRemaining };
   }, [protocolStatus]);
@@ -231,6 +254,31 @@ export const PortfolioPage: React.FC = () => {
     stakeEntries,
   } = portfolioData;
 
+  // Calculate pending unbonding count and data
+  const pendingUnbondingData = useMemo(() => {
+    if (!delegatorTransactions) {
+      return {
+        count: 0,
+        totalAmount: 0,
+        timeRemaining: null,
+      };
+    }
+
+    const pending = delegatorTransactions.pendingStakeTransactions || [];
+    const count = pending.length;
+    const totalAmount = pending.reduce(
+      (sum, tx) => sum + parseFloat(tx.amount || "0"),
+      0
+    );
+    const timeRemaining = getEarliestUnbondingTime(pending);
+
+    return {
+      count,
+      totalAmount,
+      timeRemaining,
+    };
+  }, [delegatorTransactions]);
+
   const handleBackClick = () => {
     navigate(-1);
   };
@@ -316,8 +364,8 @@ export const PortfolioPage: React.FC = () => {
                 {selectedPeriod === "Weekly"
                   ? formatEarnings(weeklyEarnings)
                   : selectedPeriod === "Monthly"
-                  ? formatEarnings(monthlyEarnings)
-                  : formatEarnings(monthlyEarnings * 12)}
+                    ? formatEarnings(monthlyEarnings)
+                    : formatEarnings(monthlyEarnings * 12)}
                 <span className="text-sm ml-0.1">LPT</span>
               </span>
             </p>
@@ -366,8 +414,13 @@ export const PortfolioPage: React.FC = () => {
         <div
           className={`flex items-center justify-between ${isAnalyticsOpen ? "mb-3" : "mb-5"}`}
         >
-          <span className="text-base font-medium text-white/50">
+          <span className="text-base font-medium text-white/50 flex items-center gap-2">
             View summary
+            {pendingUnbondingData.count > 0 && (
+              <span className="bg-[#C7EF6B] text-black text-xs font-semibold rounded-full w-5 h-5 flex items-center justify-center">
+                {pendingUnbondingData.count}
+              </span>
+            )}
           </span>
           <button
             onClick={() => setIsAnalyticsOpen((v) => !v)}
@@ -411,6 +464,37 @@ export const PortfolioPage: React.FC = () => {
                 </p>
               </div>
             </div>
+
+            {/* Unbonding in Process Section */}
+            {pendingUnbondingData.count > 0 && (
+              <div className="bg-[#1a1a1a] rounded-xl p-4 mb-4 border border-yellow-500/20">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <p className="text-[#C7EF6B] text-sm font-medium">
+                      Unbonding in process
+                    </p>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-400 text-sm">Amount</span>
+                    <span className="text-white/90 font-medium">
+                      {formatEarnings(pendingUnbondingData.totalAmount)} LPT
+                    </span>
+                  </div>
+                  {pendingUnbondingData.timeRemaining && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-400 text-sm">
+                        Time Remaining
+                      </span>
+                      <span className="text-[#C7EF6B] text-sm font-medium">
+                        {pendingUnbondingData.timeRemaining}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </>
         )}
 

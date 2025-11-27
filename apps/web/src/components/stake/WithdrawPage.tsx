@@ -134,10 +134,12 @@ export const WithdrawPage: React.FC = () => {
       });
 
       if (!approveResponse.success) {
+        const friendlyApprovalMsg =
+          "We couldn't complete the withdrawal. Please double-check the details and try again.";
+        const serverApprovalMsg =
+          approveResponse.message || approveResponse.error || "";
         setErrorMessage(
-          approveResponse.message ||
-            approveResponse.error ||
-            "Failed to approve LPT. Please try again."
+          serverApprovalMsg ? `${friendlyApprovalMsg}` : friendlyApprovalMsg
         );
         setShowErrorDrawer(true);
         return;
@@ -152,16 +154,17 @@ export const WithdrawPage: React.FC = () => {
       });
 
       if (!sendResponse.success) {
-        setErrorMessage(
-          sendResponse.message ||
-            sendResponse.error ||
-            "Failed to send LPT. Please try again."
-        );
+        const friendlySendMsg =
+          "We couldn't complete the withdrawal. Please double-check the details and try again.";
+        const serverSendMsg = sendResponse.message || sendResponse.error || "";
+        setErrorMessage(serverSendMsg ? `${friendlySendMsg}` : friendlySendMsg);
         setShowErrorDrawer(true);
         return;
       }
 
-      setSuccessMessage(`Withdraw successful!`);
+      setSuccessMessage(
+        `Your withdrawal has been processed successfully. You will receive your funds in a few minutes.`
+      );
       setShowSuccessDrawer(true);
 
       // Refetch delegation and transaction data
@@ -205,6 +208,14 @@ export const WithdrawPage: React.FC = () => {
     try {
       const text = await navigator.clipboard.readText();
       setWithdrawalAddress(text.trim());
+    } catch (err) {
+      console.error("Failed to paste:", err);
+    }
+  };
+  const handlePasteAmount = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      setLptAmount(text.trim());
     } catch (err) {
       console.error("Failed to paste:", err);
     }
@@ -260,7 +271,7 @@ export const WithdrawPage: React.FC = () => {
               type="button"
               onClick={handlePasteAddress}
               disabled={!isWithdrawalLaunched}
-              className={`absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium transition-colors ${
+              className={`absolute right-4 top-1/2 -translate-y-1/2 text-xs font-medium transition-colors ${
                 !isWithdrawalLaunched
                   ? "text-gray-500 cursor-not-allowed"
                   : "text-[#C7EF6B] hover:text-[#B8E55A]"
@@ -309,15 +320,15 @@ export const WithdrawPage: React.FC = () => {
               }`}
             />
             <button
-              onClick={handleMaxClick}
+              onClick={handlePasteAmount}
               disabled={!isWithdrawalLaunched}
-              className={`text-sm font-medium transition-colors ${
+              className={`text-xs font-medium transition-colors ${
                 !isWithdrawalLaunched
                   ? "text-gray-500 cursor-not-allowed"
                   : "text-[#C7EF6B] hover:text-[#B8E55A]"
               }`}
             >
-              Max
+              Paste
             </button>
           </div>
           <p className="text-gray-400 text-xs mt-2 pl-2">
@@ -462,7 +473,9 @@ export const WithdrawPage: React.FC = () => {
         isOpen={showSuccessDrawer}
         onClose={() => {
           setShowSuccessDrawer(false);
-          navigate("/portfolio");
+          setTimeout(() => {
+            navigate("/wallet");
+          }, 3000);
         }}
         title="Withdraw Successful!"
         message={successMessage}

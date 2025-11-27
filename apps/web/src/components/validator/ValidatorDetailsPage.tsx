@@ -17,6 +17,7 @@ import { useTransactions } from "@/contexts/TransactionContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { delegationService } from "@/services";
 import { totpService } from "@/services/totp";
+import { getEarliestUnbondingTime } from "@/lib/unbondingTime";
 
 export const ValidatorDetailsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -118,6 +119,15 @@ export const ValidatorDetailsPage: React.FC = () => {
 
   const hasWithdrawableAmount = withdrawableTransactions.length > 0;
   const hasPendingUnbonding = pendingUnbondingTransactions.length > 0;
+
+  // Get time remaining for unbonding transactions
+  const unbondingTimeRemaining = useMemo(() => {
+    if (!hasPendingUnbonding) {
+      return null;
+    }
+    
+    return getEarliestUnbondingTime(pendingUnbondingTransactions);
+  }, [pendingUnbondingTransactions, hasPendingUnbonding]);
 
   const totalStakedAmount = hasStakeWithValidator
     ? parseFloat(userDelegation?.bondedAmount || "0")
@@ -374,6 +384,7 @@ export const ValidatorDetailsPage: React.FC = () => {
         totalStakedAmount={totalStakedAmount}
         totalWithdrawableAmount={totalWithdrawableAmount}
         totalPendingAmount={totalPendingAmount}
+        unbondingTimeRemaining={unbondingTimeRemaining}
       />
 
       {/* Help Drawer */}
