@@ -10,6 +10,7 @@ interface ValidatorAboutSectionProps {
   totalStakedAmount: number;
   totalWithdrawableAmount: number;
   totalPendingAmount: number;
+  unbondingTimeRemaining?: string | null;
 }
 
 export const ValidatorAboutSection: React.FC<ValidatorAboutSectionProps> = ({
@@ -20,6 +21,7 @@ export const ValidatorAboutSection: React.FC<ValidatorAboutSectionProps> = ({
   totalStakedAmount,
   totalWithdrawableAmount,
   totalPendingAmount,
+  unbondingTimeRemaining,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const description =
@@ -114,7 +116,18 @@ export const ValidatorAboutSection: React.FC<ValidatorAboutSectionProps> = ({
           {(hasWithdrawableAmount || hasPendingUnbonding) && (
             <div className="flex justify-between items-center py-2 border-b border-gray-800">
               <span className="text-gray-400 text-sm">
-                {hasWithdrawableAmount ? "Unbonded" : "Unbonding"}
+                {hasWithdrawableAmount ? (
+                  "Unbonded"
+                ) : unbondingTimeRemaining ? (
+                  <>
+                    Unbonding{" "}
+                    <span className="text-xs text-gray-500">
+                      ({unbondingTimeRemaining})
+                    </span>
+                  </>
+                ) : (
+                  "Unbonding"
+                )}
               </span>
               <div className="text-right">
                 {hasWithdrawableAmount && (
@@ -123,8 +136,10 @@ export const ValidatorAboutSection: React.FC<ValidatorAboutSectionProps> = ({
                   </div>
                 )}
                 {hasPendingUnbonding && (
-                  <div className="text-yellow-400 font-medium text-sm">
-                    {totalPendingAmount.toFixed(2)} LPT
+                  <div>
+                    <div className="text-[#C7EF6B] font-medium text-sm">
+                      {totalPendingAmount.toFixed(2)} LPT
+                    </div>
                   </div>
                 )}
               </div>

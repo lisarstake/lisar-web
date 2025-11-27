@@ -21,7 +21,7 @@ export const walletTourConfig: TourConfig = {
       target: '[data-tour="wallet-help-icon"]',
       title: "Need Help?",
       description:
-        "Use the help icon on any screen to access quick guides about the page you're on.",
+        "Every page has a help icon like this. Tap it to open quick guides for the screen you are on.",
       position: "bottom",
       highlightPadding: 5,
     },

@@ -108,6 +108,14 @@ export const LeaderboardPage: React.FC = () => {
                   ? `${entry.address.slice(0, 6)}...${entry.address.slice(-4)}`
                   : "Unknown";
 
+              const addressHash = entry.address
+                ? entry.address
+                    .split("")
+                    .reduce((acc, char) => acc + char.charCodeAt(0), 0)
+                : entry.rank;
+              const punkIndex = (addressHash % 6) + 1;
+              const punkImage = `/punk${punkIndex}.jpeg`;
+
               return (
                 <div
                   key={`${entry.address}-${entry.rank}`}
@@ -115,13 +123,15 @@ export const LeaderboardPage: React.FC = () => {
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-[#2a2a2a] rounded-full flex items-center justify-center">
-                        <span className="text-gray-400 text-sm">
-                          {entry.rank}
-                        </span>
+                      <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center bg-[#2a2a2a]">
+                        <img
+                          src={punkImage}
+                          alt={`Punk ${punkIndex}`}
+                          className="w-full h-full object-cover"
+                        />
                       </div>
                       <div>
-                        <p className="text-[#86B3F7] font-medium">
+                        <p className="text-white/60 font-medium">
                           {displayName}
                         </p>
                       </div>

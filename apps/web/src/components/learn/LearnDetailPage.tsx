@@ -166,6 +166,8 @@ export const LearnDetailPage: React.FC = () => {
   }, [content.duration, totalWords]);
 
   useEffect(() => {
+    // Skip highlighting for how-to-guides
+    if (content.category === "how-to-guides") return;
     if (!content.duration) return;
 
     const wordsRead = elapsedTime * wordsPerSecond * content.s_factor;
@@ -192,6 +194,7 @@ export const LearnDetailPage: React.FC = () => {
     contentSentences.length,
     content.duration,
     content.s_factor,
+    content.category,
   ]);
 
   const handleBackClick = () => {
@@ -224,8 +227,8 @@ export const LearnDetailPage: React.FC = () => {
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-6 scrollbar-hide pb-10">
         <div className="relative w-full bg-black rounded-xl mb-6 overflow-hidden">
-          {/* 16:9 aspect ratio */}
-          <div className="pt-[56.25%]" />
+          {/* Dynamic aspect ratio - 4:3 for how-to-guides, 16:9 for academy */}
+          <div className={content.category === "how-to-guides" ? "pt-[75%]" : "pt-[56.25%]"} />
           {embedUrl ? (
             <iframe
               ref={iframeRef}
@@ -247,24 +250,30 @@ export const LearnDetailPage: React.FC = () => {
           <h2 className="text-2xl font-bold text-white">{content.title}</h2>
           <p className="text-gray-400 text-sm">{content.subtitle}</p>
 
-          {/* Script with highlighting */}
+          {/* Script with highlighting (disabled for how-to-guides) */}
           <div className="space-y-3">
             <div className="max-h-96 overflow-y-auto scrollbar-hide">
-              {contentSentences.map((sentence, index) => (
-                <span
-                  key={index}
-                  className={`text-sm leading-relaxed transition-all duration-500 ${
-                    index === currentHighlight
-                      ? "text-[#C7EF6B] bg-[#C7EF6B]/10 px-0.5 py-1 rounded"
-                      : index < currentHighlight
-                        ? "text-gray-400"
-                        : "text-gray-300"
-                  }`}
-                >
-                  {sentence}
-                  {index < contentSentences.length - 1 ? " " : ""}
-                </span>
-              ))}
+              {content.category === "how-to-guides" ? (
+                <p className="text-sm leading-relaxed text-gray-300">
+                  {content.fullContent}
+                </p>
+              ) : (
+                contentSentences.map((sentence, index) => (
+                  <span
+                    key={index}
+                    className={`text-sm leading-relaxed transition-all duration-500 ${
+                      index === currentHighlight
+                        ? "text-[#C7EF6B] bg-[#C7EF6B]/10 px-0.5 py-1 rounded"
+                        : index < currentHighlight
+                          ? "text-gray-400"
+                          : "text-gray-300"
+                    }`}
+                  >
+                    {sentence}
+                    {index < contentSentences.length - 1 ? " " : ""}
+                  </span>
+                ))
+              )}
             </div>
           </div>
         </div>

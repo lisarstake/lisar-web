@@ -14,8 +14,8 @@ export const LearnPage: React.FC = () => {
   const { state } = useAuth();
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<
-    "mandatory" | "academy"
-  >("mandatory");
+    "how-to-guides" | "academy"
+  >(state.user?.is_onboarded === false ? "academy" : "how-to-guides");
 
   // Start tour automatically only for non-onboarded users
   const shouldAutoStart = state.user?.is_onboarded === false;
@@ -30,7 +30,7 @@ export const LearnPage: React.FC = () => {
     navigate(`/learn/${slug}`);
   };
 
-  const handleCategoryChange = (category: "mandatory" | "academy") => {
+  const handleCategoryChange = (category: "how-to-guides" | "academy") => {
     setSelectedCategory(category);
   };
 
@@ -51,7 +51,7 @@ export const LearnPage: React.FC = () => {
           <div>
             <h1 className="text-lg font-medium text-white">Lisar Academy</h1>
             <p className="text-xs text-gray-500">
-              Get familiar with Lisar and crypto basics
+             Discover helpful guides and videos
             </p>
           </div>
           <button
@@ -118,14 +118,14 @@ export const LearnPage: React.FC = () => {
         <div className="flex items-center justify-center space-x-2">
           <div className="bg-[#1a1a1a] rounded-full p-1 border border-[#2a2a2a]">
             <button
-              onClick={() => handleCategoryChange("mandatory")}
+              onClick={() => handleCategoryChange("how-to-guides")}
               className={`px-3 py-2 rounded-full text-xs font-medium transition-colors ${
-                selectedCategory === "mandatory"
+                selectedCategory === "how-to-guides"
                   ? "bg-[#C7EF6B] text-black"
                   : "text-white hover:text-[#C7EF6B]"
               }`}
             >
-              Onboarding
+               Guides
             </button>
             <button
               onClick={() => handleCategoryChange("academy")}
