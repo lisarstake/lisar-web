@@ -7,9 +7,10 @@ interface EarnCard {
   id: string;
   title: string;
   description: string;
-  image: string;
+  image?: string;
   buttonText: string;
   isComingSoon: boolean;
+  isSocialCard?: boolean;
 }
 
 export const EarnPage: React.FC = () => {
@@ -31,6 +32,14 @@ export const EarnPage: React.FC = () => {
       image: "/earn2.jpeg",
       buttonText: "Coming soon",
       isComingSoon: true,
+    },
+    {
+      id: "3",
+      title: "Connect with us",
+      description: "Follow us on social media for new updates",
+      buttonText: "Follow",
+      isComingSoon: false,
+      isSocialCard: true,
     },
   ];
 
@@ -72,35 +81,86 @@ export const EarnPage: React.FC = () => {
               className="bg-[#1a1a1a] rounded-xl overflow-hidden"
             >
               {/* Card Image */}
-              <div className="w-full h-48 relative">
-                <img
-                  src={card.image}
-                  alt={card.title}
-                  className="w-full h-full object-cover"
-                />
-              </div>
+              {!card.isSocialCard && (
+                <div className="w-full h-48 relative">
+                  <img
+                    src={card.image}
+                    alt={card.title}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
 
               {/* Card Content */}
               <div className="p-4">
-                <h3 className="text-white font-semibold text-large mb-2">
+                <h3 className="text-white font-semibold text-large mb-3">
                   {card.title}
                 </h3>
-                <p className="text-gray-400 text-sm mb-2 leading-relaxed">
+
+                {/* Social Icons - Between Title and Description */}
+                {card.isSocialCard && (
+                  <div className="flex items-center justify-start gap-5 mb-3">
+                    {/* X/Twitter Logo */}
+                    <a
+                      href="https://x.com/lisarstake"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:opacity-80 transition-opacity"
+                    >
+                      <svg
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"
+                          fill="white"
+                        />
+                      </svg>
+                    </a>
+
+                    {/* Telegram Logo */}
+                    <a
+                      href="https://t.me/+F0YXOMaiJMxkODVk"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:opacity-80 transition-opacity"
+                    >
+                     <img src="/telegram.png" alt="Telegram" className="w-7 h-7" />
+                    </a>
+
+                    {/* YouTube Logo */}
+                    <a
+                      href="https://youtube.com/@lisarstake"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:opacity-80 transition-opacity"
+                    >
+                      <img src="/youtube.png" alt="Telegram" className="w-8 h-8" />
+                    </a>
+                  </div>
+                )}
+
+                <p className="text-gray-400 text-sm leading-relaxed">
                   {card.description}
                 </p>
 
                 {/* Action Button */}
-                <button
-                  onClick={() => handleCardClick(card)}
-                  disabled={card.isComingSoon}
-                  className={` py-1.5 px-4 rounded-lg font-medium text-sm transition-colors ${
-                    card.isComingSoon
-                      ? "bg-blue-500 text-white cursor-not-allowed opacity-75"
-                      : "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
-                  }`}
-                >
-                  {card.buttonText}
-                </button>
+                {!card.isSocialCard && (
+                  <button
+                    onClick={() => handleCardClick(card)}
+                    disabled={card.isComingSoon}
+                    className={`mt-3 py-1.5 px-4 rounded-lg font-medium text-sm transition-colors ${
+                      card.isComingSoon
+                        ? "bg-blue-500 text-white cursor-not-allowed opacity-75"
+                        : "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
+                    }`}
+                  >
+                    {card.buttonText}
+                  </button>
+                )}
               </div>
             </div>
           ))}

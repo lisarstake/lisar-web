@@ -471,7 +471,7 @@ export const PortfolioPage: React.FC = () => {
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <p className="text-[#C7EF6B] text-sm font-medium">
-                      Unbonding in process
+                      Unbonding in progress
                     </p>
                   </div>
                 </div>
@@ -485,7 +485,7 @@ export const PortfolioPage: React.FC = () => {
                   {pendingUnbondingData.timeRemaining && (
                     <div className="flex items-center justify-between">
                       <span className="text-gray-400 text-sm">
-                        Time Remaining
+                        Time left
                       </span>
                       <span className="text-[#C7EF6B] text-sm font-medium">
                         {pendingUnbondingData.timeRemaining}
@@ -530,7 +530,7 @@ export const PortfolioPage: React.FC = () => {
           "View your total stake, earnings, and current staking positions in one place.",
           "Total stake shows your combined investment across all validators.",
           "Earnings can be viewed weekly, monthly, or yearly. Next payout shows when you'll receive rewards.",
-          "Click any validator in Current Stake to view details or manage your position.",
+         
         ]}
       />
 
