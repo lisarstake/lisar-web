@@ -50,6 +50,7 @@ export const WithdrawPage: React.FC = () => {
   const { state } = useAuth();
   const { wallet } = useWallet();
   const { refetch: refetchDelegation } = useDelegation();
+  const { refetch: refetchWallet } = useWallet();
   const { refetch: refetchTransactions } = useTransactions();
 
   // Get user's preferred currency
@@ -162,14 +163,21 @@ export const WithdrawPage: React.FC = () => {
         return;
       }
 
+      // Refetch delegation, wallet and transaction data
+      await Promise.all([
+        refetchDelegation(),
+        refetchWallet(),
+        refetchTransactions(),
+      ]);
+
+      // Clear inputs after successful withdrawal
+      setWithdrawalAddress("");
+      setLptAmount("0");
+
       setSuccessMessage(
-        `Your withdrawal has been processed successfully. You will receive your funds in a few minutes.`
+        `Withdrawal processed successfully. Return to the previous screen and click "I have sent" to complete the withdrawal.`
       );
       setShowSuccessDrawer(true);
-
-      // Refetch delegation and transaction data
-      refetchDelegation();
-      refetchTransactions();
     } catch (error) {
       const errorMsg =
         error instanceof Error
@@ -331,13 +339,13 @@ export const WithdrawPage: React.FC = () => {
               Paste
             </button>
           </div>
-          <p className="text-gray-400 text-xs mt-2 pl-2">
+          {/* <p className="text-gray-400 text-xs mt-2 pl-2">
             ≈ {currencySymbol}
             {fiatEquivalent.toLocaleString(undefined, {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             })}
-          </p>
+          </p> */}
         </div>
 
         {/* Predefined LPT Amounts */}
@@ -392,7 +400,7 @@ export const WithdrawPage: React.FC = () => {
           {/* Guide */}
           <div className="mt-3 p-3 bg-[#1a1a1a] rounded-lg border border-[#2a2a2a]">
             <div className="text-gray-400 text-xs leading-relaxed space-y-2">
-              <p className="font-medium mb-2">To withdraw:</p>
+              <p className="font-medium mb-2">To Withdraw:</p>
               <div className="space-y-1.5">
                 <p>1. Click "Get Address" to initiate withdrawal</p>
                 <p>2. Complete the details and copy the address provided</p>
