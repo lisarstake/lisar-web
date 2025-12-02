@@ -35,6 +35,8 @@ const LeaderboardPage = lazyRetry(() => import('@/screens/leaderboard-page'))
 const DashboardPage = lazyRetry(() => import('@/screens/dashboard-page'))
 const ProfilePage = lazyRetry(() => import('@/screens/profile-page'))
 const NotificationsPage = lazyRetry(() => import('@/screens/notifications-page'))
+const BlogPage = lazyRetry(() => import('@/screens/blog-page'))
+const BlogDetailPage = lazyRetry(() => import('@/screens/blog-detail-page'))
 const NotFoundPage = lazyRetry(() => import('@/screens/NotFoundPage'))
 
 const withSuspense = (element: ReactNode) => (
@@ -71,6 +73,8 @@ export const router = createBrowserRouter([
       { path: 'dashboard', element: withSuspenseAndErrorBoundary(<DashboardPage />) },
       { path: 'forgot-password', element: withSuspenseAndErrorBoundary(<ForgotPasswordPage />) },
       { path: 'reset-password', element: withSuspenseAndErrorBoundary(<ResetPasswordPage />) },
+      { path: 'blog', element: withSuspenseAndErrorBoundary(<BlogPage />) },
+      { path: 'blog/:slug', element: withSuspenseAndErrorBoundary(<BlogDetailPage />) },
       
       // Protected routes
       {
