@@ -15,7 +15,7 @@ interface LoginFormData {
 export const LoginForm: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { signin, signinWithGoogle, handleGoogleCallback, state } = useAuth();
+  const { signin, signinWithGoogle, handleGoogleCallback, state, refreshUser } = useAuth();
 
   const [formData, setFormData] = useState<LoginFormData>({
     email: "",
@@ -87,6 +87,8 @@ export const LoginForm: React.FC = () => {
       clearHashFromURL();
 
       if (response.success) {
+        await refreshUser();
+
         setSuccessDrawer({
           isOpen: true,
           title: "Sign-in Successful!",
@@ -94,13 +96,7 @@ export const LoginForm: React.FC = () => {
           details: "",
         });
 
-        setTimeout(() => {
-          if (state.user?.is_onboarded === false) {
-            navigate("/learn/what-is-lisar", { replace: true });
-          } else {
-            navigate("/wallet", { replace: true });
-          }
-        }, 1500);
+        navigate("/wallet", { replace: true });
       } else {
         throw new Error(response.message || "Google sign-in failed");
       }
@@ -116,7 +112,6 @@ export const LoginForm: React.FC = () => {
       setIsSubmitting(false);
     }
   };
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({

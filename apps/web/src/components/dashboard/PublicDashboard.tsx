@@ -66,8 +66,7 @@ export const PublicDashboard: React.FC = () => {
             Overview
           </h1>
           <p className="text-gray-400 text-base md:text-lg mb-8 max-w-3xl">
-            Real-time statistics and insights into the Livepeer staking
-            platform. Track total delegators, staked amounts, and validator
+            Real-time statistics and insights into Lisar. Track total delegators, staked amounts, and validator
             activity.
           </p>
 
