@@ -10,12 +10,12 @@ export const AdminSignup: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!isProduction()) {
+    if (isProduction()) {
       navigate("/login", { replace: true });
     }
   }, [navigate]);
 
-  if (!isProduction()) {
+  if (isProduction()) {
     return null;
   }
 
