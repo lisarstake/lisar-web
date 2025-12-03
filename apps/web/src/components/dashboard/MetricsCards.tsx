@@ -2,8 +2,9 @@
  * Metrics Cards Component
  */
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { DashboardSummary } from "@/services/dashboard/types";
+import { priceService } from "@/lib/priceService";
 
 interface MetricsCardsProps {
   summary: DashboardSummary | null;
@@ -16,6 +17,38 @@ export const MetricsCards: React.FC<MetricsCardsProps> = ({
   isLoading,
   error,
 }) => {
+  const [fiatValue, setFiatValue] = useState<number | null>(null);
+
+  // Calculate total delegated LPT value
+  const totalDelegatedLpt = useMemo(() => {
+    if (!summary || error) return 0;
+    return parseFloat(summary.totalLptDelegated.toString()) || 0;
+  }, [summary, error]);
+
+  // Calculate USD value from total delegated LPT
+  useEffect(() => {
+    const calculateFiatValues = async () => {
+      if (totalDelegatedLpt === 0) {
+        setFiatValue(0);
+        return;
+      }
+
+      try {
+        const fiatCurrency = "USD";
+        const usdValue = await priceService.convertLptToFiat(
+          totalDelegatedLpt,
+          fiatCurrency
+        );
+        setFiatValue(usdValue);
+      } catch (error) {
+        console.error("Error calculating fiat value:", error);
+        setFiatValue(null);
+      }
+    };
+
+    calculateFiatValues();
+  }, [totalDelegatedLpt]);
+
   // Format metrics from summary data - show "-" when empty or error
   const metrics = useMemo(() => {
     const emptyValue = "-";
@@ -24,32 +57,33 @@ export const MetricsCards: React.FC<MetricsCardsProps> = ({
 
     return [
       {
-        title: "Total Fiat Converted",
-        value: hasError || !hasSummary
-          ? emptyValue
-          : summary.totalNgNConverted.toLocaleString(),
-        currency: hasError || !hasSummary ? undefined : "₦",
-      },
-      {
-        title: "Total Delegators",
+        title: "Total Stakers",
         value: hasError || !hasSummary
           ? emptyValue
           : summary.totalDelegators.toLocaleString(),
       },
       {
-        title: "Total Delegated",
+        title: "Total Staked",
         value: hasError || !hasSummary
           ? emptyValue
           : summary.totalLptDelegated.toLocaleString(),
       },
       {
-        title: "Total Orchestrators",
-        value: hasError || !hasSummary
+        title: "Total Staked Value",
+        value: hasError || !hasSummary || fiatValue === null
           ? emptyValue
-          : summary.totalValidators.toLocaleString(),
+          : fiatValue.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }),
+        currency: hasError || !hasSummary || fiatValue === null ? undefined : "$",
+      },
+      {
+        title: "Total Validators",
+        value: '25',
       },
     ];
-  }, [summary, error]);
+  }, [summary, error, fiatValue]);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
