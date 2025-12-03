@@ -19,6 +19,15 @@ export const WalletPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [showBalanceDrawer, setShowBalanceDrawer] = useState(false);
+
+  const [showBalance, setShowBalance] = useState(() => {
+    const saved = localStorage.getItem("wallet_show_balance");
+    return saved ? JSON.parse(saved) : true;
+  });
+
+  useEffect(() => {
+    localStorage.setItem("wallet_show_balance", JSON.stringify(showBalance));
+  }, [showBalance]);
   const { orchestrators, isLoading, error, refetch } = useOrchestrators();
   const { state } = useAuth();
   const { wallet, isLoading: walletLoading } = useWallet();
@@ -217,28 +226,35 @@ export const WalletPage: React.FC = () => {
           </button>
         </div>
         <div
-          className={
-            walletLoading || delegationLoading || !wallet ? "animate-pulse" : ""
-          }
+          onClick={() => setShowBalance(!showBalance)}
+          className={`cursor-pointer ${walletLoading || delegationLoading || !wallet ? "animate-pulse" : ""}`}
         >
           <h1 className="text-3xl font-semibold text-gray-300 mb-1.5">
             {walletLoading || delegationLoading || !wallet
               ? "0.00"
-              : formatEarnings(combinedBalance)}
-            <span className="text-sm ml-0.5">LPT</span>
+              : showBalance
+                ? formatEarnings(combinedBalance)
+                : "••••"}
+            {showBalance && !walletLoading && !delegationLoading && wallet && (
+              <span className="text-sm ml-0.5">LPT</span>
+            )}
           </h1>
-          <p
-            className={`text-white/70 text-base ${walletLoading || delegationLoading || !wallet ? "mr-4" : "mr-2"}`}
-          >
-            ≈{fiatSymbol}
-            {(walletLoading || delegationLoading || !wallet
-              ? 0
-              : fiatValue
-            ).toLocaleString(undefined, {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
-          </p>
+          {showBalance ? (
+            <p
+              className={`text-white/70 text-base ${walletLoading || delegationLoading || !wallet ? "mr-4" : "mr-2"}`}
+            >
+              ≈{fiatSymbol}
+              {(walletLoading || delegationLoading || !wallet
+                ? 0
+                : fiatValue
+              ).toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </p>
+          ) : (
+            <div className="pb-6"></div>
+          )}
         </div>
       </div>
 
@@ -296,6 +312,7 @@ export const WalletPage: React.FC = () => {
           `Unbonding: Tokens being withdrawn back to your wallet (${formatEarnings(
             unbondingBalance
           )} LPT) `,
+          "Tap on the balance to show/hide your balance.",
         ]}
       />
     </div>
