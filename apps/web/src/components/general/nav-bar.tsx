@@ -5,7 +5,10 @@ const Navbar = () => {
   return (
     <nav className="w-full flex items-center justify-between py-6 px-8 max-w-7xl mx-auto">
       {/* Logo */}
-      <div className="flex items-center gap-2">
+      <div 
+        className="flex items-center gap-2 cursor-pointer"
+        onClick={() => navigate("/")}
+      >
         <img src="/Logo.svg" alt="Lisar Logo" className="h-5 w-auto" />
       </div>
       {/* Centered Menu - Hidden on mobile */}

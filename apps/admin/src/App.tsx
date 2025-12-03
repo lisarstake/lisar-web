@@ -5,6 +5,7 @@ import { ValidatorProvider } from './contexts/ValidatorContext'
 import { TransactionProvider } from './contexts/TransactionContext'
 import { HealthProvider } from './contexts/HealthContext'
 import { UserProvider } from './contexts/UserContext'
+import { PublicationProvider } from './contexts/PublicationContext'
 import { AppRouter } from './routes/router'
 import { ErrorBoundary } from './components/general/ErrorBoundary'
 
@@ -19,10 +20,14 @@ export const App: React.FC = () => {
                 <ErrorBoundary>
                   <UserProvider>
                     <ErrorBoundary>
-                      <HealthProvider>
-                        <AppRouter />
-                        <Toaster position="top-right" />
-                      </HealthProvider>
+                      <PublicationProvider>
+                        <ErrorBoundary>
+                          <HealthProvider>
+                            <AppRouter />
+                            <Toaster position="top-right" />
+                          </HealthProvider>
+                        </ErrorBoundary>
+                      </PublicationProvider>
                     </ErrorBoundary>
                   </UserProvider>
                 </ErrorBoundary>

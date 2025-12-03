@@ -101,19 +101,32 @@ export const BlogDetailPage: React.FC = () => {
                 </h1>
               ),
               h2: ({ children }) => (
-                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mt-6 sm:mt-10 mb-3 sm:mb-4">
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mt-10 sm:mt-12 md:mt-16 mb-4 sm:mb-6 pt-6 sm:pt-8 border-t border-gray-200">
                   {children}
                 </h2>
               ),
               h3: ({ children }) => (
-                <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mt-6 sm:mt-8 mb-2 sm:mb-3">
+                <h3 className="text-lg sm:text-xl md:text-2xl font-semibold text-[#235538] mt-8 sm:mt-10 mb-3 sm:mb-4">
                   {children}
                 </h3>
               ),
               h4: ({ children }) => (
-                <h4 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 mt-4 sm:mt-6 mb-2">
+                <h4 className="text-base sm:text-lg md:text-xl font-semibold text-gray-800 mt-6 sm:mt-8 mb-2 sm:mb-3">
                   {children}
                 </h4>
+              ),
+              h5: ({ children }) => (
+                <h5 className="text-sm sm:text-base md:text-lg font-semibold text-gray-700 mt-5 sm:mt-6 mb-2">
+                  {children}
+                </h5>
+              ),
+              h6: ({ children }) => (
+                <h6 className="text-sm md:text-base font-semibold text-gray-600 mt-4 sm:mt-5 mb-2 uppercase tracking-wide">
+                  {children}
+                </h6>
+              ),
+              hr: () => (
+                <hr className="my-8 sm:my-12 border-0 border-t-2 border-gray-200" />
               ),
               p: ({ children }) => (
                 <p className="text-sm sm:text-base text-gray-700 leading-relaxed mb-4 sm:mb-6">

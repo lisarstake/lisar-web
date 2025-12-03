@@ -82,7 +82,7 @@ export const BlogPage: React.FC = () => {
 
             {/* Description */}
             <p className="text-base sm:text-lg md:text-xl text-gray-600 mb-6 md:mb-10 px-4 max-w-2xl mx-auto">
-              Insights, guides, and updates from the world of staking and DeFi
+              Insights, guides, and latest updates from the Lisar community
             </p>
 
             {/* Category Filter Buttons */}
