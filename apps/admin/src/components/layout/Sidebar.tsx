@@ -10,6 +10,7 @@ import {
   CircleUser,
   LogOut,
   Settings,
+  FileText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -33,6 +34,11 @@ const menuItems = [
     label: "Validators",
     path: "/validators",
     icon: CheckCircle2,
+  },
+  {
+    label: "Publications",
+    path: "/publications",
+    icon: FileText,
   },
   {
     label: "Health",

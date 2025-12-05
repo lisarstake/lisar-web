@@ -171,18 +171,18 @@ export const mockLearnContent: LearnContent[] = [
     duration: 41,
     category: "how-to-guides",
   },
-  // {
-  //   id: "12",
-  //   slug: "how-to-withdraw",
-  //   title: "How to Withdraw",
-  //   subtitle: "Withdraw your funds from Lisar to your external wallet",
-  //   videoUrl: "https://vimeo.com/1131329056?fl=ip&fe=ec",
-  //   brief:
-  //     "A simple guide to withdrawing your tokens from Lisar to your bank account.",
-  //   fullContent:
-  //     "Withdrawing is straightforward. Go to your wallet, click Withdraw, from the withdraw page click get address to initiate the withdrawal, complete the process on our onramp partners and enter the destination address and amount, then confirm the transaction. Your tokens will be withdrawn directly to your bank account.",
-  //   s_factor: 1.02,
-  //   duration: 45,
-  //   category: "how-to-guides",
-  // },
+  {
+    id: "12",
+    slug: "how-to-withdraw",
+    title: "How to Withdraw ",
+    subtitle: "Withdraw your funds from your Lisar wallet to your bank account",
+    videoUrl: "https://vimeo.com/1143904039?fl=sv&fe=ci",
+    brief:
+      "A simple guide to withdrawing from your Lisar wallet to your bank account.",
+    fullContent:
+      "Withdrawing is straightforward. Go to your wallet, click Withdraw, from the withdraw page click get address to initiate the withdrawal, complete the process on our onramp partner and copy the destination address and amount, then confirm the transaction. Your funds will be withdrawn and credited to your bank account once confirmed.",
+    s_factor: 1.02,
+    duration: 45,
+    category: "how-to-guides",
+  },
 ];

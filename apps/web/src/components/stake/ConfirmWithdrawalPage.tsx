@@ -10,8 +10,13 @@ import { useOrchestrators } from "@/contexts/OrchestratorContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { delegationService } from "@/services";
 import { totpService } from "@/services/totp";
+import { usePageTracking } from "@/hooks/usePageTracking";
+import { trackStake } from "@/lib/mixpanel";
 
 export const ConfirmWithdrawalPage: React.FC = () => {
+  // Track withdrawal page visit
+  usePageTracking('Confirm Withdrawal Page', { page_type: 'withdrawal_confirm' });
+  
   const navigate = useNavigate();
   const { validatorId } = useParams<{ validatorId: string }>();
   const [searchParams] = useSearchParams();
@@ -123,6 +128,10 @@ export const ConfirmWithdrawalPage: React.FC = () => {
       const response = await delegationService.withdrawStake(withdrawalParams);
 
       if (response.success) {
+        // Track successful withdrawal
+        const amount = parseFloat(lptAmountParam || '0');
+        trackStake('withdraw', amount, 'LPT', validatorId);
+        
         const successMsg =
           response.message || "Your withdrawal has been processed successfully";
         setSuccessMessage(successMsg);
