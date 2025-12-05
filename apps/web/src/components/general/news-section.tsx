@@ -1,109 +1,116 @@
-import {LisarLines} from "./lisar-lines";
+import { useNavigate } from "react-router-dom";
+import { LisarLines } from "./lisar-lines";
+import { Clock, ArrowRight } from "lucide-react";
+import { useState, useEffect } from "react";
+import { blogService } from "@/services/blog";
+import { BlogPost } from "@/types/blog";
 
 const NewsSection = () => {
-  const newsArticles = [
-    {
-      id: 1,
-      title: "Lisar Launches Multi-Chain Staking Infrastructure",
-      description:
-        "Revolutionary staking platform enables users to stake across multiple blockchain networks with fiat currencies and earn rewards in crypto tokens.",
-      featured: true,
-    },
-    {
-      id: 2,
-      title: "68% APY Achieved Through Advanced Delegation",
-      description:
-        "Lisar's non-custodial delegation system delivers industry-leading returns through automated validator selection and optimization.",
-      featured: false,
-    },
-    {
-      id: 3,
-      title: "New Settlement Options: LPT and USDC",
-      description:
-        "Users can now receive staking rewards in Livepeer tokens or USDC, providing flexibility in reward distribution.",
-      featured: false,
-    },
-  ];
+  const navigate = useNavigate();
+  const [featuredPosts, setFeaturedPosts] = useState<BlogPost[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchFeaturedPosts = async () => {
+      try {
+        setIsLoading(true);
+        const response = await blogService.getFeaturedPosts(2);
+        if (response.success && response.data) {
+          const posts = Array.isArray(response.data)
+            ? response.data
+            : response.data.posts || [];
+          setFeaturedPosts(Array.isArray(posts) ? posts : []);
+        }
+      } catch (error) {
+        console.error("Error fetching featured posts:", error);
+        setFeaturedPosts([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchFeaturedPosts();
+  }, []);
+
+  const handleArticleClick = (slug: string) => {
+    navigate(`/blog/${slug}`);
+  };
+
+  const handleViewAll = () => {
+    navigate("/blog");
+  };
 
   return (
-    <section className="w-full md:py-20 py-12 relative overflow-hidden">
+    <section className="w-full md:py-20 py-12 relative overflow-hidden bg-white">
       {/* Lisar Lines Decorations */}
       <LisarLines position="top-right" />
       {/* <LisarLines position="bottom-left" /> */}
 
       <div className="max-w-7xl mx-auto px-8 relative z-10">
         {/* Section Title */}
-        <h2 className="font-medium text-black mb-6 text-xl text-center">
-          News & Articles
-        </h2>
+        <div className="flex justify-center mb-8">
+          <span className="text-xl text-black font-medium">
+            News & Articles
+          </span>
+        </div>
 
         {/* News Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Featured Article - Large Card */}
-          <div className="lg:row-span-2">
-            <article className="bg-gray-800 rounded-2xl p-8 h-full flex flex-col justify-between hover:bg-gray-750 transition-colors cursor-pointer">
-              <div>
-                <h3 className="text-xl font-medium text-white mb-6 leading-tight">
-                  {newsArticles[0].title}
-                </h3>
-                <p className="text-gray-300 leading-relaxed">
-                  {newsArticles[0].description}
-                </p>
-              </div>
-              <div className="mt-8">
-                <span className="inline-flex items-center text-[#C7EF6B] font-medium">
-                  Read More
-                  <svg
-                    className="w-4 h-4 ml-2"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
-                </span>
-              </div>
-            </article>
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#235538]"></div>
           </div>
-
-          {/* Secondary Articles - Two Smaller Cards */}
-          <div className="space-y-8">
-            {newsArticles.slice(1).map((article) => (
+        ) : Array.isArray(featuredPosts) && featuredPosts.length > 0 ? (
+          <div className="flex flex-row gap-8">
+            {/* Articles */}
+            {featuredPosts.map((article) => (
               <article
                 key={article.id}
-                className="bg-gray-800 rounded-2xl p-6 hover:bg-gray-750 transition-colors cursor-pointer"
+                onClick={() => handleArticleClick(article.slug)}
+                className="bg-white border border-gray-200 rounded-2xl overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer group flex-1"
               >
-                <h3 className="text-xl font-medium text-white mb-4 leading-tight">
-                  {article.title}
-                </h3>
-                <p className="text-gray-300 leading-relaxed mb-4">
-                  {article.description}
-                </p>
-                <span className="inline-flex items-center text-[#C7EF6B] font-medium text-sm">
-                  Read More
-                  <svg
-                    className="w-4 h-4 ml-2"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
-                </span>
+                {/* Article Image */}
+                <div className="relative h-48 overflow-hidden">
+                  <img
+                    src={article.cover_image}
+                    alt={article.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                </div>
+
+                {/* Content */}
+                <div className="p-6">
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="text-xs font-medium text-[#235538] bg-[#F8FFF0] px-2 py-1 rounded-full">
+                      {article.category}
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-xs text-gray-500">
+                      <Clock className="w-3 h-3" />
+                      {article.reading_time} min
+                    </span>
+                  </div>
+
+                  <h3 className="text-xl font-bold text-gray-900 mb-3 leading-tight group-hover:text-[#235538] transition-colors line-clamp-2">
+                    {article.title}
+                  </h3>
+                  <p className="text-gray-600 leading-relaxed mb-4 line-clamp-2 text-sm">
+                    {article.excerpt}
+                  </p>
+
+                  <span className="inline-flex items-center text-[#235538] font-medium text-sm group-hover:gap-2 transition-all">
+                    Read More
+                    <ArrowRight className="w-5 h-4 ml-2 group-hover:translate-x-0.5 transition-transform" />
+                  </span>
+                </div>
               </article>
             ))}
           </div>
-        </div>
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-gray-600">
+              No articles available at the moment.
+            </p>
+          </div>
+        )}
       </div>
     </section>
   );

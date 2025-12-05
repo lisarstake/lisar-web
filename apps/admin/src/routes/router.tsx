@@ -39,6 +39,12 @@ const AdminPage = lazy(() =>
 const SettingsPage = lazy(() => 
   import("@/pages/screens/SettingsPage").then(module => ({ default: module.SettingsPage }))
 );
+const PublicationsPage = lazy(() => 
+  import("@/pages/screens/PublicationsPage").then(module => ({ default: module.PublicationsPage }))
+);
+const PublicationEditorPage = lazy(() => 
+  import("@/pages/screens/PublicationEditorPage").then(module => ({ default: module.PublicationEditorPage }))
+);
 const NotFoundPage = lazy(() => 
   import("@/pages/screens/NotFoundPage").then(module => ({ default: module.NotFoundPage }))
 );
@@ -181,6 +187,38 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             {withSuspenseAndErrorBoundary(<SettingsPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "publications",
+        element: (
+          <ProtectedRoute>
+            {withSuspenseAndErrorBoundary(<PublicationsPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "publications/create",
+        element: (
+          <ProtectedRoute>
+            {withSuspenseAndErrorBoundary(<PublicationEditorPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "publications/:publicationId",
+        element: (
+          <ProtectedRoute>
+            {withSuspenseAndErrorBoundary(<PublicationEditorPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "publications/:publicationId/edit",
+        element: (
+          <ProtectedRoute>
+            {withSuspenseAndErrorBoundary(<PublicationEditorPage />)}
           </ProtectedRoute>
         ),
       },

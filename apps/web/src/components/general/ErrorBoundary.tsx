@@ -1,6 +1,7 @@
 import { Component, type ReactNode } from "react";
 import { AlertCircle, RefreshCw, Home } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { trackError } from "@/lib/mixpanel";
 
 type ErrorBoundaryProps = {
   children: ReactNode;
@@ -32,6 +33,13 @@ export class ErrorBoundary extends Component<
       error.message?.includes("Importing a module script failed") ||
       error.message?.includes("error loading dynamically imported module") ||
       error.name === "ChunkLoadError";
+
+    // Track error in Mixpanel
+    trackError(
+      isChunkError ? 'chunk_load_error' : 'runtime_error',
+      error.message || 'Unknown error',
+      error.name
+    );
 
     if (isChunkError) {
       const hasReloaded = sessionStorage.getItem(

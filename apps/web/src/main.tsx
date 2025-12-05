@@ -5,6 +5,16 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { router } from '@/routes/router'
 import { queryClient } from '@/providers/queryClient'
 import './styles/index.css'
+import mixpanel from 'mixpanel-browser'
+
+// Initialize Mixpanel
+mixpanel.init(import.meta.env.VITE_MIXPANEL_TOKEN || '', {
+  debug: false,
+  track_pageview: true,
+  persistence: 'localStorage',
+  autocapture: true,
+  record_sessions_percent: 100,
+})
 
 // Handle chunk loading errors globally
 window.addEventListener('error', (event) => {
