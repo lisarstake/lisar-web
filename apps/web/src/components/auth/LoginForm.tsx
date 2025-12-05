@@ -15,8 +15,7 @@ interface LoginFormData {
 export const LoginForm: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { signin, signinWithGoogle, handleGoogleCallback, state, refreshUser } =
-    useAuth();
+  const { signin, signinWithGoogle, handleGoogleCallback, state, refreshUser } = useAuth();
 
   const [formData, setFormData] = useState<LoginFormData>({
     email: "",
@@ -112,7 +111,6 @@ export const LoginForm: React.FC = () => {
       setIsSubmitting(false);
     }
   };
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
