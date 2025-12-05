@@ -12,19 +12,16 @@ import {
   UpdateBlogPostData,
   BlogCategory,
   PUBLICATION_CONFIG,
+  IPublicationApiService,
 } from './types';
-import { IPublicationApiService } from './api';
-import { mockBlogPosts, mockBlogCategories } from './mockData';
 
 export class PublicationService implements IPublicationApiService {
   private baseUrl: string;
   private timeout: number;
-  private useMockData: boolean;
 
   constructor() {
     this.baseUrl = PUBLICATION_CONFIG.baseUrl;
     this.timeout = PUBLICATION_CONFIG.timeout;
-    this.useMockData = PUBLICATION_CONFIG.useMockData;
   }
 
   // Helper method for making HTTP requests
@@ -91,103 +88,8 @@ export class PublicationService implements IPublicationApiService {
     return null;
   }
 
-  // Mock data helper methods
-  private getMockPublications(params?: GetPublicationsParams): PaginatedPublicationsResponse {
-    const {
-      page = 1,
-      limit = 10,
-      category,
-      tag,
-      search,
-      status = 'all',
-      featured,
-      sortBy = 'publishedAt',
-      sortOrder = 'desc',
-    } = params || {};
-
-    let filteredPosts = [...mockBlogPosts];
-
-    // Filter by status
-    if (status !== 'all') {
-      filteredPosts = filteredPosts.filter((post) => post.status === status);
-    }
-
-    // Filter by category
-    if (category && category !== 'all') {
-      filteredPosts = filteredPosts.filter((post) => post.category === category);
-    }
-
-    // Filter by tag
-    if (tag) {
-      filteredPosts = filteredPosts.filter((post) =>
-        post.tags.some((t) => t.toLowerCase() === tag.toLowerCase())
-      );
-    }
-
-    // Filter by featured
-    if (featured !== undefined) {
-      filteredPosts = filteredPosts.filter((post) => post.featured === featured);
-    }
-
-    // Search
-    if (search) {
-      const searchLower = search.toLowerCase();
-      filteredPosts = filteredPosts.filter(
-        (post) =>
-          post.title.toLowerCase().includes(searchLower) ||
-          post.excerpt.toLowerCase().includes(searchLower) ||
-          post.tags.some((tag) => tag.toLowerCase().includes(searchLower))
-      );
-    }
-
-    // Sort
-    filteredPosts.sort((a, b) => {
-      let compareValue = 0;
-
-      switch (sortBy) {
-        case 'publishedAt':
-          compareValue = new Date(a.publishedAt).getTime() - new Date(b.publishedAt).getTime();
-          break;
-        case 'createdAt':
-          compareValue = new Date(a.createdAt || a.publishedAt).getTime() - new Date(b.createdAt || b.publishedAt).getTime();
-          break;
-        case 'title':
-          compareValue = a.title.localeCompare(b.title);
-          break;
-        case 'readingTime':
-          compareValue = a.readingTime - b.readingTime;
-          break;
-        default:
-          compareValue = 0;
-      }
-
-      return sortOrder === 'asc' ? compareValue : -compareValue;
-    });
-
-    // Paginate
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedPosts = filteredPosts.slice(startIndex, endIndex);
-
-    return {
-      posts: paginatedPosts,
-      pagination: {
-        currentPage: page,
-        totalPages: Math.ceil(filteredPosts.length / limit),
-        totalItems: filteredPosts.length,
-        itemsPerPage: limit,
-      },
-    };
-  }
-
   // Get all publications with filters and pagination
   async getPublications(params?: GetPublicationsParams): Promise<PublicationApiResponse<PaginatedPublicationsResponse>> {
-    if (this.useMockData) {
-      return {
-        success: true,
-        data: this.getMockPublications(params),
-      };
-    }
 
     const authError = this.checkAuth<PaginatedPublicationsResponse>();
     if (authError) return authError;
@@ -200,32 +102,39 @@ export class PublicationService implements IPublicationApiService {
     if (params?.search) queryParams.append('search', params.search);
     if (params?.status) queryParams.append('status', params.status);
     if (params?.featured !== undefined) queryParams.append('featured', String(params.featured));
-    if (params?.sortBy) queryParams.append('sortBy', params.sortBy);
-    if (params?.sortOrder) queryParams.append('sortOrder', params.sortOrder);
+    if (params?.sortBy) queryParams.append('sort_by', params.sortBy);
+    if (params?.sortOrder) queryParams.append('sort_order', params.sortOrder);
 
     const endpoint = `/admin/publications${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
-    return this.makeRequest<PaginatedPublicationsResponse>(endpoint, {
+    const response = await this.makeRequest<any>(endpoint, {
       method: 'GET',
     });
+
+    // Transform the response if API returns an array directly instead of the expected structure
+    if (response.success && response.data && Array.isArray(response.data)) {
+      const posts = response.data;
+      const page = params?.page || 1;
+      const limit = params?.limit || 10;
+      
+      return {
+        success: true,
+        data: {
+          posts: posts,
+          pagination: {
+            current_page: page,
+            total_pages: Math.ceil(posts.length / limit),
+            total_items: posts.length,
+            items_per_page: limit,
+          },
+        },
+      };
+    }
+
+    return response;
   }
 
   // Get publication by ID
   async getPublicationById(id: string): Promise<PublicationApiResponse<BlogPost>> {
-    if (this.useMockData) {
-      const post = mockBlogPosts.find((p) => p.id === id);
-      if (!post) {
-        return {
-          success: false,
-          message: 'Publication not found',
-          error: 'Publication not found',
-        };
-      }
-      return {
-        success: true,
-        data: post,
-      };
-    }
-
     const authError = this.checkAuth<BlogPost>();
     if (authError) return authError;
 
@@ -237,22 +146,6 @@ export class PublicationService implements IPublicationApiService {
 
   // Create publication
   async createPublication(data: CreateBlogPostData): Promise<PublicationApiResponse<BlogPost>> {
-    if (this.useMockData) {
-      const newPost: BlogPost = {
-        ...data,
-        id: `${Date.now()}`,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        status: data.status || 'draft',
-      };
-      mockBlogPosts.unshift(newPost);
-      return {
-        success: true,
-        data: newPost,
-        message: 'Publication created successfully',
-      };
-    }
-
     const authError = this.checkAuth<BlogPost>();
     if (authError) return authError;
 
@@ -264,29 +157,6 @@ export class PublicationService implements IPublicationApiService {
 
   // Update publication
   async updatePublication(data: UpdateBlogPostData): Promise<PublicationApiResponse<BlogPost>> {
-    if (this.useMockData) {
-      const index = mockBlogPosts.findIndex((p) => p.id === data.id);
-      if (index === -1) {
-        return {
-          success: false,
-          message: 'Publication not found',
-          error: 'Publication not found',
-        };
-      }
-
-      const updatedPost = {
-        ...mockBlogPosts[index],
-        ...data,
-        updatedAt: new Date().toISOString(),
-      };
-      mockBlogPosts[index] = updatedPost;
-      return {
-        success: true,
-        data: updatedPost,
-        message: 'Publication updated successfully',
-      };
-    }
-
     const authError = this.checkAuth<BlogPost>();
     if (authError) return authError;
 
@@ -299,22 +169,6 @@ export class PublicationService implements IPublicationApiService {
 
   // Delete publication
   async deletePublication(id: string): Promise<PublicationApiResponse<void>> {
-    if (this.useMockData) {
-      const index = mockBlogPosts.findIndex((p) => p.id === id);
-      if (index === -1) {
-        return {
-          success: false,
-          message: 'Publication not found',
-          error: 'Publication not found',
-        };
-      }
-      mockBlogPosts.splice(index, 1);
-      return {
-        success: true,
-        message: 'Publication deleted successfully',
-      };
-    }
-
     const authError = this.checkAuth<void>();
     if (authError) return authError;
 
@@ -326,51 +180,65 @@ export class PublicationService implements IPublicationApiService {
 
   // Get publication stats
   async getPublicationStats(): Promise<PublicationApiResponse<GetPublicationStatsResponse>> {
-    if (this.useMockData) {
-      const totalPosts = mockBlogPosts.length;
-      const publishedPosts = mockBlogPosts.filter((p) => p.status === 'published').length;
-      const draftPosts = mockBlogPosts.filter((p) => p.status === 'draft').length;
-      const archivedPosts = mockBlogPosts.filter((p) => p.status === 'archived').length;
-      const featuredPosts = mockBlogPosts.filter((p) => p.featured).length;
-
-      return {
-        success: true,
-        data: {
-          stats: {
-            totalPosts,
-            publishedPosts,
-            draftPosts,
-            archivedPosts,
-            featuredPosts,
-          },
-        },
-      };
-    }
-
     const authError = this.checkAuth<GetPublicationStatsResponse>();
     if (authError) return authError;
 
     const endpoint = '/admin/publications/stats';
-    return this.makeRequest<GetPublicationStatsResponse>(endpoint, {
+    const response = await this.makeRequest<any>(endpoint, {
       method: 'GET',
     });
+
+    // Transform camelCase to snake_case for stats
+    if (response.success && response.data) {
+      const camelStats = response.data;
+      return {
+        success: true,
+        data: {
+          total_posts: camelStats.totalPosts,
+          published_posts: camelStats.publishedPosts,
+          draft_posts: camelStats.draftPosts,
+          archived_posts: camelStats.archivedPosts,
+          featured_posts: camelStats.featuredPosts,
+          total_views: camelStats.totalViews,
+        },
+      };
+    }
+
+    return response;
   }
 
   // Get categories
   async getCategories(): Promise<PublicationApiResponse<BlogCategory[]>> {
-    if (this.useMockData) {
-      return {
-        success: true,
-        data: mockBlogCategories,
-      };
-    }
-
     const authError = this.checkAuth<BlogCategory[]>();
     if (authError) return authError;
 
     const endpoint = '/admin/publications/categories';
     return this.makeRequest<BlogCategory[]>(endpoint, {
       method: 'GET',
+    });
+  }
+
+  // Create category
+  async createCategory(data: { name: string; description?: string }): Promise<PublicationApiResponse<BlogCategory>> {
+    const authError = this.checkAuth<BlogCategory>();
+    if (authError) return authError;
+
+    const endpoint = '/admin/publications/categories';
+    return this.makeRequest<BlogCategory>(endpoint, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // Update category
+  async updateCategory(id: string, data: { name: string; description?: string }): Promise<PublicationApiResponse<BlogCategory>> {
+    const authError = this.checkAuth<BlogCategory>();
+    if (authError) return authError;
+
+    const endpoint = `/admin/publications/categories/${id}`;
+    return this.makeRequest<BlogCategory>(endpoint, {
+      method: 'PUT',
+      body: JSON.stringify(data),
     });
   }
 }

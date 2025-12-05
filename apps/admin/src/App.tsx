@@ -21,11 +21,11 @@ export const App: React.FC = () => {
                   <UserProvider>
                     <ErrorBoundary>
                       <PublicationProvider>
-                        <ErrorBoundary>
-                          <HealthProvider>
-                            <AppRouter />
-                            <Toaster position="top-right" />
-                          </HealthProvider>
+                    <ErrorBoundary>
+                      <HealthProvider>
+                        <AppRouter />
+                        <Toaster position="top-right" />
+                      </HealthProvider>
                         </ErrorBoundary>
                       </PublicationProvider>
                     </ErrorBoundary>

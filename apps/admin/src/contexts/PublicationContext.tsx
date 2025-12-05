@@ -28,6 +28,8 @@ type PublicationAction =
   | { type: "UPDATE_PUBLICATION_SUCCESS"; payload: BlogPost }
   | { type: "DELETE_PUBLICATION_SUCCESS"; payload: string }
   | { type: "FETCH_CATEGORIES_SUCCESS"; payload: BlogCategory[] }
+  | { type: "CREATE_CATEGORY_SUCCESS"; payload: BlogCategory }
+  | { type: "UPDATE_CATEGORY_SUCCESS"; payload: BlogCategory }
   | { type: "CLEAR_ERROR" };
 
 const initialState: PublicationState = {
@@ -107,6 +109,18 @@ const publicationReducer = (
         ...state,
         categories: action.payload,
       };
+    case "CREATE_CATEGORY_SUCCESS":
+      return {
+        ...state,
+        categories: [...state.categories, action.payload],
+      };
+    case "UPDATE_CATEGORY_SUCCESS":
+      return {
+        ...state,
+        categories: state.categories.map((cat) =>
+          cat.id === action.payload.id ? action.payload : cat
+        ),
+      };
       
     case "CLEAR_ERROR":
       return { ...state, error: null };
@@ -123,8 +137,11 @@ interface PublicationContextValue {
   createPublication: (data: CreateBlogPostData) => Promise<BlogPost>;
   updatePublication: (data: UpdateBlogPostData) => Promise<BlogPost>;
   deletePublication: (id: string) => Promise<void>;
+  togglePublicationStatus: (id: string, currentStatus: string) => Promise<void>;
   getPublicationStats: () => Promise<void>;
   getCategories: () => Promise<void>;
+  createCategory: (data: { name: string; description?: string }) => Promise<BlogCategory>;
+  updateCategory: (id: string, data: { name: string; description?: string }) => Promise<BlogCategory>;
   clearError: () => void;
 }
 
@@ -141,6 +158,7 @@ export const PublicationProvider: React.FC<{ children: React.ReactNode }> = ({
     dispatch({ type: "FETCH_PUBLICATIONS_REQUEST" });
     try {
       const response = await publicationService.getPublications(params);
+      
       if (response.success && response.data) {
         dispatch({ type: "FETCH_PUBLICATIONS_SUCCESS", payload: response.data });
       } else {
@@ -218,12 +236,36 @@ export const PublicationProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, []);
 
+  const togglePublicationStatus = useCallback(async (id: string, currentStatus: string): Promise<void> => {
+    try {
+      // Toggle between published and archived
+      const newStatus = currentStatus === "published" ? "archived" : "published";
+      
+      const updateData: UpdateBlogPostData = {
+        id,
+        status: newStatus as "draft" | "published" | "archived",
+      };
+
+      const response = await publicationService.updatePublication(updateData);
+      if (response.success && response.data) {
+        dispatch({ type: "UPDATE_PUBLICATION_SUCCESS", payload: response.data });
+      } else {
+        throw new Error(response.error || response.message || "Failed to toggle publication status");
+      }
+    } catch (error) {
+      throw error;
+    }
+  }, []);
+
   const getPublicationStats = useCallback(async () => {
     dispatch({ type: "FETCH_STATS_REQUEST" });
     try {
       const response = await publicationService.getPublicationStats();
+      
       if (response.success && response.data) {
-        dispatch({ type: "FETCH_STATS_SUCCESS", payload: response.data.stats });
+        // API returns stats directly (not wrapped in a stats property)
+        const statsData = response.data;
+        dispatch({ type: "FETCH_STATS_SUCCESS", payload: statsData });
       } else {
         dispatch({
           type: "FETCH_STATS_FAILURE",
@@ -244,10 +286,38 @@ export const PublicationProvider: React.FC<{ children: React.ReactNode }> = ({
       if (response.success && response.data) {
         dispatch({ type: "FETCH_CATEGORIES_SUCCESS", payload: response.data });
       } else {
-        console.error("Failed to fetch categories:", response.error || response.message);
+        // Error handled silently
       }
     } catch (error) {
-      console.error("Failed to fetch categories:", error);
+      // Error handled silently
+    }
+  }, []);
+
+  const createCategory = useCallback(async (data: { name: string; description?: string }): Promise<BlogCategory> => {
+    try {
+      const response = await publicationService.createCategory(data);
+      if (response.success && response.data) {
+        dispatch({ type: "CREATE_CATEGORY_SUCCESS", payload: response.data });
+        return response.data;
+      } else {
+        throw new Error(response.error || response.message || "Failed to create category");
+      }
+    } catch (error) {
+      throw error;
+    }
+  }, []);
+
+  const updateCategory = useCallback(async (id: string, data: { name: string; description?: string }): Promise<BlogCategory> => {
+    try {
+      const response = await publicationService.updateCategory(id, data);
+      if (response.success && response.data) {
+        dispatch({ type: "UPDATE_CATEGORY_SUCCESS", payload: response.data });
+        return response.data;
+      } else {
+        throw new Error(response.error || response.message || "Failed to update category");
+      }
+    } catch (error) {
+      throw error;
     }
   }, []);
 
@@ -264,8 +334,11 @@ export const PublicationProvider: React.FC<{ children: React.ReactNode }> = ({
         createPublication,
         updatePublication,
         deletePublication,
+        togglePublicationStatus,
         getPublicationStats,
         getCategories,
+        createCategory,
+        updateCategory,
         clearError,
       }}
     >

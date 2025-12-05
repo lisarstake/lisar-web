@@ -9,6 +9,8 @@ import {
 } from "@/components/screens/SummaryCard";
 import { Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SuccessDrawer } from "@/components/ui/SuccessDrawer";
+import { ErrorDrawer } from "@/components/ui/ErrorDrawer";
 
 export const PublicationsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -18,6 +20,7 @@ export const PublicationsPage: React.FC = () => {
     getPublicationStats,
     getCategories,
     deletePublication,
+    togglePublicationStatus,
   } = usePublication();
   const {
     paginatedPublications,
@@ -28,16 +31,25 @@ export const PublicationsPage: React.FC = () => {
     error,
   } = state;
 
+  console.log(paginatedPublications)
+
   const [filters, setFilters] = useState<BlogFilters>({
     page: 1,
-    limit: 10,
-    status: "all",
-    category: "all",
-    sortBy: "publishedAt",
+    limit: 50,
     sortOrder: "desc",
   });
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [successDrawer, setSuccessDrawer] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+  });
+  const [errorDrawer, setErrorDrawer] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+  });
 
   // Fetch stats and categories on mount
   useEffect(() => {
@@ -74,14 +86,40 @@ export const PublicationsPage: React.FC = () => {
       getPublications(filters);
       getPublicationStats();
     } catch (error) {
-      console.error("Failed to delete publication:", error);
+      // Error handled by context
     }
   };
 
-  const totalPosts = publicationStats?.totalPosts || 0;
-  const publishedPosts = publicationStats?.publishedPosts || 0;
-  const draftPosts = publicationStats?.draftPosts || 0;
-  const featuredPosts = publicationStats?.featuredPosts || 0;
+  const handleToggleStatus = async (id: string, currentStatus: string) => {
+    try {
+      await togglePublicationStatus(id, currentStatus);
+      
+      // Show success drawer
+      const newStatus = currentStatus === "published" ? "archived" : "published";
+      const statusText = newStatus === "published" ? "published" : "archived";
+      setSuccessDrawer({
+        isOpen: true,
+        title: "Status Updated!",
+        message: `Publication has been successfully ${statusText}.`,
+      });
+      
+      // Refresh the list and stats
+      getPublications(filters);
+      getPublicationStats();
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
+      setErrorDrawer({
+        isOpen: true,
+        title: "Failed to Update Status",
+        message: errorMessage,
+      });
+    }
+  };
+
+  const totalPosts = publicationStats?.total_posts || 0;
+  const publishedPosts = publicationStats?.published_posts || 0;
+  const draftPosts = publicationStats?.draft_posts || 0;
+  const featuredPosts = publicationStats?.featured_posts || 0;
 
   return (
     <div className="space-y-6 lg:space-y-8">
@@ -98,14 +136,14 @@ export const PublicationsPage: React.FC = () => {
           <>
             <SummaryCard
               title="Total Posts"
-              subtitle={`${publishedPosts} published`}
+              subtitle={`Total publications`}
               value={totalPosts.toString()}
               color="green"
               isLoading={isLoadingStats}
             />
             <SummaryCard
               title="Published"
-              subtitle={`${draftPosts} drafts`}
+              subtitle={`Published publications`}
               value={publishedPosts.toString()}
               color="blue"
               isLoading={isLoadingStats}
@@ -171,8 +209,25 @@ export const PublicationsPage: React.FC = () => {
           error={error}
           onPageChange={handlePageChange}
           onDelete={handleDelete}
+          onToggleStatus={handleToggleStatus}
         />
       </div>
+
+      {/* Success Drawer */}
+      <SuccessDrawer
+        isOpen={successDrawer.isOpen}
+        onClose={() => setSuccessDrawer({ ...successDrawer, isOpen: false })}
+        title={successDrawer.title}
+        message={successDrawer.message}
+      />
+
+      {/* Error Drawer */}
+      <ErrorDrawer
+        isOpen={errorDrawer.isOpen}
+        onClose={() => setErrorDrawer({ ...errorDrawer, isOpen: false })}
+        title={errorDrawer.title}
+        message={errorDrawer.message}
+      />
     </div>
   );
 };

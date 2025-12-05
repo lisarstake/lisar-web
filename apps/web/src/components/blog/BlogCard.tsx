@@ -16,7 +16,7 @@ export const BlogCard: React.FC<BlogCardProps> = ({ post, featured = false }) =>
     navigate(`/blog/${post.slug}`);
   };
 
-  const formattedDate = formatDistanceToNow(new Date(post.publishedAt), {
+  const formattedDate = formatDistanceToNow(new Date(post.published_at), {
     addSuffix: true,
   });
 
@@ -29,7 +29,7 @@ export const BlogCard: React.FC<BlogCardProps> = ({ post, featured = false }) =>
         {/* Featured Image */}
         <div className="relative h-48 sm:h-64 md:h-80 overflow-hidden">
           <img
-            src={post.coverImage}
+            src={post.cover_image}
             alt={post.title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
@@ -51,7 +51,7 @@ export const BlogCard: React.FC<BlogCardProps> = ({ post, featured = false }) =>
             </span>
             <span className="inline-flex items-center gap-1 text-xs sm:text-sm text-gray-500">
               <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
-              {post.readingTime} min read
+              {post.reading_time} min read
             </span>
           </div>
 
@@ -108,7 +108,7 @@ export const BlogCard: React.FC<BlogCardProps> = ({ post, featured = false }) =>
       {/* Regular Image */}
       <div className="relative h-40 sm:h-48 overflow-hidden">
         <img
-          src={post.coverImage}
+          src={post.cover_image}
           alt={post.title}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
@@ -124,7 +124,7 @@ export const BlogCard: React.FC<BlogCardProps> = ({ post, featured = false }) =>
           </span>
           <span className="inline-flex items-center gap-1 text-xs text-gray-500">
             <Clock className="w-3 h-3" />
-            {post.readingTime} min
+            {post.reading_time} min
           </span>
         </div>
 

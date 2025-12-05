@@ -45,5 +45,5 @@ export interface BlogConfig {
 export const BLOG_CONFIG: BlogConfig = {
   baseUrl: env.VITE_API_BASE_URL,
   timeout: 30000,
-  useMockData: import.meta.env.VITE_USE_MOCK_BLOG === 'true' || true, // Default to false (use real API)
+  useMockData: import.meta.env.VITE_USE_MOCK_BLOG === 'true' || false, // Default to false (use real API)
 };

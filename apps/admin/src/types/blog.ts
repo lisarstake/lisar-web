@@ -9,15 +9,16 @@ export interface BlogPost {
     avatar?: string;
     role?: string;
   };
-  coverImage: string;
+  cover_image: string;
   category: string;
   tags: string[];
-  publishedAt: string;
-  readingTime: number; // in minutes
+  published_at: string;
+  reading_time: number; // in minutes
   featured?: boolean;
   status?: 'draft' | 'published' | 'archived';
-  createdAt?: string;
-  updatedAt?: string;
+  views?: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface BlogCategory {
@@ -35,17 +36,17 @@ export interface BlogFilters {
   search?: string;
   status?: 'all' | 'draft' | 'published' | 'archived';
   featured?: boolean;
-  sortBy?: 'publishedAt' | 'createdAt' | 'title' | 'readingTime';
+  sortBy?: 'published_at' | 'created_at' | 'title' | 'reading_time';
   sortOrder?: 'asc' | 'desc';
 }
 
 export interface BlogStats {
-  totalPosts: number;
-  publishedPosts: number;
-  draftPosts: number;
-  archivedPosts: number;
-  totalViews?: number;
-  featuredPosts: number;
+  total_posts: number;
+  published_posts: number;
+  draft_posts: number;
+  archived_posts: number;
+  total_views?: number;
+  featured_posts: number;
 }
 
 export interface CreateBlogPostData {
@@ -58,11 +59,11 @@ export interface CreateBlogPostData {
     avatar?: string;
     role?: string;
   };
-  coverImage: string;
+  cover_image: string;
   category: string;
   tags: string[];
-  publishedAt: string;
-  readingTime: number;
+  published_at: string;
+  reading_time: number;
   featured?: boolean;
   status?: 'draft' | 'published' | 'archived';
 }

@@ -9,12 +9,16 @@ export interface BlogPost {
     avatar?: string;
     role?: string;
   };
-  coverImage: string;
+  cover_image: string;
   category: string;
   tags: string[];
-  publishedAt: string;
-  readingTime: number; // in minutes
+  published_at: string;
+  reading_time: number; // in minutes
   featured?: boolean;
+  views?: number;
+  created_at?: string;
+  updated_at?: string;
+  status?: 'draft' | 'published' | 'archived';
 }
 
 export interface BlogCategory {

@@ -1,62 +1,96 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Clock, Calendar, Tag, Share2 } from "lucide-react";
-import { mockBlogPosts } from "@/mock/blog";
+import { blogService } from "@/services/blog";
 import { formatDistanceToNow, format } from "date-fns";
 import Navbar from "@/components/general/nav-bar";
 import Footer from "@/components/general/footer";
 import ReactMarkdown from "react-markdown";
 import { BlogCard } from "./BlogCard";
+import { BlogPost } from "@/types/blog";
+import { trackBlogRead, trackPageView } from "@/lib/mixpanel";
 
 export const BlogDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const { slug } = useParams<{ slug: string }>();
+  const [post, setPost] = useState<BlogPost | null>(null);
+  const [relatedPosts, setRelatedPosts] = useState<BlogPost[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const post = useMemo(() => {
-    return mockBlogPosts.find((p) => p.slug === slug);
+  useEffect(() => {
+    const fetchPost = async () => {
+      if (!slug) return;
+
+      try {
+        setIsLoading(true);
+        const response = await blogService.getBlogPost(slug);
+
+        if (response.success && response.data) {
+          setPost(response.data);
+
+          // Track blog article read
+          trackBlogRead(
+            response.data.id,
+            response.data.title,
+            response.data.category,
+            response.data.reading_time
+          );
+
+          // Track page view with details
+          trackPageView('Blog Article', {
+            page_type: 'blog_detail',
+            article_id: response.data.id,
+            article_title: response.data.title,
+            category: response.data.category,
+          });
+
+          // Fetch related posts by category
+          const relatedResponse = await blogService.getBlogPosts({
+            category: response.data.category,
+            limit: 4,
+          });
+
+          if (relatedResponse.success && relatedResponse.data) {
+            // Handle both response structures:
+            // 1. { data: { posts: [...] } } - expected structure
+            // 2. { data: [...] } - array directly (fallback)
+            const posts = Array.isArray(relatedResponse.data)
+              ? relatedResponse.data
+              : relatedResponse.data.posts || [];
+
+            if (Array.isArray(posts)) {
+              const filtered = posts
+                .filter((p) => p.id !== response.data!.id)
+                .slice(0, 3);
+              setRelatedPosts(filtered);
+            }
+          }
+        } else {
+          setPost(null);
+        }
+      } catch (error) {
+        console.error("Error fetching blog post:", error);
+        setPost(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPost();
   }, [slug]);
-
-  const relatedPosts = useMemo(() => {
-    if (!post) return [];
-    return mockBlogPosts
-      .filter((p) => p.id !== post.id && p.category === post.category)
-      .slice(0, 3);
-  }, [post]);
-
-  if (!post) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">
-            Article Not Found
-          </h1>
-          <button
-            onClick={() => navigate("/blog")}
-            className="px-6 py-3 bg-[#C7EF6B] text-[#060E0A] rounded-lg font-medium hover:bg-[#b5dd59] transition-colors"
-          >
-            Back to Blog
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  const formattedDate = format(new Date(post.publishedAt), "MMMM dd, yyyy");
-  const relativeDate = formatDistanceToNow(new Date(post.publishedAt), {
-    addSuffix: true,
-  });
 
   const handleShare = async () => {
     const url = window.location.href;
+    const text = post?.title || "Check out this article";
+
     if (navigator.share) {
       try {
         await navigator.share({
-          title: post.title,
-          text: post.excerpt,
+          title: text,
           url: url,
         });
       } catch (error) {
-        console.log("Error sharing:", error);
+        console.error("Error sharing:", error);
       }
     } else {
       // Fallback: copy to clipboard
@@ -65,182 +99,236 @@ export const BlogDetailPage: React.FC = () => {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-white">
-      <Navbar />
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white flex flex-col">
+        <Navbar />
+        <main className="flex-1 flex items-center justify-center min-h-[50vh]">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#235538]"></div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
-      {/* Back Button */}
-      {/* <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8">
-        <button
-          onClick={() => navigate("/blog")}
-          className="inline-flex items-center gap-2 text-gray-600 hover:text-[#235538] transition-colors text-sm sm:text-base"
-        >
-          <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-          <span className="font-medium">Return</span>
-        </button>
-      </div> */}
-
-      {/* Article Header */}
-      <article className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-        {/* Cover Image */}
-        <div className="mb-8 sm:mb-12 rounded-xl sm:rounded-2xl overflow-hidden">
-          <img
-            src={post.coverImage}
-            alt={post.title}
-            className="w-full h-auto object-cover"
-          />
-        </div>
-
-        {/* Article Content */}
-        <div className="prose prose-sm sm:prose-base md:prose-lg max-w-none">
-          <ReactMarkdown
-            components={{
-              h1: ({ children }) => (
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mt-8 sm:mt-12 mb-4 sm:mb-6">
-                  {children}
-                </h1>
-              ),
-              h2: ({ children }) => (
-                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mt-10 sm:mt-12 md:mt-16 mb-4 sm:mb-6 pt-6 sm:pt-8 border-t border-gray-200">
-                  {children}
-                </h2>
-              ),
-              h3: ({ children }) => (
-                <h3 className="text-lg sm:text-xl md:text-2xl font-semibold text-[#235538] mt-8 sm:mt-10 mb-3 sm:mb-4">
-                  {children}
-                </h3>
-              ),
-              h4: ({ children }) => (
-                <h4 className="text-base sm:text-lg md:text-xl font-semibold text-gray-800 mt-6 sm:mt-8 mb-2 sm:mb-3">
-                  {children}
-                </h4>
-              ),
-              h5: ({ children }) => (
-                <h5 className="text-sm sm:text-base md:text-lg font-semibold text-gray-700 mt-5 sm:mt-6 mb-2">
-                  {children}
-                </h5>
-              ),
-              h6: ({ children }) => (
-                <h6 className="text-sm md:text-base font-semibold text-gray-600 mt-4 sm:mt-5 mb-2 uppercase tracking-wide">
-                  {children}
-                </h6>
-              ),
-              hr: () => (
-                <hr className="my-8 sm:my-12 border-0 border-t-2 border-gray-200" />
-              ),
-              p: ({ children }) => (
-                <p className="text-sm sm:text-base text-gray-700 leading-relaxed mb-4 sm:mb-6">
-                  {children}
-                </p>
-              ),
-              ul: ({ children }) => (
-                <ul className="list-disc list-inside text-gray-700 mb-6 space-y-2">
-                  {children}
-                </ul>
-              ),
-              ol: ({ children }) => (
-                <ol className="list-decimal list-inside text-gray-700 mb-6 space-y-2">
-                  {children}
-                </ol>
-              ),
-              li: ({ children }) => (
-                <li className="text-gray-700 leading-relaxed">{children}</li>
-              ),
-              strong: ({ children }) => (
-                <strong className="font-semibold text-gray-900">
-                  {children}
-                </strong>
-              ),
-              em: ({ children }) => (
-                <em className="italic text-gray-700">{children}</em>
-              ),
-              blockquote: ({ children }) => (
-                <blockquote className="border-l-4 border-[#C7EF6B] pl-6 py-2 my-6 italic text-gray-600 bg-[#F8FFF0] rounded-r-lg">
-                  {children}
-                </blockquote>
-              ),
-              code: ({ children }) => (
-                <code className="bg-gray-100 text-[#235538] px-2 py-1 rounded text-sm font-mono">
-                  {children}
-                </code>
-              ),
-              a: ({ children, href }) => (
-                <a
-                  href={href}
-                  className="text-[#235538] hover:text-[#1a4029] underline font-medium"
-                  target={href?.startsWith("http") ? "_blank" : undefined}
-                  rel={
-                    href?.startsWith("http") ? "noopener noreferrer" : undefined
-                  }
-                >
-                  {children}
-                </a>
-              ),
-            }}
-          >
-            {post.content}
-          </ReactMarkdown>
-        </div>
-
-        {/* Tags */}
-        <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-gray-200">
-          <h3 className="text-xs sm:text-sm font-semibold text-gray-900 mb-3 sm:mb-4">
-            Tags
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            {post.tags.map((tag) => (
-              <span
-                key={tag}
-                className="px-2 sm:px-3 py-1 bg-gray-100 text-gray-700 text-xs sm:text-sm rounded-full hover:bg-gray-200 transition-colors cursor-pointer"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
-        </div>
-      </article>
-
-      {/* Related Articles */}
-      {relatedPosts.length > 0 && (
-        <section className="py-8 sm:py-12 md:py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
-          <div className="max-w-7xl mx-auto">
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6 sm:mb-8">
-              Related Articles
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-              {relatedPosts.map((relatedPost) => (
-                <BlogCard key={relatedPost.id} post={relatedPost} />
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* CTA Section */}
-      <section className="py-12 sm:py-16 md:py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-[#F8FFF0] to-white">
-        <div className="max-w-4xl mx-auto text-center rounded-xl sm:rounded-2xl p-6 sm:p-8 md:p-12">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">
-            Ready to Start Staking?
-          </h2>
-          <p className="text-base sm:text-lg text-gray-600 mb-6 sm:mb-8">
-            Join thousands of users already earning rewards with Lisar
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
-            <button
-              onClick={() => navigate("/signup")}
-              className="px-6 sm:px-8 py-3 bg-[#235538] text-white rounded-lg font-medium hover:bg-[#1a4029] transition-colors text-sm sm:text-base"
-            >
-              Get Started
-            </button>
+  if (!post) {
+    return (
+      <div className="min-h-screen bg-white flex flex-col">
+        <Navbar />
+        <main className="flex-1 flex items-center justify-center min-h-[50vh]">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">
+              Article Not Found
+            </h1>
             <button
               onClick={() => navigate("/blog")}
-              className="px-6 sm:px-8 py-3 bg-white border-2 border-gray-200 text-gray-900 rounded-lg font-medium hover:border-gray-300 transition-colors text-sm sm:text-base"
+              className="px-6 py-3 bg-[#C7EF6B] text-[#060E0A] rounded-lg font-medium hover:bg-[#b5dd59] transition-colors"
             >
-              Read More 
+              Back to Blog
             </button>
           </div>
-        </div>
-      </section>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  const formattedDate = format(new Date(post.published_at), "MMMM dd, yyyy");
+  const relativeDate = formatDistanceToNow(new Date(post.published_at), {
+    addSuffix: true,
+  });
+
+  return (
+    <div className="min-h-screen bg-white flex flex-col">
+      <Navbar />
+
+      {/* Main Content - flex-1 to push footer down */}
+      <main className="flex-1">
+        {/* Article Header */}
+        <article className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 md:py-16 min-h-[400px]">
+          {/* Back Button */}
+          {/* <button
+          onClick={() => navigate("/blog")}
+          className="inline-flex items-center gap-2 text-gray-600 hover:text-[#235538] mb-6 sm:mb-8 transition-colors group"
+        >
+          <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 group-hover:-translate-x-1 transition-transform" />
+          <span className="text-sm sm:text-base">Back to Blog</span>
+        </button> */}
+
+          {/* Category Badge */}
+          <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+            <span className="inline-flex items-center gap-1 px-3 py-1 bg-[#F8FFF0] text-[#235538] text-xs sm:text-sm font-medium rounded-full">
+              <Tag className="w-3 h-3" />
+              {post.category}
+            </span>
+            <span className="inline-flex items-center gap-1 text-xs sm:text-sm text-gray-500">
+              <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
+              {post.reading_time} min read
+            </span>
+          </div>
+
+          {/* Title */}
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4 sm:mb-6 leading-tight">
+            {post.title}
+          </h1>
+
+          {/* Meta Information */}
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4 mb-6 sm:mb-8 pb-6 sm:pb-8 border-b border-gray-200">
+            {/* Author */}
+            <div className="flex items-center gap-2 sm:gap-3">
+              {post.author.avatar && (
+                <img
+                  src={post.author.avatar}
+                  alt={post.author.name}
+                  className="w-6 h-6 sm:w-10 sm:h-10 rounded-full object-cover"
+                />
+              )}
+              <div>
+                <p className="text-gray-900 text-xs sm:text-sm">
+                  {post.author.name}
+                </p>
+                {post.author.role && (
+                  <p className="text-xs sm:text-sm text-gray-600">
+                    {post.author.role}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Date */}
+            <div className="flex items-center gap-1 sm:gap-2 text-gray-600 ml-auto">
+              <Calendar className="w-4 h-4" />
+              <div className="text-xs sm:text-sm">
+                <span className="hidden sm:inline">{formattedDate}</span>
+                <span className="sm:hidden">{relativeDate}</span>
+              </div>
+            </div>
+
+            {/* Share Button */}
+            {/* <button
+            onClick={handleShare}
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            title="Share article"
+          >
+            <Share2 className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
+          </button> */}
+          </div>
+
+          {/* Cover Image */}
+          <div className="relative w-full h-64 sm:h-80 md:h-96 mb-8 sm:mb-12 rounded-xl sm:rounded-2xl overflow-hidden">
+            <img
+              src={post.cover_image}
+              alt={post.title}
+              className="w-full h-full object-cover"
+            />
+          </div>
+
+          {/* Article Content */}
+          <div className="prose prose-sm sm:prose-base lg:prose-lg max-w-none">
+            <ReactMarkdown
+              components={{
+                h1: ({ children }) => (
+                  <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4 sm:mb-6 mt-8 sm:mt-10">
+                    {children}
+                  </h1>
+                ),
+                h2: ({ children }) => (
+                  <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-3 sm:mb-4 mt-6 sm:mt-8">
+                    {children}
+                  </h2>
+                ),
+                h3: ({ children }) => (
+                  <h3 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-900 mb-2 sm:mb-3 mt-4 sm:mt-6">
+                    {children}
+                  </h3>
+                ),
+                p: ({ children }) => (
+                  <p className="text-sm sm:text-base md:text-lg text-gray-700 leading-relaxed mb-4 sm:mb-6">
+                    {children}
+                  </p>
+                ),
+                ul: ({ children }) => (
+                  <ul className="list-disc list-inside space-y-2 mb-4 sm:mb-6 text-sm sm:text-base md:text-lg text-gray-700">
+                    {children}
+                  </ul>
+                ),
+                ol: ({ children }) => (
+                  <ol className="list-decimal list-inside space-y-2 mb-4 sm:mb-6 text-sm sm:text-base md:text-lg text-gray-700">
+                    {children}
+                  </ol>
+                ),
+                li: ({ children }) => (
+                  <li className="ml-4 sm:ml-6">{children}</li>
+                ),
+                blockquote: ({ children }) => (
+                  <blockquote className="border-l-4 border-[#235538] pl-4 sm:pl-6 italic text-gray-700 my-4 sm:my-6">
+                    {children}
+                  </blockquote>
+                ),
+                code: ({ children }) => (
+                  <code className="bg-gray-100 text-[#235538] px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-xs sm:text-sm font-mono">
+                    {children}
+                  </code>
+                ),
+                img: ({ src, alt }) => (
+                  <img
+                    src={src}
+                    alt={alt || "Article image"}
+                    className="w-full h-auto rounded-xl sm:rounded-2xl my-6 sm:my-8 object-cover"
+                  />
+                ),
+              }}
+            >
+              {post.content}
+            </ReactMarkdown>
+          </div>
+
+          {/* Tags */}
+          {post.tags && post.tags.length > 0 && (
+            <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-gray-200">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">
+                Tags
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {post.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="px-3 py-1 bg-gray-100 text-gray-700 text-xs sm:text-sm rounded-full hover:bg-gray-200 transition-colors"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </article>
+
+        {/* Related Articles */}
+        {relatedPosts.length > 0 ? (
+          <section className="bg-[#F8FFF0] py-12 sm:py-16 md:py-20 min-h-[300px]">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6 sm:mb-8">
+                Related Articles
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+                {relatedPosts.map((relatedPost) => (
+                  <BlogCard key={relatedPost.id} post={relatedPost} />
+                ))}
+              </div>
+            </div>
+          </section>
+        ) : (
+          <section className="bg-[#F8FFF0] py-12 sm:py-16 md:py-20 min-h-[300px]">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="text-center py-8">
+                <p className="text-base sm:text-lg text-gray-600">
+                  No related articles found.
+                </p>
+              </div>
+            </div>
+          </section>
+        )}
+      </main>
 
       <Footer />
     </div>

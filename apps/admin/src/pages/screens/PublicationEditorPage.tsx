@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { usePublication } from "@/contexts/PublicationContext";
-import { CreateBlogPostData, UpdateBlogPostData } from "@/types/blog";
-import { ArrowLeft, Save, Eye, Star, Upload, X } from "lucide-react";
+import { CreateBlogPostData, UpdateBlogPostData, BlogCategory } from "@/types/blog";
+import { Eye, Upload, X, Pencil, Edit2, SquarePen } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { SuccessDrawer } from "@/components/ui/SuccessDrawer";
+import { ErrorDrawer } from "@/components/ui/ErrorDrawer";
+import { CategoryDialog } from "@/components/ui/CategoryDialog";
 
 export const PublicationEditorPage: React.FC = () => {
   const navigate = useNavigate();
@@ -20,6 +23,9 @@ export const PublicationEditorPage: React.FC = () => {
     createPublication,
     updatePublication,
     getCategories,
+    getPublications,
+    createCategory,
+    updateCategory,
   } = usePublication();
   const { currentPublication, categories, isLoading } = state;
 
@@ -33,18 +39,35 @@ export const PublicationEditorPage: React.FC = () => {
       avatar: "",
       role: "",
     },
-    coverImage: "",
+    cover_image: "",
     category: "",
     tags: [],
-    publishedAt: new Date().toISOString(),
-    readingTime: 5,
+    published_at: new Date().toISOString(),
+    reading_time: 5,
     featured: false,
     status: "draft",
   });
 
   const [tagInput, setTagInput] = useState("");
   const [isSaving, setIsSaving] = useState(false);
-  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [isUploadingCoverImage, setIsUploadingCoverImage] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [successDrawer, setSuccessDrawer] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+  });
+  const [errorDrawer, setErrorDrawer] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+  });
+  const [categoryDialog, setCategoryDialog] = useState({
+    isOpen: false,
+    category: null as BlogCategory | null,
+  });
 
   // Fetch categories
   useEffect(() => {
@@ -62,6 +85,21 @@ export const PublicationEditorPage: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isEditMode, publicationId]);
 
+  // Cleanup blob URLs on unmount
+  useEffect(() => {
+    return () => {
+      if (formData.cover_image && formData.cover_image.startsWith("blob:")) {
+        URL.revokeObjectURL(formData.cover_image);
+      }
+      if (
+        formData.author.avatar &&
+        formData.author.avatar.startsWith("blob:")
+      ) {
+        URL.revokeObjectURL(formData.author.avatar);
+      }
+    };
+  }, []);
+
   // Populate form with current publication data
   useEffect(() => {
     if (currentPublication && isEditMode) {
@@ -71,11 +109,11 @@ export const PublicationEditorPage: React.FC = () => {
         excerpt: currentPublication.excerpt,
         content: currentPublication.content,
         author: currentPublication.author,
-        coverImage: currentPublication.coverImage,
+        cover_image: currentPublication.cover_image,
         category: currentPublication.category,
         tags: currentPublication.tags,
-        publishedAt: currentPublication.publishedAt.split("T")[0],
-        readingTime: currentPublication.readingTime,
+        published_at: currentPublication.published_at.split("T")[0],
+        reading_time: currentPublication.reading_time,
         featured: currentPublication.featured,
         status: currentPublication.status || "draft",
       });
@@ -122,7 +160,11 @@ export const PublicationEditorPage: React.FC = () => {
     }));
   };
 
-  const uploadCoverImage = async (file: File): Promise<string | null> => {
+  const uploadImage = async (
+    file: File,
+    folder: string,
+    setLoading: (loading: boolean) => void
+  ): Promise<string | null> => {
     // Validate file size (5MB max)
     if (file.size > 5 * 1024 * 1024) {
       alert("Image size must be less than 5MB");
@@ -136,11 +178,11 @@ export const PublicationEditorPage: React.FC = () => {
     }
 
     try {
-      setIsUploadingImage(true);
+      setLoading(true);
       const formDataUpload = new FormData();
       formDataUpload.append("file", file);
       formDataUpload.append("upload_preset", "lisar_profiles");
-      formDataUpload.append("folder", "lisar-blog-covers");
+      formDataUpload.append("folder", folder);
 
       const response = await fetch(
         "https://api.cloudinary.com/v1_1/dgz4c3ahz/image/upload",
@@ -163,37 +205,137 @@ export const PublicationEditorPage: React.FC = () => {
       alert("Failed to upload image. Please try again.");
       return null;
     } finally {
-      setIsUploadingImage(false);
+      setLoading(false);
     }
   };
 
-  const handleUploadCoverImage = async () => {
+  const uploadCoverImage = async (file: File): Promise<string | null> => {
+    return uploadImage(file, "lisar-blog-covers", setIsUploadingCoverImage);
+  };
+
+  const uploadAuthorAvatar = async (file: File): Promise<string | null> => {
+    return uploadImage(file, "lisar-author-avatars", setIsUploadingAvatar);
+  };
+
+  const handleUploadCoverImage = () => {
     const input = document.createElement("input");
     input.type = "file";
     input.accept = "image/*";
-    input.onchange = async (e) => {
+    input.onchange = (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (file) {
-        const imageUrl = await uploadCoverImage(file);
-        if (imageUrl) {
-          setFormData((prev) => ({ ...prev, coverImage: imageUrl }));
+        // Validate file size (5MB max)
+        if (file.size > 5 * 1024 * 1024) {
+          alert("Image size must be less than 5MB");
+          return;
         }
+
+        // Validate file type
+        if (!file.type.startsWith("image/")) {
+          alert("Please select a valid image file");
+          return;
+        }
+
+        // Store file and create preview URL
+        setCoverImageFile(file);
+        const previewUrl = URL.createObjectURL(file);
+        setFormData((prev) => ({ ...prev, cover_image: previewUrl }));
       }
     };
     input.click();
   };
 
-  const handleSubmit = async (status: "draft" | "published" | "archived") => {
+  const handleUploadAuthorAvatar = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        // Validate file size (5MB max)
+        if (file.size > 5 * 1024 * 1024) {
+          alert("Image size must be less than 5MB");
+          return;
+        }
+
+        // Validate file type
+        if (!file.type.startsWith("image/")) {
+          alert("Please select a valid image file");
+          return;
+        }
+
+        // Store file and create preview URL
+        setAvatarFile(file);
+        const previewUrl = URL.createObjectURL(file);
+        setFormData((prev) => ({
+          ...prev,
+          author: { ...prev.author, avatar: previewUrl },
+        }));
+      }
+    };
+    input.click();
+  };
+
+  const handleSubmit = async () => {
     setIsSaving(true);
     try {
+      let coverImageUrl = formData.cover_image;
+      let avatarUrl = formData.author.avatar;
+
+      // Upload cover image if a new file was selected
+      if (coverImageFile) {
+        setIsUploadingCoverImage(true);
+        try {
+          const uploadedUrl = await uploadCoverImage(coverImageFile);
+          if (uploadedUrl) {
+            coverImageUrl = uploadedUrl;
+            // Clean up preview URL
+            if (formData.cover_image.startsWith("blob:")) {
+              URL.revokeObjectURL(formData.cover_image);
+            }
+          } else {
+            throw new Error("Failed to upload cover image");
+          }
+        } finally {
+          setIsUploadingCoverImage(false);
+        }
+      }
+
+      // Upload avatar if a new file was selected
+      if (avatarFile) {
+        setIsUploadingAvatar(true);
+        try {
+          const uploadedUrl = await uploadAuthorAvatar(avatarFile);
+          if (uploadedUrl) {
+            avatarUrl = uploadedUrl;
+            // Clean up preview URL
+            if (
+              formData.author.avatar &&
+              formData.author.avatar.startsWith("blob:")
+            ) {
+              URL.revokeObjectURL(formData.author.avatar);
+            }
+          } else {
+            throw new Error("Failed to upload avatar");
+          }
+        } finally {
+          setIsUploadingAvatar(false);
+        }
+      }
+
+      // Prepare data with uploaded URLs
       const dataToSubmit = {
         ...formData,
-        status,
-        // Auto-generate publishedAt when publishing
-        publishedAt:
-          status === "published" && !isEditMode
-            ? new Date().toISOString()
-            : formData.publishedAt,
+        cover_image: coverImageUrl,
+        author: {
+          ...formData.author,
+          avatar: avatarUrl,
+        },
+        status: "published" as const,
+        // Auto-generate published_at when publishing
+        published_at: !isEditMode
+          ? new Date().toISOString()
+          : formData.published_at,
       };
 
       if (isEditMode && publicationId) {
@@ -202,10 +344,40 @@ export const PublicationEditorPage: React.FC = () => {
         await createPublication(dataToSubmit);
       }
 
-      navigate("/publications");
+      // Clear file references
+      setCoverImageFile(null);
+      setAvatarFile(null);
+
+      // Refresh publications list
+      try {
+        await getPublications({ page: 1, limit: 10 });
+      } catch (refreshError) {
+        console.warn("Failed to refresh publications list:", refreshError);
+        // Continue with navigation even if refresh fails
+      }
+
+      // Show success drawer and navigate
+      setSuccessDrawer({
+        isOpen: true,
+        title: isEditMode ? "Publication Updated!" : "Publication Created!",
+        message: isEditMode 
+          ? "Your publication has been successfully updated and published."
+          : "Your publication has been successfully created and published.",
+      });
+
+      // Navigate after a short delay
+      setTimeout(() => {
+        navigate("/publications");
+      }, 1500);
     } catch (error) {
       console.error("Failed to save publication:", error);
-      alert("Failed to save publication. Please try again.");
+      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
+      
+      setErrorDrawer({
+        isOpen: true,
+        title: "Publication Failed",
+        message: errorMessage,
+      });
     } finally {
       setIsSaving(false);
     }
@@ -229,18 +401,23 @@ export const PublicationEditorPage: React.FC = () => {
             {/* Cover Image Upload */}
             <div>
               <Label className="mb-2">Cover Image *</Label>
-              {formData.coverImage ? (
+              {formData.cover_image ? (
                 <div className="relative">
                   <img
-                    src={formData.coverImage}
+                    src={formData.cover_image}
                     alt="Cover"
                     className="w-full h-64 object-cover rounded-lg"
                   />
                   <button
                     type="button"
-                    onClick={() =>
-                      setFormData((prev) => ({ ...prev, coverImage: "" }))
-                    }
+                    onClick={() => {
+                      // Clean up preview URL if it's a blob URL
+                      if (formData.cover_image.startsWith("blob:")) {
+                        URL.revokeObjectURL(formData.cover_image);
+                      }
+                      setCoverImageFile(null);
+                      setFormData((prev) => ({ ...prev, cover_image: "" }));
+                    }}
                     className="absolute top-2 right-2 p-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors"
                   >
                     <X className="w-4 h-4" />
@@ -250,24 +427,12 @@ export const PublicationEditorPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleUploadCoverImage}
-                  disabled={isUploadingImage}
-                  className="w-full h-24 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center gap-2 hover:border-gray-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full h-24 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center gap-2 hover:border-gray-400 transition-colors"
                 >
-                  {isUploadingImage ? (
-                    <>
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#235538]"></div>
-                      <span className="text-sm text-gray-600">
-                        Uploading...
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="w-4 h-4 text-gray-400" />
-                      <span className="text-xs text-gray-600">
-                        Click to upload cover image 
-                      </span>
-                    </>
-                  )}
+                  <Upload className="w-4 h-4 text-gray-400" />
+                  <span className="text-xs text-gray-600">
+                    Click to upload cover image
+                  </span>
                 </button>
               )}
             </div>
@@ -311,7 +476,7 @@ export const PublicationEditorPage: React.FC = () => {
                 value={formData.content}
                 onChange={(e) => handleInputChange("content", e.target.value)}
                 placeholder="Write your article content in Markdown format..."
-                rows={20}
+                rows={10}
                 required
                 className="font-mono text-sm"
               />
@@ -327,7 +492,54 @@ export const PublicationEditorPage: React.FC = () => {
         <div className="space-y-6">
           {/* Publishing Details */}
           <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
-            <h3 className="font-semibold text-gray-900">Publishing Details</h3>
+            {/* <h3 className="font-semibold text-gray-900">Publishing Details</h3> */}
+
+            {/* Author Avatar Upload */}
+            <div>
+              <Label className="mb-2">Author Avatar</Label>
+              {formData.author.avatar ? (
+                <div className="relative">
+                  <img
+                    src={formData.author.avatar}
+                    alt="Author Avatar"
+                    className="w-full h-24 object-cover rounded-lg cursor-pointer"
+                    onClick={handleUploadAuthorAvatar}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      // Clean up preview URL if it's a blob URL
+                      if (
+                        formData.author.avatar &&
+                        formData.author.avatar.startsWith("blob:")
+                      ) {
+                        URL.revokeObjectURL(formData.author.avatar);
+                      }
+                      setAvatarFile(null);
+                      setFormData((prev) => ({
+                        ...prev,
+                        author: { ...prev.author, avatar: "" },
+                      }));
+                    }}
+                    className="absolute top-2 right-2 p-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors"
+                    title="Remove avatar"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleUploadAuthorAvatar}
+                  className="w-full h-20 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center gap-2 hover:border-gray-400 transition-colors"
+                >
+                  <Upload className="w-4 h-4 text-gray-400" />
+                  <span className="text-xs text-gray-600">
+                    Click to upload avatar
+                  </span>
+                </button>
+              )}
+            </div>
 
             {/* Author Name */}
             <div>
@@ -345,9 +557,32 @@ export const PublicationEditorPage: React.FC = () => {
 
             {/* Category */}
             <div>
-              <Label htmlFor="category" className="mb-2">
-                Category *
-              </Label>
+              <div className="flex items-center justify-between mb-2">
+                <Label htmlFor="category">
+                  Category *
+                </Label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (formData.category) {
+                      // Edit selected category
+                      const selectedCategory = categories.find(
+                        (cat) => cat.name === formData.category
+                      );
+                      if (selectedCategory) {
+                        setCategoryDialog({ isOpen: true, category: selectedCategory });
+                      }
+                    } else {
+                      // Create new category
+                      setCategoryDialog({ isOpen: true, category: null });
+                    }
+                  }}
+                  className="text-[#235538] hover:text-[#1a4029] transition-colors"
+                  title={formData.category ? "Edit selected category" : "Create new category"}
+                >
+                  <SquarePen className="w-4 h-4" />
+                </button>
+              </div>
               <select
                 id="category"
                 value={formData.category}
@@ -366,15 +601,15 @@ export const PublicationEditorPage: React.FC = () => {
 
             {/* Reading Time */}
             <div>
-              <Label htmlFor="readingTime" className="mb-2">
+              <Label htmlFor="reading_time" className="mb-2">
                 Reading Time (minutes) *
               </Label>
               <Input
-                id="readingTime"
+                id="reading_time"
                 type="number"
-                value={formData.readingTime}
+                value={formData.reading_time}
                 onChange={(e) =>
-                  handleInputChange("readingTime", parseInt(e.target.value))
+                  handleInputChange("reading_time", parseInt(e.target.value))
                 }
                 min={1}
                 required
@@ -440,27 +675,73 @@ export const PublicationEditorPage: React.FC = () => {
 
           {/* Submit Buttons */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 w-full">
-              <Button
-                onClick={() => handleSubmit("draft")}
-                disabled={isSaving}
-                variant="outline"
-              >
-                <Save className="w-4 h-4 mr-2" />
-                Save Draft
-              </Button>
-              <Button
-                onClick={() => handleSubmit("published")}
-                disabled={isSaving}
-                className="bg-[#235538] hover:bg-[#1a4029]"
-              >
-                <Eye className="w-4 h-4 mr-2" />
-                Publish
-              </Button>
-            </div>
+            <Button
+              onClick={handleSubmit}
+              size={"lg"}
+              disabled={isSaving || isUploadingCoverImage || isUploadingAvatar}
+              className="w-full bg-[#235538] hover:bg-[#1a4029] disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSaving || isUploadingCoverImage || isUploadingAvatar ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Publishing...
+                </>
+              ) : (
+                <>
+                  <Eye className="w-4 h-4 mr-2" />
+                  Publish
+                </>
+              )}
+            </Button>
           </div>
         </div>
       </div>
+
+      {/* Success Drawer */}
+      <SuccessDrawer
+        isOpen={successDrawer.isOpen}
+        onClose={() => setSuccessDrawer({ ...successDrawer, isOpen: false })}
+        title={successDrawer.title}
+        message={successDrawer.message}
+      />
+
+      {/* Error Drawer */}
+      <ErrorDrawer
+        isOpen={errorDrawer.isOpen}
+        onClose={() => setErrorDrawer({ ...errorDrawer, isOpen: false })}
+        title={errorDrawer.title}
+        message={errorDrawer.message}
+      />
+
+      {/* Category Dialog */}
+      <CategoryDialog
+        isOpen={categoryDialog.isOpen}
+        onClose={() => setCategoryDialog({ isOpen: false, category: null })}
+        onSave={async (data) => {
+          try {
+            if (categoryDialog.category) {
+              // Update existing category
+              await updateCategory(categoryDialog.category.id, data);
+            } else {
+              // Create new category
+              const newCategory = await createCategory(data);
+              // Auto-select the newly created category
+              setFormData((prev) => ({ ...prev, category: newCategory.name }));
+            }
+            // Refresh categories list
+            await getCategories();
+          } catch (error) {
+            setErrorDrawer({
+              isOpen: true,
+              title: categoryDialog.category ? "Update Failed" : "Create Failed",
+              message: error instanceof Error ? error.message : "Failed to save category",
+            });
+            throw error;
+          }
+        }}
+        category={categoryDialog.category}
+        categories={categories}
+      />
     </div>
   );
 };
