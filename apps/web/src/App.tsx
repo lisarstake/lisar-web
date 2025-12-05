@@ -16,7 +16,9 @@ export default function App() {
   const location = useLocation();
 
   const useDesktopView =
-    location.pathname === "/" || location.pathname === "/dashboard";
+    location.pathname === "/" || 
+    location.pathname === "/dashboard" ||
+    location.pathname.startsWith("/blog");
 
   const pagesWithBottomNav = [
     "/wallet",

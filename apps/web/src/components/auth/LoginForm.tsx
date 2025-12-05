@@ -41,7 +41,6 @@ export const LoginForm: React.FC = () => {
   const fromSignup = location.state?.fromSignup;
 
   useEffect(() => {
-
     if (!state.isLoading && state.isAuthenticated && !fromSignup) {
       navigate("/wallet", { replace: true });
     }

@@ -20,8 +20,12 @@ import { StakeRequest } from "@/services/delegation/types";
 import { priceService } from "@/lib/priceService";
 import { useWallet } from "@/contexts/WalletContext";
 import { formatNumber, parseFormattedNumber } from "@/lib/formatters";
+import { usePageTracking } from "@/hooks/usePageTracking";
+import { trackStake } from "@/lib/mixpanel";
 
 export const StakePage: React.FC = () => {
+  // Track stake page visit
+  usePageTracking('Stake Page', { page_type: 'stake' });
   const navigate = useNavigate();
   const location = useLocation();
   const { validatorId } = useParams<{ validatorId: string }>();
@@ -158,6 +162,9 @@ export const StakePage: React.FC = () => {
         const response = await delegationService.stake(stakeRequest);
 
         if (response.success) {
+          // Track successful stake
+          trackStake('deposit', parseFloat(lptAmount.replace(/,/g, "")), 'LPT', currentValidator.address);
+          
           setSuccessMessage(
             "Staking successful! Your tokens have been staked."
           );

@@ -12,6 +12,7 @@ import React, {
 } from "react";
 import { User, Wallet, Session, AuthApiResponse } from "@/services/auth/types";
 import { authService } from "@/services/auth";
+import mixpanel from 'mixpanel-browser';
 
 // Auth State
 interface AuthState {
@@ -330,6 +331,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         full_name: fullName,
       });
       if (response.success && response.data) {
+        // Track Sign Up event
+        mixpanel.track('Sign Up', {
+          email: email,
+          signup_method: 'email',
+          full_name: fullName,
+        });
+        
         // Return the wallet data for the next step
         return response;
       } else {
@@ -410,6 +418,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             },
           });
 
+          // Identify user and track Sign In
+          mixpanel.identify(userResponse.data.user_id);
+          mixpanel.people.set({
+            '$email': userResponse.data.email,
+            '$name': userResponse.data.full_name,
+            'username': userResponse.data.username,
+            'wallet_address': userResponse.data.wallet_address,
+          });
+          mixpanel.track('Sign In', {
+            user_id: userResponse.data.user_id,
+            email: userResponse.data.email,
+            login_method: 'email',
+            success: true,
+          });
+
           return {
             success: true,
             message: "Login successful",
@@ -465,6 +488,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 wallet,
                 session: response.data.session,
               },
+            });
+
+            // Identify user and track Sign In
+            mixpanel.identify(userResponse.data.user_id);
+            mixpanel.people.set({
+              '$email': userResponse.data.email,
+              '$name': userResponse.data.full_name,
+              'username': userResponse.data.username,
+              'wallet_address': userResponse.data.wallet_address,
+            });
+            mixpanel.track('Sign In', {
+              user_id: userResponse.data.user_id,
+              email: userResponse.data.email,
+              login_method: 'email',
+              success: true,
             });
           }
         } else {
@@ -555,6 +593,36 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             session: data.session,
           },
         });
+
+        // Check if this is a new user (sign up) or existing user (sign in)
+        const isNewUser = data.user.created_at && 
+          (new Date().getTime() - new Date(data.user.created_at).getTime()) < 60000; // Within last minute
+
+        // Identify user
+        mixpanel.identify(user.user_id);
+        mixpanel.people.set({
+          '$email': user.email,
+          '$name': user.full_name,
+          'username': user.username,
+          'wallet_address': user.wallet_address,
+        });
+
+        // Track event
+        if (isNewUser) {
+          mixpanel.track('Sign Up', {
+            user_id: user.user_id,
+            email: user.email,
+            signup_method: 'google',
+            full_name: user.full_name,
+          });
+        } else {
+          mixpanel.track('Sign In', {
+            user_id: user.user_id,
+            email: user.email,
+            login_method: 'google',
+            success: true,
+          });
+        }
 
         return {
           success: true,

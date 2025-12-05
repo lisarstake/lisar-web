@@ -80,7 +80,7 @@ const FAQ = () => {
   };
 
   return (
-    <section className="flex flex-col items-center justify-center mx-auto py-12 px-8 sm:px-0 relative overflow-hidden">
+    <section className="flex flex-col items-center justify-center mx-auto py-12 px-8 sm:px-0 relative overflow-hidden mb-8">
       {/* Lisar Lines Decorations */}
       <LisarLines position="top-right" />
       <div className="hidden md:block">
