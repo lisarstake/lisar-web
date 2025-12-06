@@ -140,8 +140,8 @@ interface PublicationContextValue {
   togglePublicationStatus: (id: string, currentStatus: string) => Promise<void>;
   getPublicationStats: () => Promise<void>;
   getCategories: () => Promise<void>;
-  createCategory: (data: { name: string; description?: string }) => Promise<BlogCategory>;
-  updateCategory: (id: string, data: { name: string; description?: string }) => Promise<BlogCategory>;
+  createCategory: (data: { name: string; slug: string; description?: string }) => Promise<BlogCategory>;
+  updateCategory: (id: string, data: { name: string; slug: string; description?: string }) => Promise<BlogCategory>;
   clearError: () => void;
 }
 
@@ -293,7 +293,7 @@ export const PublicationProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, []);
 
-  const createCategory = useCallback(async (data: { name: string; description?: string }): Promise<BlogCategory> => {
+  const createCategory = useCallback(async (data: { name: string; slug: string; description?: string }): Promise<BlogCategory> => {
     try {
       const response = await publicationService.createCategory(data);
       if (response.success && response.data) {
@@ -307,7 +307,7 @@ export const PublicationProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, []);
 
-  const updateCategory = useCallback(async (id: string, data: { name: string; description?: string }): Promise<BlogCategory> => {
+  const updateCategory = useCallback(async (id: string, data: { name: string; slug: string; description?: string }): Promise<BlogCategory> => {
     try {
       const response = await publicationService.updateCategory(id, data);
       if (response.success && response.data) {
