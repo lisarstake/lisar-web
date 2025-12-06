@@ -9,6 +9,7 @@ import { format } from "date-fns";
 import { BlogPost, BlogCategory } from "@/types/blog";
 import { usePageTracking } from "@/hooks/usePageTracking";
 import { trackSearch } from "@/lib/mixpanel";
+import { BlogCardSkeleton, FeaturedBlogCardSkeleton } from "./BlogCardSkeleton";
 
 export const BlogPage: React.FC = () => {
   const navigate = useNavigate();
@@ -118,11 +119,99 @@ export const BlogPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen">
+      <div className="min-h-screen flex flex-col">
         <Navbar />
-        <div className="flex items-center justify-center min-h-[80vh]">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#235538]"></div>
-        </div>
+        
+        {/* Main Content */}
+        <main className="flex-1">
+          {/* Hero Section */}
+          <section className="bg-[#F8FFF0] py-12 md:py-20 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-7xl mx-auto">
+              <div className="text-center max-w-3xl mx-auto">
+                {/* Main Heading */}
+                <h1 className="text-4xl sm:text-4xl md:text-6xl font-bold text-gray-900 mb-4 md:mb-6">
+                  Read Stories
+                  <br />
+                  from <span className="text-[#235538]">The Clan</span>
+                </h1>
+
+                {/* Description */}
+                <p className="text-base sm:text-lg md:text-xl text-gray-600 mb-6 md:mb-10 px-4 max-w-2xl mx-auto">
+                  Insights, guides, and latest updates from the Lisar community
+                </p>
+
+                {/* Category Filter */}
+                <div className="w-full">
+                  <div className="flex items-center gap-3 md:gap-4 overflow-x-auto scrollbar-hide pb-2 md:pb-0 md:justify-center md:flex-wrap">
+                    <button
+                      onClick={() => setSelectedCategory("all")}
+                      className={`px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-sm sm:text-base font-medium transition-colors whitespace-nowrap shrink-0 ${
+                        selectedCategory === "all"
+                          ? "bg-[#235538] text-white"
+                          : "bg-white border border-gray-300 text-gray-700 hover:border-gray-400"
+                      }`}
+                    >
+                      All
+                    </button>
+                    <button
+                      onClick={() => setSelectedCategory("Announcements")}
+                      className={`px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-sm sm:text-base font-medium transition-colors whitespace-nowrap shrink-0 ${
+                        selectedCategory === "Announcements"
+                          ? "bg-[#235538] text-white"
+                          : "bg-white border border-gray-300 text-gray-700 hover:border-gray-400"
+                      }`}
+                    >
+                      Announcements
+                    </button>
+                    <button
+                      onClick={() => setSelectedCategory("Getting Started")}
+                      className={`px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-sm sm:text-base font-medium transition-colors whitespace-nowrap shrink-0 ${
+                        selectedCategory === "Getting Started"
+                          ? "bg-[#235538] text-white"
+                          : "bg-white border border-gray-300 text-gray-700 hover:border-gray-400"
+                      }`}
+                    >
+                      Getting Started
+                    </button>
+                    <button
+                      onClick={() => setSelectedCategory("Community")}
+                      className={`px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-sm sm:text-base font-medium transition-colors whitespace-nowrap shrink-0 ${
+                        selectedCategory === "Community"
+                          ? "bg-[#235538] text-white"
+                          : "bg-white border border-gray-300 text-gray-700 hover:border-gray-400"
+                      }`}
+                    >
+                      Community
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Featured Post Skeleton */}
+          <section className="py-4 md:py-8 px-4 sm:px-6 lg:px-8 bg-white">
+            <div className="max-w-7xl mx-auto">
+              <div className="h-8 bg-gray-100 rounded-lg w-48 mb-6 animate-pulse" />
+              <FeaturedBlogCardSkeleton />
+            </div>
+          </section>
+
+          {/* Category Sections Skeleton */}
+          {[1, 2].map((section) => (
+            <section key={section} className="py-6 md:py-8 px-4 sm:px-6 lg:px-8 bg-white">
+              <div className="max-w-7xl mx-auto">
+                <div className="h-8 bg-gray-100 rounded-lg w-40 mb-6 animate-pulse" />
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <BlogCardSkeleton />
+                  <BlogCardSkeleton />
+                  <BlogCardSkeleton />
+                </div>
+              </div>
+            </section>
+          ))}
+        </main>
+        
         <Footer />
       </div>
     );
@@ -163,19 +252,36 @@ export const BlogPage: React.FC = () => {
                 >
                   All
                 </button>
-                {categories.map((cat) => (
-                  <button
-                    key={cat.id}
-                    onClick={() => setSelectedCategory(cat.name)}
-                    className={`px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-sm sm:text-base font-medium transition-colors whitespace-nowrap shrink-0 ${
-                      selectedCategory === cat.name
-                        ? "bg-[#235538] text-white"
-                        : "bg-white border border-gray-300 text-gray-700 hover:border-gray-400"
-                    }`}
-                  >
-                    {cat.name}
-                  </button>
-                ))}
+                <button
+                  onClick={() => setSelectedCategory("Announcements")}
+                  className={`px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-sm sm:text-base font-medium transition-colors whitespace-nowrap shrink-0 ${
+                    selectedCategory === "Announcements"
+                      ? "bg-[#235538] text-white"
+                      : "bg-white border border-gray-300 text-gray-700 hover:border-gray-400"
+                  }`}
+                >
+                  Announcements
+                </button>
+                <button
+                  onClick={() => setSelectedCategory("Getting Started")}
+                  className={`px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-sm sm:text-base font-medium transition-colors whitespace-nowrap shrink-0 ${
+                    selectedCategory === "Getting Started"
+                      ? "bg-[#235538] text-white"
+                      : "bg-white border border-gray-300 text-gray-700 hover:border-gray-400"
+                  }`}
+                >
+                  Getting Started
+                </button>
+                <button
+                  onClick={() => setSelectedCategory("Community")}
+                  className={`px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-sm sm:text-base font-medium transition-colors whitespace-nowrap shrink-0 ${
+                    selectedCategory === "Community"
+                      ? "bg-[#235538] text-white"
+                      : "bg-white border border-gray-300 text-gray-700 hover:border-gray-400"
+                  }`}
+                >
+                  Community
+                </button>
               </div>
             </div>
           </div>
