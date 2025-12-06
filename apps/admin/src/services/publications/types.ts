@@ -45,8 +45,8 @@ export interface IPublicationApiService {
   deletePublication(id: string): Promise<PublicationApiResponse<void>>;
   getPublicationStats(): Promise<PublicationApiResponse<GetPublicationStatsResponse>>;
   getCategories(): Promise<PublicationApiResponse<BlogCategory[]>>;
-  createCategory(data: { name: string; description?: string }): Promise<PublicationApiResponse<BlogCategory>>;
-  updateCategory(id: string, data: { name: string; description?: string }): Promise<PublicationApiResponse<BlogCategory>>;
+  createCategory(data: { name: string; slug: string; description?: string }): Promise<PublicationApiResponse<BlogCategory>>;
+  updateCategory(id: string, data: { name: string; slug: string; description?: string }): Promise<PublicationApiResponse<BlogCategory>>;
 }
 
 // API Configuration

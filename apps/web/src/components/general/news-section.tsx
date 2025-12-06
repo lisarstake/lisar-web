@@ -4,6 +4,7 @@ import { Clock, ArrowRight } from "lucide-react";
 import { useState, useEffect } from "react";
 import { blogService } from "@/services/blog";
 import { BlogPost } from "@/types/blog";
+import { BlogCardSkeleton } from "@/components/blog/BlogCardSkeleton";
 
 const NewsSection = () => {
   const navigate = useNavigate();
@@ -46,7 +47,7 @@ const NewsSection = () => {
       <LisarLines position="top-right" />
       {/* <LisarLines position="bottom-left" /> */}
 
-      <div className="max-w-7xl mx-auto px-8 relative z-10">
+      <div className="w-full mx-auto px-4 sm:px-6 lg:px-12 xl:px-16 relative z-10">
         {/* Section Title */}
         <div className="flex justify-center mb-8">
           <span className="text-xl text-black font-medium">
@@ -56,17 +57,18 @@ const NewsSection = () => {
 
         {/* News Grid */}
         {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#235538]"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 w-full">
+            <BlogCardSkeleton />
+            <BlogCardSkeleton />
           </div>
         ) : Array.isArray(featuredPosts) && featuredPosts.length > 0 ? (
-          <div className="flex flex-row gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 w-full">
             {/* Articles */}
             {featuredPosts.map((article) => (
               <article
                 key={article.id}
                 onClick={() => handleArticleClick(article.slug)}
-                className="bg-white border border-gray-200 rounded-2xl overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer group flex-1"
+                className="bg-white border border-gray-200 rounded-2xl overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer group w-full"
               >
                 {/* Article Image */}
                 <div className="relative h-48 overflow-hidden">

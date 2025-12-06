@@ -219,7 +219,7 @@ export class PublicationService implements IPublicationApiService {
   }
 
   // Create category
-  async createCategory(data: { name: string; description?: string }): Promise<PublicationApiResponse<BlogCategory>> {
+  async createCategory(data: { name: string; slug: string; description?: string }): Promise<PublicationApiResponse<BlogCategory>> {
     const authError = this.checkAuth<BlogCategory>();
     if (authError) return authError;
 
@@ -231,7 +231,7 @@ export class PublicationService implements IPublicationApiService {
   }
 
   // Update category
-  async updateCategory(id: string, data: { name: string; description?: string }): Promise<PublicationApiResponse<BlogCategory>> {
+  async updateCategory(id: string, data: { name: string; slug: string; description?: string }): Promise<PublicationApiResponse<BlogCategory>> {
     const authError = this.checkAuth<BlogCategory>();
     if (authError) return authError;
 
