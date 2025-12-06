@@ -10,7 +10,7 @@ import { X } from "lucide-react";
 interface CategoryDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: { name: string; description?: string }) => Promise<void>;
+  onSave: (data: { name: string; slug: string; description?: string }) => Promise<void>;
   category?: BlogCategory | null;
   categories: BlogCategory[];
 }
@@ -28,6 +28,14 @@ export const CategoryDialog: React.FC<CategoryDialogProps> = ({
   const [error, setError] = useState("");
 
   const isEditMode = !!category;
+
+  // Generate slug from name
+  const generateSlug = (text: string): string => {
+    return text
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "");
+  };
 
   useEffect(() => {
     if (category) {
@@ -59,10 +67,14 @@ export const CategoryDialog: React.FC<CategoryDialogProps> = ({
       return;
     }
 
+    // Generate slug from name
+    const slug = generateSlug(name.trim());
+
     try {
       setIsSaving(true);
       await onSave({
         name: name.trim(),
+        slug: slug,
         description: description.trim() || undefined,
       });
       onClose();
