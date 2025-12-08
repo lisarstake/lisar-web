@@ -22,7 +22,7 @@ export const EarnPage: React.FC = () => {
       title: "Invite Friends",
       description: "Earn inviting your friends to Lisar",
       image: "/earn1.jpeg",
-      buttonText: "Coming soon",
+      buttonText: "Get started",
       isComingSoon: true,
     },
     {
@@ -30,7 +30,7 @@ export const EarnPage: React.FC = () => {
       title: "Creator Program",
       description: "Get paid creating content for Lisar",
       image: "/earn2.jpeg",
-      buttonText: "Coming soon",
+      buttonText: "Get started",
       isComingSoon: true,
     },
     {
@@ -48,8 +48,9 @@ export const EarnPage: React.FC = () => {
   };
 
   const handleCardClick = (card: EarnCard) => {
-    if (!card.isComingSoon) {
-      // Handle card action when it's not coming soon
+    if (card.isComingSoon) {
+      // Open Telegram link
+      window.open("https://t.me/+F0YXOMaiJMxkODVk", "_blank", "noopener,noreferrer");
     }
   };
 
@@ -78,7 +79,10 @@ export const EarnPage: React.FC = () => {
           {earnCards.map((card) => (
             <div
               key={card.id}
-              className="bg-[#1a1a1a] rounded-xl overflow-hidden"
+              className={`bg-[#1a1a1a] rounded-xl overflow-hidden ${
+                card.isSocialCard ? "cursor-pointer hover:bg-[#2a2a2a] transition-colors" : ""
+              }`}
+              onClick={() => card.isSocialCard && handleCardClick(card)}
             >
               {/* Card Image */}
               {!card.isSocialCard && (
@@ -128,7 +132,11 @@ export const EarnPage: React.FC = () => {
                       rel="noopener noreferrer"
                       className="hover:opacity-80 transition-opacity"
                     >
-                     <img src="/telegram.png" alt="Telegram" className="w-7 h-7" />
+                      <img
+                        src="/telegram.png"
+                        alt="Telegram"
+                        className="w-7 h-7"
+                      />
                     </a>
 
                     {/* YouTube Logo */}
@@ -138,7 +146,11 @@ export const EarnPage: React.FC = () => {
                       rel="noopener noreferrer"
                       className="hover:opacity-80 transition-opacity"
                     >
-                      <img src="/youtube.png" alt="Telegram" className="w-8 h-8" />
+                      <img
+                        src="/youtube.png"
+                        alt="Telegram"
+                        className="w-8 h-8"
+                      />
                     </a>
                   </div>
                 )}
@@ -151,7 +163,6 @@ export const EarnPage: React.FC = () => {
                 {!card.isSocialCard && (
                   <button
                     onClick={() => handleCardClick(card)}
-                    disabled={card.isComingSoon}
                     className={`mt-3 py-1.5 px-4 rounded-lg font-medium text-sm transition-colors ${
                       card.isComingSoon
                         ? "bg-blue-500 text-white cursor-not-allowed opacity-75"
