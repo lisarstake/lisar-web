@@ -1,43 +1,44 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import { RouterProvider } from 'react-router-dom'
-import { QueryClientProvider } from '@tanstack/react-query'
-import { router } from '@/routes/router'
-import { queryClient } from '@/providers/queryClient'
-import './styles/index.css'
-import mixpanel from 'mixpanel-browser'
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { RouterProvider } from "react-router-dom";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { router } from "@/routes/router";
+import { queryClient } from "@/providers/queryClient";
+import "./styles/index.css";
+import mixpanel from "mixpanel-browser";
 
 // Initialize Mixpanel
-mixpanel.init(import.meta.env.VITE_MIXPANEL_TOKEN || '', {
+mixpanel.init(import.meta.env.VITE_MIXPANEL_TOKEN || "", {
   debug: false,
+  api_host: "https://nginx-proxy-mctg.onrender.com",
   track_pageview: true,
-  persistence: 'localStorage',
+  persistence: "localStorage",
   autocapture: true,
   record_sessions_percent: 100,
-})
+});
 
 // Handle chunk loading errors globally
-window.addEventListener('error', (event) => {
+window.addEventListener("error", (event) => {
   // Check if it's a chunk loading error
   if (
-    event.message.includes('Failed to fetch dynamically imported module') ||
-    event.message.includes('Importing a module script failed') ||
-    event.message.includes('error loading dynamically imported module')
+    event.message.includes("Failed to fetch dynamically imported module") ||
+    event.message.includes("Importing a module script failed") ||
+    event.message.includes("error loading dynamically imported module")
   ) {
-    const hasReloaded = sessionStorage.getItem('chunk-error-reloaded')
-    
+    const hasReloaded = sessionStorage.getItem("chunk-error-reloaded");
+
     if (!hasReloaded) {
-      sessionStorage.setItem('chunk-error-reloaded', 'true')
-      window.location.reload()
+      sessionStorage.setItem("chunk-error-reloaded", "true");
+      window.location.reload();
     } else {
-      sessionStorage.removeItem('chunk-error-reloaded')
+      sessionStorage.removeItem("chunk-error-reloaded");
     }
   }
-})
+});
 
-const rootElement = document.getElementById('root')
+const rootElement = document.getElementById("root");
 if (!rootElement) {
-  throw new Error('Root element with id "root" not found')
+  throw new Error('Root element with id "root" not found');
 }
 
 createRoot(rootElement).render(
@@ -46,6 +47,4 @@ createRoot(rootElement).render(
       <RouterProvider router={router} />
     </QueryClientProvider>
   </StrictMode>
-)
-
-
+);

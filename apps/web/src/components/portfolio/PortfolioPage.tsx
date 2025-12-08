@@ -279,6 +279,32 @@ export const PortfolioPage: React.FC = () => {
     };
   }, [delegatorTransactions]);
 
+  // Calculate completed unbonding (ready for withdrawal) count and data
+  const completedUnbondingData = useMemo(() => {
+    if (!delegatorTransactions) {
+      return {
+        count: 0,
+        totalAmount: 0,
+        validatorId: null,
+      };
+    }
+
+    const completed = delegatorTransactions.completedStakeTransactions || [];
+    const count = completed.length;
+    const totalAmount = completed.reduce(
+      (sum, tx) => sum + parseFloat(tx.amount || "0"),
+      0
+    );
+    // Get the first validator ID from completed transactions (for navigation)
+    const validatorId = completed.length > 0 ? completed[0].delegate.id : null;
+
+    return {
+      count,
+      totalAmount,
+      validatorId,
+    };
+  }, [delegatorTransactions]);
+
   const handleBackClick = () => {
     navigate(-1);
   };
@@ -293,6 +319,12 @@ export const PortfolioPage: React.FC = () => {
 
   const handleStakeClick = (stakeId: string) => {
     navigate(`/validator-details/${stakeId}`);
+  };
+
+  const handleWithdrawClick = () => {
+    if (completedUnbondingData.validatorId) {
+      navigate(`/validator-details/${completedUnbondingData.validatorId}`);
+    }
   };
 
   const handleHelpClick = () => {
@@ -416,9 +448,10 @@ export const PortfolioPage: React.FC = () => {
         >
           <span className="text-base font-medium text-white/50 flex items-center gap-2">
             View summary
-            {pendingUnbondingData.count > 0 && (
+            {(pendingUnbondingData.count > 0 ||
+              completedUnbondingData.count > 0) && (
               <span className="bg-[#C7EF6B] text-black text-xs font-semibold rounded-full w-5 h-5 flex items-center justify-center">
-                {pendingUnbondingData.count}
+                {pendingUnbondingData.count + completedUnbondingData.count}
               </span>
             )}
           </span>
@@ -465,6 +498,33 @@ export const PortfolioPage: React.FC = () => {
               </div>
             </div>
 
+            {/* Withdrawal Available Section */}
+            {completedUnbondingData.count > 0 && (
+              <div className="bg-[#1a1a1a] rounded-xl p-4 mb-4 border border-[#C7EF6B]/30">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <p className="text-[#C7EF6B] text-sm font-medium">
+                      Withdrawal Available
+                    </p>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-400 text-sm">Amount</span>
+                    <span className="text-white/90 font-medium">
+                      {formatEarnings(completedUnbondingData.totalAmount)} LPT
+                    </span>
+                  </div>
+                  <button
+                    onClick={handleWithdrawClick}
+                    className="w-full py-3 rounded-lg font-semibold bg-[#C7EF6B] text-black hover:bg-[#B8E55A] transition-colors"
+                  >
+                    Withdraw
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Unbonding in Process Section */}
             {pendingUnbondingData.count > 0 && (
               <div className="bg-[#1a1a1a] rounded-xl p-4 mb-4 border border-yellow-500/20">
@@ -484,9 +544,7 @@ export const PortfolioPage: React.FC = () => {
                   </div>
                   {pendingUnbondingData.timeRemaining && (
                     <div className="flex items-center justify-between">
-                      <span className="text-gray-400 text-sm">
-                        Time left
-                      </span>
+                      <span className="text-gray-400 text-sm">Time left</span>
                       <span className="text-[#C7EF6B] text-sm font-medium">
                         {pendingUnbondingData.timeRemaining}
                       </span>
@@ -530,7 +588,6 @@ export const PortfolioPage: React.FC = () => {
           "View your total stake, earnings, and current staking positions in one place.",
           "Total stake shows your combined investment across all validators.",
           "Earnings can be viewed weekly, monthly, or yearly. Next payout shows when you'll receive rewards.",
-         
         ]}
       />
 
