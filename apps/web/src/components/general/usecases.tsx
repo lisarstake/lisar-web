@@ -25,28 +25,10 @@ export const UseCasesSection = () => {
           <Card className=" bg-gray-200 rounded-lg shadow-none border border-black flex flex-col justify-between">
             <CardHeader>
               <CardTitle className="text-2xl mb-2 text-black">
-                Deposit funds
+                Save or stake
               </CardTitle>
               <CardDescription className=" text-gray-700">
-                Add capital in fiat or crypto. Lisar converts it instantly into
-                the right staking asset for the chain you choose.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col items-center justify-center h-full">
-              <img src="/h1.svg" className="mx-auto " />
-            </CardContent>
-          </Card>
-
-          {/* Card 2: Choose Your Orchestrator */}
-          <Card className="bg-gray-200 rounded-lg shadow-none border border-black flex flex-col justify-between">
-            <CardHeader>
-              <CardTitle className="text-2xl mb-2 text-black">
-                Earn rewards daily
-              </CardTitle>
-              <CardDescription className=" text-gray-700">
-                Your funds are staked with high-performing validators across
-                supported networks. You earn rewards automatically, credited
-                daily.
+                Start with stable coins for steady savings, or go for high-yield staking to maximize returns. Add money in your local currency or crypto—we handle the rest.
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col items-center justify-center h-full">
@@ -54,15 +36,29 @@ export const UseCasesSection = () => {
             </CardContent>
           </Card>
 
+          {/* Card 2: Choose Your Orchestrator */}
+          <Card className="bg-gray-200 rounded-lg shadow-none border border-black flex flex-col justify-between">
+            <CardHeader>
+              <CardTitle className="text-2xl mb-2 text-black">
+                Watch it grow
+              </CardTitle>
+              <CardDescription className=" text-gray-700">
+                Your money starts earning right away. Rewards are added to your account daily, automatically. No checking, no managing—just growth.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col items-center justify-center h-full">
+              <img src="/h1.svg" className="mx-auto " />
+            </CardContent>
+          </Card>
+
           {/* Card 3: One-Click Staking */}
           <Card className="bg-gray-200 rounded-lg shadow-none border border-black flex flex-col justify-between">
             <CardHeader>
               <CardTitle className="text-2xl text-black mb-2">
-                Withdraw anytime
+                Take it out when you need it
               </CardTitle>
               <CardDescription className="text-gray-700">
-                Your principal stays intact and available. Withdraw whenever you
-                like (subject to each chain’s unbonding period).
+                Your money is always yours. Withdraw stable savings instantly, or wait a few days for high-yield stakes. Simple and straightforward.
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col items-center justify-center h-full">

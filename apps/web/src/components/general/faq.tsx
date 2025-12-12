@@ -35,43 +35,43 @@ const FAQ = () => {
       id: 1,
       question: "What is Lisar?",
       answer:
-        "Lisar is a simple platform that lets you earn staking rewards across multiple blockchains using your local currency. You don’t need prior crypto knowledge — Lisar handles everything behind the scenes while you earn.",
+        "Lisar is your DeFi bank. Save your stable coins safely, or stake for higher returns. Think of it like a regular bank, but your money actually grows—and you're in full control.",
     },
     {
       id: 2,
-      question: "Where do the rewards come from?",
+      question: "What's the difference; stables vs high-yield?",
       answer:
-        "Rewards are built into the economics of Proof-of-Stake blockchains. When you stake tokens, you help secure the network, and in return, the protocol pays you inflationary rewards and transaction fees. Lisar gives you access to these yields without the complexity.",
+        "Stable savings keep your money safe with steady rewards. High-yield staking offers bigger returns but prices can be volatile. Choose what fits your needs.",
     },
     {
       id: 3,
-      question: "Which chains are supported?",
+      question: "How do I earn rewards?",
       answer:
-        "We’re currently live on Livepeer, with BNB and Solana launching soon. More networks will be added to expand your earning opportunities.",
+        "When you save or stake, your money helps secure blockchain networks. In return, you get paid daily rewards automatically. It's like earning interest, but better—and you see it grow every day.",
     },
     {
       id: 4,
       question: "Do I need crypto to get started?",
       answer:
-        "No. You can deposit with your local currency, and Lisar handles the conversion into the right staking assets. If you already hold crypto, you can also stake directly.",
+        "Nope. You can start with your local currency—dollars, euros, whatever you use. We handle the conversion. If you already have crypto, you can use that too. Either way works.",
     },
     {
       id: 5,
-      question: "How safe is Lisar?",
+      question: "Is my money safe?",
       answer:
-        "We follow strict security practices and stake only with trusted validators. While risks like price volatility and governance changes exist, we design Lisar to keep your funds safe and transparent.",
+        "Yes. We use trusted validators and follow strict security practices. Your funds are always yours, and you can see everything in your account. Like any investment, there are risks, but we're built to keep your money safe.",
     },
     {
       id: 6,
-      question: "Can I withdraw anytime?",
+      question: "Can I withdraw my money anytime?",
       answer:
-        "Yes. Your funds remain yours and are available for withdrawal. Note: each chain has its own unbonding period (eg. 7 days for Livepeer). Once unbonded, you can withdraw fully.",
+        "Stable savings? Yes, withdraw instantly. High-yield stakes? Usually takes a few days to process. Your money is always yours—we just need a bit of time to unlock staked funds.",
     },
     {
       id: 7,
       question: "How much can I earn?",
       answer:
-        "It depends on the network and how much you stake. For example, Livepeer currently offers up to 68% APY. Other chains like Solana or BNB may offer different reward rates.",
+        "It depends on what you choose. Stable savings offer steady returns around 14.9% APY. High-yield staking can go up to 60% APY or more, depending on the network. The more you put in, the more you earn.",
     },
   ];
 

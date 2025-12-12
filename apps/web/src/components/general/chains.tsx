@@ -9,7 +9,7 @@ const supportedChains = [
   {
     name: "Solana",
     img: "/sol.svg",
-    comingSoon: true,
+    comingSoon: false,
   },
   {
     name: "Lisk",

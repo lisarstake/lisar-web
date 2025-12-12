@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {LisarLines} from "./lisar-lines";
+import { LisarLines } from "./lisar-lines";
 import { usePrices } from "@/hooks/usePrices";
 
 const Hero = () => {
   const navigate = useNavigate();
   const [stakeAmount, setStakeAmount] = useState(1000);
   const [currencyType] = useState<"LPT" | "USD">("USD");
-  const [settlementToken, setSettlementToken] = useState<"LPT" | "USDC">("USDC");
+  const [settlementToken, setSettlementToken] = useState<"LPT" | "USDC">(
+    "USDC"
+  );
   const [showTooltip, setShowTooltip] = useState(false);
 
   // Use the price service hook
@@ -27,10 +29,7 @@ const Hero = () => {
       baseAmount = stakeAmount * prices.lpt;
     }
 
-    const annualEarningsUSD = calculateEarnings(
-      baseAmount,
-      lptAPY
-    );
+    const annualEarningsUSD = calculateEarnings(baseAmount, lptAPY);
 
     if (settlementToken === "LPT") {
       return (parseFloat(annualEarningsUSD) / prices.lpt).toFixed(2);
@@ -54,34 +53,17 @@ const Hero = () => {
           {/* Left Section - Informational */}
           <div className="space-y-8">
             <div>
-              <h1 className="text-5xl font-bold text-gray-900 mb-4">
-                Stake & Earn Yield Rewards
+              <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-4">
+                Your Money, Working Harder
               </h1>
-              <p className="text-xl text-gray-600 italic font-playfair">
-                Stake with Fiat, Earn in Crypto.
+              <p className="text-lg md:text-xl text-gray-600 italic font-playfair">
+                Earn, save and do more with your assets.
               </p>
             </div>
 
             <p className="text-lg text-gray-700 leading-relaxed">
-              Earn rewards securing the world’s top blockchain networks. Stake
-              with your local currency and earn rewards in crypto tokens.
+              From stable savings to high-yield growth, Lisar makes your money work for you—effortlessly and instantly, without all the fees.
             </p>
-
-            {/* Key Metrics */}
-            <div className="flex gap-8">
-              <div>
-                <div className="text-3xl font-bold text-[#235538]">68% APY</div>
-                <div className="text-sm text-gray-500">
-                  Annual Percentage Yield
-                </div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-gray-900">
-                  $119.9M <span className="hidden md:inline">USD</span>
-                </div>
-                <div className="text-sm text-gray-500">Total Value Locked</div>
-              </div>
-            </div>
 
             {/* CTA Buttons */}
             <div className="flex gap-4">
@@ -89,7 +71,7 @@ const Hero = () => {
                 className="bg-[#C7EF6B] rounded-lg cursor-pointer text-[#060E0A] px-8 py-3 font-semibold transition-colors"
                 onClick={() => navigate("/login")}
               >
-                Stake now
+                Get Started
               </button>
             </div>
           </div>
@@ -97,7 +79,7 @@ const Hero = () => {
           {/* Right Section - Calculator */}
           <div className="bg-gradient-to-br from-blue-50 to-green-50 rounded-2xl p-2 md:p-6">
             <div className="bg-white rounded-xl p-6 shadow-sm">
-              <h3 className="text-gray-500 text-sm mb-4">Amount to stake</h3>
+              <h3 className="text-gray-500 text-sm mb-4">Amount</h3>
 
               <div className="flex items-center gap-2 mb-6">
                 <span className="text-4xl font-bold text-gray-900">
@@ -111,10 +93,14 @@ const Hero = () => {
                   </span>
                 )}
                 {pricesLoading && (
-                  <span className="text-sm text-gray-400">Loading prices...</span>
+                  <span className="text-sm text-gray-400">
+                    Loading prices...
+                  </span>
                 )}
                 {pricesError && (
-                  <span className="text-sm text-red-500">Price unavailable</span>
+                  <span className="text-sm text-red-500">
+                    Price unavailable
+                  </span>
                 )}
               </div>
 
@@ -126,9 +112,11 @@ const Hero = () => {
                 value={stakeAmount}
                 onChange={(e) => setStakeAmount(Number(e.target.value))}
                 className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider mb-6"
-                style={{
-                  '--progress': `${((stakeAmount - 100) / (10000 - 100)) * 100}%`
-                } as React.CSSProperties}
+                style={
+                  {
+                    "--progress": `${((stakeAmount - 100) / (10000 - 100)) * 100}%`,
+                  } as React.CSSProperties
+                }
               />
 
               <div className="flex items-center gap-2 sm:gap-3 mt-2">
@@ -159,17 +147,21 @@ const Hero = () => {
                   />
                 </div>
                 {/* Coming Soon Token Option */}
-                <div className="flex flex-col items-center px-3 py-2.5 rounded-2xl border border-gray-200 bg-white opacity-50 cursor-not-allowed relative">
+                {/* <div className="flex flex-col items-center px-3 py-2.5 rounded-2xl border border-gray-200 bg-white opacity-50 cursor-not-allowed relative">
                   <div className="rounded-full mb-1 flex items-center justify-center">
                     <img src="/sol1.svg" alt="SOL" className="h-10 w-10 mt-1" />
                   </div>
                   <div className="absolute -top-1 -right-1 bg-[#235538] text-white font-medium text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full">
                     Soon
                   </div>
-                </div>
-                <div className="hidden md:flex flex-col items-center px-3 py-2.5 rounded-2xl border border-gray-200 bg-white opacity-50 cursor-not-allowed relative">
+                </div> */}
+                <div className="flex flex-col items-center px-3 py-2.5 rounded-2xl border border-gray-200 bg-white opacity-50 cursor-not-allowed relative">
                   <div className="rounded-full mb-1 flex items-center justify-center">
-                    <img src="/lisk1.png" alt="LISK" className="h-10 w-10 mt-1" />
+                    <img
+                      src="/lisk1.png"
+                      alt="LISK"
+                      className="h-10 w-10 mt-1"
+                    />
                   </div>
                   <div className="absolute -top-1 -right-1 bg-[#235538] text-white font-medium text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full">
                     Soon

@@ -19,8 +19,8 @@ export const LisarLines: React.FC<LisarLinesProps> = ({
   };
 
   const containerStyle: React.CSSProperties = {
-    width: width || "100px",
-    height: height || "100px",
+    width: width || "400px",
+    height: height || "400px",
   };
 
   return (

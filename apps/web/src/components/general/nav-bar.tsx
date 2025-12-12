@@ -35,7 +35,7 @@ const Navbar = () => {
           onClick={() => navigate("/login")}
           className="py-2 px-3 sm:px-4 flex bg-[#C7EF6B] rounded-lg text-[#060E0A] cursor-pointer font-medium text-xs sm:text-sm whitespace-nowrap"
         >
-          Stake now
+          Get Started
         </button>
       </div>
     </nav>
