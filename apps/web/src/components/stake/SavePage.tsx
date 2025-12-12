@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   ChevronLeft,
   CircleQuestionMark,
@@ -21,32 +21,32 @@ import { priceService } from "@/lib/priceService";
 import { useWallet } from "@/contexts/WalletContext";
 import { formatNumber, parseFormattedNumber } from "@/lib/formatters";
 import { usePageTracking } from "@/hooks/usePageTracking";
-import { trackStake } from "@/lib/mixpanel";
 
-export const StakePage: React.FC = () => {
-  // Track stake page visit
-  usePageTracking('Stake Page', { page_type: 'stake' });
+export const SavePage: React.FC = () => {
+  // Track save page visit
+  usePageTracking("Save Page", { page_type: "save" });
   const navigate = useNavigate();
   const location = useLocation();
-  const { validatorId } = useParams<{ validatorId: string }>();
 
-  const [lptAmount, setLptAmount] = useState(() => {
-    const state = location.state as { lptAmount?: string } | null;
-    return state?.lptAmount || "0";
+  const locationState = location.state as {
+    usdcAmount?: string;
+    walletType?: string;
+  } | null;
+
+  const [usdcAmount, setUsdcAmount] = useState(() => {
+    return locationState?.usdcAmount || "0";
   });
 
   // Only set amount from state on initial mount, not on every state change
-  // This prevents loops when navigating back from deposit page
   useEffect(() => {
-    const state = location.state as { lptAmount?: string } | null;
-    if (state?.lptAmount && lptAmount === "0") {
-      setLptAmount(state.lptAmount);
+    if (locationState?.usdcAmount && usdcAmount === "0") {
+      setUsdcAmount(locationState.usdcAmount);
     }
-  }, []); // Empty dependency array - only run on mount
+  }, []);
 
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
   const [showConfirmDrawer, setShowConfirmDrawer] = useState(false);
-  const [isStaking, setIsStaking] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [showErrorDrawer, setShowErrorDrawer] = useState(false);
   const [showSuccessDrawer, setShowSuccessDrawer] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -54,40 +54,52 @@ export const StakePage: React.FC = () => {
   const { orchestrators } = useOrchestrators();
   const { state } = useAuth();
   const { wallet, refetch: refetchWallet } = useWallet();
-  const { refetch: refetchDelegation } = useDelegation();
+  const { delegatorStakeProfile, refetch: refetchDelegation } = useDelegation();
   const { refetch: refetchTransactions } = useTransactions();
 
-  // Find the orchestrator by address (validatorId is the address)
-  const currentValidator = orchestrators.find(
-    (orch) => orch.address === validatorId
-  );
+  // For stables, use the first available orchestrator
+  const currentValidator = orchestrators?.[0];
 
   // Get user's preferred currency
   const userCurrency = state.user?.fiat_type || "NGN";
   const currencySymbol = priceService.getCurrencySymbol(userCurrency);
 
-  // User's wallet balance
-  const walletBalanceLpt = wallet?.balanceLpt || 0;
+  // For stables, use staked balance (which represents USDC savings)
+  const walletBalanceUsdc = delegatorStakeProfile
+    ? parseFloat(delegatorStakeProfile.currentStake) || 0
+    : 0;
 
-  const pageTitle = "Stake";
+  const pageTitle = "Save";
 
   const [fiatEquivalent, setFiatEquivalent] = useState(0);
 
   useEffect(() => {
     const calculateFiat = async () => {
-      const numericAmount = parseFloat(lptAmount.replace(/,/g, "")) || 0;
+      const numericAmount = parseFloat(usdcAmount.replace(/,/g, "")) || 0;
       if (numericAmount > 0) {
-        const fiatValue = await priceService.convertLptToFiat(
-          numericAmount,
-          userCurrency
-        );
-        setFiatEquivalent(fiatValue);
+        const prices = await priceService.getPrices();
+        let convertedValue = numericAmount;
+        switch (userCurrency.toUpperCase()) {
+          case "NGN":
+            convertedValue = numericAmount * prices.ngn;
+            break;
+          case "EUR":
+            convertedValue = numericAmount * prices.eur;
+            break;
+          case "GBP":
+            convertedValue = numericAmount * prices.gbp;
+            break;
+          case "USD":
+          default:
+            convertedValue = numericAmount;
+        }
+        setFiatEquivalent(convertedValue);
       } else {
         setFiatEquivalent(0);
       }
     };
     calculateFiat();
-  }, [lptAmount, userCurrency]);
+  }, [usdcAmount, userCurrency]);
 
   const handleBackClick = () => {
     navigate(-1);
@@ -95,22 +107,28 @@ export const StakePage: React.FC = () => {
 
   const handleAmountSelect = (amount: string) => {
     const numericAmount = parseFormattedNumber(amount);
-    setLptAmount(numericAmount);
+    setUsdcAmount(numericAmount);
   };
 
   const handleMaxClick = () => {
-    // Leave a small balance to avoid transaction issues (0.01%)
+    // Use wallet LPT balance for now (will be converted to USDC equivalent)
+    const walletBalanceLpt = wallet?.balanceLpt || 0;
     const buffer = Math.max(0.001, walletBalanceLpt * 0.0001);
     const maxAmount = Math.max(0, walletBalanceLpt - buffer);
-    setLptAmount(maxAmount.toString());
+    setUsdcAmount(maxAmount.toString());
   };
 
   const handleProceed = async () => {
-    const numericAmount = parseFloat(lptAmount.replace(/,/g, "")) || 0;
+    const numericAmount = parseFloat(usdcAmount.replace(/,/g, "")) || 0;
+    const walletBalanceLpt = wallet?.balanceLpt || 0;
 
     if (numericAmount > walletBalanceLpt) {
       navigate("/deposit", {
-        state: { lptAmount, returnTo: `/stake/${validatorId}` },
+        state: {
+          usdcAmount: usdcAmount,
+          returnTo: "/save",
+          walletType: "savings",
+        },
       });
       return;
     }
@@ -118,27 +136,20 @@ export const StakePage: React.FC = () => {
     setShowConfirmDrawer(true);
   };
 
-  const handleStake = async () => {
-    setIsStaking(true);
+  const handleSave = async () => {
+    setIsSaving(true);
 
-    if (!currentValidator) {
-      setErrorMessage("Validator not found. Please try again.");
+    if (!usdcAmount || parseFloat(usdcAmount.replace(/,/g, "")) <= 0) {
+      setErrorMessage("Please enter a valid amount to save.");
       setShowErrorDrawer(true);
-      setIsStaking(false);
-      return;
-    }
-
-    if (!lptAmount || parseFloat(lptAmount.replace(/,/g, "")) <= 0) {
-      setErrorMessage("Please enter a valid amount to stake.");
-      setShowErrorDrawer(true);
-      setIsStaking(false);
+      setIsSaving(false);
       return;
     }
 
     if (!state.user) {
       setErrorMessage("User not authenticated. Please log in and try again.");
       setShowErrorDrawer(true);
-      setIsStaking(false);
+      setIsSaving(false);
       return;
     }
 
@@ -146,7 +157,7 @@ export const StakePage: React.FC = () => {
       walletId: state.user.wallet_id,
       walletAddress: state.user.wallet_address,
       orchestratorAddress: currentValidator.address,
-      amount: lptAmount.replace(/,/g, ""), // Remove commas from amount
+      amount: usdcAmount.replace(/,/g, ""), // Remove commas from amount
     };
 
     // Retry logic: temporary fix until error fixed
@@ -162,19 +173,14 @@ export const StakePage: React.FC = () => {
         const response = await delegationService.stake(stakeRequest);
 
         if (response.success) {
-          // Track successful stake
-          trackStake('deposit', parseFloat(lptAmount.replace(/,/g, "")), 'LPT', currentValidator.address);
-          
-          setSuccessMessage(
-            "Staking successful! Your tokens have been staked."
-          );
+          setSuccessMessage("Saving successful! Your funds have been saved.");
           setShowSuccessDrawer(true);
           setShowConfirmDrawer(false);
 
           await refetchWallet();
           refetchDelegation();
           refetchTransactions();
-          setIsStaking(false);
+          setIsSaving(false);
           return;
         } else {
           lastResponse = response;
@@ -191,23 +197,23 @@ export const StakePage: React.FC = () => {
       }
     }
 
-    setIsStaking(false);
+    setIsSaving(false);
     setShowConfirmDrawer(false);
 
     if (lastError) {
       const errorMsg =
         lastError instanceof Error
           ? lastError.message
-          : "An error occurred while staking. Please try again.";
+          : "An error occurred while saving. Please try again.";
       setErrorMessage(errorMsg);
     } else if (lastResponse) {
       setErrorMessage(
         lastResponse.error ||
           lastResponse.message ||
-          "Staking failed. Please check your balance and try again."
+          "Saving failed. Please check your balance and try again."
       );
     } else {
-      setErrorMessage("Staking failed. Please try again.");
+      setErrorMessage("Saving failed. Please try again.");
     }
 
     setShowErrorDrawer(true);
@@ -218,7 +224,8 @@ export const StakePage: React.FC = () => {
   };
 
   // Check if user has insufficient funds
-  const numericAmount = parseFloat(lptAmount.replace(/,/g, "")) || 0;
+  const numericAmount = parseFloat(usdcAmount.replace(/,/g, "")) || 0;
+  const walletBalanceLpt = wallet?.balanceLpt || 0;
   const hasInsufficientFunds =
     numericAmount > 0 && numericAmount > walletBalanceLpt;
 
@@ -230,7 +237,7 @@ export const StakePage: React.FC = () => {
           onClick={handleBackClick}
           className="w-8 h-8 flex items-center justify-center"
         >
-          <ChevronLeft color="#C7EF6B" />
+          <ChevronLeft color="#86B3F7" />
         </button>
 
         <h1 className="text-lg font-medium text-white">{pageTitle}</h1>
@@ -250,7 +257,7 @@ export const StakePage: React.FC = () => {
           <div className="bg-[#1a1a1a] rounded-lg p-3 flex items-center gap-3">
             <input
               type="text"
-              value={lptAmount ? formatNumber(lptAmount) : ""}
+              value={usdcAmount ? formatNumber(usdcAmount) : ""}
               onChange={(e) => {
                 const rawValue = parseFormattedNumber(e.target.value);
                 let numericValue = rawValue.replace(/[^0-9.]/g, "");
@@ -258,14 +265,14 @@ export const StakePage: React.FC = () => {
                 if (parts.length > 2) {
                   numericValue = parts[0] + "." + parts.slice(1).join("");
                 }
-                setLptAmount(numericValue);
+                setUsdcAmount(numericValue);
               }}
-              placeholder="LPT"
+              placeholder="USDC"
               className="flex-1 bg-transparent text-white text-lg font-medium focus:outline-none"
             />
             <button
               onClick={handleMaxClick}
-              className="text-[#C7EF6B] text-sm font-medium transition-colors"
+              className="text-[#86B3F7] text-sm font-medium transition-colors"
             >
               Max
             </button>
@@ -279,24 +286,24 @@ export const StakePage: React.FC = () => {
           </p>
         </div>
 
-        {/* Predefined LPT Amounts */}
+        {/* Predefined USDC Amounts */}
         <div className="pb-4">
           <div className="flex space-x-3">
             {["10", "50", "100"].map((amount) => {
               const isActive =
-                lptAmount === amount ||
-                parseFloat(lptAmount || "0") === parseFloat(amount);
+                usdcAmount === amount ||
+                parseFloat(usdcAmount || "0") === parseFloat(amount);
               return (
                 <button
                   key={amount}
                   onClick={() => handleAmountSelect(amount)}
                   className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-colors ${
                     isActive
-                      ? "bg-[#C7EF6B] text-black"
+                      ? "bg-[#86B3F7] text-black"
                       : "bg-[#1a1a1a] text-white/80 hover:bg-[#2a2a2a]"
                   }`}
                 >
-                  {formatNumber(amount)} LPT
+                  {formatNumber(amount)} USDC
                 </button>
               );
             })}
@@ -306,18 +313,15 @@ export const StakePage: React.FC = () => {
         {/* Wallet Balance Info */}
         <div className="py-4">
           <h3 className="text-base font-medium text-white/90 mb-2">
-            Payment method
+            Wallet balance
           </h3>
           <div className="bg-[#1a1a1a] rounded-lg p-4 border border-[#2a2a2a]">
             <div className="flex items-center space-x-3">
               <Wallet2 size={20} color="#86B3F7" />
               <div className="flex-1">
-                <div>
-                  <span className="text-white font-normal">Wallet balance</span>
-                  <span className="text-gray-400 text-sm ml-2">
-                    {walletBalanceLpt.toLocaleString()} LPT
-                  </span>
-                </div>
+                <span className="text-gray-400 text-sm">
+                  {walletBalanceLpt.toLocaleString()} USDC
+                </span>
               </div>
             </div>
           </div>
@@ -333,14 +337,14 @@ export const StakePage: React.FC = () => {
       <div className="px-6 py-4 bg-[#050505] pb-24">
         <button
           onClick={handleProceed}
-          disabled={!lptAmount || parseFloat(lptAmount) <= 0 || isStaking}
+          disabled={!usdcAmount || parseFloat(usdcAmount) <= 0 || isSaving}
           className={`w-full py-4 rounded-lg font-semibold text-lg transition-colors ${
-            lptAmount && parseFloat(lptAmount) > 0 && !isStaking
-              ? "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
+            usdcAmount && parseFloat(usdcAmount) > 0 && !isSaving
+              ? "bg-[#86B3F7] text-black hover:bg-[#6da7fd]"
               : "bg-[#636363] text-white cursor-not-allowed"
           }`}
         >
-          {isStaking ? (
+          {isSaving ? (
             <span className="flex items-center justify-center gap-2">
               <LoaderCircle className="animate-spin h-5 w-5 text-white" />
               Processing..
@@ -348,7 +352,7 @@ export const StakePage: React.FC = () => {
           ) : hasInsufficientFunds ? (
             "Proceed to Deposit"
           ) : (
-            "Stake"
+            "Save"
           )}
         </button>
       </div>
@@ -357,11 +361,11 @@ export const StakePage: React.FC = () => {
       <HelpDrawer
         isOpen={showHelpDrawer}
         onClose={() => setShowHelpDrawer(false)}
-        title="Staking Guide"
+        title="Saving Guide"
         content={[
-          "Stake to a validator to start earning rewards. To get started, choose an amount you want to stake and a payment method.",
+          "Save your funds to start earning stable returns. To get started, choose an amount you want to save and a payment method.",
           "Use your existing wallet balance, or deposit with fiat money or tokens from another wallet or exchange.",
-          "Review all details before confirming your stake to ensure everything is correct.",
+          "Review all details before confirming your save to ensure everything is correct.",
         ]}
       />
 
@@ -378,26 +382,26 @@ export const StakePage: React.FC = () => {
         isOpen={showSuccessDrawer}
         onClose={() => {
           setShowSuccessDrawer(false);
-          navigate("/portfolio", { state: { walletType: "staking" } });
+          navigate("/portfolio", { state: { walletType: "savings" } });
         }}
-        title="Staking Successful!"
+        title="Saving Successful!"
         message={successMessage}
       />
 
-      {/* Confirm Stake Drawer */}
+      {/* Confirm Save Drawer */}
       <ActionDrawer
         isOpen={showConfirmDrawer}
-        onClose={() => !isStaking && setShowConfirmDrawer(false)}
-        title="Proceed to Stake"
+        onClose={() => !isSaving && setShowConfirmDrawer(false)}
+        title="Proceed to Save"
         content={[
-          `You are about to stake ${formatNumber(lptAmount.replace(/,/g, ""))} LPT to ${currentValidator?.ensName || "this validator"}.`,
-          "Once confirmed, your tokens will be staked and you will start earning rewards! 💲",
-          "You can unstake at anytime.",
+          `You are about to save ${formatNumber(usdcAmount.replace(/,/g, ""))} USDC.`,
+          "Once confirmed you will start earning yields! 💲",
+          "You can withdraw at anytime you want.",
         ]}
         actions={[
           {
-            label: "Stake",
-            onClick: handleStake,
+            label: "Save",
+            onClick: handleSave,
           },
           {
             label: "Cancel",
@@ -405,7 +409,7 @@ export const StakePage: React.FC = () => {
             variant: "secondary",
           },
         ]}
-        isProcessing={isStaking}
+        isProcessing={isSaving}
       />
 
       {/* Bottom Navigation */}

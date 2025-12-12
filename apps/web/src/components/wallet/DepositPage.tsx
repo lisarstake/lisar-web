@@ -25,13 +25,22 @@ export const DepositPage: React.FC = () => {
 
   const locationState = location.state as {
     lptAmount?: string;
+    usdcAmount?: string;
     returnTo?: string;
+    walletType?: string;
   } | null;
-  const preservedAmount = locationState?.lptAmount;
+  const preservedAmount = locationState?.lptAmount || locationState?.usdcAmount;
+  const preservedUsdcAmount = locationState?.usdcAmount;
   const returnTo = locationState?.returnTo;
+  const walletType = locationState?.walletType;
   const [fiatAmount, setFiatAmount] = useState("0");
-
   const [lptEquivalent, setLptEquivalent] = useState(0);
+  const [tokenEquivalent, setTokenEquivalent] = useState(0);
+
+  const isStables = walletType === "savings";
+  const tokenName = isStables ? "USDC" : "LPT";
+  const coinCode = isStables ? "usdc" : "lpt";
+  const network = isStables ? "spl" : "arbitrum";
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<
     string | null
   >(null);
@@ -51,39 +60,72 @@ export const DepositPage: React.FC = () => {
 
   const pageTitle = "Deposit";
 
-  // Initialize fiat amount from preserved LPT amount
+  // Initialize fiat amount from preserved token amount
   useEffect(() => {
-    const initializeFromLpt = async () => {
+    const initializeFromToken = async () => {
       if (preservedAmount) {
-        const numericLpt = parseFloat(preservedAmount.replace(/,/g, "")) || 0;
-        if (numericLpt > 0) {
+        const numericAmount = parseFloat(preservedAmount.replace(/,/g, "")) || 0;
+        if (numericAmount > 0) {
+          if (preservedUsdcAmount || walletType === "savings") {
+            // For USDC, convert directly (1 USDC = 1 USD, then to user's currency)
+            const prices = await priceService.getPrices();
+            let fiatValue = numericAmount;
+            switch (userCurrency.toUpperCase()) {
+              case "NGN":
+                fiatValue = numericAmount * prices.ngn;
+                break;
+              case "EUR":
+                fiatValue = numericAmount * prices.eur;
+                break;
+              case "GBP":
+                fiatValue = numericAmount * prices.gbp;
+                break;
+              case "USD":
+              default:
+                fiatValue = numericAmount;
+            }
+            setFiatAmount(fiatValue.toFixed(2));
+          } else {
+            // For LPT, convert using LPT price
           const fiatValue = await priceService.convertLptToFiat(
-            numericLpt,
+              numericAmount,
             userCurrency
           );
           setFiatAmount(fiatValue.toFixed(2));
+          }
         }
       }
     };
-    initializeFromLpt();
-  }, [preservedAmount, userCurrency]);
+    initializeFromToken();
+  }, [preservedAmount, preservedUsdcAmount, walletType, userCurrency]);
 
-  // Calculate LPT equivalent of fiat amount
+  // Calculate token equivalent of fiat amount
   useEffect(() => {
-    const calculateLpt = async () => {
+    const calculateToken = async () => {
       const numericAmount = parseFloat(fiatAmount.replace(/,/g, "")) || 0;
       if (numericAmount > 0) {
+        if (isStables) {
+          const usdValue = await priceService.convertFiatToUsd(
+            numericAmount,
+            userCurrency
+          );
+          setTokenEquivalent(usdValue);
+          setLptEquivalent(0);
+        } else {
         const lptValue = await priceService.convertFiatToLpt(
           numericAmount,
           userCurrency
         );
         setLptEquivalent(lptValue);
+          setTokenEquivalent(0);
+        }
       } else {
         setLptEquivalent(0);
+        setTokenEquivalent(0);
       }
     };
-    calculateLpt();
-  }, [fiatAmount, userCurrency]);
+    calculateToken();
+  }, [fiatAmount, userCurrency, isStables]);
 
   // Clean up onramp instance when component unmounts
   useEffect(() => {
@@ -112,7 +154,7 @@ export const DepositPage: React.FC = () => {
 
   const handleProceed = async () => {
     if (selectedPaymentMethod === "onchain") {
-      navigate("/deposit-address");
+      navigate("/deposit-address", { state: { walletType } });
     } else if (selectedPaymentMethod === "fiat") {
       await handleFundWallet();
     }
@@ -144,8 +186,8 @@ export const DepositPage: React.FC = () => {
         fiatType: fiatType,
         paymentMethod: 2, // Instant transfer
         fiatAmount: numericAmount,
-        coinCode: "lpt",
-        network: "arbitrum",
+        coinCode: coinCode,
+        network: network,
         theme: {
           lightMode: {
             baseColor: "#C7EF6B",
@@ -230,7 +272,8 @@ export const DepositPage: React.FC = () => {
       <div className="flex-1 overflow-y-auto px-6 pb-28 scrollbar-hide">
         {/* Amount Input Field */}
         <div className="py-6">
-          <div className="bg-[#1a1a1a] rounded-lg p-3">
+          <span className="text-white/80 text-base font-medium ml-1">Deposit amount</span>
+          <div className="bg-[#1a1a1a] rounded-lg p-3 mt-1">
             <input
               type="text"
               value={fiatAmount ? formatNumber(fiatAmount) : ""}
@@ -249,11 +292,14 @@ export const DepositPage: React.FC = () => {
           </div>
           <p className="text-gray-400 text-xs mt-2 pl-2">
             ≈{" "}
-            {lptEquivalent.toLocaleString(undefined, {
+            {(isStables ? tokenEquivalent : lptEquivalent).toLocaleString(
+              undefined,
+              {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
-            })}{" "}
-            LPT
+              }
+            )}{" "}
+            {tokenName}
           </p>
         </div>
 
@@ -305,7 +351,7 @@ export const DepositPage: React.FC = () => {
                   }
                 />
                 <span className="text-white font-normal">
-                  {userCurrency} deposit
+                 Deposit {userCurrency}
                 </span>
               </div>
               <ChevronRight
@@ -329,7 +375,7 @@ export const DepositPage: React.FC = () => {
                     selectedPaymentMethod === "onchain" ? "#C7EF6B" : "#86B3F7"
                   }
                 />
-                <span className="text-white font-normal">On-Chain deposit</span>
+                <span className="text-white font-normal">Transfer From Wallet</span>
               </div>
               <ChevronRight
                 size={20}

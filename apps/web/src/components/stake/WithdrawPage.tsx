@@ -24,21 +24,29 @@ export const WithdrawPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const locationState = location.state as {
+    lptAmount?: string;
+    walletType?: string;
+  } | null;
+
   const [lptAmount, setLptAmount] = useState(() => {
-    const state = location.state as { lptAmount?: string } | null;
-    return state?.lptAmount || "0";
+    return locationState?.lptAmount || "0";
   });
 
   const [withdrawalAddress, setWithdrawalAddress] = useState("");
   const [isWithdrawalLaunched, setIsWithdrawalLaunched] = useState(false);
-  const network = "Arbitrum";
+  
+  const walletType = locationState?.walletType;
+  const isStables = walletType === "savings";
+  const coinCode = isStables ? "usdc" : "lpt";
+  const network = isStables ? "spl" : "arbitrum";
+  const tokenName = isStables ? "USDC" : "LPT";
 
   useEffect(() => {
-    const state = location.state as { lptAmount?: string } | null;
-    if (state?.lptAmount) {
-      setLptAmount(state.lptAmount);
+    if (locationState?.lptAmount) {
+      setLptAmount(locationState.lptAmount);
     }
-  }, [location.state]);
+  }, [locationState]);
 
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
   const [isWithdrawing, setIsWithdrawing] = useState(false);
@@ -200,8 +208,8 @@ export const WithdrawPage: React.FC = () => {
 
     const params = new URLSearchParams({
       appId: appId.toString(),
-      coinCode: "lpt",
-      network: "arbitrum",
+      coinCode: coinCode,
+      network: network,
       coinAmount: "0",
       fiatType: "6",
       // fiatType: fiatType.toString(),
@@ -319,7 +327,7 @@ export const WithdrawPage: React.FC = () => {
                 }
                 setLptAmount(numericValue);
               }}
-              placeholder="LPT"
+              placeholder={tokenName}
               disabled={!isWithdrawalLaunched}
               className={`flex-1 bg-transparent text-base font-medium focus:outline-none ${
                 !isWithdrawalLaunched
@@ -386,7 +394,7 @@ export const WithdrawPage: React.FC = () => {
               <div className="flex-1">
                 <div>
                   <span className="text-gray-400 text-sm">
-                    {walletBalanceLpt.toLocaleString()} LPT
+                    {walletBalanceLpt.toLocaleString()} {tokenName}
                   </span>
                 </div>
               </div>
@@ -394,7 +402,7 @@ export const WithdrawPage: React.FC = () => {
           </div>
           {hasInsufficientFunds && (
             <p className="text-red-300 text-xs mt-2 pl-2">
-              Insufficient funds, ensure you have enough LPT in your wallet
+              Insufficient funds, ensure you have enough {tokenName} in your wallet
             </p>
           )}
           {/* Guide */}

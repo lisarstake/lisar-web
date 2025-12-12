@@ -13,6 +13,11 @@ import {
   SendLptResponse,
   ApproveLptRequest,
   ApproveLptResponse,
+  GetWalletsResponse,
+  GetPrimaryWalletResponse,
+  CreateSolanaWalletRequest,
+  CreateSolanaWalletResponse,
+  ChainType,
   WALLET_CONFIG,
 } from "./types";
 import { http } from "@/lib/http";
@@ -110,7 +115,7 @@ export class WalletService implements IWalletApiService {
   }
 
   // Get wallet balance
-  async getBalance(walletAddress: string, token: 'ETH' | 'LPT'): Promise<BalanceResponse> {
+  async getBalance(walletAddress: string, token: 'ETH' | 'LPT' | 'USDC'): Promise<BalanceResponse> {
     const token_auth = this.getStoredToken();
     if (!token_auth) {
       return {
@@ -253,6 +258,119 @@ export class WalletService implements IWalletApiService {
         success: false,
         error: error.response?.data?.error || error.message || "Unknown error",
         message: error.response?.data?.message || "Failed to approve LPT",
+      };
+    }
+  }
+
+  // Get all wallets for authenticated user
+  async getWallets(chainType?: ChainType): Promise<GetWalletsResponse> {
+    const token = this.getStoredToken();
+    if (!token) {
+      return {
+        success: false,
+        wallets: [],
+        error: "Authentication required",
+      };
+    }
+
+    try {
+      const headers = {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      };
+
+      let url = `${this.baseUrl}/v1/wallet`;
+      if (chainType) {
+        url += `?chain_type=${chainType}`;
+      }
+
+      const response = await http.request({
+        url,
+        method: "GET",
+        headers,
+        timeout: this.timeout,
+      });
+
+      return {
+        success: true,
+        wallets: response.data.wallets || [],
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        wallets: [],
+        error: error.response?.data?.error || error.message || "Failed to fetch wallets",
+      };
+    }
+  }
+
+  // Get primary wallet for a specific chain
+  async getPrimaryWallet(chainType: ChainType): Promise<GetPrimaryWalletResponse> {
+    const token = this.getStoredToken();
+    if (!token) {
+      return {
+        success: false,
+        error: "Authentication required",
+      };
+    }
+
+    try {
+      const headers = {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      };
+
+      const response = await http.request({
+        url: `${this.baseUrl}/wallet/primary/${chainType}`,
+        method: "GET",
+        headers,
+        timeout: this.timeout,
+      });
+
+      return {
+        success: true,
+        wallet: response.data.wallet,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.response?.data?.error || error.message || "Failed to fetch primary wallet",
+      };
+    }
+  }
+
+  // Create a new Solana wallet for authenticated user
+  async createSolanaWallet(request: CreateSolanaWalletRequest): Promise<CreateSolanaWalletResponse> {
+    const token = this.getStoredToken();
+    if (!token) {
+      return {
+        success: false,
+        error: "Authentication required",
+      };
+    }
+
+    try {
+      const headers = {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      };
+
+      const response = await http.request({
+        url: `${this.baseUrl}/wallet/solana`,
+        method: "POST",
+        headers,
+        data: request,
+        timeout: this.timeout,
+      });
+
+      return {
+        success: true,
+        wallet: response.data.wallet,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.response?.data?.error || error.message || "Failed to create Solana wallet",
       };
     }
   }

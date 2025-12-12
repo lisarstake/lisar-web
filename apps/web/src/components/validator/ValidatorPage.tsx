@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { OrchestratorList } from "../validator/OrchestratorList";
 import { useOrchestrators } from "@/contexts/OrchestratorContext";
 import { FilterType } from "@/types/wallet";
@@ -9,9 +9,14 @@ import { BottomNavigation } from "@/components/general/BottomNavigation";
 
 export const ValidatorPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
   const { orchestrators, isLoading, error, refetch } = useOrchestrators();
+
+  // Get tier name from location state, default to "Stake" if not provided
+  const tierName =
+    (location.state as { tierName?: string })?.tierName || "Stake";
 
   const urlFilter = useMemo((): FilterType => {
     const filterParam = searchParams.get("filter");
@@ -74,7 +79,7 @@ export const ValidatorPage: React.FC = () => {
           <ChevronLeft color="#C7EF6B" />
         </button>
 
-        <h1 className="text-lg font-medium text-white">Stake</h1>
+        <h1 className="text-lg font-medium text-white">{tierName}</h1>
 
         <button
           onClick={handleHelpClick}
@@ -85,7 +90,7 @@ export const ValidatorPage: React.FC = () => {
       </div>
 
       {/* Filter Tabs - Separated */}
-      <div className="flex items-center justify-start px-6 pb-4 space-x-2">
+      {/* <div className="flex items-center justify-start px-6 pb-4 space-x-2">
         <button
           onClick={() => handleFilterChange("apy")}
           className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
@@ -116,7 +121,7 @@ export const ValidatorPage: React.FC = () => {
         >
           Active time
         </button>
-      </div>
+      </div> */}
 
       {/* Orchestrator List - Scrollable */}
       <div className="flex-1 overflow-y-auto px-6 pb-28 scrollbar-hide">
@@ -125,7 +130,7 @@ export const ValidatorPage: React.FC = () => {
           isLoading={isLoading}
           error={error}
           onRetry={handleRetry}
-          skeletonCount={10}
+          skeletonCount={5}
         />
       </div>
 

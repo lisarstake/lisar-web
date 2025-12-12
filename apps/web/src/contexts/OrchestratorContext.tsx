@@ -50,7 +50,7 @@ export const OrchestratorProvider: React.FC<OrchestratorProviderProps> = ({
 
       const queryParams: OrchestratorQueryParams = params || {
         page: 1,
-        limit: 25,
+        limit: 8,
         sortBy: "apy",
         sortOrder: "desc",
         active: true,

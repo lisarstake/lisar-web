@@ -26,6 +26,46 @@ export interface WalletData {
   owner_id: string;
 }
 
+// Wallet Response Types (for new endpoints)
+export interface Wallet {
+  id: string;
+  user_id: string;
+  wallet_id: string;
+  wallet_address: string;
+  chain_type: string;
+  wallet_type: string;
+  is_primary: boolean;
+  wallet_index: number | null;
+  public_key: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface GetWalletsResponse {
+  success: boolean;
+  wallets: Wallet[];
+  error?: string;
+}
+
+export interface GetPrimaryWalletResponse {
+  success: boolean;
+  wallet?: Wallet;
+  error?: string;
+}
+
+export interface CreateSolanaWalletRequest {
+  make_primary: boolean;
+}
+
+export interface CreateSolanaWalletResponse {
+  success: boolean;
+  wallet?: Wallet;
+  error?: string;
+}
+
+// Chain Types
+export type ChainType = 'ethereum' | 'solana' | 'polygon' | 'arbitrum' | 'base' | 'optimism';
+
 // Balance Types
 export interface BalanceData {
   balance: string;
@@ -83,7 +123,7 @@ export interface GetWalletRequest {
 
 export interface GetBalanceRequest {
   walletAddress: string;
-  token: 'ETH' | 'LPT';
+  token: 'ETH' | 'LPT' | 'USDC';
 }
 
 export interface ExportWalletRequest {

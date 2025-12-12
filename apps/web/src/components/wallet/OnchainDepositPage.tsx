@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { ChevronLeft, CircleQuestionMark, Copy, Check } from "lucide-react";
 import QRCode from "qrcode";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
@@ -8,10 +8,19 @@ import { useAuth } from "@/contexts/AuthContext";
 
 export const OnchainDepositPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [copied, setCopied] = useState(false);
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { state } = useAuth();
+
+  const locationState = location.state as {
+    walletType?: string;
+  } | null;
+  const walletType = locationState?.walletType;
+  const isStables = walletType === "savings";
+  const tokenName = isStables ? "USDC" : "Livepeer (LPT)";
+  const networkName = isStables ? "Solana" : "Arbitrum One";
 
   const fullWalletAddress = state.user?.wallet_address || "";
   const walletAddress = fullWalletAddress
@@ -76,7 +85,14 @@ export const OnchainDepositPage: React.FC = () => {
 
       {/* QR Code and Address Section */}
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-8">
-        <p className="text-xl font-semibold text-gray-100 mb-3">Livepeer token (LPT)</p>
+        <div className="flex items-center gap-2 mb-3">
+          <img
+            src={isStables ? "/usdc.svg" : "/livepeer.webp"}
+            alt={isStables ? "USDC" : "LPT"}
+            className="w-6 h-6"
+          />
+          <p className="text-xl font-semibold text-gray-100">{tokenName}</p>
+        </div>
         {/* QR Code */}
         <div className="bg-white rounded-xl p-2 mb-6">
           <div className="w-48 h-48 bg-white rounded-lg flex items-center justify-center">
@@ -97,7 +113,7 @@ export const OnchainDepositPage: React.FC = () => {
 
         {/* Network Information */}
         <div className="text-center mb-6">
-          <p className="text-white/70 text-sm">Network: Arbitrum One</p>
+          <p className="text-white/70 text-sm">Network: {networkName}</p>
         </div>
 
         {/* Warning Note */}
@@ -136,9 +152,9 @@ export const OnchainDepositPage: React.FC = () => {
         onClose={() => setShowHelpDrawer(false)}
         title="Deposit Guide"
         content={[
-          "Send LPT tokens to this address to add funds to your Lisar wallet.",
+          `Send ${isStables ? "USDC" : "LPT"} tokens to this address to add funds to your Lisar wallet.`,
           "Copy the address or scan the QR code with your mobile wallet to send tokens.",
-          "Only send LPT tokens to this address to avoid losing funds.",
+          `Only send ${isStables ? "USDC" : "LPT"} tokens to this address to avoid losing funds.`,
         ]}
       />
 

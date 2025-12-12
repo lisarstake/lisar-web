@@ -1,15 +1,14 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ChevronDown, CircleQuestionMark } from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
-import { useOrchestrators } from "@/contexts/OrchestratorContext";
 import { delegationService } from "@/services";
 import { Skeleton } from "@/components/ui/skeleton";
 import { priceService } from "@/lib/priceService";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatNumber, parseFormattedNumber } from "@/lib/formatters";
 
-type ForecastOrchestrator = {
+type SavingsPlan = {
   id: string;
   name: string;
   apy: number;
@@ -21,8 +20,11 @@ export const ForecastPage: React.FC = () => {
   const { state } = useAuth();
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
   const [showCurrencyDropdown, setShowCurrencyDropdown] = useState(false);
-  const [selectedOrchestrator, setSelectedOrchestrator] =
-    useState<ForecastOrchestrator | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<SavingsPlan>({
+    id: "flexible",
+    name: "Flexible",
+    apy: 25,
+  });
   const [delegationAmount, setDelegationAmount] = useState("0");
   const [selectedCurrency, setSelectedCurrency] = useState<Currency>(
     (state.user?.fiat_type as Currency) || "USD"
@@ -32,43 +34,36 @@ export const ForecastPage: React.FC = () => {
   const [projections, setProjections] = useState<
     Array<{ period: string; projectedReward: number; currency?: string }>
   >([]);
-  const { orchestrators, isLoading, error } = useOrchestrators();
 
   const currencies: Currency[] = ["USD", "LPT", "NGN", "GBP"];
+
+  const savingsPlans: SavingsPlan[] = [
+    {
+      id: "stables",
+      name: "Stables",
+      apy: 14.9,
+    },
+    {
+      id: "flexible",
+      name: "Flexible",
+      apy: 25,
+    },
+    {
+      id: "platinum",
+      name: "Platinum",
+      apy: 40,
+    },
+    {
+      id: "diamond",
+      name: "Diamond",
+      apy: 60,
+    },
+  ];
 
   const getCurrencySymbol = (currency: Currency): string => {
     if (currency === "LPT") return "LPT";
     return priceService.getCurrencySymbol(currency);
   };
-
-  const options: ForecastOrchestrator[] = useMemo(() => {
-    const list = Array.isArray(orchestrators) ? orchestrators : [];
-    const valid = list.filter((o: any) => {
-      const ens = o.ensName || o.name || "";
-      return ens && !ens.startsWith("0x") && ens.includes(".");
-    });
-    return valid
-      .map((o: any) => {
-        const rawApy = o.apy ?? o.apyPercentage ?? o.APY ?? 0;
-        const apyNum =
-          typeof rawApy === "string"
-            ? parseFloat(rawApy.replace("%", ""))
-            : Number(rawApy) || 0;
-        return {
-          id: o.address || o.id || (o.ensName ?? o.name),
-          name: o.ensName || o.name,
-          apy: apyNum,
-        } as ForecastOrchestrator;
-      })
-      .sort((a, b) => b.apy - a.apy)
-      .slice(0, 30);
-  }, [orchestrators]);
-
-  useEffect(() => {
-    if (!selectedOrchestrator && options.length > 0) {
-      setSelectedOrchestrator(options[0]);
-    }
-  }, [options, selectedOrchestrator]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -89,8 +84,8 @@ export const ForecastPage: React.FC = () => {
     setShowHelpDrawer(true);
   };
 
-  const handleOrchestratorSelect = (orchestrator: ForecastOrchestrator) => {
-    setSelectedOrchestrator(orchestrator);
+  const handlePlanSelect = (plan: SavingsPlan) => {
+    setSelectedPlan(plan);
   };
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -100,7 +95,7 @@ export const ForecastPage: React.FC = () => {
   };
 
   const numericAmount = parseFloat(delegationAmount.replace(/,/g, "")) || 0;
-  const apy = selectedOrchestrator?.apy || 0;
+  const apy = selectedPlan?.apy || 0;
   const fallbackDailyYield = (numericAmount * apy) / 100 / 365;
   const fallbackMonthlyYield = fallbackDailyYield * 30;
   const fallbackYearlyYield = (numericAmount * apy) / 100;
@@ -109,7 +104,7 @@ export const ForecastPage: React.FC = () => {
   useEffect(() => {
     const run = async () => {
       if (
-        !selectedOrchestrator ||
+        !selectedPlan ||
         numericAmount <= 0 ||
         !Number.isFinite(apy) ||
         apy <= 0
@@ -163,7 +158,7 @@ export const ForecastPage: React.FC = () => {
       }
     };
     run();
-  }, [numericAmount, apy, selectedOrchestrator, selectedCurrency]);
+  }, [numericAmount, apy, selectedPlan, selectedCurrency]);
 
   return (
     <div className="h-screen bg-[#050505] text-white flex flex-col">
@@ -174,7 +169,7 @@ export const ForecastPage: React.FC = () => {
           <div>
             <h1 className="text-lg font-medium text-white">Yield Calculator</h1>
             <p className="text-xs text-gray-500">
-              Calculate your potential rewards
+              Calculate your potential earnings
             </p>
           </div>
           <button
@@ -185,37 +180,26 @@ export const ForecastPage: React.FC = () => {
           </button>
         </div>
 
-        {/* Select Orchestrator */}
+        {/* Select Savings Plan */}
         <div className="mb-6">
           <label className="block text-gray-400 text-sm font-medium mb-3">
-            Select Validator
+            Select Account
           </label>
           <div className="relative">
-            {isLoading ? (
-              <div className="h-12 bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl animate-pulse" />
-            ) : error ? (
-              <div className="p-4 bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl text-sm text-red-400">
-                Failed to load validators. Please try again later.
-              </div>
-            ) : (
-              <select
-                value={selectedOrchestrator?.id || ""}
-                onChange={(e) => {
-                  const selected = options.find((o) => o.id === e.target.value);
-                  if (selected) handleOrchestratorSelect(selected);
-                }}
-                className="w-full p-4 bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl text-white appearance-none focus:border-[#C7EF6B] focus:outline-none"
-              >
-                {options.map((o) => (
-                  <option key={o.id} value={o.id}>
-                    {o.name.length > 14
-                      ? `${o.name.substring(0, 20)}..`
-                      : o.name}{" "}
-                    - APY: {o.apy}%
-                  </option>
-                ))}
-              </select>
-            )}
+            <select
+              value={selectedPlan?.id || ""}
+              onChange={(e) => {
+                const selected = savingsPlans.find((p) => p.id === e.target.value);
+                if (selected) handlePlanSelect(selected);
+              }}
+              className="w-full p-4 bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl text-white appearance-none focus:border-[#C7EF6B] focus:outline-none"
+            >
+              {savingsPlans.map((plan) => (
+                <option className="font-medium" key={plan.id} value={plan.id}>
+                  {plan.name} - APY: {plan.apy}%
+                </option>
+              ))}
+            </select>
             <ChevronDown
               size={20}
               color="#C7EF6B"
@@ -224,11 +208,11 @@ export const ForecastPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Delegation Amount */}
+        {/* Amount */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-3">
             <label className="block text-gray-400 text-sm font-medium">
-              Delegation amount
+              Amount
             </label>
             <div className="relative pr-0.5" data-currency-dropdown>
               <button
@@ -387,9 +371,8 @@ export const ForecastPage: React.FC = () => {
         onClose={() => setShowHelpDrawer(false)}
         title="Yield Calculator Guide"
         content={[
-          "Calculate your potential earnings by choosing a validator and entering your stake amount.",
-          "You can select your preferred currency (USD, LPT, NGN, GBP) using the dropdown next to the amount field.",
-          "Each validator has a different APY that affects your rewards. Higher APY means more earnings.",
+          "Calculate your potential earnings by choosing an account and entering your stake amount.",
+          "Stables offers 14.9% APY for stable, low-risk returns. Flexible offers 25% APY. Platinum offers 40% APY. Diamond offers 60% APY for maximum returns.",
           "Results are estimates and may vary based on network performance.",
         ]}
       />
