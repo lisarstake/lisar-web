@@ -45,7 +45,7 @@ const Hero = () => {
             <img
               src="/home2.svg"
               alt="Hero illustration"
-              className="w-full max-w-xs object-contain"
+              className="w-full md:max-w-xs object-contain"
               style={{
                 imageRendering: 'crisp-edges',
                 transform: 'translateZ(0)',
