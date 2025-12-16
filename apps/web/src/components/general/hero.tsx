@@ -43,7 +43,7 @@ const Hero = () => {
           {/* Right Section - Image */}
           <div className="flex items-center justify-center order-2 md:order-2">
             <img
-              src="/home2.svg"
+              src="/home2.png"
               alt="Hero illustration"
               className="w-full md:max-w-xs object-contain"
               style={{
