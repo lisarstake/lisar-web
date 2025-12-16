@@ -199,7 +199,7 @@ export const SavePage: React.FC = () => {
             walletAddress: ethAddress,
             amount: amountString,
           },
-          syrupRouterAddress
+          maplePoolId
         );
 
         if (!approveResponse.success) {

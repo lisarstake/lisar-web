@@ -35,43 +35,38 @@ const FAQ = () => {
       id: 1,
       question: "What is Lisar?",
       answer:
-        "Lisar is your DeFi bank. Save your stable coins safely, or stake for higher returns. Think of it like a regular bank, but your money actually grows—and you're in full control.",
+        "A platform that lets you Earn, save, and spend globally with crypto.",
     },
-    {
-      id: 2,
-      question: "What's the difference; stables vs high-yield?",
-      answer:
-        "Stable savings keep your money safe with steady rewards. High-yield staking offers bigger returns but prices can be volatile. Choose what fits your needs.",
-    },
+    
     {
       id: 3,
       question: "How do I earn rewards?",
       answer:
-        "When you save or stake, your money helps secure blockchain networks. In return, you get paid daily rewards automatically. It's like earning interest, but better—and you see it grow every day.",
+        "When you vest, your money earns daily rewards automatically. Interest starts accruing once your funds are vested.",
     },
     {
       id: 4,
       question: "Do I need crypto to get started?",
       answer:
-        "Nope. You can start with your local currency—dollars, euros, whatever you use. We handle the conversion. If you already have crypto, you can use that too. Either way works.",
+        "No. You can deposit your local currency from your bank to your Lisar wallet.",
     },
     {
       id: 5,
       question: "Is my money safe?",
       answer:
-        "Yes. We use trusted validators and follow strict security practices. Your funds are always yours, and you can see everything in your account. Like any investment, there are risks, but we're built to keep your money safe.",
+        "Yes. Your funds are always yours and fully self-custodial.",
     },
     {
       id: 6,
       question: "Can I withdraw my money anytime?",
       answer:
-        "Stable savings? Yes, withdraw instantly. High-yield stakes? Usually takes a few days to process. Your money is always yours—we just need a bit of time to unlock staked funds.",
+        "Yes, you can withdraw your money from your Lisar wallet to your bank account at anytime.",
     },
     {
       id: 7,
       question: "How much can I earn?",
       answer:
-        "It depends on what you choose. Stable savings offer steady returns around 14.9% APY. High-yield staking can go up to 60% APY or more, depending on the network. The more you put in, the more you earn.",
+        "Stables vest up to 15% APY. High-yield vest much higher. Returns depend on your chosen vault.",
     },
   ];
 
@@ -128,7 +123,7 @@ const FAQ = () => {
                   transform 
                   transition-transform 
                   duration-200 
-                  flex-shrink-0
+                  shrink-0
                   ${expandedQuestion === faq.id ? "rotate-45" : ""}
                 `}
                 color="#235538"

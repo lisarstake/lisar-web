@@ -155,8 +155,7 @@ export const PortfolioProvider: React.FC<PortfolioProviderProps> = ({
       const entries: StakeEntry[] = [];
 
       try {
-        const maplePoolId =
-          "0x356B8d89c1e1239Cbbb9dE4815c39A1474d5BA7D".toLowerCase();
+        const maplePoolId = import.meta.env.VITE_MAPLE_POOL_ID;
 
         const ethWalletResp = await walletService.getPrimaryWallet("ethereum");
         if (ethWalletResp.success && ethWalletResp.wallet) {
@@ -291,7 +290,8 @@ export const PortfolioProvider: React.FC<PortfolioProviderProps> = ({
         const rewardCutDecimal = rewardCutPercentage / 100;
 
         if (bondedAmount > 0 && apyPercentage > 0) {
-          const grossDailyEarnings = (bondedAmount * apyPercentage) / (100 * 365);
+          const grossDailyEarnings =
+            (bondedAmount * apyPercentage) / (100 * 365);
           const grossWeeklyEarnings = grossDailyEarnings * 7;
           const grossMonthlyEarnings = grossDailyEarnings * 30;
 
@@ -323,23 +323,15 @@ export const PortfolioProvider: React.FC<PortfolioProviderProps> = ({
   ]);
 
   const unbonding: UnbondingInfo = useMemo(() => {
-    if (!delegatorTransactions?.transactions) {
+    if (!delegatorTransactions) {
       return {
         pending: { count: 0, totalAmount: 0, timeRemaining: null },
         completed: { count: 0, totalAmount: 0, validatorId: null },
       };
     }
 
-    const pending: DelegatorTransaction[] = [];
-    const completed: DelegatorTransaction[] = [];
-
-    delegatorTransactions.transactions.forEach((tx) => {
-      if (tx.type === "unbond" && tx.status === "pending") {
-        pending.push(tx);
-      } else if (tx.type === "unbond" && tx.status === "completed") {
-        completed.push(tx);
-      }
-    });
+    const pending = delegatorTransactions.pendingStakeTransactions || [];
+    const completed = delegatorTransactions.completedStakeTransactions || [];
 
     const pendingTotal = pending.reduce((sum, tx) => {
       return sum + (parseFloat(tx.amount || "0") || 0);
@@ -350,7 +342,8 @@ export const PortfolioProvider: React.FC<PortfolioProviderProps> = ({
     }, 0);
 
     const earliestTime = getEarliestUnbondingTime(pending);
-    const latestCompleted = completed.length > 0 ? completed[completed.length - 1] : null;
+    const latestCompleted =
+      completed.length > 0 ? completed[completed.length - 1] : null;
 
     return {
       pending: {
@@ -371,7 +364,15 @@ export const PortfolioProvider: React.FC<PortfolioProviderProps> = ({
       return savingsLoading || (solanaLoading && solanaBalance === null);
     }
     return delegationLoading && !userDelegation && !delegatorStakeProfile;
-  }, [mode, savingsLoading, solanaLoading, solanaBalance, delegationLoading, userDelegation, delegatorStakeProfile]);
+  }, [
+    mode,
+    savingsLoading,
+    solanaLoading,
+    solanaBalance,
+    delegationLoading,
+    userDelegation,
+    delegatorStakeProfile,
+  ]);
 
   const refetch = async () => {
     if (mode === "savings") {
@@ -395,13 +396,15 @@ export const PortfolioProvider: React.FC<PortfolioProviderProps> = ({
   );
 
   return (
-    <PortfolioContext.Provider value={value}>{children}</PortfolioContext.Provider>
+    <PortfolioContext.Provider value={value}>
+      {children}
+    </PortfolioContext.Provider>
   );
 };
 
 export const usePortfolio = (): PortfolioContextValue => {
   const ctx = useContext(PortfolioContext);
-  if (!ctx) throw new Error("usePortfolio must be used within PortfolioProvider");
+  if (!ctx)
+    throw new Error("usePortfolio must be used within PortfolioProvider");
   return ctx;
 };
-

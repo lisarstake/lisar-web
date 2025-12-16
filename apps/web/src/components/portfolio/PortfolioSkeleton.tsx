@@ -22,20 +22,20 @@ export const PortfolioSkeleton: React.FC = () => {
       <div className="flex-1 overflow-y-auto px-6 pb-20 scrollbar-hide">
         {/* Header */}
         <div className="flex items-center justify-between py-8 mb-2">
-          <button
-            onClick={handleBackClick}
-            className="w-8 h-8 flex items-center justify-center"
-          >
-            <ChevronLeft color="#C7EF6B" />
-          </button>
+        <button
+          onClick={handleBackClick}
+          className="w-8 h-8 flex items-center justify-center"
+        >
+          <ChevronLeft color="#C7EF6B" />
+        </button>
           <h1 className="text-lg font-medium text-white">My portfolio</h1>
-          <button
-            onClick={handleHelpClick}
-            className="w-8 h-8 bg-[#2a2a2a] rounded-full flex items-center justify-center"
-          >
-            <CircleQuestionMark color="#86B3F7" size={16} />
-          </button>
-        </div>
+        <button
+          onClick={handleHelpClick}
+          className="w-8 h-8 bg-[#2a2a2a] rounded-full flex items-center justify-center"
+        >
+          <CircleQuestionMark color="#86B3F7" size={16} />
+        </button>
+      </div>
 
         {/* Main Wallet Card Skeleton */}
         <div className="bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-2xl p-6 h-[170px] mb-6 relative overflow-hidden border border-[#2a2a2a]">
@@ -46,7 +46,7 @@ export const PortfolioSkeleton: React.FC = () => {
           {/* Circular Progress Skeleton - Top Right */}
           <div className="absolute top-4 right-4 z-20">
             <Skeleton className="w-12 h-12 rounded-full bg-[#2a2a2a]" />
-          </div>
+        </div>
 
           {/* Content Skeleton */}
           <div className="relative z-10">
@@ -54,12 +54,12 @@ export const PortfolioSkeleton: React.FC = () => {
             <div className="flex items-center gap-2 mb-2">
               <Skeleton className="h-4 w-32 bg-[#2a2a2a]" />
               <Skeleton className="w-4 h-4 rounded bg-[#2a2a2a]" />
-            </div>
+        </div>
 
             {/* Main Balance Skeleton */}
             <div className="mb-8">
               <Skeleton className="h-8 w-40 bg-[#2a2a2a]" />
-            </div>
+      </div>
 
             {/* Three Values Skeleton */}
             <div className="flex items-center justify-between">
@@ -98,41 +98,41 @@ export const PortfolioSkeleton: React.FC = () => {
               <div className="flex-1 relative z-10">
                 <Skeleton className="h-5 w-24 mb-2 bg-[#2a2a2a]" />
                 <Skeleton className="h-4 w-full bg-[#2a2a2a]" />
-              </div>
+          </div>
             </div>
             <Skeleton className="h-8 w-20 rounded-full bg-[#2a2a2a]" />
-          </div>
         </div>
+      </div>
 
         {/* Recent Transactions Section Skeleton */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-3 px-2">
             <Skeleton className="h-4 w-32 bg-[#2a2a2a]" />
             <Skeleton className="h-4 w-16 bg-[#2a2a2a]" />
-          </div>
+      </div>
 
           {/* Transaction Items Skeleton */}
-          <div className="space-y-3">
+        <div className="space-y-3">
             {Array.from({ length: 3 }).map((_, index) => (
-              <div
-                key={index}
-                className="bg-[#1a1a1a] rounded-xl p-4 border border-[#2a2a2a]"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <Skeleton className="w-10 h-10 rounded-full bg-[#2a2a2a]" />
-                    <div className="space-y-2">
-                      <Skeleton className="h-4 w-24 bg-[#2a2a2a]" />
-                      <Skeleton className="h-3 w-20 bg-[#2a2a2a]" />
-                    </div>
-                  </div>
-                  <div className="text-right space-y-2">
-                    <Skeleton className="h-4 w-16 bg-[#2a2a2a] ml-auto" />
-                    <Skeleton className="h-3 w-12 bg-[#2a2a2a] ml-auto" />
+            <div
+              key={index}
+              className="bg-[#1a1a1a] rounded-xl p-4 border border-[#2a2a2a]"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <Skeleton className="w-10 h-10 rounded-full bg-[#2a2a2a]" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-24 bg-[#2a2a2a]" />
+                    <Skeleton className="h-3 w-20 bg-[#2a2a2a]" />
                   </div>
                 </div>
+                <div className="text-right space-y-2">
+                  <Skeleton className="h-4 w-16 bg-[#2a2a2a] ml-auto" />
+                  <Skeleton className="h-3 w-12 bg-[#2a2a2a] ml-auto" />
+                </div>
               </div>
-            ))}
+            </div>
+          ))}
           </div>
         </div>
       </div>

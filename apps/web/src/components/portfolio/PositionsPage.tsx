@@ -162,8 +162,7 @@ export const PositionsPage: React.FC = () => {
           }
 
           const maplePoolId =
-            import.meta.env.VITE_MAPLE_POOL_ID ||
-            "0x356B8d89c1e1239Cbbb9dE4815c39A1474d5BA7D";
+            import.meta.env.VITE_MAPLE_POOL_ID;
           const positionsResp = await mapleService.getPositions(
             ethWalletResp.wallet.wallet_address,
             maplePoolId
@@ -183,7 +182,7 @@ export const PositionsPage: React.FC = () => {
 
           const totalShares = positionsResp.data.positions.reduce(
             (sum, position) => {
-              const shares = parseFloat(position.availableSharesRaw || "0");
+              const shares = parseFloat(position.redeemableSharesRaw || "0");
               return sum + (isNaN(shares) ? 0 : shares);
             },
             0
@@ -361,24 +360,24 @@ export const PositionsPage: React.FC = () => {
             <div className="space-y-3">
               <div className="bg-[#1a1a1a] rounded-lg p-4 border border-[#2a2a2a] space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-400 text-sm">Vested Amount</span>
+                  <span className="text-white/70 text-sm">Vested Amount</span>
                   <span className="text-white/90 font-medium">
                     {formatEarnings(selectedEntry.yourStake)} USDC
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-400 text-sm">APY</span>
+                  <span className="text-white/70 text-sm">APY</span>
                   <span className="text-white/90 font-medium">
                     {(selectedEntry.apy * 100).toFixed(1)}%
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-400 text-sm">Fee</span>
+                  <span className="text-white/70 text-sm">Fee</span>
                   <span className="text-white/90">
                     {(selectedEntry.fee * 100).toFixed(1)}%
                   </span>
                 </div>
-                <p className="text-xs text-[#C7EF6B] mt-2">
+                <p className="text-xs text-white/50 mt-2">
                   Withdrawals are processed instantly but might take longer when
                   processing many withdrawals.
                 </p>
