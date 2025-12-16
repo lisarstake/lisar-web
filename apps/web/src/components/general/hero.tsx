@@ -46,6 +46,12 @@ const Hero = () => {
               src="/home2.svg"
               alt="Hero illustration"
               className="w-full max-w-xs object-contain"
+              style={{
+                imageRendering: 'crisp-edges',
+                transform: 'translateZ(0)',
+                backfaceVisibility: 'hidden',
+                ...({ WebkitImageRendering: 'crisp-edges' } as React.CSSProperties),
+              }}
             />
           </div>
         </div>

@@ -32,7 +32,7 @@ export const UseCasesSection = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col items-center justify-center h-full">
-              <img src="/highyield-2.svg" className="mx-auto h-[90%]" />
+              <img src="/highyield-2.svg" className="mx-auto h-full" />
             </CardContent>
           </Card>
 
