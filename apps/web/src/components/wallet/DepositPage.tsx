@@ -18,6 +18,7 @@ import { useWallet } from "@/contexts/WalletContext";
 import { priceService } from "@/lib/priceService";
 import { getFiatType } from "@/lib/onramp";
 import { formatNumber, parseFormattedNumber } from "@/lib/formatters";
+import { walletService } from "@/services";
 
 export const DepositPage: React.FC = () => {
   const navigate = useNavigate();
@@ -28,11 +29,15 @@ export const DepositPage: React.FC = () => {
     usdcAmount?: string;
     returnTo?: string;
     walletType?: string;
+    provider?: "maple" | "perena";
+    tierNumber?: number;
+    tierTitle?: string;
   } | null;
   const preservedAmount = locationState?.lptAmount || locationState?.usdcAmount;
   const preservedUsdcAmount = locationState?.usdcAmount;
   const returnTo = locationState?.returnTo;
   const walletType = locationState?.walletType;
+  const selectedProvider = locationState?.provider;
   const [fiatAmount, setFiatAmount] = useState("0");
   const [lptEquivalent, setLptEquivalent] = useState(0);
   const [tokenEquivalent, setTokenEquivalent] = useState(0);
@@ -40,7 +45,13 @@ export const DepositPage: React.FC = () => {
   const isStables = walletType === "savings";
   const tokenName = isStables ? "USDC" : "LPT";
   const coinCode = isStables ? "usdc" : "lpt";
-  const network = isStables ? "spl" : "arbitrum";
+  const network = isStables
+    ? selectedProvider === "maple"
+      ? "ethereum"
+      : selectedProvider === "perena"
+      ? "spl"
+      : "spl"
+    : "arbitrum";
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<
     string | null
   >(null);
@@ -154,7 +165,12 @@ export const DepositPage: React.FC = () => {
 
   const handleProceed = async () => {
     if (selectedPaymentMethod === "onchain") {
-      navigate("/deposit-address", { state: { walletType } });
+      navigate("/deposit-address", { 
+        state: { 
+          walletType,
+          provider: selectedProvider,
+        } 
+      });
     } else if (selectedPaymentMethod === "fiat") {
       await handleFundWallet();
     }
@@ -167,21 +183,42 @@ export const DepositPage: React.FC = () => {
       return;
     }
 
-    if (!state.user.wallet_address) {
-      setErrorMessage(
-        "No wallet available. Please ensure you have a wallet connected."
-      );
+    if (isStables && !selectedProvider) {
+      setErrorMessage("Provider not selected. Please go back and select a tier.");
       setShowErrorDrawer(true);
       return;
     }
 
     try {
+      let walletAddress = state.user.wallet_address;
+
+      if (isStables && selectedProvider) {
+        const chainType = selectedProvider === "maple" ? "ethereum" : "solana";
+        const walletResp = await walletService.getPrimaryWallet(chainType);
+        if (!walletResp.success || !walletResp.wallet) {
+          setErrorMessage(
+            `No ${chainType} wallet available. Please create a wallet first.`
+          );
+          setShowErrorDrawer(true);
+          return;
+        }
+        walletAddress = walletResp.wallet.wallet_address;
+      }
+
+      if (!walletAddress) {
+        setErrorMessage(
+          "No wallet available. Please ensure you have a wallet connected."
+        );
+        setShowErrorDrawer(true);
+        return;
+      }
+
       const numericAmount = parseFloat(fiatAmount.replace(/,/g, ""));
       const fiatType = getFiatType(userCurrency);
 
       const onramp = new OnrampWebSDK({
         appId: import.meta.env.VITE_ONRAMP_APP_ID,
-        walletAddress: state.user.wallet_address,
+        walletAddress: walletAddress,
         flowType: 1,
         fiatType: fiatType,
         paymentMethod: 2, // Instant transfer
@@ -327,6 +364,31 @@ export const DepositPage: React.FC = () => {
             })}
           </div>
         </div>
+
+        {/* Provider Indicator for Stables */}
+        {isStables && selectedProvider && locationState?.tierTitle && (
+          <div className="py-4">
+            <div className="bg-[#1a1a1a] rounded-lg p-4 border border-[#2a2a2a]">
+              <div className="flex items-center gap-3">
+                <img
+                  src={selectedProvider === "maple" ? "/maple.svg" : "/perena2.png"}
+                  alt={selectedProvider}
+                  className="w-8 h-8 object-contain"
+                />
+                <div>
+                  <p className="text-white/90 text-sm font-medium">
+                    {locationState.tierTitle}
+                  </p>
+                  <p className="text-gray-400 text-xs">
+                    {selectedProvider === "maple"
+                      ? "USD Base - Up to 6.5% APY"
+                      : "USD Plus - Up to 14% APY"}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Payment Method Selection */}
         <div className="py-4">

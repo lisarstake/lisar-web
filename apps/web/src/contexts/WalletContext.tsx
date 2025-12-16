@@ -53,32 +53,61 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
     
     setSolanaLoading(true);
     try {
-      let walletResp = await walletService.getPrimaryWallet("solana");
-      
-      if (!walletResp.success || !walletResp.wallet) {
+      // Fetch Solana USD balances (USDC, USDT, USD*)
+      let solStableBalance = 0;
+      let solWalletResp = await walletService.getPrimaryWallet("solana");
+
+      if (!solWalletResp.success || !solWalletResp.wallet) {
         const createResp = await walletService.createSolanaWallet({
           make_primary: true,
         });
         if (createResp.success && createResp.wallet) {
-          walletResp = { success: true, wallet: createResp.wallet };
+          solWalletResp = { success: true, wallet: createResp.wallet };
         }
       }
-      
-      if (walletResp.success && walletResp.wallet) {
-        const balanceResp = await walletService.getBalance(
-          walletResp.wallet.wallet_address,
-          "USDC"
+
+      if (solWalletResp.success && solWalletResp.wallet) {
+        const balanceResp = await walletService.getSolanaBalance(
+          solWalletResp.wallet.wallet_address
         );
-        if (balanceResp.success) {
-          const balance = parseFloat(balanceResp.balance || "0");
-          setSolanaBalance(balance);
-          if (wallet) {
-            setWallet({ ...wallet, solanaBalance: balance });
-          }
+        if (balanceResp.success && balanceResp.balances) {
+          const { usdc, usdt, ["usd*"]: usdStar } = balanceResp.balances;
+
+          solStableBalance =
+            (usdc ? parseFloat(usdc.balance || "0") : 0) +
+            (usdt ? parseFloat(usdt.balance || "0") : 0) +
+            (usdStar ? parseFloat(usdStar.balance || "0") : 0);
         }
+      }
+
+      // xFetch Ethereum USDC + USDT balances
+      let evmStableBalance = 0;
+      const ethWalletResp = await walletService.getPrimaryWallet("ethereum");
+
+      if (ethWalletResp.success && ethWalletResp.wallet) {
+        const evmAddress = ethWalletResp.wallet.wallet_address;
+
+        const [usdcResp, usdtResp] = await Promise.all([
+          walletService.getBalance(evmAddress, "USDC"),
+          walletService.getBalance(evmAddress, "USDT"),
+        ]);
+
+        if (usdcResp.success) {
+          evmStableBalance += parseFloat(usdcResp.balance || "0");
+        }
+        if (usdtResp.success) {
+          evmStableBalance += parseFloat(usdtResp.balance || "0");
+        }
+      }
+
+      const totalStableBalance = solStableBalance + evmStableBalance;
+
+      setSolanaBalance(totalStableBalance);
+      if (wallet) {
+        setWallet({ ...wallet, solanaBalance: totalStableBalance });
       }
     } catch (error) {
-      console.error("Failed to fetch Solana balance:", error);
+      console.error("Failed to fetch stables balance:", error);
     } finally {
       setSolanaLoading(false);
     }

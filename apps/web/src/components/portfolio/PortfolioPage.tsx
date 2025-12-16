@@ -18,18 +18,15 @@ import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { EmptyState } from "@/components/general/EmptyState";
 import { LisarLines } from "@/components/general/lisar-lines";
 import { PayoutProgressCircle } from "@/components/general/PayoutProgressCircle";
-import { useOrchestrators } from "@/contexts/OrchestratorContext";
 import { useDelegation } from "@/contexts/DelegationContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { useWallet } from "@/contexts/WalletContext";
 import { useTransactions } from "@/contexts/TransactionContext";
+import { usePortfolio, type StakeEntry } from "@/contexts/PortfolioContext";
 import { RecentTransactionsCard } from "@/components/wallet/RecentTransactionsCard";
 import { PortfolioSkeleton } from "./PortfolioSkeleton";
 import { formatEarnings, formatLifetime } from "@/lib/formatters";
 import { getColorForAddress } from "@/lib/qrcode";
-import { getEarliestUnbondingTime } from "@/lib/unbondingTime";
 import { priceService } from "@/lib/priceService";
-import { walletService } from "@/services";
 
 interface StakeEntryItemProps {
   entry: StakeEntry;
@@ -113,21 +110,11 @@ const StakeEntryItem: React.FC<StakeEntryItemProps> = ({ entry, onClick }) => {
   );
 };
 
-interface StakeEntry {
-  id: string;
-  name: string;
-  yourStake: number;
-  apy: number;
-  fee: number;
-  orchestrator?: any;
-}
 
 export const PortfolioPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [selectedPeriod, setSelectedPeriod] = useState("Weekly");
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
-  const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
   const [showBalance, setShowBalance] = useState(() => {
     const saved = localStorage.getItem("portfolio_show_balance");
     return saved ? JSON.parse(saved) : true;
@@ -137,48 +124,45 @@ export const PortfolioPage: React.FC = () => {
     (location.state as { walletType?: string })?.walletType || "staking";
   const isSavings = walletType === "savings";
 
-  const { orchestrators } = useOrchestrators();
-  const {
-    userDelegation,
-    delegatorTransactions,
-    delegatorStakeProfile,
-    protocolStatus,
-    isLoading: delegationLoading,
-  } = useDelegation();
+  const { protocolStatus } = useDelegation();
   const { state } = useAuth();
-  const { solanaBalance, ethereumBalance, loadSolanaBalance, solanaLoading, ethereumLoading } = useWallet();
-  
-  useEffect(() => {
-    if (isSavings && solanaBalance === null && !solanaLoading) {
-      loadSolanaBalance();
-    }
-  }, [isSavings, solanaBalance, solanaLoading, loadSolanaBalance]);
-  
-  const [hasInitiallyLoaded, setHasInitiallyLoaded] = useState(false);
-  
-  useEffect(() => {
-    if (isSavings) {
-      if (solanaBalance !== null || !solanaLoading) {
-        setHasInitiallyLoaded(true);
-      }
-    } else {
-      if (!delegationLoading && (delegatorStakeProfile || userDelegation)) {
-        setHasInitiallyLoaded(true);
-      }
-    }
-  }, [isSavings, solanaBalance, solanaLoading, delegationLoading, delegatorStakeProfile, userDelegation]);
-  
-  const isLoading = !hasInitiallyLoaded && (isSavings ? solanaLoading : delegationLoading);
   const { transactions, isLoading: transactionsLoading } = useTransactions();
+  const {
+    setMode,
+    summary,
+    stakeEntries,
+    isLoading: portfolioLoading,
+  } = usePortfolio();
+
+  useEffect(() => {
+    setMode(isSavings ? "savings" : "staking");
+  }, [isSavings, setMode]);
+
+  const isLoading = useMemo(() => {
+    if (isSavings) {
+      return portfolioLoading && !summary;
+    } else {
+      return portfolioLoading && !summary && stakeEntries.length === 0;
+    }
+  }, [portfolioLoading, summary, stakeEntries.length, isSavings]);
 
   useEffect(() => {
     localStorage.setItem("portfolio_show_balance", JSON.stringify(showBalance));
   }, [showBalance]);
 
-  // Get recent transactions (last 5)
+  // Get recent transactions (last 5), filtered like wallet view
   const recentTransactions = useMemo(() => {
-    return transactions.slice(0, 5);
-  }, [transactions]);
+    const filtered =
+      walletType === "staking"
+        ? transactions.filter((tx) => tx.token_symbol?.toUpperCase() === "LPT")
+        : walletType === "savings"
+          ? transactions.filter(
+              (tx) => tx.token_symbol?.toUpperCase() !== "LPT"
+            )
+          : transactions;
+
+    return filtered.slice(0, 5);
+  }, [transactions, walletType]);
 
   // Calculate next payout progress using protocol status
   const nextPayoutProgress = useMemo(() => {
@@ -209,112 +193,9 @@ export const PortfolioPage: React.FC = () => {
     return { progress: Math.min(progress, 100), timeRemaining };
   }, [protocolStatus]);
 
-  const portfolioData = useMemo(() => {
-    // Initialize defaults
-    let totalStake = 0;
-    let currentStake = 0;
-    let lifetimeRewards = 0;
-    let lifetimeUnbonded = 0;
-    let dailyEarnings = 0;
-    let weeklyEarnings = 0;
-    let monthlyEarnings = 0;
-    const stakeEntries: StakeEntry[] = [];
-
-    if (isSavings) {
-      totalStake = solanaBalance || 0;
-      currentStake = solanaBalance || 0;
-      if (delegatorStakeProfile) {
-        lifetimeRewards = parseFloat(delegatorStakeProfile.lifetimeRewards) || 0;
-        lifetimeUnbonded =
-          parseFloat(delegatorStakeProfile.lifetimeUnbonded) || 0;
-      }
-    } else {
-      if (delegatorStakeProfile) {
-        totalStake = parseFloat(delegatorStakeProfile.currentStake) || 0;
-        currentStake = totalStake;
-        lifetimeRewards = parseFloat(delegatorStakeProfile.lifetimeRewards) || 0;
-        lifetimeUnbonded =
-          parseFloat(delegatorStakeProfile.lifetimeUnbonded) || 0;
-      }
-    }
-
-    // Handle userDelegation and orchestrators data (if available)
-    if (userDelegation) {
-      const bondedAmount = parseFloat(userDelegation.bondedAmount) || 0;
-      const delegateId = userDelegation.delegate?.id || "";
-
-      // Find orchestrator if orchestrators list is available
-      const orchestrator =
-        orchestrators.length > 0
-          ? orchestrators.find((orch) => orch.address === delegateId)
-          : null;
-
-      const orchestratorName =
-        orchestrator?.ensIdentity?.name ||
-        orchestrator?.ensName ||
-        userDelegation.delegate?.id ||
-        "Unknown Orchestrator";
-
-      // Handle APY as string (e.g., "15%") or number (e.g., 15)
-      let apyPercentage = 0;
-      if (orchestrator?.apy) {
-        const apyValue = orchestrator.apy;
-        if (typeof apyValue === "string") {
-          apyPercentage = parseFloat(apyValue.replace("%", "")) || 0;
-        } else {
-          apyPercentage = typeof apyValue === "number" ? apyValue : 0;
-        }
-      }
-
-      const rewardCutPercentage = orchestrator?.reward
-        ? parseFloat(orchestrator.reward) / 10000
-        : 0;
-      const rewardCutDecimal = rewardCutPercentage / 100;
-
-      // Calculate earnings if we have bonded amount and APY
-      if (bondedAmount > 0 && apyPercentage > 0) {
-        const grossDailyEarnings = (bondedAmount * apyPercentage) / (100 * 365);
-        const grossWeeklyEarnings = grossDailyEarnings * 7;
-        const grossMonthlyEarnings = grossDailyEarnings * 30;
-
-        dailyEarnings = grossDailyEarnings * (1 - rewardCutDecimal);
-        weeklyEarnings = grossWeeklyEarnings * (1 - rewardCutDecimal);
-        monthlyEarnings = grossMonthlyEarnings * (1 - rewardCutDecimal);
-      }
-
-      // Add stake entry if we have delegation data
-      if (delegateId) {
-        stakeEntries.push({
-          id: delegateId,
-          name: orchestratorName,
-          yourStake: bondedAmount,
-          apy: apyPercentage / 100,
-          fee: rewardCutPercentage,
-          orchestrator: orchestrator || null,
-        });
-      }
-    }
-
-    return {
-      totalStake,
-      currentStake,
-      lifetimeRewards,
-      lifetimeUnbonded,
-      dailyEarnings,
-      weeklyEarnings,
-      monthlyEarnings,
-      stakeEntries,
-    };
-  }, [userDelegation, orchestrators, delegatorStakeProfile, isSavings, solanaBalance]);
-
-  const {
-    totalStake,
-    lifetimeRewards,
-    lifetimeUnbonded,
-    weeklyEarnings,
-    monthlyEarnings,
-    stakeEntries,
-  } = portfolioData;
+  const totalStake = summary?.totalStake || 0;
+  const lifetimeRewards = summary?.lifetimeRewards || 0;
+  const averageApy = summary?.averageApy || 0;
 
   // Calculate fiat value for total stake
   const [totalStakeFiat, setTotalStakeFiat] = useState(0);
@@ -356,97 +237,17 @@ export const PortfolioPage: React.FC = () => {
     calculateFiat();
   }, [totalStake, fiatCurrency, isSavings]);
 
-  const averageApy = useMemo(() => {
-    if (isSavings) {
-      return 14.9;
-    }
-    if (stakeEntries.length === 0) return 0;
-    const totalApy = stakeEntries.reduce(
-      (sum, entry) => sum + entry.apy * 100,
-      0
-    );
-    return totalApy / stakeEntries.length;
-  }, [stakeEntries, isSavings]);
-
-  // Calculate pending unbonding count and data
-  const pendingUnbondingData = useMemo(() => {
-    if (!delegatorTransactions) {
-      return {
-        count: 0,
-        totalAmount: 0,
-        timeRemaining: null,
-      };
-    }
-
-    const pending = delegatorTransactions.pendingStakeTransactions || [];
-    const count = pending.length;
-    const totalAmount = pending.reduce(
-      (sum, tx) => sum + parseFloat(tx.amount || "0"),
-      0
-    );
-    const timeRemaining = getEarliestUnbondingTime(pending);
-
-    return {
-      count,
-      totalAmount,
-      timeRemaining,
-    };
-  }, [delegatorTransactions]);
-
-  // Calculate completed unbonding (ready for withdrawal) count and data
-  const completedUnbondingData = useMemo(() => {
-    if (!delegatorTransactions) {
-      return {
-        count: 0,
-        totalAmount: 0,
-        validatorId: null,
-      };
-    }
-
-    const completed = delegatorTransactions.completedStakeTransactions || [];
-    const count = completed.length;
-    const totalAmount = completed.reduce(
-      (sum, tx) => sum + parseFloat(tx.amount || "0"),
-      0
-    );
-    // Get the first validator ID from completed transactions (for navigation)
-    const validatorId = completed.length > 0 ? completed[0].delegate.id : null;
-
-    return {
-      count,
-      totalAmount,
-      validatorId,
-    };
-  }, [delegatorTransactions]);
 
   const handleBackClick = () => {
     navigate(-1);
   };
 
-  const handleTrophyClick = () => {
-    navigate("/leaderboard");
-  };
-
-  const handlePeriodChange = (period: string) => {
-    setSelectedPeriod(period);
-  };
-
-  const handleStakeClick = (stakeId: string) => {
-    navigate(`/validator-details/${stakeId}`);
-  };
-
   const handleViewAllTransactions = () => {
-    navigate("/history");
+    navigate("/history", { state: { walletType } });
   };
 
   const handleTransactionClick = (transaction: any) => {
     navigate(`/transaction-detail/${transaction.id}`);
-  };
-
-  const handleWithdrawClick = () => {
-    if (completedUnbondingData.validatorId) {
-      navigate(`/validator-details/${completedUnbondingData.validatorId}`);
-    }
   };
 
   const handleHelpClick = () => {
@@ -467,7 +268,7 @@ export const PortfolioPage: React.FC = () => {
           >
             <ChevronLeft color="#C7EF6B" />
           </button>
-          <h1 className="text-lg font-medium text-white">My portfolio</h1>
+          <h1 className="text-lg font-medium text-white">Portfolio</h1>
           <button
             onClick={handleHelpClick}
             className="w-8 h-8 bg-[#2a2a2a] rounded-full flex items-center justify-center"
@@ -503,20 +304,20 @@ export const PortfolioPage: React.FC = () => {
           )}
 
           {/* Circular Progress - Top Right */}
-          <div className="absolute top-4 right-4 z-20">
+          {/* <div className="absolute top-4 right-4 z-20">
             <PayoutProgressCircle
               progress={nextPayoutProgress.progress}
               timeRemaining={nextPayoutProgress.timeRemaining}
               isSavings={isSavings}
             />
-          </div>
+          </div> */}
 
           {/* Content */}
           <div className="relative z-10">
             <div className="flex items-center gap-2 mb-2">
               <h3 className="text-white/70 text-sm">
                 {" "}
-                {isSavings ? "Stables Portfolio" : "High Yield Portfolio"}
+                {isSavings ? "Stables " : "High Yield "}
               </h3>
               <button
                 onClick={() => setShowBalance(!showBalance)}
@@ -575,7 +376,7 @@ export const PortfolioPage: React.FC = () => {
                 <p className="text-white/90 font-semibold text-sm">
                   {showBalance ? `${averageApy.toFixed(1)}%` : "••••"}
                 </p>
-                <p className="text-white/60 text-xs">APY</p>
+                <p className="text-white/60 text-xs">Per annum</p>
               </div>
 
               {/* Total Earnings */}
@@ -597,14 +398,16 @@ export const PortfolioPage: React.FC = () => {
                 <h3 className="text-white/90 text-base font-medium mb-2">
                   Summary
                 </h3>
-                <p className="text-white/60 text-sm">
+                <p className="text-white/60 text-xs">
                   View breakdown of your portfolio
                 </p>
               </div>
             </div>
 
             <button
-              onClick={() => navigate("/portfolio/summary", { state: { walletType } })}
+              onClick={() =>
+                navigate("/portfolio/summary", { state: { walletType } })
+              }
               className="mt-1 px-6 py-2 bg-[#438af6] text-white rounded-full text-xs font-semibold hover:bg-[#96C3F7] transition-colors relative z-10"
             >
               Show
@@ -616,16 +419,18 @@ export const PortfolioPage: React.FC = () => {
             <div className="flex items-start justify-between mb-3">
               <div className="flex-1 relative z-10">
                 <h3 className="text-white/90 text-base font-medium mb-2">
-                  My Positions
+                  My Vest
                 </h3>
-                <p className="text-white/60 text-sm">
+                <p className="text-white/60 text-xs">
                   Track all your active earning positions.
                 </p>
               </div>
             </div>
 
             <button
-              onClick={() => navigate("/portfolio/positions", { state: { walletType } })}
+              onClick={() =>
+                navigate("/portfolio/positions", { state: { walletType } })
+              }
               className="mt-1 px-6 py-2 bg-[#a3d039] text-black rounded-full text-xs font-semibold hover:bg-[#B8E55A] transition-colors relative z-10"
             >
               Show

@@ -22,27 +22,27 @@ export const PayoutProgressCircle: React.FC<PayoutProgressCircleProps> = ({
           e.stopPropagation();
           setShowHelpDrawer(true);
         }}
-        className="relative w-12 h-12 cursor-pointer hover:opacity-80 transition-opacity pointer-events-auto"
+        className="relative w-16 h-16 cursor-pointer hover:opacity-80 transition-opacity pointer-events-auto"
         aria-label="View payout information"
         style={{ zIndex: 20 }}
       >
-        <svg className="transform -rotate-90 w-12 h-12 pointer-events-none">
+        <svg className="transform -rotate-90 w-16 h-16 pointer-events-none">
           <circle
-            cx="24"
-            cy="24"
-            r="20"
+            cx="32"
+            cy="32"
+            r="26"
             stroke={isSavings ? "#86B3F7" : "#2a2a2a"}
             strokeWidth="3"
             fill="none"
           />
           <circle
-            cx="24"
-            cy="24"
-            r="20"
+            cx="32"
+            cy="32"
+            r="26"
             stroke={isSavings ? "#ffffff" : "#C7EF6B"}
             strokeWidth="3"
             fill="none"
-            strokeDasharray={`${(progress / 100) * 125.6} 125.6`}
+            strokeDasharray={`${(progress / 100) * 163.36} 163.36`}
             strokeLinecap="round"
           />
         </svg>

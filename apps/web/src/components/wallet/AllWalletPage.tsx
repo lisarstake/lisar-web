@@ -11,10 +11,10 @@ import { useWallet } from "@/contexts/WalletContext";
 import { useDelegation } from "@/contexts/DelegationContext";
 import { useNotification } from "@/contexts/NotificationContext";
 import { useGuidedTour } from "@/hooks/useGuidedTour";
+import { usePrices } from "@/hooks/usePrices";
 import { WALLET_TOUR_ID } from "@/lib/tourConfig";
 import { priceService } from "@/lib/priceService";
 import { formatEarnings } from "@/lib/formatters";
-import { walletService } from "@/services";
 import {
   Search,
   Bell,
@@ -43,13 +43,21 @@ export const AllWalletPage: React.FC = () => {
   }, [showBalance]);
   const { orchestrators, isLoading, error, refetch } = useOrchestrators();
   const { state } = useAuth();
-  const { wallet, isLoading: walletLoading } = useWallet();
+  const {
+    wallet,
+    isLoading: walletLoading,
+    solanaBalance: contextSolanaBalance,
+    ethereumBalance: contextEthereumBalance,
+    solanaLoading,
+    ethereumLoading,
+  } = useWallet();
   const {
     delegatorStakeProfile,
     delegatorTransactions,
     isLoading: delegationLoading,
   } = useDelegation();
   const { unreadCount } = useNotification();
+  const { prices } = usePrices();
 
   // Start tour for non-onboarded users
   const shouldAutoStart = useMemo(() => {
@@ -93,107 +101,73 @@ export const AllWalletPage: React.FC = () => {
     });
   }, [orchestrators, searchQuery]);
 
-  const [fiatValue, setFiatValue] = useState(0);
-  const [ethereumBalance, setEthereumBalance] = useState(0);
-  const [solanaBalance, setSolanaBalance] = useState(0);
-  const [ethereumFiatValue, setEthereumFiatValue] = useState(0);
-  const [solanaFiatValue, setSolanaFiatValue] = useState(0);
-  const [walletsLoading, setWalletsLoading] = useState(false);
-  const [ethereumWalletId, setEthereumWalletId] = useState<string | null>(null);
-  const [solanaWalletId, setSolanaWalletId] = useState<string | null>(null);
+  const ethereumBalance = contextEthereumBalance || 0;
+  const solanaBalance = contextSolanaBalance || 0;
 
-  useEffect(() => {
-    const fetchWalletBalances = async () => {
-      setWalletsLoading(true);
-      try {
-        const ethWalletResp = await walletService.getPrimaryWallet("ethereum");
-        if (ethWalletResp.success && ethWalletResp.wallet) {
-          setEthereumWalletId(ethWalletResp.wallet.id);
+  const walletBalance = useMemo(() => ethereumBalance, [ethereumBalance]);
+  const stakedBalance = useMemo(() => solanaBalance, [solanaBalance]);
 
-          const ethBalanceResp = await walletService.getBalance(
-            ethWalletResp.wallet.wallet_address,
-            "LPT"
-          );
-          if (ethBalanceResp.success) {
-            const balance = parseFloat(ethBalanceResp.balance || "0");
-            setEthereumBalance(balance);
-            const fiatCurrency = state.user?.fiat_type || "USD";
-            const fiat = await priceService.convertLptToFiat(
-              balance,
-              fiatCurrency
-            );
-            setEthereumFiatValue(fiat);
-          }
-        }
+  const ethereumFiatValue = useMemo(() => {
+    const fiatCurrency = (state.user?.fiat_type || "USD").toUpperCase();
+    const lptPriceInUsd = prices.lpt || 0;
+    const usdValue = ethereumBalance * lptPriceInUsd;
 
-        let solWalletResp = await walletService.getPrimaryWallet("solana");
-
-        if (!solWalletResp.success || !solWalletResp.wallet) {
-          const createResp = await walletService.createSolanaWallet({
-            make_primary: true,
-          });
-          if (createResp.success && createResp.wallet) {
-            solWalletResp = { success: true, wallet: createResp.wallet };
-          }
-        }
-
-        if (solWalletResp.success && solWalletResp.wallet) {
-          setSolanaWalletId(solWalletResp.wallet.id);
-
-          const solBalanceResp = await walletService.getBalance(
-            solWalletResp.wallet.wallet_address,
-            "USDC"
-          );
-          if (solBalanceResp.success) {
-            const balance = parseFloat(solBalanceResp.balance || "0");
-            setSolanaBalance(balance);
-            const fiatCurrency = state.user?.fiat_type || "USD";
-            const prices = await priceService.getPrices();
-            let fiat = balance;
-            if (fiatCurrency === "NGN") {
-              fiat = balance * prices.ngn;
-            } else if (fiatCurrency === "EUR") {
-              fiat = balance * prices.eur;
-            } else if (fiatCurrency === "GBP") {
-              fiat = balance * prices.gbp;
-            }
-            setSolanaFiatValue(fiat);
-          }
-        }
-      } catch (error) {
-        console.error("Failed to fetch wallet balances:", error);
-      } finally {
-        setWalletsLoading(false);
-      }
-    };
-
-    if (state.user) {
-      fetchWalletBalances();
+    switch (fiatCurrency) {
+      case "NGN":
+        return usdValue * prices.ngn;
+      case "EUR":
+        return usdValue * prices.eur;
+      case "GBP":
+        return usdValue * prices.gbp;
+      default:
+        return usdValue;
     }
-  }, [state.user]);
+  }, [ethereumBalance, prices, state.user?.fiat_type]);
 
-  const combinedBalance = useMemo(() => {
-    return ethereumBalance + solanaBalance;
-  }, [ethereumBalance, solanaBalance]);
+  const solanaFiatValue = useMemo(() => {
+    const fiatCurrency = (state.user?.fiat_type || "USD").toUpperCase();
+    const stableBalance = solanaBalance; // already in USD-equivalent units
+
+    switch (fiatCurrency) {
+      case "NGN":
+        return stableBalance * prices.ngn;
+      case "EUR":
+        return stableBalance * prices.eur;
+      case "GBP":
+        return stableBalance * prices.gbp;
+      default:
+        return stableBalance;
+    }
+  }, [solanaBalance, prices, state.user?.fiat_type]);
+
+  const fiatValue = useMemo(
+    () => ethereumFiatValue + solanaFiatValue,
+    [ethereumFiatValue, solanaFiatValue]
+  );
+
+  // Total USD = EVM LPT in USD + all USD stables
+  const totalUsdBalance = useMemo(() => {
+    const lptPriceInUsd = prices.lpt || 0;
+    const lptUsdValue = ethereumBalance * lptPriceInUsd;
+    const stablesUsdValue = solanaBalance; // already USD-equivalent units
+    return lptUsdValue + stablesUsdValue;
+  }, [ethereumBalance, solanaBalance, prices]);
+
+  // Total NGN equivalent (used under the USD value on the main card)
+  const totalNairaBalance = useMemo(() => {
+    const nairaRate = prices.ngn || 0;
+    return totalUsdBalance * nairaRate;
+  }, [totalUsdBalance, prices]);
 
   const fiatSymbol = useMemo(() => {
     const fiatCurrency = wallet?.fiatCurrency || state.user?.fiat_type || "USD";
     return priceService.getCurrencySymbol(fiatCurrency);
   }, [wallet?.fiatCurrency, state.user?.fiat_type]);
 
-  const walletBalance = useMemo(() => ethereumBalance, [ethereumBalance]);
-  const stakedBalance = useMemo(() => solanaBalance, [solanaBalance]);
-
-
-  useEffect(() => {
-    const calculateFiatValues = async () => {
-      const fiatCurrency = state.user?.fiat_type || "USD";
-      const combinedFiat = ethereumFiatValue + solanaFiatValue;
-      setFiatValue(combinedFiat);
-    };
-
-    calculateFiatValues();
-  }, [ethereumFiatValue, solanaFiatValue, state.user?.fiat_type]);
+  const nairaSymbol = useMemo(
+    () => priceService.getCurrencySymbol("NGN"),
+    []
+  );
 
   const handleNotificationClick = () => {
     navigate("/notifications");
@@ -243,8 +217,8 @@ export const AllWalletPage: React.FC = () => {
       {
         id: "main",
         title: "Total Balance",
-        balance: combinedBalance,
-        fiatValue: fiatValue,
+        balance: totalUsdBalance, // show total USD value
+        fiatValue: totalNairaBalance, // NGN equivalent
         type: "main",
         gradient: "from-[#0f0f0f] to-[#151515]",
       },
@@ -258,7 +232,7 @@ export const AllWalletPage: React.FC = () => {
       },
       {
         id: "staking",
-        title: "Super Yield",
+        title: "High Yield",
         balance: walletBalance,
         fiatValue: savingsFiatValue,
         type: "staking",
@@ -266,8 +240,8 @@ export const AllWalletPage: React.FC = () => {
       },
     ],
     [
-      combinedBalance,
-      fiatValue,
+      totalUsdBalance,
+      totalNairaBalance,
       stakedBalance,
       stakingFiatValue,
       walletBalance,
@@ -276,7 +250,7 @@ export const AllWalletPage: React.FC = () => {
   );
 
   return (
-    <div className="h-screen bg-[#050505] text-white flex flex-col">
+    <div className="min-h-screen bg-[#050505] text-white flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-8">
         <div className="flex items-center space-x-2.5">
@@ -383,7 +357,10 @@ export const AllWalletPage: React.FC = () => {
 
                   {/* Balance Display */}
                   <div>
-                    {walletLoading || delegationLoading || walletsLoading ? (
+                    {walletLoading ||
+                    delegationLoading ||
+                    solanaLoading ||
+                    ethereumLoading ? (
                       <>
                         <div className="flex items-baseline gap-2 mb-1">
                           <span className="text-2xl font-bold text-white">
@@ -404,21 +381,33 @@ export const AllWalletPage: React.FC = () => {
                           </span>
                           {showBalance && (
                             <span className="text-sm text-white/70 ml-[-5px]">
-                              {card.type === "savings"
+                              {card.type === "main"
+                                ? "USD"
+                                : card.type === "savings"
                                 ? "USDC"
-                                : card.type === "staking"
-                                  ? "LPT"
-                                  : "LPT"}
+                                : "LPT"}
                             </span>
                           )}
                         </div>
                         {showBalance && (
                           <p className="text-white/50 text-sm">
-                            ≈{fiatSymbol}
-                            {card.fiatValue.toLocaleString(undefined, {
-                              minimumFractionDigits: 2,
-                              maximumFractionDigits: 2,
-                            })}
+                            {card.id === "main" ? (
+                              <>
+                                {nairaSymbol}
+                                {card.fiatValue.toLocaleString(undefined, {
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2,
+                                })}
+                              </>
+                            ) : (
+                              <>
+                                ≈{fiatSymbol}
+                                {card.fiatValue.toLocaleString(undefined, {
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2,
+                                })}
+                              </>
+                            )}
                           </p>
                         )}
                       </>

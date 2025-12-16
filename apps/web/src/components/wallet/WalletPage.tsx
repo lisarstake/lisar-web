@@ -13,11 +13,11 @@ import { useDelegation } from "@/contexts/DelegationContext";
 import { useNotification } from "@/contexts/NotificationContext";
 import { useTransactions } from "@/contexts/TransactionContext";
 import { useGuidedTour } from "@/hooks/useGuidedTour";
+import { usePrices } from "@/hooks/usePrices";
 import { WALLET_TOUR_ID } from "@/lib/tourConfig";
 import { priceService } from "@/lib/priceService";
 import { formatEarnings } from "@/lib/formatters";
 import { TransactionData } from "@/services/transactions/types";
-import { walletService } from "@/services";
 import {
   Search,
   Bell,
@@ -34,8 +34,6 @@ interface WalletPageProps {
 
 export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [showBalanceDrawer, setShowBalanceDrawer] = useState(false);
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
   const [showBalance, setShowBalance] = useState(() => {
     const saved = localStorage.getItem("wallet_show_balance");
@@ -45,16 +43,19 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
   useEffect(() => {
     localStorage.setItem("wallet_show_balance", JSON.stringify(showBalance));
   }, [showBalance]);
-  const { orchestrators, isLoading, error, refetch } = useOrchestrators();
   const { state } = useAuth();
-  const { wallet, isLoading: walletLoading } = useWallet();
   const {
-    delegatorStakeProfile,
-    delegatorTransactions,
-    isLoading: delegationLoading,
-  } = useDelegation();
+    wallet,
+    isLoading: walletLoading,
+    solanaBalance,
+    ethereumBalance,
+    solanaLoading,
+    ethereumLoading,
+  } = useWallet();
+  const { isLoading: delegationLoading } = useDelegation();
   const { unreadCount } = useNotification();
-  const { transactions, isLoading: transactionsLoading, error: transactionsError, refetch: refetchTransactions } = useTransactions();
+  const { transactions, isLoading: transactionsLoading } = useTransactions();
+  const { prices } = usePrices();
 
   // Start tour for non-onboarded users
   const shouldAutoStart = useMemo(() => {
@@ -66,148 +67,67 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
     autoStart: shouldAutoStart,
   });
 
-  const filteredOrchestrators = useMemo(() => {
-    if (!searchQuery.trim()) {
-      return orchestrators;
+  const rawBalance = useMemo(() => {
+    if (walletType === "savings") {
+      return solanaBalance ?? 0;
     }
-
-    const query = searchQuery.toLowerCase().trim();
-
-    return orchestrators.filter((orchestrator) => {
-      // Search by ENS name
-      const ensName =
-        orchestrator.ensIdentity?.name || orchestrator.ensName || "";
-      if (ensName.toLowerCase().includes(query)) {
-        return true;
-      }
-
-      // Search by address
-      const address = orchestrator.address || "";
-      if (address.toLowerCase().includes(query)) {
-        return true;
-      }
-
-      // Search by description
-      const description =
-        orchestrator.ensIdentity?.description || orchestrator.description || "";
-      if (description.toLowerCase().includes(query)) {
-        return true;
-      }
-
-      return false;
-    });
-  }, [orchestrators, searchQuery]);
-
-  const [fiatValue, setFiatValue] = useState(0);
-  const [stakingFiatValue, setStakingFiatValue] = useState(0);
-  const [savingsFiatValue, setSavingsFiatValue] = useState(0);
-  const [walletBalanceState, setWalletBalanceState] = useState(0);
-  const [walletLoadingState, setWalletLoadingState] = useState(false);
-  const [currentWalletId, setCurrentWalletId] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchWalletBalance = async () => {
-      if (!walletType) return;
-      
-      setWalletLoadingState(true);
-      try {
-        const chainType = walletType === "savings" ? "solana" : "ethereum";
-        let walletResp = await walletService.getPrimaryWallet(chainType);
-        
-        if (walletType === "savings" && (!walletResp.success || !walletResp.wallet)) {
-          const createResp = await walletService.createSolanaWallet({ make_primary: true });
-          if (createResp.success && createResp.wallet) {
-            walletResp = { success: true, wallet: createResp.wallet };
-          }
-        }
-        
-        if (walletResp.success && walletResp.wallet) {
-          setCurrentWalletId(walletResp.wallet.id);
-          
-          const token = walletType === "savings" ? "USDC" : "LPT";
-          const balanceResp = await walletService.getBalance(
-            walletResp.wallet.wallet_address,
-            token
-          );
-          
-          if (balanceResp.success) {
-            const balance = parseFloat(balanceResp.balance || "0");
-            setWalletBalanceState(balance);
-            
-            const fiatCurrency = state.user?.fiat_type || "USD";
-            let fiat = 0;
-            if (walletType === "savings") {
-              const prices = await priceService.getPrices();
-              fiat = balance;
-              if (fiatCurrency === "NGN") {
-                fiat = balance * prices.ngn;
-              } else if (fiatCurrency === "EUR") {
-                fiat = balance * prices.eur;
-              } else if (fiatCurrency === "GBP") {
-                fiat = balance * prices.gbp;
-              }
-            } else {
-              fiat = await priceService.convertLptToFiat(balance, fiatCurrency);
-            }
-            
-            if (walletType === "savings") {
-              setStakingFiatValue(fiat);
-            } else {
-              setSavingsFiatValue(fiat);
-            }
-          }
-        }
-      } catch (error) {
-        console.error("Failed to fetch wallet balance:", error);
-      } finally {
-        setWalletLoadingState(false);
-      }
-    };
-
-    if (state.user && walletType) {
-      fetchWalletBalance();
+    if (walletType === "staking") {
+      return ethereumBalance ?? 0;
     }
-  }, [walletType, state.user]);
-
-  const combinedBalance = useMemo(() => {
-    return walletBalanceState;
-  }, [walletBalanceState]);
+    return 0;
+  }, [walletType, solanaBalance, ethereumBalance]);
 
   const fiatSymbol = useMemo(() => {
     const fiatCurrency = wallet?.fiatCurrency || state.user?.fiat_type || "USD";
     return priceService.getCurrencySymbol(fiatCurrency);
   }, [wallet?.fiatCurrency, state.user?.fiat_type]);
 
-  const walletBalance = useMemo(() => walletBalanceState, [walletBalanceState]);
-  const stakedBalance = useMemo(() => walletBalanceState, [walletBalanceState]);
-
-  const unbondingBalance = useMemo(() => {
-    if (!delegatorTransactions?.pendingStakeTransactions?.length) return 0;
-    return delegatorTransactions.pendingStakeTransactions.reduce(
-      (total, tx) => {
-        const value = parseFloat(tx.amount || "0");
-        return total + (isNaN(value) ? 0 : value);
-      },
-      0
-    );
-  }, [delegatorTransactions]);
-
   const currentWalletBalance = useMemo(() => {
-    return walletBalanceState;
-  }, [walletBalanceState]);
+    return rawBalance;
+  }, [rawBalance]);
 
   const currentWalletFiatValue = useMemo(() => {
+    const fiatCurrency = (state.user?.fiat_type || "USD").toUpperCase();
+
+    // Staking (High Yield) - LPT based
     if (walletType === "staking") {
-      return savingsFiatValue;
-    } else if (walletType === "savings") {
-      return stakingFiatValue;
+      const lptPriceInUsd = prices.lpt || 0;
+      const usdValue = rawBalance * lptPriceInUsd;
+
+      switch (fiatCurrency) {
+        case "NGN":
+          return usdValue * prices.ngn;
+        case "EUR":
+          return usdValue * prices.eur;
+        case "GBP":
+          return usdValue * prices.gbp;
+        default:
+          return usdValue;
+      }
     }
-    return fiatValue;
-  }, [walletType, savingsFiatValue, stakingFiatValue, fiatValue]);
+
+    // Savings (Stables) - already USD-equivalent stable coins
+    if (walletType === "savings") {
+      const stableBalance = rawBalance;
+
+      switch (fiatCurrency) {
+        case "NGN":
+          return stableBalance * prices.ngn;
+        case "EUR":
+          return stableBalance * prices.eur;
+        case "GBP":
+          return stableBalance * prices.gbp;
+        default:
+          return stableBalance;
+      }
+    }
+
+    return 0;
+  }, [walletType, rawBalance, prices, state.user?.fiat_type]);
 
   const currentWalletTitle = useMemo(() => {
     if (walletType === "staking") {
-      return "Super Yield";
+      return "High Yield";
     } else if (walletType === "savings") {
       return "Stables";
     }
@@ -216,7 +136,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
 
   const handleStakeClick = () => {
     if (walletType === "savings") {
-      navigate("/save", { state: { walletType } });
+      navigate("/stable-tiers", { state: { walletType } });
     } else {
       navigate("/savings-tiers");
     }
@@ -227,7 +147,11 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
   };
 
   const handleDepositClick = () => {
-    navigate(`/deposit`, { state: { walletType } });
+    if (walletType === "savings") {
+      navigate("/stable-tiers", { state: { walletType, action: "deposit" } });
+    } else {
+      navigate(`/deposit`, { state: { walletType } });
+    }
   };
 
   const handlePortfolioClick = () => {
@@ -235,7 +159,11 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
   };
 
   const handleWithdrawClick = () => {
-    navigate("/withdraw", { state: { walletType } });
+    if (walletType === "savings") {
+      navigate("/stable-tiers", { state: { walletType, action: "withdraw" } });
+    } else {
+      navigate("/withdraw", { state: { walletType } });
+    }
   };
 
   const handleBackClick = () => {
@@ -247,12 +175,25 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
   };
 
   const handleViewAllTransactions = () => {
-    navigate("/history");
+    if (walletType) {
+      navigate("/history", { state: { walletType } });
+    } else {
+      navigate("/history");
+    }
   };
 
   const recentTransactions = useMemo(() => {
-    return transactions.slice(0, 5);
-  }, [transactions]);
+    const filtered =
+      walletType === "staking"
+        ? transactions.filter((tx) => tx.token_symbol?.toUpperCase() === "LPT")
+        : walletType === "savings"
+          ? transactions.filter(
+              (tx) => tx.token_symbol?.toUpperCase() !== "LPT"
+            )
+          : transactions;
+
+    return filtered.slice(0, 5);
+  }, [transactions, walletType]);
 
   return (
     <div className="h-screen bg-[#050505] text-white flex flex-col">
@@ -265,9 +206,11 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
           <ChevronLeft color="#C7EF6B" />
         </button>
 
-        <h1 className="text-lg font-medium text-white">
-          {walletType === "staking" ? "Super Yield" : "Stables"}
-        </h1>
+        {/* <h1 className="text-lg font-medium text-white">
+          {walletType === "staking" ? "High Yield Wallet" : "Stables Wallet"}
+        </h1> */}
+
+        <h1 className="text-lg font-medium text-white">Wallet</h1>
 
         <div className="flex items-center gap-3">
           <button
@@ -323,7 +266,11 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
 
                 {/* Balance Display */}
                 <div className="mb-4 min-h-[60px]">
-                  {walletLoading || delegationLoading || walletLoadingState ? (
+                  {walletLoading ||
+                  delegationLoading ||
+                  (walletType === "savings"
+                    ? solanaLoading
+                    : ethereumLoading) ? (
                     <div className="flex items-baseline gap-2 mb-1">
                       <span className="text-2xl font-bold text-white">
                         ••••
@@ -345,7 +292,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
                                 : "text-white/70"
                             }`}
                           >
-                           {walletType === "savings" ? "USDC" : "LPT"}
+                            {walletType === "savings" ? "USDC" : "LPT"}
                           </span>
                         )}
                       </div>
@@ -409,7 +356,9 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
       {/* Recent Transactions */}
       <div className="flex-1 px-6 pb-20 pt-6 overflow-y-auto">
         <div className="flex items-center justify-between mb-3 px-2">
-          <h2 className="text-white/80 text-sm font-medium">Recent transactions</h2>
+          <h2 className="text-white/80 text-sm font-medium">
+            Recent transactions
+          </h2>
           {transactions.length > 0 && (
             <button
               onClick={handleViewAllTransactions}
@@ -425,7 +374,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
           transactions={recentTransactions}
           isLoading={transactionsLoading}
           onTransactionClick={handleTransactionClick}
-          skeletonCount={3}
+          skeletonCount={5}
         />
       </div>
 
@@ -436,7 +385,11 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
       <HelpDrawer
         isOpen={showHelpDrawer}
         onClose={() => setShowHelpDrawer(false)}
-        title={walletType === "savings" ? "About Stables Wallet" : "About High Yield Wallet"}
+        title={
+          walletType === "savings"
+            ? "About Stables Wallet"
+            : "About High Yield Wallet"
+        }
         content={
           walletType === "savings"
             ? [

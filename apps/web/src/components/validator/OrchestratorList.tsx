@@ -9,6 +9,8 @@ interface OrchestratorListProps {
   error: string | null;
   onRetry: () => void;
   skeletonCount?: number;
+  tierNumber?: number;
+  tierTitle?: string;
 }
 
 export const OrchestratorList: React.FC<OrchestratorListProps> = ({
@@ -17,6 +19,8 @@ export const OrchestratorList: React.FC<OrchestratorListProps> = ({
   error,
   onRetry,
   skeletonCount = 5,
+  tierNumber,
+  tierTitle,
 }) => {
   if (error) {
     return (
@@ -57,6 +61,8 @@ export const OrchestratorList: React.FC<OrchestratorListProps> = ({
               key={orchestrator.address}
               orchestrator={orchestrator}
               tourId={index === 0 ? "orchestrator-highlight" : undefined}
+              tierNumber={tierNumber}
+              tierTitle={tierTitle}
             />
           ))}
     </div>

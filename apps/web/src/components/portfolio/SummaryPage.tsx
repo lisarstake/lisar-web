@@ -1,9 +1,15 @@
 import React, { useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { ChevronLeft, TrendingUp, TrendingDown, Clock, CheckCircle, CircleQuestionMark } from "lucide-react";
+import {
+  ChevronLeft,
+  Clock,
+  CheckCircle,
+  CircleQuestionMark,
+} from "lucide-react";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { useDelegation } from "@/contexts/DelegationContext";
+import { useWallet } from "@/contexts/WalletContext";
 import { formatEarnings, formatLifetime } from "@/lib/formatters";
 import { getEarliestUnbondingTime } from "@/lib/unbondingTime";
 
@@ -11,22 +17,46 @@ export const SummaryPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
-  const walletType = (location.state as { walletType?: string })?.walletType || "staking";
+  const walletType =
+    (location.state as { walletType?: string })?.walletType || "staking";
   const isSavings = walletType === "savings";
 
-  const {
-    delegatorStakeProfile,
-    delegatorTransactions,
-  } = useDelegation();
+  const { delegatorStakeProfile, delegatorTransactions } = useDelegation();
+  const { solanaBalance } = useWallet();
 
-  // Get lifetime data
-  const lifetimeRewards = delegatorStakeProfile
-    ? parseFloat(delegatorStakeProfile.lifetimeRewards) || 0
-    : 0;
+  // Get lifetime data - use staking (LPT) profile only for High Yield
+  const lifetimeRewards = useMemo(() => {
+    if (isSavings) {
+    
+      return 0;
+    }
+    return delegatorStakeProfile
+      ? parseFloat(delegatorStakeProfile.lifetimeRewards || "0")
+      : 0;
+  }, [isSavings, delegatorStakeProfile]);
 
-  const lifetimeUnbonded = delegatorStakeProfile
-    ? parseFloat(delegatorStakeProfile.lifetimeUnbonded) || 0
-    : 0;
+  const lifetimeUnbonded = useMemo(() => {
+    if (isSavings) {
+   
+      return 0;
+    }
+    return delegatorStakeProfile
+      ? parseFloat(delegatorStakeProfile.lifetimeUnbonded || "0")
+      : 0;
+  }, [isSavings, delegatorStakeProfile]);
+
+  // Current balance for Stables
+  const currentBalance = useMemo(() => {
+    return isSavings ? solanaBalance || 0 : 0;
+  }, [isSavings, solanaBalance]);
+
+  // Current stake for High Yield
+  const currentStake = useMemo(() => {
+    if (isSavings) return 0;
+    return delegatorStakeProfile
+      ? parseFloat(delegatorStakeProfile.currentStake || "0")
+      : 0;
+  }, [isSavings, delegatorStakeProfile]);
 
   // Calculate pending unbonding data
   const pendingUnbondingData = useMemo(() => {
@@ -97,7 +127,7 @@ export const SummaryPage: React.FC = () => {
             onClick={handleBackClick}
             className="w-8 h-8 flex items-center justify-center"
           >
-            <ChevronLeft color="#C7EF6B" />
+            <ChevronLeft color={isSavings ? "#86B3F7" : "#C7EF6B"} />
           </button>
           <h1 className="text-lg font-medium text-white">Summary</h1>
           <button
@@ -108,32 +138,87 @@ export const SummaryPage: React.FC = () => {
           </button>
         </div>
 
-        {/* Lifetime Stats */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          {/* Lifetime Rewards */}
-          <div className="bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-xl p-4 border border-[#2a2a2a]">
-           
-            <p className="text-gray-400 text-sm mb-2">
-              Total Rewards
-            </p>
-            <p className={`text-xl font-semibold ${isSavings ? "text-[#86B3F7]" : "text-[#C7EF6B]"}`}>
-              {formatLifetime(lifetimeRewards)}
-              <span className="text-sm ml-1">{isSavings ? "USDC" : "LPT"}</span>
-            </p>
-          </div>
+        {isSavings ? (
+          /* Stables Summary Layout */
+          <>
+            {/* Current Balance - Stables */}
+            <div className="bg-[#6da7fd] rounded-xl p-5 mb-4 border border-[#86B3F7]/30">
+              <p className="text-white/90 text-sm mb-1">Current Balance</p>
+              <p className="text-white/70 text-xs mb-3">
+                Your total vested amount
+              </p>
+              <p className="text-white text-2xl font-bold">
+                {formatEarnings(currentBalance)}{" "}
+                <span className="text-lg">USDC</span>
+              </p>
+            </div>
 
-          {/* Lifetime Withdrawn */}
-          <div className="bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-xl p-4 border border-[#2a2a2a]">
-           
-            <p className="text-gray-400 text-sm mb-2">
-              Total Withdrawn
-            </p>
-            <p className="text-[#FF6B6B] text-xl font-semibold">
-              {formatLifetime(lifetimeUnbonded)}
-              <span className="text-sm ml-1">{isSavings ? "USDC" : "LPT"}</span>
-            </p>
-          </div>
-        </div>
+            {/* Stats Grid - Stables */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              {/* Total Rewards */}
+              <div className="bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-xl p-4 border border-[#2a2a2a]">
+                <p className="text-gray-400 text-sm mb-2">Total Rewards</p>
+                <p className="text-[#86B3F7] text-xl font-semibold">
+                  {formatLifetime(lifetimeRewards)}
+                  <span className="text-sm ml-1">USDC</span>
+                </p>
+              </div>
+
+              {/* APY Info */}
+              <div className="bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-xl p-4 border border-[#2a2a2a]">
+                <p className="text-gray-400 text-sm mb-2">Total Withdrawn</p>
+                <p className="text-[#86B3F7] text-xl font-semibold">
+                {formatLifetime(lifetimeUnbonded)}
+                <span className="text-sm ml-1">USDC</span>
+                </p>
+              </div>
+            </div>
+
+            {/* Info Card - Stables */}
+            <div className="bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-xl p-5 border border-[#2a2a2a]">
+              <p className="text-gray-300 text-xs leading-relaxed">
+                Your stable vests earn daily interest at up to 14.9% APY. Withdrawals
+                are instant with no waiting periods.
+              </p>
+            </div>
+          </>
+        ) : (
+          /* High Yield Summary Layout */
+          <>
+            {/* Current Stake - High Yield */}
+            <div className="bg-linear-to-br from-[#0f0f0f] to-[#2d2b2b] rounded-xl p-5 mb-4 border border-[#C7EF6B]/30">
+              <p className="text-white/90 text-sm mb-1">Current Balance</p>
+              <p className="text-white/70 text-xs mb-3">
+                Your total vested amount
+              </p>
+              <p className="text-white text-2xl font-bold">
+                {formatEarnings(currentStake)}{" "}
+                <span className="text-lg">LPT</span>
+              </p>
+            </div>
+
+            {/* Stats Grid - High Yield */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              {/* Lifetime Rewards */}
+              <div className="bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-xl p-4 border border-[#2a2a2a]">
+                <p className="text-gray-400 text-sm mb-2">Total Rewards</p>
+                <p className="text-[#C7EF6B] text-xl font-semibold">
+                  {formatLifetime(lifetimeRewards)}
+                  <span className="text-sm ml-1">LPT</span>
+                </p>
+              </div>
+
+              {/* Lifetime Withdrawn */}
+              <div className="bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-xl p-4 border border-[#2a2a2a]">
+                <p className="text-gray-400 text-sm mb-2">Total Withdrawn</p>
+                <p className="text-[#FF6B6B] text-xl font-semibold">
+                  {formatLifetime(lifetimeUnbonded)}
+                  <span className="text-sm ml-1">LPT</span>
+                </p>
+              </div>
+            </div>
+          </>
+        )}
 
         {/* Withdrawal Available Section - Only for High Yield */}
         {!isSavings && completedUnbondingData.count > 0 && (
@@ -153,7 +238,8 @@ export const SummaryPage: React.FC = () => {
               <div className="flex items-center justify-between bg-[#0f0f0f] rounded-lg p-3">
                 <span className="text-gray-400 text-sm">Amount</span>
                 <span className="text-white font-bold text-lg">
-                  {formatEarnings(completedUnbondingData.totalAmount)} {isSavings ? "USDC" : "LPT"}
+                  {formatEarnings(completedUnbondingData.totalAmount)}{" "}
+                  {isSavings ? "USDC" : "LPT"}
                 </span>
               </div>
               <button
@@ -184,7 +270,8 @@ export const SummaryPage: React.FC = () => {
               <div className="flex items-center justify-between bg-[#0f0f0f] rounded-lg p-3">
                 <span className="text-gray-400 text-sm">Amount</span>
                 <span className="text-white font-bold text-lg">
-                  {formatEarnings(pendingUnbondingData.totalAmount)} {isSavings ? "USDC" : "LPT"}
+                  {formatEarnings(pendingUnbondingData.totalAmount)}{" "}
+                  {isSavings ? "USDC" : "LPT"}
                 </span>
               </div>
               {pendingUnbondingData.timeRemaining && (
@@ -200,30 +287,40 @@ export const SummaryPage: React.FC = () => {
         )}
 
         {/* Info message if no pending actions - Only for High Yield */}
-        {!isSavings && completedUnbondingData.count === 0 && pendingUnbondingData.count === 0 && (
-          <div className="bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-xl p-5 border border-[#2a2a2a] text-center">
-            <p className="text-gray-400 text-sm">
-              No pending or available withdrawals at this time
-            </p>
-          </div>
-        )}
+        {!isSavings &&
+          completedUnbondingData.count === 0 &&
+          pendingUnbondingData.count === 0 && (
+            <div className="bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-xl p-5 border border-[#2a2a2a] text-center">
+              <p className="text-gray-400 text-sm">
+                No pending withdrawals at this time
+              </p>
+            </div>
+          )}
       </div>
 
       <HelpDrawer
         isOpen={showHelpDrawer}
         onClose={() => setShowHelpDrawer(false)}
-        title="Portfolio Summary"
-        content={[
-          "View your complete portfolio performance and earnings history.",
-          "Lifetime Rewards shows your total earnings from staking since you started.",
-          "Lifetime Withdrawn displays the total amount you've withdrawn from your portfolio.",
-          "Withdrawal Available shows funds ready to be withdrawn immediately.",
-          "Withdrawal in Progress indicates funds currently in the unbonding period.",
-        ]}
+        title={isSavings ? "Stables Summary" : "High Yield Summary"}
+        content={
+          isSavings
+            ? [
+                "View your stables portfolio performance.",
+
+                "Total Rewards displays your lifetime earnings from stable savings.",
+
+                "Withdrawals are instant with no waiting periods.",
+              ]
+            : [
+                "Lifetime Rewards shows your total earnings from staking since you started.",
+                "Lifetime Withdrawn displays the total amount you've withdrawn from your portfolio.",
+
+                "Withdrawal in Progress indicates funds currently in the unbonding period.",
+              ]
+        }
       />
 
       <BottomNavigation currentPath="/portfolio" />
     </div>
   );
 };
-

@@ -16,7 +16,15 @@ import {
   GetPrimaryWalletResponse,
   CreateSolanaWalletRequest,
   CreateSolanaWalletResponse,
-  ChainType
+  ChainType,
+  SolanaBalanceResponse,
+  SolanaSendRequest,
+  SolanaSendResponse,
+  ApproveTokenRequest,
+  ApproveTokenResponse,
+  SendTokenRequest,
+  SendTokenResponse,
+  GetSpendersResponse
 } from './types';
 
 export interface IWalletApiService {
@@ -24,7 +32,14 @@ export interface IWalletApiService {
   getWallet(walletId: string): Promise<WalletApiResponse<WalletData>>;
   
   // Get wallet balance
-  getBalance(walletAddress: string, token: 'ETH' | 'LPT' | 'USDC'): Promise<BalanceResponse>;
+  getBalance(
+    walletAddress: string,
+    token: 'ETH' | 'LPT' | 'USDC' | 'USDT',
+    chainId?: 1 | 42161
+  ): Promise<BalanceResponse>;
+
+  // Get Solana wallet balance (always fetches all token balances)
+  getSolanaBalance(walletAddress: string): Promise<SolanaBalanceResponse>;
   
   // Export wallet private key
   exportWallet(walletId: string): Promise<ExportResponse>;
@@ -43,4 +58,16 @@ export interface IWalletApiService {
 
   // Create a new Solana wallet
   createSolanaWallet(request: CreateSolanaWalletRequest): Promise<CreateSolanaWalletResponse>;
+
+  // Send Solana tokens
+  sendSolana(request: SolanaSendRequest): Promise<SolanaSendResponse>;
+
+  // Approve token for spending (with chainId)
+  approveToken(chainId: 1 | 42161, token: 'LPT' | 'USDC' | 'USDT', request: ApproveTokenRequest, spender: string): Promise<ApproveTokenResponse>;
+
+  // Send token (with chainId)
+  sendToken(chainId: 1 | 42161, token: 'ETH' | 'LPT' | 'USDC' | 'USDT', request: SendTokenRequest): Promise<SendTokenResponse>;
+
+  // Get spenders for a token on a chain
+  getSpenders(chainId: 1 | 42161, token: 'ETH' | 'LPT' | 'USDC' | 'USDT' | 'all'): Promise<GetSpendersResponse>;
 }

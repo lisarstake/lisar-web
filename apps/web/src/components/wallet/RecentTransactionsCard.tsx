@@ -3,10 +3,11 @@ import {
   ArrowDown,
   ArrowUp,
   SquareMinus,
-  ChevronRight,
   PiggyBank,
+  Info,
 } from "lucide-react";
 import { TransactionData } from "@/services/transactions/types";
+import { EmptyState } from "@/components/general/EmptyState";
 
 interface RecentTransactionsCardProps {
   transactions: TransactionData[];
@@ -89,11 +90,11 @@ export const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-[#2a2a2a] rounded-full animate-pulse"></div>
                 <div className="space-y-2">
-                  <div className="h-4 bg-[#2a2a2a] rounded w-24 animate-pulse"></div>
-                  <div className="h-3 bg-[#2a2a2a] rounded w-20 animate-pulse"></div>
+                  <div className="h-4 bg-[#2a2a2a] rounded-lg w-24 animate-pulse"></div>
+                  <div className="h-3 bg-[#2a2a2a] rounded-lg w-20 animate-pulse"></div>
                 </div>
               </div>
-              <div className="h-4 bg-[#2a2a2a] rounded w-20 animate-pulse"></div>
+              <div className="h-5 bg-[#2a2a2a] rounded-lg w-20 animate-pulse"></div>
             </div>
           ))}
         </div>
@@ -101,17 +102,17 @@ export const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
     );
   }
 
-  if (transactions.length === 0) {
+  if (transactions.length === 0 && !isLoading) {
     return (
-      <div className="bg-[#1a1a1a] rounded-lg border border-[#2a2a2a] overflow-hidden">
-        <div className="flex flex-col items-center justify-center py-12 px-6">
-          <div className="w-12 h-12 bg-[#2a2a2a] rounded-full flex items-center justify-center mb-3">
-            <ChevronRight className="w-5 h-5 text-gray-400" />
-          </div>
-          <p className="text-white/60 text-sm text-center">
-            No transactions yet
-          </p>
-        </div>
+      <div className="overflow-hidden">
+        <EmptyState
+          icon={Info}
+          iconColor="#86B3F7"
+          iconBgColor="#2a2a2a"
+          title="No recent transactions"
+          description="Your most recent activity will appear here."
+          className="py-20"
+        />
       </div>
     );
   }

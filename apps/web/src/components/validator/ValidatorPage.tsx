@@ -14,9 +14,15 @@ export const ValidatorPage: React.FC = () => {
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
   const { orchestrators, isLoading, error, refetch } = useOrchestrators();
 
-  // Get tier name from location state, default to "Stake" if not provided
-  const tierName =
-    (location.state as { tierName?: string })?.tierName || "Stake";
+  const locationState = location.state as {
+    tierName?: string;
+    tierNumber?: number;
+    tierTitle?: string;
+  } | null;
+
+  const tierName = locationState?.tierName || "Stake";
+  const tierNumber = locationState?.tierNumber;
+  const tierTitle = locationState?.tierTitle;
 
   const urlFilter = useMemo((): FilterType => {
     const filterParam = searchParams.get("filter");
@@ -131,6 +137,8 @@ export const ValidatorPage: React.FC = () => {
           error={error}
           onRetry={handleRetry}
           skeletonCount={5}
+          tierNumber={tierNumber}
+          tierTitle={tierTitle}
         />
       </div>
 

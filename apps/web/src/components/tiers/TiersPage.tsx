@@ -1,59 +1,33 @@
-import React from "react";
-import { ChevronLeft, Key, LockKeyhole } from "lucide-react";
+import React, { useState } from "react";
+import { ChevronLeft, Key, LockKeyhole, CircleQuestionMark } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
+import { HelpDrawer } from "@/components/general/HelpDrawer";
+import { highYieldTiers } from "@/mock";
 
 export const TiersPage: React.FC = () => {
   const navigate = useNavigate();
+  const [showHelpDrawer, setShowHelpDrawer] = useState(false);
 
   const handleBackClick = () => {
     navigate(-1);
   };
 
-  const handleExplore = (tierNumber: number, tierTitle: string) => {
-    // Handle explore action for unlocked tiers
-    if (tierNumber === 1) {
-      // Navigate to validator page with tier name
-      navigate("/validator", { state: { tierName: tierTitle } });
-    }
+  const handleHelpClick = () => {
+    setShowHelpDrawer(true);
   };
 
-  // Tier cards data
-  const tiers = [
-    {
-      id: 1,
-      title: "Flexible",
-      description: "Start your journey with our entry-level tier. Perfect for beginners.",
-      isLocked: false,
-      bgColor: "bg-transparent border-2 border-[#2a2a2a]",
-      buttonBg: "bg-[#a3d039] hover:bg-[#B8E55A]",
-      buttonText: "text-black",
-      image: "/highyield-1.svg",
-      imageClass: "absolute bottom-[-5px] right-[-5px] w-16 h-16 object-contain opacity-80",
-    },
-    {
-      id: 2,
-      title: "Platinum",
-      description: "Unlock higher yields. This tier offers enhanced returns for committed members.",
-      isLocked: true,
-      bgColor: "bg-transparent border-2 border-[#2a2a2a]",
-      buttonBg: "bg-[#2a2a2a] cursor-not-allowed opacity-50",
-      buttonText: "text-white/50",
-      image: "/highyield-2.svg",
-      imageClass: "absolute bottom-[-15px] right-[0px] w-24 h-24 object-contain opacity-80",
-    },
-    {
-      id: 3,
-      title: "Diamond",
-      description: "Premium tier with maximum benefits and highest APY. Reserved for our most valued members.",
-      isLocked: true,
-      bgColor: "bg-transparent border-2 border-[#2a2a2a]",
-      buttonBg: "bg-[#2a2a2a] cursor-not-allowed opacity-50",
-      buttonText: "text-white/50",
-      image: "/highyield-4.svg",
-      imageClass: "absolute bottom-[-15px] right-[-15px] w-24 h-24 object-contain opacity-80",
-    },
-  ];
+  const handleExplore = (tierNumber: number, tierTitle: string) => {
+    if (tierNumber === 1) {
+      navigate("/validator", {
+        state: {
+          tierName: tierTitle,
+          tierNumber,
+          tierTitle,
+        },
+      });
+    }
+  };
 
   return (
     <div className="h-screen bg-[#050505] text-white flex flex-col">
@@ -66,15 +40,20 @@ export const TiersPage: React.FC = () => {
           <ChevronLeft color="#C7EF6B" />
         </button>
 
-        <h1 className="text-lg font-medium text-white">Tier Plans</h1>
+        <h1 className="text-lg font-medium text-white">Yield Tiers</h1>
 
-        <div className="w-8 h-8" />
+        <button
+          onClick={handleHelpClick}
+          className="w-8 h-8 bg-[#2a2a2a] rounded-full flex items-center justify-center"
+        >
+          <CircleQuestionMark color="#86B3F7" size={16} />
+        </button>
       </div>
 
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto px-6 pb-24">
         <div className="space-y-4">
-          {tiers.map((tier) => (
+          {highYieldTiers.map((tier) => (
             <div
               key={tier.id}
               className={`${tier.bgColor} rounded-2xl p-5 relative overflow-hidden transition-colors`}
@@ -102,7 +81,7 @@ export const TiersPage: React.FC = () => {
                 }`}
               >
                 {tier.isLocked && <LockKeyhole size={14} />}
-                <span>{tier.isLocked ? "Locked" : "Explore"}</span>
+                <span>{tier.isLocked ? "Locked" : "Vest"}</span>
               </button>
 
               {/* Bottom Right Image */}
@@ -118,7 +97,20 @@ export const TiersPage: React.FC = () => {
 
       {/* Bottom Navigation */}
       <BottomNavigation />
+
+      {/* Help Drawer */}
+      <HelpDrawer
+        isOpen={showHelpDrawer}
+        onClose={() => setShowHelpDrawer(false)}
+        title="High Yield Tiers"
+        content={[
+          "High Yield Tiers offer different APY rates for your LPT token investments.",
+          "Flexible Tier - 25% APY: Start your journey with our entry-level tier. Perfect for beginners looking to earn rewards.",
+          "Platinum Tier - 40% APY: Unlock higher yields with enhanced returns for committed members. (Currently locked)",
+          "Diamond Tier - 60% APY: Premium tier with maximum benefits and highest APY. Reserved for our most valued members. (Currently locked)",
+          "Select the Flexible tier to start staking your LPT tokens and earning rewards.",
+        ]}
+      />
     </div>
   );
 };
-

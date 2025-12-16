@@ -11,12 +11,13 @@ import { ActionDrawer } from "@/components/general/ActionDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { ErrorDrawer } from "@/components/ui/ErrorDrawer";
 import { SuccessDrawer } from "@/components/ui/SuccessDrawer";
-import { useOrchestrators } from "@/contexts/OrchestratorContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { useDelegation } from "@/contexts/DelegationContext";
 import { useTransactions } from "@/contexts/TransactionContext";
-import { delegationService } from "@/services";
-import { StakeRequest } from "@/services/delegation/types";
+import {
+  perenaService,
+  walletService,
+  mapleService,
+} from "@/services";
 import { priceService } from "@/lib/priceService";
 import { useWallet } from "@/contexts/WalletContext";
 import { formatNumber, parseFormattedNumber } from "@/lib/formatters";
@@ -31,6 +32,9 @@ export const SavePage: React.FC = () => {
   const locationState = location.state as {
     usdcAmount?: string;
     walletType?: string;
+    provider?: "maple" | "perena";
+    tierNumber?: number;
+    tierTitle?: string;
   } | null;
 
   const [usdcAmount, setUsdcAmount] = useState(() => {
@@ -51,25 +55,28 @@ export const SavePage: React.FC = () => {
   const [showSuccessDrawer, setShowSuccessDrawer] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-  const { orchestrators } = useOrchestrators();
   const { state } = useAuth();
-  const { wallet, refetch: refetchWallet } = useWallet();
-  const { delegatorStakeProfile, refetch: refetchDelegation } = useDelegation();
+  const {
+    solanaBalance,
+    loadSolanaBalance,
+  } = useWallet();
   const { refetch: refetchTransactions } = useTransactions();
 
-  // For stables, use the first available orchestrator
-  const currentValidator = orchestrators?.[0];
+  const provider = locationState?.provider;
+  const tierTitle = locationState?.tierTitle;
+  const walletType = locationState?.walletType;
+  const isStables = walletType === "savings" || !!provider;
 
-  // Get user's preferred currency
+  useEffect(() => {
+    if (isStables && solanaBalance === null) {
+      loadSolanaBalance();
+    }
+  }, [isStables, solanaBalance, loadSolanaBalance]);
+
   const userCurrency = state.user?.fiat_type || "NGN";
   const currencySymbol = priceService.getCurrencySymbol(userCurrency);
 
-  // For stables, use staked balance (which represents USDC savings)
-  const walletBalanceUsdc = delegatorStakeProfile
-    ? parseFloat(delegatorStakeProfile.currentStake) || 0
-    : 0;
-
-  const pageTitle = "Save";
+  const walletBalance = solanaBalance ?? 0;
 
   const [fiatEquivalent, setFiatEquivalent] = useState(0);
 
@@ -111,27 +118,24 @@ export const SavePage: React.FC = () => {
   };
 
   const handleMaxClick = () => {
-    // Use wallet LPT balance for now (will be converted to USDC equivalent)
-    const walletBalanceLpt = wallet?.balanceLpt || 0;
-    const buffer = Math.max(0.001, walletBalanceLpt * 0.0001);
-    const maxAmount = Math.max(0, walletBalanceLpt - buffer);
+    const buffer = Math.max(0.001, walletBalance * 0.0001);
+    const maxAmount = Math.max(0, walletBalance - buffer);
     setUsdcAmount(maxAmount.toString());
   };
 
   const handleProceed = async () => {
     const numericAmount = parseFloat(usdcAmount.replace(/,/g, "")) || 0;
-    const walletBalanceLpt = wallet?.balanceLpt || 0;
 
-    if (numericAmount > walletBalanceLpt) {
-      navigate("/deposit", {
-        state: {
-          usdcAmount: usdcAmount,
-          returnTo: "/save",
-          walletType: "savings",
-        },
-      });
-      return;
-    }
+    // if (numericAmount > walletBalance) {
+    //   navigate("/deposit", {
+    //     state: {
+    //       usdcAmount: usdcAmount,
+    //       returnTo: "/save",
+    //       walletType: isStables ? "savings" : "staking",
+    //     },
+    //   });
+    //   return;
+    // }
 
     setShowConfirmDrawer(true);
   };
@@ -140,7 +144,7 @@ export const SavePage: React.FC = () => {
     setIsSaving(true);
 
     if (!usdcAmount || parseFloat(usdcAmount.replace(/,/g, "")) <= 0) {
-      setErrorMessage("Please enter a valid amount to save.");
+      setErrorMessage("Please enter a valid amount to vest.");
       setShowErrorDrawer(true);
       setIsSaving(false);
       return;
@@ -153,81 +157,175 @@ export const SavePage: React.FC = () => {
       return;
     }
 
-    const stakeRequest: StakeRequest = {
-      walletId: state.user.wallet_id,
-      walletAddress: state.user.wallet_address,
-      orchestratorAddress: currentValidator.address,
-      amount: usdcAmount.replace(/,/g, ""), // Remove commas from amount
-    };
+    const numericAmount = parseFloat(usdcAmount.replace(/,/g, ""));
 
-    // Retry logic: temporary fix until error fixed
-    let lastError: Error | null = null;
-    let lastResponse: {
-      success: boolean;
-      message?: string;
-      error?: string;
-    } | null = null;
-
-    for (let attempt = 0; attempt < 2; attempt++) {
+    if (provider === "maple") {
       try {
-        const response = await delegationService.stake(stakeRequest);
+        const ethWalletResp = await walletService.getPrimaryWallet("ethereum");
 
-        if (response.success) {
-          setSuccessMessage("Saving successful! Your funds have been saved.");
+        if (!ethWalletResp.success || !ethWalletResp.wallet) {
+          setErrorMessage("Wallet not found. Please create a wallet first.");
+          setShowErrorDrawer(true);
+          setIsSaving(false);
+          return;
+        }
+
+        const ethAddress = ethWalletResp.wallet.wallet_address;
+        const ethWalletId = ethWalletResp.wallet.wallet_id;
+
+        const authorizationResp =
+          await mapleService.getAuthorization(ethAddress);
+
+        if (!authorizationResp.success) {
+          setErrorMessage(
+            authorizationResp.error ||
+              "Failed to check authorization status. Please try again."
+          );
+          setShowErrorDrawer(true);
+          setIsSaving(false);
+          return;
+        }
+
+        const maplePoolId = import.meta.env.VITE_MAPLE_POOL_ID; 
+        const syrupRouterAddress = import.meta.env.VITE_MAPLE_SYRUP_ROUTER_ADDRESS;
+        const amountString = numericAmount.toString();
+        const depositData = import.meta.env.VITE_MAPLE_DEPOSIT_DATA;
+
+        const approveResponse = await walletService.approveToken(
+          1,
+          "USDC",
+          {
+            walletId: ethWalletId,
+            walletAddress: ethAddress,
+            amount: amountString,
+          },
+          syrupRouterAddress
+        );
+
+        if (!approveResponse.success) {
+          setErrorMessage(
+            approveResponse.error || "Failed to approve token spending. Please try again."
+          );
+          setShowErrorDrawer(true);
+          setIsSaving(false);
+          return;
+        }
+
+        let depositResponse;
+
+        if (authorizationResp.data.isAuthorized) {
+          depositResponse = await mapleService.executeDeposit({
+            walletId: ethWalletId,
+            walletAddress: ethAddress,
+            syrupRouterAddress,
+            amount: amountString,
+            depositData,
+          });
+        } else {
+          depositResponse = await mapleService.executeAuthorizedDeposit({
+            walletId: ethWalletId,
+            walletAddress: ethAddress,
+            poolId: maplePoolId,
+            syrupRouterAddress,
+            amount: amountString,
+            depositData,
+          });
+        }
+
+        if (depositResponse.success) {
+          setSuccessMessage(
+            "Vesting successful! Rewards will begin accruing daily at the current APY."
+          );
           setShowSuccessDrawer(true);
           setShowConfirmDrawer(false);
 
-          await refetchWallet();
-          refetchDelegation();
+          await loadSolanaBalance();
           refetchTransactions();
           setIsSaving(false);
           return;
         } else {
-          lastResponse = response;
+          setErrorMessage(
+            depositResponse.error || "Failed to vest. Please try again."
+          );
+          setShowErrorDrawer(true);
+          setIsSaving(false);
+          return;
         }
       } catch (error) {
-        lastError = error instanceof Error ? error : new Error(String(error));
-      }
-
-      if (
-        attempt === 0 &&
-        (lastError || (lastResponse && !lastResponse.success))
-      ) {
-        continue;
+        const errorMsg =
+          error instanceof Error
+            ? error.message
+            : "An error occurred while vesting. Please try again.";
+        setErrorMessage(errorMsg);
+        setShowErrorDrawer(true);
+        setIsSaving(false);
+        return;
       }
     }
 
-    setIsSaving(false);
-    setShowConfirmDrawer(false);
+    if (provider === "perena") {
+      try {
+        const solWalletResp = await walletService.getPrimaryWallet("solana");
 
-    if (lastError) {
-      const errorMsg =
-        lastError instanceof Error
-          ? lastError.message
-          : "An error occurred while saving. Please try again.";
-      setErrorMessage(errorMsg);
-    } else if (lastResponse) {
-      setErrorMessage(
-        lastResponse.error ||
-          lastResponse.message ||
-          "Saving failed. Please check your balance and try again."
-      );
-    } else {
-      setErrorMessage("Saving failed. Please try again.");
+        if (!solWalletResp.success || !solWalletResp.wallet) {
+          setErrorMessage("Wallet not found. Please create a wallet first.");
+          setShowErrorDrawer(true);
+          setIsSaving(false);
+          return;
+        }
+
+        const mintResponse = await perenaService.mint({
+          walletId: solWalletResp.wallet.wallet_id,
+          walletAddress: solWalletResp.wallet.wallet_address,
+          usdcAmount: numericAmount,
+        });
+
+        if (mintResponse.success) {
+          setSuccessMessage(
+            `Vesting successful! Rewards will begin accruing daily at the current APY.`
+          );
+          setShowSuccessDrawer(true);
+          setShowConfirmDrawer(false);
+
+          await loadSolanaBalance();
+          refetchTransactions();
+          setIsSaving(false);
+          return;
+        } else {
+          setErrorMessage(
+            mintResponse.error || "Failed to vest. Please try again."
+          );
+          setShowErrorDrawer(true);
+          setIsSaving(false);
+          return;
+        }
+      } catch (error) {
+        const errorMsg =
+          error instanceof Error
+            ? error.message
+            : "An error occurred while vesting. Please try again.";
+        setErrorMessage(errorMsg);
+        setShowErrorDrawer(true);
+        setIsSaving(false);
+        return;
+      }
     }
 
-    setShowErrorDrawer(true);
+    if (!provider || (provider !== "maple" && provider !== "perena")) {
+      setErrorMessage("Invalid provider. Please select a valid tier.");
+      setShowErrorDrawer(true);
+      setIsSaving(false);
+      return;
+    }
   };
 
   const handleHelpClick = () => {
     setShowHelpDrawer(true);
   };
 
-  // Check if user has insufficient funds
   const numericAmount = parseFloat(usdcAmount.replace(/,/g, "")) || 0;
-  const walletBalanceLpt = wallet?.balanceLpt || 0;
   const hasInsufficientFunds =
-    numericAmount > 0 && numericAmount > walletBalanceLpt;
+    numericAmount > 0 && numericAmount > walletBalance;
 
   return (
     <div className="h-screen bg-[#050505] text-white flex flex-col">
@@ -240,7 +338,7 @@ export const SavePage: React.FC = () => {
           <ChevronLeft color="#86B3F7" />
         </button>
 
-        <h1 className="text-lg font-medium text-white">{pageTitle}</h1>
+        <h1 className="text-lg font-medium text-white">Vest</h1>
 
         <button
           onClick={handleHelpClick}
@@ -252,6 +350,31 @@ export const SavePage: React.FC = () => {
 
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto px-6 pb-28 scrollbar-hide">
+        {/* Provider Indicator */}
+        {provider && tierTitle && (
+          <div className="">
+            <div className="bg-[#1a1a1a] rounded-lg p-4 border border-[#2a2a2a]">
+              <div className="flex items-center gap-3">
+                <img
+                  src={provider === "maple" ? "/maple.svg" : "/perena2.png"}
+                  alt={provider}
+                  className="w-8 h-8 object-contain"
+                />
+                <div>
+                  <p className="text-white/90 text-sm font-medium">
+                    {tierTitle}
+                  </p>
+                  <p className="text-gray-400 text-xs">
+                    {provider === "maple"
+                      ? "USD Base - Up to 6.5% APY"
+                      : "USD Plus - Up to 14% APY"}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Amount Input Field */}
         <div className="py-6">
           <div className="bg-[#1a1a1a] rounded-lg p-3 flex items-center gap-3">
@@ -320,7 +443,7 @@ export const SavePage: React.FC = () => {
               <Wallet2 size={20} color="#86B3F7" />
               <div className="flex-1">
                 <span className="text-gray-400 text-sm">
-                  {walletBalanceLpt.toLocaleString()} USDC
+                  {walletBalance.toLocaleString()} USDC
                 </span>
               </div>
             </div>
@@ -350,9 +473,9 @@ export const SavePage: React.FC = () => {
               Processing..
             </span>
           ) : hasInsufficientFunds ? (
-            "Proceed to Deposit"
+            "Top up balance"
           ) : (
-            "Save"
+            "Vest"
           )}
         </button>
       </div>
@@ -392,15 +515,14 @@ export const SavePage: React.FC = () => {
       <ActionDrawer
         isOpen={showConfirmDrawer}
         onClose={() => !isSaving && setShowConfirmDrawer(false)}
-        title="Proceed to Save"
+        title="Proceed to Vest"
         content={[
-          `You are about to save ${formatNumber(usdcAmount.replace(/,/g, ""))} USDC.`,
-          "Once confirmed you will start earning yields! 💲",
-          "You can withdraw at anytime you want.",
+          `You are about to vest ${formatNumber(usdcAmount.replace(/,/g, ""))} USDC${provider ? ` on ${provider === "maple" ? "USD Base" : "USD Plus"}` : ""}.`,
+          "Once confirmed you will begin earning rewards daily at the current APY.",
         ]}
         actions={[
           {
-            label: "Save",
+            label: "Vest",
             onClick: handleSave,
           },
           {

@@ -1,14 +1,26 @@
-import React, { useState, useMemo, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ChevronLeft, Info, CircleQuestionMark } from "lucide-react";
-import QRCode from "qrcode";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { EmptyState } from "@/components/general/EmptyState";
-import { useOrchestrators } from "@/contexts/OrchestratorContext";
-import { useDelegation } from "@/contexts/DelegationContext";
+import { usePortfolio, type StakeEntry } from "@/contexts/PortfolioContext";
 import { formatEarnings } from "@/lib/formatters";
-import { getColorForAddress } from "@/lib/qrcode";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
+import { OTPVerificationDrawer } from "@/components/auth/OTPVerificationDrawer";
+import { totpService } from "@/services/totp";
+import { Button } from "../ui/button";
+import { mapleService, perenaService, walletService } from "@/services";
+import { ErrorDrawer } from "@/components/ui/ErrorDrawer";
+import { SuccessDrawer } from "@/components/ui/SuccessDrawer";
+import { LoaderCircle } from "lucide-react";
 
 interface StakeEntryItemProps {
   entry: StakeEntry;
@@ -16,35 +28,11 @@ interface StakeEntryItemProps {
 }
 
 const StakeEntryItem: React.FC<StakeEntryItemProps> = ({ entry, onClick }) => {
-  const qrCanvasRef = useRef<HTMLCanvasElement>(null);
-  const [avatarError, setAvatarError] = useState(false);
-
-  const avatar =
-    entry.orchestrator?.avatar || entry.orchestrator?.ensIdentity?.avatar;
-
-  useEffect(() => {
-    if (!entry.id || !qrCanvasRef.current) return;
-
-    if (avatar && !avatarError) return;
-
-    const qrColor = getColorForAddress(entry.id);
-
-    QRCode.toCanvas(
-      qrCanvasRef.current,
-      entry.id,
-      {
-        width: 40,
-        margin: 1,
-        color: {
-          dark: qrColor,
-          light: "#1a1a1a",
-        },
-      },
-      (error) => {
-        if (error) console.error("QR Code generation error:", error);
-      }
-    );
-  }, [entry.id, avatar, avatarError]);
+  const avatar = entry.name.toLowerCase().includes("perena")
+    ? "/perena2.png"
+    : entry.name.toLowerCase().includes("maple")
+      ? "/maple.svg"
+      : "/highyield-1.svg";
 
   return (
     <div
@@ -52,26 +40,16 @@ const StakeEntryItem: React.FC<StakeEntryItemProps> = ({ entry, onClick }) => {
       onClick={onClick}
     >
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          {avatar && !avatarError ? (
+        <div className="flex items-center space-x-2.5">
+          {avatar && (
             <img
               src={avatar}
               alt={entry.name}
-              className="w-10 h-10 rounded-full object-cover"
-              onError={() => {
-                setAvatarError(true);
-              }}
+              className={`w-12 h-12 rounded-full ${avatar.includes("highyield") ? "object-cover" : "object-contain"}`}
             />
-          ) : (
-            <div className="w-10 h-10 rounded-full bg-[#1a1a1a] flex items-center justify-center overflow-hidden">
-              <canvas
-                ref={qrCanvasRef}
-                className="w-full h-full rounded-full"
-              />
-            </div>
           )}
           <div>
-            <p className="text-gray-100 font-medium">
+            <p className="text-gray-100 font-medium mb-0.5">
               {entry.name.length > 20
                 ? `${entry.name.substring(0, 16)}..`
                 : entry.name}
@@ -84,95 +62,204 @@ const StakeEntryItem: React.FC<StakeEntryItemProps> = ({ entry, onClick }) => {
         </div>
         <div className="text-right">
           <p
-            className={`font-medium text-sm ${entry.isSavings ? "text-[#86B3F7]" : "text-[#C7EF6B]"}`}
+            className={`font-medium mb-0.5 text-sm ${entry.isSavings ? "text-[#86B3F7]" : "text-[#C7EF6B]"}`}
           >
-            APY: {(entry.apy * 100).toFixed(1)}%
+            {(entry.apy * 100).toFixed(1)}% p/a
           </p>
-          <p className="text-gray-400 text-xs">
-            Fee: {(entry.fee * 100).toFixed(1)}%
-          </p>
+          <p className="text-gray-400 text-xs">{entry.fee * 100}% fee</p>
         </div>
       </div>
     </div>
   );
 };
 
-interface StakeEntry {
-  id: string;
-  name: string;
-  yourStake: number;
-  apy: number;
-  fee: number;
-  orchestrator?: any;
-  isSavings?: boolean;
-}
+const StakeEntrySkeleton: React.FC = () => {
+  return (
+    <div className="bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-xl p-4 border border-[#2a2a2a]">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-2.5">
+          <Skeleton className="w-12 h-12 rounded-full bg-[#2a2a2a]" />
+          <div>
+            <Skeleton className="h-4 w-32 mb-2 bg-[#2a2a2a]" />
+            <Skeleton className="h-3 w-20 bg-[#2a2a2a]" />
+          </div>
+        </div>
+        <div className="text-right">
+          <Skeleton className="h-4 w-16 mb-1 bg-[#2a2a2a]" />
+          <Skeleton className="h-3 w-12 bg-[#2a2a2a]" />
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export const PositionsPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
+  const [showPositionDrawer, setShowPositionDrawer] = useState(false);
+  const [showOTPDrawer, setShowOTPDrawer] = useState(false);
+  const [selectedEntry, setSelectedEntry] = useState<StakeEntry | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [showErrorDrawer, setShowErrorDrawer] = useState(false);
+  const [showSuccessDrawer, setShowSuccessDrawer] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const walletType =
     (location.state as { walletType?: string })?.walletType || "staking";
   const isSavings = walletType === "savings";
 
-  const { orchestrators } = useOrchestrators();
-  const { userDelegation } = useDelegation();
+  const { setMode, stakeEntries, isLoading } = usePortfolio();
 
-  // Build stake entries
-  const stakeEntries: StakeEntry[] = useMemo(() => {
-    const entries: StakeEntry[] = [];
-
-    if (userDelegation) {
-      const bondedAmount = parseFloat(userDelegation.bondedAmount) || 0;
-      const delegateId = userDelegation.delegate?.id || "";
-
-      const orchestrator =
-        orchestrators.length > 0
-          ? orchestrators.find((orch) => orch.address === delegateId)
-          : null;
-
-      const orchestratorName =
-        orchestrator?.ensIdentity?.name ||
-        orchestrator?.ensName ||
-        userDelegation.delegate?.id ||
-        "Unknown Orchestrator";
-
-      let apyPercentage = 0;
-      if (orchestrator?.apy) {
-        const apyValue = orchestrator.apy;
-        if (typeof apyValue === "string") {
-          apyPercentage = parseFloat(apyValue.replace("%", "")) || 0;
-        } else {
-          apyPercentage = typeof apyValue === "number" ? apyValue : 0;
-        }
-      }
-
-      const rewardCutPercentage = orchestrator?.reward
-        ? parseFloat(orchestrator.reward) / 10000
-        : 0;
-
-      if (delegateId) {
-        entries.push({
-          id: delegateId,
-          name: isSavings ? "Lisar Perena" : orchestratorName,
-          yourStake: bondedAmount,
-          apy: isSavings ? 0.149 : apyPercentage / 100,
-          fee: isSavings ? 0.01 : rewardCutPercentage,
-          orchestrator: orchestrator || null,
-          isSavings,
-        });
-      }
-    }
-
-    return entries;
-  }, [userDelegation, orchestrators, isSavings]);
+  useEffect(() => {
+    setMode(isSavings ? "savings" : "staking");
+  }, [isSavings, setMode]);
 
   const handleBackClick = () => {
     navigate(-1);
   };
 
-  const handleStakeClick = (stakeId: string) => {
-    navigate(`/validator-details/${stakeId}`);
+  const handleStakeClick = (entry: StakeEntry) => {
+    if (!isSavings && !entry.isSavings) {
+      setSelectedEntry(entry);
+      setShowPositionDrawer(true);
+    } else {
+      navigate(`/validator-details/${entry.id}`);
+    }
+  };
+
+  const handleWithdrawClick = () => {
+    setShowPositionDrawer(false);
+    setShowOTPDrawer(true);
+  };
+
+  const handleOTPVerify = async (code: string) => {
+    const response = await totpService.verify({ token: code });
+    if (response.success) {
+      setShowOTPDrawer(false);
+      setIsProcessing(true);
+
+      if (!selectedEntry) {
+        setErrorMessage("No position selected. Please try again.");
+        setShowErrorDrawer(true);
+        setIsProcessing(false);
+        return response;
+      }
+
+      const isMaple = selectedEntry.name.toLowerCase().includes("maple");
+
+      try {
+        if (isMaple) {
+          const ethWalletResp =
+            await walletService.getPrimaryWallet("ethereum");
+          if (!ethWalletResp.success || !ethWalletResp.wallet) {
+            setErrorMessage(
+              "Ethereum wallet not found. Please create a wallet first."
+            );
+            setShowErrorDrawer(true);
+            setIsProcessing(false);
+            return response;
+          }
+
+          const maplePoolId =
+            import.meta.env.VITE_MAPLE_POOL_ID ||
+            "0x356B8d89c1e1239Cbbb9dE4815c39A1474d5BA7D";
+          const positionsResp = await mapleService.getPositions(
+            ethWalletResp.wallet.wallet_address,
+            maplePoolId
+          );
+
+          if (
+            !positionsResp.success ||
+            !positionsResp.data?.hasPositions ||
+            !positionsResp.data.positions ||
+            positionsResp.data.positions.length === 0
+          ) {
+            setErrorMessage("No positions found. Please try again.");
+            setShowErrorDrawer(true);
+            setIsProcessing(false);
+            return response;
+          }
+
+          const totalShares = positionsResp.data.positions.reduce(
+            (sum, position) => {
+              const shares = parseFloat(position.availableSharesRaw || "0");
+              return sum + (isNaN(shares) ? 0 : shares);
+            },
+            0
+          );
+
+          if (totalShares <= 0) {
+            setErrorMessage("No shares available for withdrawal.");
+            setShowErrorDrawer(true);
+            setIsProcessing(false);
+            return response;
+          }
+
+          const redeemResp = await mapleService.requestRedeem({
+            walletId: ethWalletResp.wallet.wallet_id,
+            walletAddress: ethWalletResp.wallet.wallet_address,
+            poolAddress: maplePoolId,
+            shares: totalShares.toString(),
+          });
+
+          if (redeemResp.success) {
+            setSuccessMessage(
+              "Withdrawal request submitted successfully. Your funds will be available after processing."
+            );
+            setShowSuccessDrawer(true);
+          } else {
+            setErrorMessage(
+              redeemResp.error ||
+                "Failed to request withdrawal. Please try again."
+            );
+            setShowErrorDrawer(true);
+          }
+        } else {
+          const solWalletResp = await walletService.getPrimaryWallet("solana");
+          if (!solWalletResp.success || !solWalletResp.wallet) {
+            setErrorMessage(
+              "Solana wallet not found. Please create a wallet first."
+            );
+            setShowErrorDrawer(true);
+            setIsProcessing(false);
+            return response;
+          }
+
+          const burnResp = await perenaService.burn({
+            walletId: solWalletResp.wallet.wallet_id,
+            walletAddress: solWalletResp.wallet.wallet_address,
+            usdStarAmount: selectedEntry.yourStake,
+          });
+
+          if (burnResp.success) {
+            setSuccessMessage(
+              "Withdrawal successful! Your USDC will be available in your wallet shortly."
+            );
+            setShowSuccessDrawer(true);
+          } else {
+            setErrorMessage(
+              burnResp.error || "Failed to withdraw. Please try again."
+            );
+            setShowErrorDrawer(true);
+          }
+        }
+      } catch (error) {
+        const errorMsg =
+          error instanceof Error
+            ? error.message
+            : "An error occurred while processing withdrawal. Please try again.";
+        setErrorMessage(errorMsg);
+        setShowErrorDrawer(true);
+      } finally {
+        setIsProcessing(false);
+      }
+    }
+    return response;
+  };
+
+  const handleOTPSuccess = () => {
+    setShowOTPDrawer(false);
   };
 
   return (
@@ -186,7 +273,7 @@ export const PositionsPage: React.FC = () => {
           >
             <ChevronLeft color="#C7EF6B" />
           </button>
-          <h1 className="text-lg font-medium text-white">My Positions</h1>
+          <h1 className="text-lg font-medium text-white">My Vest</h1>
           <button
             onClick={() => setShowHelpDrawer(true)}
             className="w-8 h-8 bg-[#2a2a2a] rounded-full flex items-center justify-center"
@@ -196,41 +283,161 @@ export const PositionsPage: React.FC = () => {
         </div>
 
         {/* Stakes List */}
-        <div className="mb-6">
-          <h2 className="text-white/70 text-sm font-medium mb-4 px-2">
-            Active position
-          </h2>
-          {stakeEntries.length === 0 ? (
+        {isLoading ? (
+          <div className="mb-6">
+            <h2 className="text-white/70 text-sm font-medium mb-4 px-2">
+              Active vests
+            </h2>
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => (
+                <StakeEntrySkeleton key={i} />
+              ))}
+            </div>
+          </div>
+        ) : stakeEntries.length === 0 ? (
+          <div className="flex-1 flex flex-col items-center justify-center px-6 h-[70vh]">
             <EmptyState
               icon={Info}
               iconColor="#86B3F7"
               iconBgColor="#2a2a2a"
               title="No active positions"
-              description="You don't have any active stakes yet. Start staking to earn rewards."
+              description="You don't have any active positions yet."
             />
-          ) : (
+          </div>
+        ) : (
+          <div className="mb-6">
+            <h2 className="text-white/70 text-sm font-medium mb-4 px-2">
+              Active vests
+            </h2>
             <div className="space-y-3">
               {stakeEntries.map((entry) => (
                 <StakeEntryItem
                   key={entry.id}
                   entry={entry}
-                  onClick={() => handleStakeClick(entry.id)}
+                  onClick={() => handleStakeClick(entry)}
                 />
               ))}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       <HelpDrawer
         isOpen={showHelpDrawer}
         onClose={() => setShowHelpDrawer(false)}
-        title="My Positions"
+        title="My Vests"
         content={[
-          "View all your active staking positions across different validators.",
+          "View all your active vests across different validators.",
           "Each position shows the validator name, your staked amount, APY, and fee.",
-          "Click on any position to view detailed information and manage your stake.",
+          "Click to view detailed information and manage your vest.",
         ]}
+      />
+
+      {/* Position Info Drawer for Stables */}
+      {selectedEntry && (
+        <Drawer
+          open={showPositionDrawer}
+          onOpenChange={(open) => !open && setShowPositionDrawer(false)}
+        >
+            <DrawerContent>
+              <DrawerHeader>
+                <div className="flex items-center justify-center gap-1.5 mb-3">
+                  <img
+                    src={
+                      selectedEntry.name.toLowerCase().includes("maple")
+                        ? "/maple.svg"
+                        : "/perena2.png"
+                    }
+                    alt={selectedEntry.name}
+                    className="w-8 h-8 object-contain"
+                  />
+                  <DrawerTitle className="text-xl font-semibold text-white/90">
+                    {selectedEntry.name.toLowerCase().includes("maple")
+                      ? "USD Base"
+                      : "USD Plus"}
+                  </DrawerTitle>
+                </div>
+              </DrawerHeader>
+            <div className="space-y-3">
+              <div className="bg-[#1a1a1a] rounded-lg p-4 border border-[#2a2a2a] space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-400 text-sm">Vested Amount</span>
+                  <span className="text-white/90 font-medium">
+                    {formatEarnings(selectedEntry.yourStake)} USDC
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-400 text-sm">APY</span>
+                  <span className="text-white/90 font-medium">
+                    {(selectedEntry.apy * 100).toFixed(1)}%
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-400 text-sm">Fee</span>
+                  <span className="text-white/90">
+                    {(selectedEntry.fee * 100).toFixed(1)}%
+                  </span>
+                </div>
+                <p className="text-xs text-[#C7EF6B] mt-2">
+                  Withdrawals are processed instantly but might take longer when
+                  processing many withdrawals.
+                </p>
+              </div>
+            </div>
+
+            <DrawerFooter className="space-y-1">
+              <button
+                onClick={handleWithdrawClick}
+                disabled={isProcessing}
+                className={`w-full py-4 rounded-xl font-semibold text-lg transition-colors ${
+                  isProcessing
+                    ? "bg-[#636363] text-white cursor-not-allowed opacity-70"
+                    : "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
+                }`}
+              >
+                {isProcessing ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <LoaderCircle className="animate-spin h-5 w-5" />
+                    Processing...
+                  </span>
+                ) : (
+                  "Withdraw"
+                )}
+              </button>
+            </DrawerFooter>
+          </DrawerContent>
+        </Drawer>
+      )}
+
+      {/* OTP Verification Drawer */}
+      <OTPVerificationDrawer
+        isOpen={showOTPDrawer}
+        onClose={() => !isProcessing && setShowOTPDrawer(false)}
+        title="Secure Withdrawal"
+        description="Enter the 6-digit code from your Authenticator App to proceed with withdrawal."
+        onVerify={handleOTPVerify}
+        onSuccess={handleOTPSuccess}
+        showSuccessDrawer={false}
+      />
+
+      {/* Error Drawer */}
+      <ErrorDrawer
+        isOpen={showErrorDrawer}
+        onClose={() => setShowErrorDrawer(false)}
+        title="Something went wrong"
+        message={errorMessage}
+      />
+
+      {/* Success Drawer */}
+      <SuccessDrawer
+        isOpen={showSuccessDrawer}
+        onClose={() => {
+          setShowSuccessDrawer(false);
+          setShowPositionDrawer(false);
+          setSelectedEntry(null);
+        }}
+        title="Withdrawal Successful!"
+        message={successMessage}
       />
 
       <BottomNavigation currentPath="/portfolio" />

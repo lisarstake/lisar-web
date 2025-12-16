@@ -57,7 +57,7 @@ export const WalletActionButtons: React.FC<WalletActionButtonsProps> = ({
         >
           <PiggyBank size={25} color={iconColor} />
         </button>
-        <span className="text-white/80 text-xs mt-2">Save</span>
+        <span className="text-white/80 text-xs mt-2">Vest</span>
       </div>
 
       <div className="flex flex-col items-center">

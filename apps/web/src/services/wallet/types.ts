@@ -68,12 +68,21 @@ export type ChainType = 'ethereum' | 'solana' | 'polygon' | 'arbitrum' | 'base' 
 
 // Balance Types
 export interface BalanceData {
+  // Human‑readable balance (e.g. "211.667977")
   balance: string;
+  // Raw balance in smallest units (e.g. wei/lamports) as a string
+  balanceRaw?: string;
+  // Number of decimals for the token (e.g. 6 for USDC/USDT)
+  decimals?: number;
+  // Token symbol, e.g. "USDT", "USDC", "ETH", "LPT"
+  symbol?: string;
+  // Chain ID for the balance (e.g. 1 for Ethereum, 42161 for Arbitrum)
+  chainId?: number;
 }
 
-export interface BalanceResponse {
+export interface BalanceResponse extends BalanceData {
   success: boolean;
-  balance: string;
+  error?: string;
 }
 
 // Export Types
@@ -123,11 +132,105 @@ export interface GetWalletRequest {
 
 export interface GetBalanceRequest {
   walletAddress: string;
-  token: 'ETH' | 'LPT' | 'USDC';
+  token: 'ETH' | 'LPT' | 'USDC' | 'USDT';
+  chainId?: 1 | 42161;
+}
+
+// Solana Balance Types
+export interface SolanaBalanceRequest {
+  walletAddress: string;
+  token: 'SOL' | 'USDC' | 'USDT' | 'USD*' | 'ALL';
+}
+
+export interface SolanaTokenBalance {
+  balance: string;
+  balanceLamports?: string; 
+  decimals?: number; 
+  tokenAccount?: string;
+}
+
+export interface SolanaBalances {
+  sol?: SolanaTokenBalance;
+  usdc?: SolanaTokenBalance;
+  usdt?: SolanaTokenBalance;
+  'usd*'?: SolanaTokenBalance;
+}
+
+export interface SolanaBalanceResponse {
+  success: boolean;
+  balances?: SolanaBalances;
+  error?: string;
 }
 
 export interface ExportWalletRequest {
   walletId: string;
+}
+
+// Solana Send Types
+export interface SolanaSendRequest {
+  walletId: string;
+  fromAddress: string;
+  toAddress: string;
+  token: 'SOL' | 'USDC' | 'USDT';
+  amount: number;
+}
+
+export interface SolanaSendResponse {
+  success: boolean;
+  txHash?: string;
+  error?: string;
+}
+
+// Token Approve Types (with chainId)
+export interface ApproveTokenRequest {
+  walletId: string;
+  walletAddress: string;
+  amount: string;
+}
+
+export interface ApproveTokenResponse {
+  success: boolean;
+  txHash?: string;
+  spender?: string;
+  amount?: string;
+  chainId?: number;
+  error?: string;
+}
+
+// Token Send Types (with chainId)
+export interface SendTokenRequest {
+  walletId: string;
+  walletAddress: string;
+  to: string;
+  amount: string;
+}
+
+export interface SendTokenResponse {
+  success: boolean;
+  txHash?: string;
+  to?: string;
+  amount?: string;
+  chainId?: number;
+  error?: string;
+}
+
+// Spender Types
+export interface Spender {
+  key: string;
+  address: string;
+  name: string;
+  description: string;
+  category: string;
+  tokens?: string[];
+}
+
+export interface GetSpendersResponse {
+  success: boolean;
+  chainId: number;
+  token?: string;
+  count: number;
+  spenders: Spender[];
+  error?: string;
 }
 
 // Configuration

@@ -10,6 +10,7 @@ import { LeaderboardProvider } from "@/contexts/LeaderboardContext";
 import { DashboardProvider } from "@/contexts/DashboardContext";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 import { GuidedTourProvider } from "@/contexts/GuidedTourContext";
+import { PortfolioProvider } from "@/contexts/PortfolioContext";
 import { GuidedTour } from "@/components/general/GuidedTour";
 
 export default function App() {
@@ -59,9 +60,11 @@ export default function App() {
                           <ErrorBoundary>
                             <DelegationProvider>
                               <ErrorBoundary>
-                                <LeaderboardProvider>
+                                <PortfolioProvider>
                                   <ErrorBoundary>
-                                    <NotificationProvider>
+                                    <LeaderboardProvider>
+                                      <ErrorBoundary>
+                                        <NotificationProvider>
                                     <div className="min-h-screen bg-white relative">
                                       {useDesktopView ? (
                                         <main className="app-main">
@@ -90,9 +93,11 @@ export default function App() {
                                       )}
                                       <GuidedTour />
                                     </div>
-                                    </NotificationProvider>
+                                        </NotificationProvider>
+                                      </ErrorBoundary>
+                                    </LeaderboardProvider>
                                   </ErrorBoundary>
-                                </LeaderboardProvider>
+                                </PortfolioProvider>
                               </ErrorBoundary>
                             </DelegationProvider>
                           </ErrorBoundary>

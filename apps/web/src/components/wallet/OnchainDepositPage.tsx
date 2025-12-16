@@ -5,27 +5,50 @@ import QRCode from "qrcode";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { walletService } from "@/services";
 
 export const OnchainDepositPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [copied, setCopied] = useState(false);
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
+  const [fullWalletAddress, setFullWalletAddress] = useState("");
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { state } = useAuth();
 
   const locationState = location.state as {
     walletType?: string;
+    provider?: "maple" | "perena";
   } | null;
   const walletType = locationState?.walletType;
+  const provider = locationState?.provider;
   const isStables = walletType === "savings";
   const tokenName = isStables ? "USDC" : "Livepeer (LPT)";
-  const networkName = isStables ? "Solana" : "Arbitrum One";
+  const networkName = isStables
+    ? provider === "maple"
+      ? "Ethereum"
+      : "Solana"
+    : "Arbitrum One";
 
-  const fullWalletAddress = state.user?.wallet_address || "";
   const walletAddress = fullWalletAddress
     ? `${fullWalletAddress.slice(0, 6)}...${fullWalletAddress.slice(-4)}`
     : "";
+
+  useEffect(() => {
+    const fetchWalletAddress = async () => {
+      if (isStables && provider) {
+        const chainType = provider === "maple" ? "ethereum" : "solana";
+        const walletResp = await walletService.getPrimaryWallet(chainType);
+        if (walletResp.success && walletResp.wallet) {
+          setFullWalletAddress(walletResp.wallet.wallet_address);
+        }
+      } else if (!isStables && state.user?.wallet_address) {
+        setFullWalletAddress(state.user.wallet_address);
+      }
+    };
+
+    fetchWalletAddress();
+  }, [isStables, provider, state.user?.wallet_address]);
 
   useEffect(() => {
     if (canvasRef.current && fullWalletAddress) {

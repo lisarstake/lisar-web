@@ -128,7 +128,7 @@ export const ValidatorAboutSection: React.FC<ValidatorAboutSectionProps> = ({
                 </div>
               </div>
               <span className="text-white/90 font-medium text-sm">
-                {validator ? parseFloat(validator.totalStake).toFixed(0) : "0"}
+                {validator ? parseFloat(validator.totalStake).toFixed(0) : "0"} LPT
               </span>
             </div>
 
@@ -161,7 +161,7 @@ export const ValidatorAboutSection: React.FC<ValidatorAboutSectionProps> = ({
           hasPendingUnbonding) && (
           <div className="bg-[#1a1a1a] rounded-xl p-4 border border-[#2a2a2a]">
             <h4 className="text-white/90 font-semibold text-sm mb-4">
-              My Position
+              My Vest
             </h4>
             <div className="space-y-3">
               {hasStakeWithValidator && (
@@ -172,12 +172,12 @@ export const ValidatorAboutSection: React.FC<ValidatorAboutSectionProps> = ({
                     </div>
                     <div className="flex flex-col">
                       <span className="text-gray-400 text-sm">
-                        Currently Staked
+                        Currently vested
                       </span>
                     </div>
                   </div>
                   <span className="font-medium text-sm">
-                    {totalStakedAmount.toFixed(2)}
+                    {totalStakedAmount.toFixed(2)} LPT
                   </span>
                 </div>
               )}
