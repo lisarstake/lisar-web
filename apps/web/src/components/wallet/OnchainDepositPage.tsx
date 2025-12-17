@@ -5,7 +5,7 @@ import QRCode from "qrcode";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { useAuth } from "@/contexts/AuthContext";
-import { walletService } from "@/services";
+import { useWallet } from "@/contexts/WalletContext";
 
 export const OnchainDepositPage: React.FC = () => {
   const navigate = useNavigate();
@@ -15,6 +15,7 @@ export const OnchainDepositPage: React.FC = () => {
   const [fullWalletAddress, setFullWalletAddress] = useState("");
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { state } = useAuth();
+  const { solanaWalletAddress, ethereumWalletAddress } = useWallet();
 
   const locationState = location.state as {
     walletType?: string;
@@ -35,20 +36,16 @@ export const OnchainDepositPage: React.FC = () => {
     : "";
 
   useEffect(() => {
-    const fetchWalletAddress = async () => {
-      if (isStables && provider) {
-        const chainType = provider === "maple" ? "ethereum" : "solana";
-        const walletResp = await walletService.getPrimaryWallet(chainType);
-        if (walletResp.success && walletResp.wallet) {
-          setFullWalletAddress(walletResp.wallet.wallet_address);
-        }
-      } else if (!isStables && state.user?.wallet_address) {
-        setFullWalletAddress(state.user.wallet_address);
+    if (isStables && provider) {
+      if (provider === "maple" && ethereumWalletAddress) {
+        setFullWalletAddress(ethereumWalletAddress);
+      } else if (provider === "perena" && solanaWalletAddress) {
+        setFullWalletAddress(solanaWalletAddress);
       }
-    };
-
-    fetchWalletAddress();
-  }, [isStables, provider, state.user?.wallet_address]);
+    } else if (!isStables && state.user?.wallet_address) {
+      setFullWalletAddress(state.user.wallet_address);
+    }
+  }, [isStables, provider, state.user?.wallet_address, solanaWalletAddress, ethereumWalletAddress]);
 
   useEffect(() => {
     if (canvasRef.current && fullWalletAddress) {

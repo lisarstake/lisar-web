@@ -110,7 +110,6 @@ const StakeEntryItem: React.FC<StakeEntryItemProps> = ({ entry, onClick }) => {
   );
 };
 
-
 export const PortfolioPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -207,7 +206,6 @@ export const PortfolioPage: React.FC = () => {
   useEffect(() => {
     const calculateFiat = async () => {
       if (isSavings) {
-        // For USDC, convert directly (1 USDC = 1 USD, then to user's currency)
         const prices = await priceService.getPrices();
         let fiatValue = totalStake;
         switch (fiatCurrency.toUpperCase()) {
@@ -226,7 +224,6 @@ export const PortfolioPage: React.FC = () => {
         }
         setTotalStakeFiat(fiatValue);
       } else {
-        // For LPT, convert using LPT price
         const fiatValue = await priceService.convertLptToFiat(
           totalStake,
           fiatCurrency
@@ -236,7 +233,6 @@ export const PortfolioPage: React.FC = () => {
     };
     calculateFiat();
   }, [totalStake, fiatCurrency, isSavings]);
-
 
   const handleBackClick = () => {
     navigate(-1);
@@ -317,7 +313,7 @@ export const PortfolioPage: React.FC = () => {
             <div className="flex items-center gap-2 mb-2">
               <h3 className="text-white/70 text-sm">
                 {" "}
-                {isSavings ? "Stables " : "High Yield "}
+                {isSavings ? "Stables Wallet" : "High Yield Wallet"}
               </h3>
               <button
                 onClick={() => setShowBalance(!showBalance)}
@@ -367,7 +363,7 @@ export const PortfolioPage: React.FC = () => {
                   {showBalance ? formatEarnings(totalStake) : "••••"}
                 </p>
                 <p className="text-white/60 text-xs">
-                  {isSavings ? "USDC" : "Livepeer token"}
+                  {isSavings ? "USDC" : "LPT"}
                 </p>
               </div>
 

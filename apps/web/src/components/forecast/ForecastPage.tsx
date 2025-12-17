@@ -39,9 +39,14 @@ export const ForecastPage: React.FC = () => {
 
   const savingsPlans: SavingsPlan[] = [
     {
-      id: "stables",
-      name: "Stables",
-      apy: 14.9,
+      id: "usd-base",
+      name: "USD-Base",
+      apy: 6.5,
+    },
+    {
+      id: "usd-plus",
+      name: "USD-Plus",
+      apy: 14,
     },
     {
       id: "flexible",
@@ -372,7 +377,7 @@ export const ForecastPage: React.FC = () => {
         title="Yield Calculator Guide"
         content={[
           "Calculate your potential earnings by choosing an account and entering your stake amount.",
-          "Stables offers 14.9% APY for stable, low-risk returns. Flexible offers 25% APY. Platinum offers 40% APY. Diamond offers 60% APY for maximum returns.",
+          "Stables offers 14% APY for stable, low-risk returns. Flexible offers 25% APY. Platinum offers 40% APY. Diamond offers 60% APY for maximum returns.",
           "Results are estimates and may vary based on network performance.",
         ]}
       />

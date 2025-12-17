@@ -322,7 +322,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
             {/* Bottom Left Text */}
             <div className="absolute bottom-2 left-2 z-10">
               <span className="text-white/70 text-[10px] bg-[#2a2a2a] rounded-full px-3 py-1 inline-block  leading-relaxed">
-                {` Interest will be accrued daily ${walletType === "savings" ? "up to 14.9%" : "up to 60%"} per annum`}
+                {` Interest will be accrued daily ${walletType === "savings" ? "up to 14%" : "up to 60%"} per annum`}
               </span>
             </div>
 
@@ -396,7 +396,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
                 "Stables offers lower yields with instant withdrawal capabilities.",
                 "Your funds are available for withdrawal at any time without waiting periods.",
                 "Perfect for emergency funds and short-term savings with stable returns.",
-                "Interest is accrued daily and paid out monthly at 14.9% APY.",
+                "Interest is accrued daily and paid out monthly at 14% APY.",
               ]
             : [
                 "High Yield offers higher APYs for maximum returns on your investment.",

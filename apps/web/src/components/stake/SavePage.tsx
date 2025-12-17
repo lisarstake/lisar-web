@@ -126,16 +126,16 @@ export const SavePage: React.FC = () => {
   const handleProceed = async () => {
     const numericAmount = parseFloat(usdcAmount.replace(/,/g, "")) || 0;
 
-    // if (numericAmount > walletBalance) {
-    //   navigate("/deposit", {
-    //     state: {
-    //       usdcAmount: usdcAmount,
-    //       returnTo: "/save",
-    //       walletType: isStables ? "savings" : "staking",
-    //     },
-    //   });
-    //   return;
-    // }
+    if (numericAmount > walletBalance) {
+      navigate("/deposit", {
+        state: {
+          usdcAmount: usdcAmount,
+          returnTo: "/save",
+          walletType: isStables ? "savings" : "staking",
+        },
+      });
+      return;
+    }
 
     setShowConfirmDrawer(true);
   };

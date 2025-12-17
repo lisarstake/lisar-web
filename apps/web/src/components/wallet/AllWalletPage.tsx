@@ -581,7 +581,7 @@ export const AllWalletPage: React.FC = () => {
               ]
             : selectedCardType === "savings"
               ? [
-                  "Stables wallet holds your USDC savings with a stable 14.9% APY.",
+                  "Stables wallet holds your USDC savings with a stable 14% APY.",
                   "Your balance shows the total USDC you have in your wallet.",
                   "Interest accrues daily and is paid out automatically.",
                 ]

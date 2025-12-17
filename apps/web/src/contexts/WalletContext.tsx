@@ -26,6 +26,8 @@ type WalletContextValue = {
   refetch: () => Promise<void>;
   solanaBalance: number | null;
   ethereumBalance: number | null;
+  solanaWalletAddress: string | null;
+  ethereumWalletAddress: string | null;
   loadSolanaBalance: () => Promise<void>;
   loadEthereumBalance: () => Promise<void>;
   solanaLoading: boolean;
@@ -43,6 +45,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
   const [error, setError] = useState<string | null>(null);
   const [solanaBalance, setSolanaBalance] = useState<number | null>(null);
   const [ethereumBalance, setEthereumBalance] = useState<number | null>(null);
+  const [solanaWalletAddress, setSolanaWalletAddress] = useState<string | null>(null);
+  const [ethereumWalletAddress, setEthereumWalletAddress] = useState<string | null>(null);
   const [solanaLoading, setSolanaLoading] = useState<boolean>(false);
   const [ethereumLoading, setEthereumLoading] = useState<boolean>(false);
 
@@ -67,6 +71,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
       }
 
       if (solWalletResp.success && solWalletResp.wallet) {
+        setSolanaWalletAddress(solWalletResp.wallet.wallet_address);
         const balanceResp = await walletService.getSolanaBalance(
           solWalletResp.wallet.wallet_address
         );
@@ -86,6 +91,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
 
       if (ethWalletResp.success && ethWalletResp.wallet) {
         const evmAddress = ethWalletResp.wallet.wallet_address;
+        setEthereumWalletAddress(evmAddress);
 
         const [usdcResp, usdtResp] = await Promise.all([
           walletService.getBalance(evmAddress, "USDC"),
@@ -123,6 +129,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
       const walletResp = await walletService.getPrimaryWallet("ethereum");
       
       if (walletResp.success && walletResp.wallet) {
+        setEthereumWalletAddress(walletResp.wallet.wallet_address);
         const balanceResp = await walletService.getBalance(
           walletResp.wallet.wallet_address,
           "LPT"
@@ -209,12 +216,14 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
       refetch: load,
       solanaBalance,
       ethereumBalance,
+      solanaWalletAddress,
+      ethereumWalletAddress,
       loadSolanaBalance,
       loadEthereumBalance,
       solanaLoading,
       ethereumLoading,
     }),
-    [wallet, isLoading, error, solanaBalance, ethereumBalance, solanaLoading, ethereumLoading, loadSolanaBalance, loadEthereumBalance]
+    [wallet, isLoading, error, solanaBalance, ethereumBalance, solanaWalletAddress, ethereumWalletAddress, solanaLoading, ethereumLoading, loadSolanaBalance, loadEthereumBalance]
   );
 
   return (

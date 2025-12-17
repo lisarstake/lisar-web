@@ -177,7 +177,7 @@ export const SummaryPage: React.FC = () => {
             {/* Info Card - Stables */}
             <div className="bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-xl p-5 border border-[#2a2a2a]">
               <p className="text-gray-300 text-xs leading-relaxed">
-                Your stable vests earn daily interest at up to 14.9% APY. Withdrawals
+                Your stable vests earn daily interest at up to 14% APY. Withdrawals
                 are instant with no waiting periods.
               </p>
             </div>
