@@ -5,8 +5,8 @@ const getApiBaseUrl = (): string => {
     import.meta.env.VITE_ENV === "staging" ||
     import.meta.env.MODE === "staging";
 
-  if (isStaging && import.meta.env.VITE_API_BASE_URL_STAGING) {
-    return import.meta.env.VITE_API_BASE_URL_STAGING;
+  if (isStaging && import.meta.env.VITE_API_BASE_URL_MIGRATION) {
+    return import.meta.env.VITE_API_BASE_URL_MIGRATION;
   }
 
   if (isProduction && import.meta.env.VITE_API_BASE_URL) {
@@ -16,7 +16,7 @@ const getApiBaseUrl = (): string => {
   // Development fallback
   return (
     import.meta.env.VITE_API_BASE_URL ||
-    "https://lisar-api-1.onrender.com/api/v1"
+    "https://lisar-api-2.onrender.com/api/v1"
   );
 };
 
