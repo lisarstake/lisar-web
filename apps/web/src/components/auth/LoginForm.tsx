@@ -6,7 +6,6 @@ import { SuccessDrawer } from "@/components/ui/SuccessDrawer";
 import { LoadingSpinner } from "@/components/general/LoadingSpinner";
 import { extractTokensFromHash, clearHashFromURL } from "@/lib/tokenExtractor";
 import { EyeClosed, EyeIcon } from "lucide-react";
-import { isProduction } from "@/lib/utils";
 
 interface LoginFormData {
   email: string;
@@ -309,7 +308,6 @@ export const LoginForm: React.FC = () => {
           </button>
 
           {/* Divider */}
-          {!isProduction() && (
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-[#121212]"></div>
@@ -318,10 +316,9 @@ export const LoginForm: React.FC = () => {
                 <span className="px-2 bg-black text-white">Or</span>
               </div>
             </div>
-          )}
+          
 
           {/* Google Sign In Button */}
-          {!isProduction() && (
             <button
               type="button"
               onClick={handleGoogleLogin}
@@ -347,7 +344,6 @@ export const LoginForm: React.FC = () => {
               </svg>
               Sign in with Google
             </button>
-          )}
         </form>
 
         {/* Footer Link */}
