@@ -309,7 +309,7 @@ export const LoginForm: React.FC = () => {
           </button>
 
           {/* Divider */}
-          {!isProduction() && (
+          {isProduction() && (
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-[#121212]"></div>
@@ -321,7 +321,7 @@ export const LoginForm: React.FC = () => {
           )}
 
           {/* Google Sign In Button */}
-          {!isProduction() && (
+          {isProduction() && (
             <button
               type="button"
               onClick={handleGoogleLogin}
