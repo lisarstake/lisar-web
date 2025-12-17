@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { EmptyState } from "@/components/general/EmptyState";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
+import { ConfirmDrawer } from "@/components/ui/ConfirmDrawer";
 import { useNotification } from "@/contexts/NotificationContext";
 import { useTransactions } from "@/contexts/TransactionContext";
 import { TransactionList } from "@/components/transactions/TransactionList";
@@ -21,6 +22,15 @@ export const NotificationsPage: React.FC = () => {
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<ViewMode>("notifications");
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    isOpen: boolean;
+    notificationId: string | null;
+    notificationTitle: string;
+  }>({
+    isOpen: false,
+    notificationId: null,
+    notificationTitle: "",
+  });
 
   const {
     notifications,
@@ -61,11 +71,26 @@ export const NotificationsPage: React.FC = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    try {
-      await deleteNotification(id);
-    } catch (error) {
-      console.error("Failed to delete notification:", error);
+  const handleDeleteClick = (id: string, title: string) => {
+    setDeleteConfirm({
+      isOpen: true,
+      notificationId: id,
+      notificationTitle: title,
+    });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (deleteConfirm.notificationId) {
+      try {
+        await deleteNotification(deleteConfirm.notificationId);
+        setDeleteConfirm({
+          isOpen: false,
+          notificationId: null,
+          notificationTitle: "",
+        });
+      } catch (error) {
+        console.error("Failed to delete notification:", error);
+      }
     }
   };
 
@@ -198,7 +223,7 @@ export const NotificationsPage: React.FC = () => {
                               </button>
                             )}
                             <button
-                              onClick={() => handleDelete(notification.id)}
+                              onClick={() => handleDeleteClick(notification.id, notification.title)}
                               className="text-xs text-gray-500 hover:text-red-400 transition-colors flex items-center space-x-1"
                             >
                               <Trash2 size={14} />
@@ -281,6 +306,23 @@ export const NotificationsPage: React.FC = () => {
           ]}
         />
       )}
+
+      <ConfirmDrawer
+        isOpen={deleteConfirm.isOpen}
+        onClose={() =>
+          setDeleteConfirm({
+            isOpen: false,
+            notificationId: null,
+            notificationTitle: "",
+          })
+        }
+        onConfirm={handleDeleteConfirm}
+        title="Delete Notification"
+        message={`Are you sure you want to delete? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+      />
     </div>
   );
 };
