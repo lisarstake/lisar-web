@@ -22,7 +22,7 @@ export const WalletPage: React.FC = () => {
 
   const [showBalance, setShowBalance] = useState(() => {
     const saved = localStorage.getItem("wallet_show_balance");
-    return saved ? JSON.parse(saved) : true;
+    return saved ? JSON.parse(saved) : false;
   });
 
   useEffect(() => {
@@ -231,7 +231,7 @@ export const WalletPage: React.FC = () => {
         >
           <h1 className="text-3xl font-semibold text-gray-300 mb-1.5">
             {walletLoading || delegationLoading || !wallet
-              ? "0.00"
+              ? "••••"
               : showBalance
                 ? formatEarnings(combinedBalance)
                 : "••••"}
@@ -240,18 +240,15 @@ export const WalletPage: React.FC = () => {
             )}
           </h1>
           {showBalance ? (
-            <p
-              className={`text-white/70 text-base ${walletLoading || delegationLoading || !wallet ? "mr-4" : "mr-2"}`}
-            >
-              ≈{fiatSymbol}
-              {(walletLoading || delegationLoading || !wallet
-                ? 0
-                : fiatValue
-              ).toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
-            </p>
+            !walletLoading && !delegationLoading && wallet ? (
+              <p className="text-white/70 text-base mr-2">
+                ≈{fiatSymbol}
+                {fiatValue.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </p>
+            ) : null
           ) : (
             <div className="pb-6"></div>
           )}

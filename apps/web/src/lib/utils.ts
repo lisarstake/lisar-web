@@ -76,3 +76,11 @@ export const getLeaderboardDisplayName = (
   // Fallback to shortened address
   return shortenHash(address);
 };
+
+/**
+ * Check if the app is running in production mode
+ * @returns true if MODE is "production", false otherwise
+ */
+export const isProduction = (): boolean => {
+  return import.meta.env.MODE === "production";
+};
