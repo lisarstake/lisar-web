@@ -30,19 +30,21 @@ export const StakePage: React.FC = () => {
   const location = useLocation();
   const { validatorId } = useParams<{ validatorId: string }>();
 
+  const locationState = location.state as {
+    lptAmount?: string;
+    tierNumber?: number;
+    tierTitle?: string;
+  } | null;
+
   const [lptAmount, setLptAmount] = useState(() => {
-    const state = location.state as { lptAmount?: string } | null;
-    return state?.lptAmount || "0";
+    return locationState?.lptAmount || "0";
   });
 
-  // Only set amount from state on initial mount, not on every state change
-  // This prevents loops when navigating back from deposit page
   useEffect(() => {
-    const state = location.state as { lptAmount?: string } | null;
-    if (state?.lptAmount && lptAmount === "0") {
-      setLptAmount(state.lptAmount);
+    if (locationState?.lptAmount && lptAmount === "0") {
+      setLptAmount(locationState.lptAmount);
     }
-  }, []); // Empty dependency array - only run on mount
+  }, []);
 
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
   const [showConfirmDrawer, setShowConfirmDrawer] = useState(false);
@@ -66,10 +68,22 @@ export const StakePage: React.FC = () => {
   const userCurrency = state.user?.fiat_type || "NGN";
   const currencySymbol = priceService.getCurrencySymbol(userCurrency);
 
-  // User's wallet balance
   const walletBalanceLpt = wallet?.balanceLpt || 0;
 
-  const pageTitle = "Stake";
+  const tierNumber = locationState?.tierNumber;
+  const tierTitle = locationState?.tierTitle;
+
+  const getTierInfo = (tierNum?: number) => {
+    if (!tierNum) return null;
+    const tierMap: Record<number, { title: string; apy: number; image: string }> = {
+      1: { title: "Flexible", apy: 25, image: "/highyield-1.svg" },
+      2: { title: "Platinum", apy: 40, image: "/highyield-2.svg" },
+      3: { title: "Diamond", apy: 60, image: "/highyield-4.svg" },
+    };
+    return tierMap[tierNum] || null;
+  };
+
+  const tierInfo = getTierInfo(tierNumber);
 
   const [fiatEquivalent, setFiatEquivalent] = useState(0);
 
@@ -233,7 +247,7 @@ export const StakePage: React.FC = () => {
           <ChevronLeft color="#C7EF6B" />
         </button>
 
-        <h1 className="text-lg font-medium text-white">{pageTitle}</h1>
+        <h1 className="text-lg font-medium text-white">Stake</h1>
 
         <button
           onClick={handleHelpClick}
@@ -245,6 +259,29 @@ export const StakePage: React.FC = () => {
 
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto px-6 pb-28 scrollbar-hide">
+        {/* Tier Indicator */}
+        {tierInfo && (
+          <div className="">
+            <div className="bg-[#1a1a1a] rounded-lg p-4 border border-[#2a2a2a]">
+              <div className="flex items-center gap-3">
+                <img
+                  src={tierInfo.image}
+                  alt={tierInfo.title}
+                  className="w-8 h-8 object-contain"
+                />
+                <div>
+                  <p className="text-white/90 text-sm font-medium">
+                    {tierInfo.title}
+                  </p>
+                  <p className="text-gray-400 text-xs">
+                  {tierInfo.title} - Up to {tierInfo.apy}% APY
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Amount Input Field */}
         <div className="py-6">
           <div className="bg-[#1a1a1a] rounded-lg p-3 flex items-center gap-3">
@@ -306,18 +343,15 @@ export const StakePage: React.FC = () => {
         {/* Wallet Balance Info */}
         <div className="py-4">
           <h3 className="text-base font-medium text-white/90 mb-2">
-            Payment method
+            Wallet balance
           </h3>
           <div className="bg-[#1a1a1a] rounded-lg p-4 border border-[#2a2a2a]">
             <div className="flex items-center space-x-3">
               <Wallet2 size={20} color="#86B3F7" />
               <div className="flex-1">
-                <div>
-                  <span className="text-white font-normal">Wallet balance</span>
-                  <span className="text-gray-400 text-sm ml-2">
-                    {walletBalanceLpt.toLocaleString()} LPT
-                  </span>
-                </div>
+                <span className="text-gray-400 text-sm">
+                  {walletBalanceLpt.toLocaleString()} LPT
+                </span>
               </div>
             </div>
           </div>
@@ -378,7 +412,7 @@ export const StakePage: React.FC = () => {
         isOpen={showSuccessDrawer}
         onClose={() => {
           setShowSuccessDrawer(false);
-          navigate("/portfolio");
+          navigate("/portfolio", { state: { walletType: "staking" } });
         }}
         title="Staking Successful!"
         message={successMessage}

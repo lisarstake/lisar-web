@@ -9,6 +9,8 @@ interface OrchestratorListProps {
   error: string | null;
   onRetry: () => void;
   skeletonCount?: number;
+  tierNumber?: number;
+  tierTitle?: string;
 }
 
 export const OrchestratorList: React.FC<OrchestratorListProps> = ({
@@ -17,6 +19,8 @@ export const OrchestratorList: React.FC<OrchestratorListProps> = ({
   error,
   onRetry,
   skeletonCount = 5,
+  tierNumber,
+  tierTitle,
 }) => {
   if (error) {
     return (
@@ -24,9 +28,11 @@ export const OrchestratorList: React.FC<OrchestratorListProps> = ({
         <div className="w-16 h-16 bg-gray-100/10 rounded-full flex items-center justify-center mb-6">
           <AlertCircle className="w-8 h-8 text-gray-400" />
         </div>
-        <h3 className="text-xl font-semibold text-white mb-2">Unexpected error</h3>
+        <h3 className="text-xl font-semibold text-white mb-2">
+          Unexpected error
+        </h3>
         <p className="text-gray-400 text-center mb-6 max-w-sm">
-          We couldn't fetch orchestrators. Please check your connection and try again.
+          Please check your connection and try again.
         </p>
         <button
           onClick={onRetry}
@@ -41,24 +47,24 @@ export const OrchestratorList: React.FC<OrchestratorListProps> = ({
 
   return (
     <div className="space-y-3">
-      {isLoading ? (
-        // Show skeleton loading items
-        Array.from({ length: skeletonCount }).map((_, index) => (
-          <OrchestratorItem
-            key={`skeleton-${index}`}
-            isLoading={true}
-            tourId={index === 0 ? "orchestrator-highlight" : undefined}
-          />
-        ))
-      ) : (
-        orchestrators.map((orchestrator, index) => (
-          <OrchestratorItem
-            key={orchestrator.address}
-            orchestrator={orchestrator}
-            tourId={index === 0 ? "orchestrator-highlight" : undefined}
-          />
-        ))
-      )}
+      {isLoading
+        ? // Show skeleton loading items
+          Array.from({ length: skeletonCount }).map((_, index) => (
+            <OrchestratorItem
+              key={`skeleton-${index}`}
+              isLoading={true}
+              tourId={index === 0 ? "orchestrator-highlight" : undefined}
+            />
+          ))
+        : orchestrators.map((orchestrator, index) => (
+            <OrchestratorItem
+              key={orchestrator.address}
+              orchestrator={orchestrator}
+              tourId={index === 0 ? "orchestrator-highlight" : undefined}
+              tierNumber={tierNumber}
+              tierTitle={tierTitle}
+            />
+          ))}
     </div>
   );
 };

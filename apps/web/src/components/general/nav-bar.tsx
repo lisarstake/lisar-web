@@ -9,7 +9,7 @@ const Navbar = () => {
         className="flex items-center gap-2 cursor-pointer"
         onClick={() => navigate("/")}
       >
-        <img src="/Logo.svg" alt="Lisar Logo" className="h-5 w-auto" />
+        <img src="/Logo.svg" alt="Lisar Logo" className="h-4 md:h-5 w-auto" />
       </div>
       {/* Centered Menu - Hidden on mobile */}
       <div className="hidden lg:flex gap-8 text-sm font-medium text-gray-700">
@@ -35,7 +35,7 @@ const Navbar = () => {
           onClick={() => navigate("/login")}
           className="py-2 px-3 sm:px-4 flex bg-[#C7EF6B] rounded-lg text-[#060E0A] cursor-pointer font-medium text-xs sm:text-sm whitespace-nowrap"
         >
-          Stake now
+          Create Account
         </button>
       </div>
     </nav>

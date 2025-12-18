@@ -21,52 +21,48 @@ export const UseCasesSection = () => {
           <span className="text-xl text-black font-medium">How it Works</span>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Card 1: Fund with Fiat */}
-          <Card className=" bg-gray-200 rounded-lg shadow-none border border-black flex flex-col justify-between">
-            <CardHeader>
-              <CardTitle className="text-2xl mb-2 text-black">
-                Deposit funds
-              </CardTitle>
-              <CardDescription className=" text-gray-700">
-                Add capital in fiat or crypto. Lisar converts it instantly into
-                the right staking asset for the chain you choose.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col items-center justify-center h-full">
-              <img src="/h1.svg" className="mx-auto " />
-            </CardContent>
-          </Card>
-
-          {/* Card 2: Choose Your Orchestrator */}
+          {/* Card 1: Deposit and convert */}
           <Card className="bg-gray-200 rounded-lg shadow-none border border-black flex flex-col justify-between">
             <CardHeader>
               <CardTitle className="text-2xl mb-2 text-black">
-                Earn rewards daily
-              </CardTitle>
-              <CardDescription className=" text-gray-700">
-                Your funds are staked with high-performing validators across
-                supported networks. You earn rewards automatically, credited
-                daily.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col items-center justify-center h-full">
-              <img src="/h2.svg" className="mx-auto " />
-            </CardContent>
-          </Card>
-
-          {/* Card 3: One-Click Staking */}
-          <Card className="bg-gray-200 rounded-lg shadow-none border border-black flex flex-col justify-between">
-            <CardHeader>
-              <CardTitle className="text-2xl text-black mb-2">
-                Withdraw anytime
+                Deposit from your bank
               </CardTitle>
               <CardDescription className="text-gray-700">
-                Your principal stays intact and available. Withdraw whenever you
-                like (subject to each chain’s unbonding period).
+                Use your local currency. Deposit directly from your bank account to your Lisar wallet.
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col items-center justify-center h-full">
-              <img src="/h3.svg" className="mx-auto " />
+              <img src="/h4.png" className="mx-auto" />
+            </CardContent>
+          </Card>
+
+          {/* Card 2: Start earning */}
+          <Card className="bg-gray-200 rounded-lg shadow-none border border-black flex flex-col justify-between">
+            <CardHeader>
+              <CardTitle className="text-2xl mb-2 text-black">
+                Start earning right away
+              </CardTitle>
+              <CardDescription className="text-gray-700">
+                Your money starts earning interest once vested. Get up to 15% APY on stablecoins. 
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col items-center justify-center h-full">
+              <img src="/h3.svg" className="mx-auto" />
+            </CardContent>
+          </Card>
+
+          {/* Card 3: Zero setup */}
+          <Card className="bg-gray-200 rounded-lg shadow-none border border-black flex flex-col justify-between">
+            <CardHeader>
+              <CardTitle className="text-2xl mb-2 text-black">
+                No setup needed
+              </CardTitle>
+              <CardDescription className="text-gray-700">
+                No wallet setup, no seed phrases, no gas fees. We handle everything while you stay in control. 
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col items-center justify-center h-full">
+              <img src="/h2.svg" className="mx-auto" />
             </CardContent>
           </Card>
         </div>

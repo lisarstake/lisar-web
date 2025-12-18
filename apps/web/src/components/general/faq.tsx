@@ -35,43 +35,38 @@ const FAQ = () => {
       id: 1,
       question: "What is Lisar?",
       answer:
-        "Lisar is a simple platform that lets you earn staking rewards across multiple blockchains using your local currency. You don’t need prior crypto knowledge — Lisar handles everything behind the scenes while you earn.",
+        "A platform that lets you Earn, save, and spend globally with crypto.",
     },
-    {
-      id: 2,
-      question: "Where do the rewards come from?",
-      answer:
-        "Rewards are built into the economics of Proof-of-Stake blockchains. When you stake tokens, you help secure the network, and in return, the protocol pays you inflationary rewards and transaction fees. Lisar gives you access to these yields without the complexity.",
-    },
+    
     {
       id: 3,
-      question: "Which chains are supported?",
+      question: "How do I earn rewards?",
       answer:
-        "We’re currently live on Livepeer, with BNB and Solana launching soon. More networks will be added to expand your earning opportunities.",
+        "When you vest, your money earns daily rewards automatically. Interest starts accruing once your funds are vested.",
     },
     {
       id: 4,
       question: "Do I need crypto to get started?",
       answer:
-        "No. You can deposit with your local currency, and Lisar handles the conversion into the right staking assets. If you already hold crypto, you can also stake directly.",
+        "No. You can deposit your local currency from your bank to your Lisar wallet.",
     },
     {
       id: 5,
-      question: "How safe is Lisar?",
+      question: "Is my money safe?",
       answer:
-        "We follow strict security practices and stake only with trusted validators. While risks like price volatility and governance changes exist, we design Lisar to keep your funds safe and transparent.",
+        "Yes. Your funds are always yours and fully self-custodial.",
     },
     {
       id: 6,
-      question: "Can I withdraw anytime?",
+      question: "Can I withdraw my money anytime?",
       answer:
-        "Yes. Your funds remain yours and are available for withdrawal. Note: each chain has its own unbonding period (eg. 7 days for Livepeer). Once unbonded, you can withdraw fully.",
+        "Yes, you can withdraw your money from your Lisar wallet to your bank account at anytime.",
     },
     {
       id: 7,
       question: "How much can I earn?",
       answer:
-        "It depends on the network and how much you stake. For example, Livepeer currently offers up to 68% APY. Other chains like Solana or BNB may offer different reward rates.",
+        "Stables vest up to 15% APY. High-yield vest much higher. Returns depend on your chosen vault.",
     },
   ];
 
@@ -128,7 +123,7 @@ const FAQ = () => {
                   transform 
                   transition-transform 
                   duration-200 
-                  flex-shrink-0
+                  shrink-0
                   ${expandedQuestion === faq.id ? "rotate-45" : ""}
                 `}
                 color="#235538"

@@ -7,6 +7,7 @@ import React, {
   useCallback,
   ReactNode,
 } from "react";
+import { useLocation } from "react-router-dom";
 import {
   DashboardSummary,
   DashboardTransaction,
@@ -32,9 +33,10 @@ interface DashboardProviderProps {
 export const DashboardProvider: React.FC<DashboardProviderProps> = ({
   children,
 }) => {
+  const location = useLocation();
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [transactions, setTransactions] = useState<DashboardTransaction[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchDashboardData = useCallback(async () => {
@@ -51,14 +53,18 @@ export const DashboardProvider: React.FC<DashboardProviderProps> = ({
       if (summaryResponse.success && summaryResponse.data) {
         setSummary(summaryResponse.data);
       } else {
-        throw new Error(summaryResponse.message || "Failed to fetch dashboard summary");
+        throw new Error(
+          summaryResponse.message || "Failed to fetch dashboard summary"
+        );
       }
 
       if (transactionsResponse.success && transactionsResponse.data) {
         setTransactions(transactionsResponse.data);
       } else {
-        // Don't throw error for transactions, just log it
-        console.warn("Failed to fetch transactions:", transactionsResponse.message);
+        console.warn(
+          "Failed to fetch transactions:",
+          transactionsResponse.message
+        );
         setTransactions([]);
       }
     } catch (err: any) {
@@ -70,9 +76,15 @@ export const DashboardProvider: React.FC<DashboardProviderProps> = ({
   }, []);
 
   useEffect(() => {
-    // Fetch dashboard data on mount
-    fetchDashboardData();
-  }, [fetchDashboardData]);
+    if (location.pathname === "/dashboard") {
+      fetchDashboardData();
+    } else {
+      setSummary(null);
+      setTransactions([]);
+      setIsLoading(false);
+      setError(null);
+    }
+  }, [location.pathname, fetchDashboardData]);
 
   const value = useMemo<DashboardContextType>(
     () => ({
@@ -99,4 +111,3 @@ export const useDashboard = (): DashboardContextType => {
   }
   return context;
 };
-

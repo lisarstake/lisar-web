@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   ChevronLeft,
   Trophy,
@@ -8,18 +8,25 @@ import {
   ChevronUp,
   Info,
   CircleDollarSign,
+  Eye,
+  EyeOff,
+  TrendingUp,
 } from "lucide-react";
 import QRCode from "qrcode";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { EmptyState } from "@/components/general/EmptyState";
-import { useOrchestrators } from "@/contexts/OrchestratorContext";
+import { LisarLines } from "@/components/general/lisar-lines";
+import { PayoutProgressCircle } from "@/components/general/PayoutProgressCircle";
 import { useDelegation } from "@/contexts/DelegationContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTransactions } from "@/contexts/TransactionContext";
+import { usePortfolio, type StakeEntry } from "@/contexts/PortfolioContext";
+import { RecentTransactionsCard } from "@/components/wallet/RecentTransactionsCard";
 import { PortfolioSkeleton } from "./PortfolioSkeleton";
 import { formatEarnings, formatLifetime } from "@/lib/formatters";
 import { getColorForAddress } from "@/lib/qrcode";
-import { getEarliestUnbondingTime } from "@/lib/unbondingTime";
+import { priceService } from "@/lib/priceService";
 
 interface StakeEntryItemProps {
   entry: StakeEntry;
@@ -103,29 +110,58 @@ const StakeEntryItem: React.FC<StakeEntryItemProps> = ({ entry, onClick }) => {
   );
 };
 
-interface StakeEntry {
-  id: string;
-  name: string;
-  yourStake: number;
-  apy: number;
-  fee: number;
-  orchestrator?: any;
-}
-
 export const PortfolioPage: React.FC = () => {
   const navigate = useNavigate();
-  const [selectedPeriod, setSelectedPeriod] = useState("Weekly");
+  const location = useLocation();
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
-  const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
-  const { orchestrators } = useOrchestrators();
-  const {
-    userDelegation,
-    delegatorTransactions,
-    delegatorStakeProfile,
-    protocolStatus,
-    isLoading,
-  } = useDelegation();
+  const [showBalance, setShowBalance] = useState(() => {
+    const saved = localStorage.getItem("portfolio_show_balance");
+    return saved ? JSON.parse(saved) : true;
+  });
+
+  const walletType =
+    (location.state as { walletType?: string })?.walletType || "staking";
+  const isSavings = walletType === "savings";
+
+  const { protocolStatus } = useDelegation();
   const { state } = useAuth();
+  const { transactions, isLoading: transactionsLoading } = useTransactions();
+  const {
+    setMode,
+    summary,
+    stakeEntries,
+    isLoading: portfolioLoading,
+  } = usePortfolio();
+
+  useEffect(() => {
+    setMode(isSavings ? "savings" : "staking");
+  }, [isSavings, setMode]);
+
+  const isLoading = useMemo(() => {
+    if (isSavings) {
+      return portfolioLoading && !summary;
+    } else {
+      return portfolioLoading && !summary && stakeEntries.length === 0;
+    }
+  }, [portfolioLoading, summary, stakeEntries.length, isSavings]);
+
+  useEffect(() => {
+    localStorage.setItem("portfolio_show_balance", JSON.stringify(showBalance));
+  }, [showBalance]);
+
+  // Get recent transactions (last 5), filtered like wallet view
+  const recentTransactions = useMemo(() => {
+    const filtered =
+      walletType === "staking"
+        ? transactions.filter((tx) => tx.token_symbol?.toUpperCase() === "LPT")
+        : walletType === "savings"
+          ? transactions.filter(
+              (tx) => tx.token_symbol?.toUpperCase() !== "LPT"
+            )
+          : transactions;
+
+    return filtered.slice(0, 5);
+  }, [transactions, walletType]);
 
   // Calculate next payout progress using protocol status
   const nextPayoutProgress = useMemo(() => {
@@ -156,175 +192,58 @@ export const PortfolioPage: React.FC = () => {
     return { progress: Math.min(progress, 100), timeRemaining };
   }, [protocolStatus]);
 
-  const portfolioData = useMemo(() => {
-    // Initialize defaults
-    let totalStake = 0;
-    let currentStake = 0;
-    let lifetimeRewards = 0;
-    let lifetimeUnbonded = 0;
-    let dailyEarnings = 0;
-    let weeklyEarnings = 0;
-    let monthlyEarnings = 0;
-    const stakeEntries: StakeEntry[] = [];
+  const totalStake = summary?.totalStake || 0;
+  const lifetimeRewards = summary?.lifetimeRewards || 0;
+  const averageApy = summary?.averageApy || 0;
 
-    // Handle delegatorStakeProfile data (if available)
-    if (delegatorStakeProfile) {
-      totalStake = parseFloat(delegatorStakeProfile.currentStake) || 0;
-      currentStake = totalStake;
-      lifetimeRewards = parseFloat(delegatorStakeProfile.lifetimeRewards) || 0;
-      lifetimeUnbonded =
-        parseFloat(delegatorStakeProfile.lifetimeUnbonded) || 0;
-    }
+  // Calculate fiat value for total stake
+  const [totalStakeFiat, setTotalStakeFiat] = useState(0);
+  const fiatCurrency = state.user?.fiat_type || "USD";
+  const fiatSymbol = useMemo(() => {
+    return priceService.getCurrencySymbol(fiatCurrency);
+  }, [fiatCurrency]);
 
-    // Handle userDelegation and orchestrators data (if available)
-    if (userDelegation) {
-      const bondedAmount = parseFloat(userDelegation.bondedAmount) || 0;
-      const delegateId = userDelegation.delegate?.id || "";
-
-      // Find orchestrator if orchestrators list is available
-      const orchestrator =
-        orchestrators.length > 0
-          ? orchestrators.find((orch) => orch.address === delegateId)
-          : null;
-
-      const orchestratorName =
-        orchestrator?.ensIdentity?.name ||
-        orchestrator?.ensName ||
-        userDelegation.delegate?.id ||
-        "Unknown Orchestrator";
-
-      // Handle APY as string (e.g., "15%") or number (e.g., 15)
-      let apyPercentage = 0;
-      if (orchestrator?.apy) {
-        const apyValue = orchestrator.apy;
-        if (typeof apyValue === "string") {
-          apyPercentage = parseFloat(apyValue.replace("%", "")) || 0;
-        } else {
-          apyPercentage = typeof apyValue === "number" ? apyValue : 0;
+  useEffect(() => {
+    const calculateFiat = async () => {
+      if (isSavings) {
+        const prices = await priceService.getPrices();
+        let fiatValue = totalStake;
+        switch (fiatCurrency.toUpperCase()) {
+          case "NGN":
+            fiatValue = totalStake * prices.ngn;
+            break;
+          case "EUR":
+            fiatValue = totalStake * prices.eur;
+            break;
+          case "GBP":
+            fiatValue = totalStake * prices.gbp;
+            break;
+          case "USD":
+          default:
+            fiatValue = totalStake;
         }
+        setTotalStakeFiat(fiatValue);
+      } else {
+        const fiatValue = await priceService.convertLptToFiat(
+          totalStake,
+          fiatCurrency
+        );
+        setTotalStakeFiat(fiatValue);
       }
-
-      const rewardCutPercentage = orchestrator?.reward
-        ? parseFloat(orchestrator.reward) / 10000
-        : 0;
-      const rewardCutDecimal = rewardCutPercentage / 100;
-
-      // Calculate earnings if we have bonded amount and APY
-      if (bondedAmount > 0 && apyPercentage > 0) {
-        const grossDailyEarnings = (bondedAmount * apyPercentage) / (100 * 365);
-        const grossWeeklyEarnings = grossDailyEarnings * 7;
-        const grossMonthlyEarnings = grossDailyEarnings * 30;
-
-        dailyEarnings = grossDailyEarnings * (1 - rewardCutDecimal);
-        weeklyEarnings = grossWeeklyEarnings * (1 - rewardCutDecimal);
-        monthlyEarnings = grossMonthlyEarnings * (1 - rewardCutDecimal);
-      }
-
-      // Add stake entry if we have delegation data
-      if (delegateId) {
-        stakeEntries.push({
-          id: delegateId,
-          name: orchestratorName,
-          yourStake: bondedAmount,
-          apy: apyPercentage / 100,
-          fee: rewardCutPercentage,
-          orchestrator: orchestrator || null,
-        });
-      }
-    }
-
-    return {
-      totalStake,
-      currentStake,
-      lifetimeRewards,
-      lifetimeUnbonded,
-      dailyEarnings,
-      weeklyEarnings,
-      monthlyEarnings,
-      stakeEntries,
     };
-  }, [userDelegation, orchestrators, delegatorStakeProfile]);
-
-  const {
-    totalStake,
-    lifetimeRewards,
-    lifetimeUnbonded,
-    weeklyEarnings,
-    monthlyEarnings,
-    stakeEntries,
-  } = portfolioData;
-
-  // Calculate pending unbonding count and data
-  const pendingUnbondingData = useMemo(() => {
-    if (!delegatorTransactions) {
-      return {
-        count: 0,
-        totalAmount: 0,
-        timeRemaining: null,
-      };
-    }
-
-    const pending = delegatorTransactions.pendingStakeTransactions || [];
-    const count = pending.length;
-    const totalAmount = pending.reduce(
-      (sum, tx) => sum + parseFloat(tx.amount || "0"),
-      0
-    );
-    const timeRemaining = getEarliestUnbondingTime(pending);
-
-    return {
-      count,
-      totalAmount,
-      timeRemaining,
-    };
-  }, [delegatorTransactions]);
-
-  // Calculate completed unbonding (ready for withdrawal) count and data
-  const completedUnbondingData = useMemo(() => {
-    if (!delegatorTransactions) {
-      return {
-        count: 0,
-        totalAmount: 0,
-        validatorId: null,
-      };
-    }
-
-    const completed = delegatorTransactions.completedStakeTransactions || [];
-    const count = completed.length;
-    const totalAmount = completed.reduce(
-      (sum, tx) => sum + parseFloat(tx.amount || "0"),
-      0
-    );
-    // Get the first validator ID from completed transactions (for navigation)
-    const validatorId = completed.length > 0 ? completed[0].delegate.id : null;
-
-    return {
-      count,
-      totalAmount,
-      validatorId,
-    };
-  }, [delegatorTransactions]);
+    calculateFiat();
+  }, [totalStake, fiatCurrency, isSavings]);
 
   const handleBackClick = () => {
     navigate(-1);
   };
 
-  const handleTrophyClick = () => {
-    navigate("/leaderboard");
+  const handleViewAllTransactions = () => {
+    navigate("/history", { state: { walletType } });
   };
 
-  const handlePeriodChange = (period: string) => {
-    setSelectedPeriod(period);
-  };
-
-  const handleStakeClick = (stakeId: string) => {
-    navigate(`/validator-details/${stakeId}`);
-  };
-
-  const handleWithdrawClick = () => {
-    if (completedUnbondingData.validatorId) {
-      navigate(`/validator-details/${completedUnbondingData.validatorId}`);
-    }
+  const handleTransactionClick = (transaction: any) => {
+    navigate(`/transaction-detail/${transaction.id}`);
   };
 
   const handleHelpClick = () => {
@@ -338,7 +257,7 @@ export const PortfolioPage: React.FC = () => {
   return (
     <div className="h-screen bg-[#050505] text-white flex flex-col">
       <div className="flex-1 overflow-y-auto px-6 pb-20 scrollbar-hide">
-        <div className="flex items-center justify-between py-8 mb-6">
+        <div className="flex items-center justify-between py-8 mb-2">
           <button
             onClick={handleBackClick}
             className="w-8 h-8 flex items-center justify-center"
@@ -353,230 +272,189 @@ export const PortfolioPage: React.FC = () => {
             <CircleQuestionMark color="#86B3F7" size={16} />
           </button>
         </div>
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="bg-[#C7EF6B] rounded-xl p-4">
-            <p className="text-black text-sm font-medium my-1">Total stake</p>
-            <p className="text-black text-2xl font-semibold">
-              {formatEarnings(totalStake)}
-              <span className="text-sm ml-0.5">LPT</span>
-            </p>
-          </div>
-
-          <div className="bg-blue-500 rounded-xl p-4">
-            <div className="flex items-center justify-between mb-1">
-              <p className="text-white text-sm font-medium">Earnings</p>
-              <div className="relative">
-                <div className="inline-flex items-center border-b border-white cursor-pointer mb-1">
-                  <select
-                    value={selectedPeriod}
-                    onChange={(e) => handlePeriodChange(e.target.value)}
-                    className="bg-transparent text-white text-sm appearance-none focus:outline-none cursor-pointer border-none px-0"
-                    style={{ boxShadow: "none" }}
-                  >
-                    <option value="Weekly" className="bg-[#1a1a1a]">
-                      Weekly
-                    </option>
-                    <option value="Monthly" className="bg-[#1a1a1a]">
-                      Monthly
-                    </option>
-                    <option value="Yearly" className="bg-[#1a1a1a]">
-                      Yearly
-                    </option>
-                  </select>
-                  <ChevronDown
-                    size={12}
-                    color="white"
-                    className="pointer-events-none"
-                  />
-                </div>
-              </div>
-            </div>
-            <p className="text-white text-2xl font-semibold">
-              <span className="inline-flex items-baseline gap-0.5">
-                {selectedPeriod === "Weekly"
-                  ? formatEarnings(weeklyEarnings)
-                  : selectedPeriod === "Monthly"
-                    ? formatEarnings(monthlyEarnings)
-                    : formatEarnings(monthlyEarnings * 12)}
-                <span className="text-sm ml-0.1">LPT</span>
-              </span>
-            </p>
-          </div>
-        </div>
-
-        <div className="flex space-x-2 mb-6">
-          <div
-            className="bg-[#1a1a1a] rounded-xl p-4 flex-1"
-            style={{ flex: "4" }}
-          >
-            <p className="text-gray-400 text-sm font-medium mb-3 flex gap-1 items-center">
-              <span>
-                <CircleDollarSign size={16} />
-              </span>
-              Next payout in{" "}
-            </p>
-            <div className="flex items-center space-x-3">
-              <div className="flex-1 bg-[#2a2a2a] rounded-full h-3">
-                <div
-                  className="bg-[#C7EF6B] h-3 rounded-full relative"
-                  style={{ width: `${nextPayoutProgress.progress}%` }}
-                >
-                  <div className="bg-white w-4 h-4 rounded-full absolute -top-0.5 right-0 transform translate-x-1/2"></div>
-                </div>
-              </div>
-              <span className="text-white text-sm font-medium">
-                {nextPayoutProgress.timeRemaining}
-              </span>
-            </div>
-          </div>
-
-          <div
-            className="bg-[#1a1a1a] rounded-xl p-4 flex items-center justify-center cursor-pointer hover:bg-[#2a2a2a] transition-colors"
-            style={{ flex: "1" }}
-            onClick={handleTrophyClick}
-          >
-            <div className="text-center">
-              <div className="text-xl mb-1">🏆</div>
-              <p className="text-white text-xs font-medium">Leaderboard</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Analytics Header */}
+        {/* Main Wallet Card */}
         <div
-          className={`flex items-center justify-between ${isAnalyticsOpen ? "mb-3" : "mb-5"}`}
+          className={`${isSavings ? "bg-[#6da7fd] border-2 border-[#86B3F7]/30" : "bg-linear-to-br from-[#0f0f0f] to-[#151515] border border-[#2a2a2a]"} rounded-2xl p-6 h-[170px] mb-6 relative overflow-hidden`}
         >
-          <span className="text-base font-medium text-white/50 flex items-center gap-2">
-            View summary
-            {(pendingUnbondingData.count > 0 ||
-              completedUnbondingData.count > 0) && (
-              <span className="bg-[#C7EF6B] text-black text-xs font-semibold rounded-full w-5 h-5 flex items-center justify-center">
-                {pendingUnbondingData.count + completedUnbondingData.count}
-              </span>
-            )}
-          </span>
-          <button
-            onClick={() => setIsAnalyticsOpen((v) => !v)}
-            className="relative flex items-center justify-center p-1 rounded hover:bg-[#232323] transition-colors"
-            aria-label={isAnalyticsOpen ? "Collapse summary" : "Expand summary"}
-            type="button"
-          >
-            {isAnalyticsOpen ? (
-              <ChevronUp size={16} color="gray" />
-            ) : (
-              <ChevronDown size={16} color="gray" />
-            )}
-          </button>
+          {/* Lisar Lines Decoration */}
+          {!isSavings && (
+            <LisarLines
+              position="top-right"
+              className="opacity-100"
+              width="185px"
+              height="185px"
+            />
+          )}
+
+          {/* Decorative elements */}
+          {isSavings ? (
+            <>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-[#86B3F7]/10 rounded-full blur-3xl"></div>
+              <div className="absolute bottom-0 left-0 w-24 h-24 bg-[#438af6]/10 rounded-full blur-2xl"></div>
+            </>
+          ) : (
+            <>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-[#C7EF6B]/5 rounded-full blur-3xl"></div>
+              <div className="absolute bottom-0 left-0 w-24 h-24 bg-[#86B3F7]/5 rounded-full blur-2xl"></div>
+            </>
+          )}
+
+          {/* Circular Progress - Top Right */}
+          {/* <div className="absolute top-4 right-4 z-20">
+            <PayoutProgressCircle
+              progress={nextPayoutProgress.progress}
+              timeRemaining={nextPayoutProgress.timeRemaining}
+              isSavings={isSavings}
+            />
+          </div> */}
+
+          {/* Content */}
+          <div className="relative z-10">
+            <div className="flex items-center gap-2 mb-2">
+              <h3 className="text-white/70 text-sm">
+                {" "}
+                {isSavings ? "Stables Wallet" : "High Yield Wallet"}
+              </h3>
+              <button
+                onClick={() => setShowBalance(!showBalance)}
+                className="shrink-0 cursor-pointer hover:opacity-70 transition-opacity"
+              >
+                {showBalance ? (
+                  <Eye
+                    size={16}
+                    color={
+                      isSavings
+                        ? "rgba(255, 255, 255, 0.9)"
+                        : "rgba(255, 255, 255, 0.6)"
+                    }
+                  />
+                ) : (
+                  <EyeOff
+                    size={16}
+                    color={
+                      isSavings
+                        ? "rgba(255, 255, 255, 0.9)"
+                        : "rgba(255, 255, 255, 0.6)"
+                    }
+                  />
+                )}
+              </button>
+            </div>
+
+            {/* Main Balance */}
+            <div className="mb-8">
+              <div className="flex items-baseline gap-2 mb-1">
+                <span className="text-2xl font-semibold text-white/90">
+                  {showBalance
+                    ? `${fiatSymbol}${totalStakeFiat.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}`
+                    : "••••"}
+                </span>
+              </div>
+            </div>
+
+            {/* Three Values */}
+            <div className="flex items-center justify-between">
+              {/* Token Amount */}
+              <div className="flex items-center flex-col">
+                <p className="text-white/90 font-semibold text-sm">
+                  {showBalance ? formatEarnings(totalStake) : "••••"}
+                </p>
+                <p className="text-white/60 text-xs">
+                  {isSavings ? "USDC" : "LPT"}
+                </p>
+              </div>
+
+              {/* APY */}
+              <div className="flex items-center flex-col">
+                <p className="text-white/90 font-semibold text-sm">
+                  {showBalance ? `${averageApy.toFixed(1)}%` : "••••"}
+                </p>
+                <p className="text-white/60 text-xs">Per annum</p>
+              </div>
+
+              {/* Total Earnings */}
+              <div className="flex items-center flex-col">
+                <p className="text-white/90 font-semibold text-sm">
+                  {showBalance ? formatLifetime(lifetimeRewards) : "••••"}
+                </p>
+                <p className="text-white/60 text-xs">Total earning</p>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Collapsible Analytics Section */}
-        {isAnalyticsOpen && (
-          <>
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div className="bg-[#1a1a1a] rounded-xl p-4">
-                <p className="text-gray-400 text-sm font-medium mb-2">
-                  Lifetime Rewards
-                </p>
-                <p className="text-[#C7EF6B] text-xl font-semibold">
-                  <span className="inline-flex items-baseline gap-0.5">
-                    {formatLifetime(lifetimeRewards)}
-                    <span className="text-sm ml-0.1">LPT</span>
-                  </span>
-                </p>
-              </div>
-
-              <div className="bg-[#1a1a1a] rounded-xl p-4">
-                <p className="text-gray-400 text-sm font-medium mb-2">
-                  Lifetime Withdrawn
-                </p>
-                <p className="text-[#FF6B6B] text-xl font-semibold">
-                  <span className="inline-flex items-baseline gap-0.5">
-                    {formatLifetime(lifetimeUnbonded)}
-                    <span className="text-sm ml-0.1">LPT</span>
-                  </span>
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          {/* Summary Card */}
+          <div className="bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-2xl p-5 border border-[#2a2a2a] relative overflow-hidden">
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex-1 relative z-10">
+                <h3 className="text-white/90 text-base font-medium mb-2">
+                  Summary
+                </h3>
+                <p className="text-white/60 text-xs">
+                  View breakdown of your portfolio
                 </p>
               </div>
             </div>
 
-            {/* Withdrawal Available Section */}
-            {completedUnbondingData.count > 0 && (
-              <div className="bg-[#1a1a1a] rounded-xl p-4 mb-4 border border-[#C7EF6B]/30">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <p className="text-[#C7EF6B] text-sm font-medium">
-                      Withdrawal Available
-                    </p>
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-400 text-sm">Amount</span>
-                    <span className="text-white/90 font-medium">
-                      {formatEarnings(completedUnbondingData.totalAmount)} LPT
-                    </span>
-                  </div>
-                  <button
-                    onClick={handleWithdrawClick}
-                    className="w-full py-3 rounded-lg font-semibold bg-[#C7EF6B] text-black hover:bg-[#B8E55A] transition-colors"
-                  >
-                    Withdraw
-                  </button>
-                </div>
-              </div>
-            )}
+            <button
+              onClick={() =>
+                navigate("/portfolio/summary", { state: { walletType } })
+              }
+              className="mt-1 px-6 py-2 bg-[#438af6] text-white rounded-full text-xs font-semibold hover:bg-[#96C3F7] transition-colors relative z-10"
+            >
+              Show
+            </button>
+          </div>
 
-            {/* Unbonding in Process Section */}
-            {pendingUnbondingData.count > 0 && (
-              <div className="bg-[#1a1a1a] rounded-xl p-4 mb-4 border border-yellow-500/20">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <p className="text-[#C7EF6B] text-sm font-medium">
-                      Unbonding in progress
-                    </p>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-400 text-sm">Amount</span>
-                    <span className="text-white/90 font-medium">
-                      {formatEarnings(pendingUnbondingData.totalAmount)} LPT
-                    </span>
-                  </div>
-                  {pendingUnbondingData.timeRemaining && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-400 text-sm">Time left</span>
-                      <span className="text-[#C7EF6B] text-sm font-medium">
-                        {pendingUnbondingData.timeRemaining}
-                      </span>
-                    </div>
-                  )}
-                </div>
+          {/* My Positions Card */}
+          <div className="bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-2xl p-5 border border-[#2a2a2a] relative overflow-hidden">
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex-1 relative z-10">
+                <h3 className="text-white/90 text-base font-medium mb-2">
+                  My Vest
+                </h3>
+                <p className="text-white/60 text-xs">
+                  Track all your active earning positions.
+                </p>
               </div>
-            )}
-          </>
-        )}
+            </div>
 
+            <button
+              onClick={() =>
+                navigate("/portfolio/positions", { state: { walletType } })
+              }
+              className="mt-1 px-6 py-2 bg-[#a3d039] text-black rounded-full text-xs font-semibold hover:bg-[#B8E55A] transition-colors relative z-10"
+            >
+              Show
+            </button>
+          </div>
+        </div>
+
+        {/* Recent Transactions Section */}
         <div className="mb-6">
-          <h2 className="text-white text-lg font-medium mb-4">Current Stake</h2>
-          {stakeEntries.length === 0 ? (
-            <EmptyState
-              icon={Info}
-              iconColor="#86B3F7"
-              iconBgColor="#2a2a2a"
-              title="No stakes yet"
-              description="You haven't staked with any validators yet."
-            />
-          ) : (
-            <div className="space-y-3">
-              {stakeEntries.map((entry) => (
-                <StakeEntryItem
-                  key={entry.id}
-                  entry={entry}
-                  onClick={() => handleStakeClick(entry.id)}
-                />
-              ))}
-            </div>
-          )}
+          <div className="flex items-center justify-between mb-3 px-2">
+            <h2 className="text-white/80 text-sm font-medium">
+              Recent transactions
+            </h2>
+            {transactions.length > 0 && (
+              <button
+                onClick={handleViewAllTransactions}
+                className="text-[#C7EF6B] text-sm hover:opacity-70 transition-opacity"
+              >
+                See all
+              </button>
+            )}
+          </div>
+
+          <RecentTransactionsCard
+            transactions={recentTransactions}
+            isLoading={transactionsLoading}
+            onTransactionClick={handleTransactionClick}
+          />
         </div>
       </div>
 

@@ -17,6 +17,9 @@ const WalletPage = lazyRetry(() => import('@/screens/wallet-page'))
 const ValidatorPage = lazyRetry(() => import('@/screens/validator-page'))
 const ValidatorDetailsPage = lazyRetry(() => import('@/screens/validator-details-page'))
 const StakePage = lazyRetry(() => import('@/screens/stake-page'))
+const SavePage = lazyRetry(() => import('@/screens/save-page'))
+const TiersPage = lazyRetry(() => import('@/screens/tiers-page'))
+const StableTiersPage = lazyRetry(() => import('@/screens/stable-tiers-page'))
 const WithdrawPage = lazyRetry(() => import('@/screens/withdraw-page'))
 const DepositPage = lazyRetry(() => import('@/screens/deposit-page'))
 const OnchainDepositPage = lazyRetry(() => import('@/screens/onchain-deposit-page'))
@@ -31,6 +34,8 @@ const LearnDetailPage = lazyRetry(() => import('@/screens/learn-detail-page'))
 const ForecastPage = lazyRetry(() => import('@/screens/forecast-page'))
 const EarnPage = lazyRetry(() => import('@/screens/earn-page'))
 const PortfolioPage = lazyRetry(() => import('@/screens/portfolio-page'))
+const PortfolioSummaryPage = lazyRetry(() => import('@/screens/portfolio-summary-page'))
+const PortfolioPositionsPage = lazyRetry(() => import('@/screens/portfolio-positions-page'))
 const LeaderboardPage = lazyRetry(() => import('@/screens/leaderboard-page'))
 const DashboardPage = lazyRetry(() => import('@/screens/dashboard-page'))
 const ProfilePage = lazyRetry(() => import('@/screens/profile-page'))
@@ -86,6 +91,14 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: 'wallet/:walletType',
+        element: (
+          <ProtectedRoute>
+            {withSuspenseAndErrorBoundary(<WalletPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
         path: 'validator',
         element: (
           <ProtectedRoute>
@@ -106,6 +119,30 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             {withSuspenseAndErrorBoundary(<StakePage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'save',
+        element: (
+          <ProtectedRoute>
+            {withSuspenseAndErrorBoundary(<SavePage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'savings-tiers',
+        element: (
+          <ProtectedRoute>
+            {withSuspenseAndErrorBoundary(<TiersPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'stable-tiers',
+        element: (
+          <ProtectedRoute>
+            {withSuspenseAndErrorBoundary(<StableTiersPage />)}
           </ProtectedRoute>
         ),
       },
@@ -226,6 +263,22 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             {withSuspenseAndErrorBoundary(<PortfolioPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'portfolio/summary',
+        element: (
+          <ProtectedRoute>
+            {withSuspenseAndErrorBoundary(<PortfolioSummaryPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'portfolio/positions',
+        element: (
+          <ProtectedRoute>
+            {withSuspenseAndErrorBoundary(<PortfolioPositionsPage />)}
           </ProtectedRoute>
         ),
       },
