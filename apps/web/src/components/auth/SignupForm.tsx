@@ -222,6 +222,7 @@ export const SignupForm: React.FC = () => {
           </button>
 
           {/* Divider */}
+
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-700"></div>
@@ -232,6 +233,7 @@ export const SignupForm: React.FC = () => {
           </div>
 
           {/* Google Signup Button */}
+
           <button
             type="button"
             onClick={handleGoogleSignup}
