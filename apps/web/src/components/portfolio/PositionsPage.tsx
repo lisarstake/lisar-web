@@ -120,7 +120,7 @@ export const PositionsPage: React.FC = () => {
   };
 
   const handleStakeClick = (entry: StakeEntry) => {
-    if (!isSavings && !entry.isSavings) {
+    if (isSavings && entry.isSavings) {
       setSelectedEntry(entry);
       setShowPositionDrawer(true);
     } else {

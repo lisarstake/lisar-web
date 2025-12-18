@@ -266,10 +266,10 @@ export const ForecastPage: React.FC = () => {
         {/* Total Projected Earnings (Yearly) */}
         <div className="mb-8">
           <div className="bg-[#1a1a1a] rounded-xl p-6 text-center">
-            <h2 className="text-gray-400 text-sm font-medium mb-2">
+            <h2 className="text-gray-400 text-sm font-normal mb-2">
               Projected Annual Earning
             </h2>
-            <div className="text-3xl font-bold text-white/90 mb-1">
+            <div className="text-xl font-bold text-white/90 mb-1">
               {yieldLoading ? (
                 <Skeleton className="h-7 w-10 bg-[#2a2a2a] inline-block align-middle rounded-sm mb-2" />
               ) : (
@@ -282,7 +282,7 @@ export const ForecastPage: React.FC = () => {
               )}{" "}
               {selectedCurrency}
             </div>
-            <div className="text-[#C7EF6B] text-sm">= {apy}% APY</div>
+            <div className="text-[#C7EF6B] text-xs">= {apy}% APY</div>
           </div>
         </div>
 

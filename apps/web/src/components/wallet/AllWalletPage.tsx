@@ -15,6 +15,7 @@ import { usePrices } from "@/hooks/usePrices";
 import { WALLET_TOUR_ID } from "@/lib/tourConfig";
 import { priceService } from "@/lib/priceService";
 import { formatEarnings } from "@/lib/formatters";
+import { isProduction } from "@/lib/utils";
 import {
   Search,
   Bell,
@@ -52,8 +53,7 @@ export const AllWalletPage: React.FC = () => {
     ethereumLoading,
   } = useWallet();
   const {
-    delegatorStakeProfile,
-    delegatorTransactions,
+    
     isLoading: delegationLoading,
   } = useDelegation();
   const { unreadCount } = useNotification();
@@ -164,10 +164,7 @@ export const AllWalletPage: React.FC = () => {
     return priceService.getCurrencySymbol(fiatCurrency);
   }, [wallet?.fiatCurrency, state.user?.fiat_type]);
 
-  const nairaSymbol = useMemo(
-    () => priceService.getCurrencySymbol("NGN"),
-    []
-  );
+  const nairaSymbol = useMemo(() => priceService.getCurrencySymbol("NGN"), []);
 
   const handleNotificationClick = () => {
     navigate("/notifications");
@@ -336,7 +333,7 @@ export const AllWalletPage: React.FC = () => {
                   className="absolute top-6 right-6 z-20 w-6 h-6 bg-[#2a2a2a] rounded-full flex items-center justify-center hover:bg-[#3a3a3a] transition-colors cursor-pointer"
                   style={{ pointerEvents: "auto" }}
                 >
-                  <CircleQuestionMark size={14} color="#86B3F7" />
+                  <CircleQuestionMark size={14} color="#6a6a6a" />
                 </button>
 
                 {/* Wallet Title */}
@@ -384,8 +381,8 @@ export const AllWalletPage: React.FC = () => {
                               {card.type === "main"
                                 ? "USD"
                                 : card.type === "savings"
-                                ? "USDC"
-                                : "LPT"}
+                                  ? "USDC"
+                                  : "LPT"}
                             </span>
                           )}
                         </div>
@@ -425,13 +422,22 @@ export const AllWalletPage: React.FC = () => {
                         : "mt-8"
                   }`}
                 >
-                  <button
-                    onClick={() => handleDepositClick(card.type, index)}
-                    className="flex items-center gap-1 px-2.5 py-1.5 bg-[#C7EF6B] text-black rounded-full text-[10px] font-semibold hover:bg-[#B8E55A] transition-colors"
-                  >
-                    <Plus size={14} />
-                    Quick Add
-                  </button>
+                  {card.type === "savings" && isProduction() ? (
+                    <button
+                      disabled
+                      className="flex items-center gap-1 px-2.5 py-1.5 bg-[#2a2a2a] text-white/60 rounded-full text-[10px] font-semibold cursor-not-allowed"
+                    >
+                      coming soon
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleDepositClick(card.type, index)}
+                      className="flex items-center gap-1 px-2.5 py-1.5 bg-[#C7EF6B] text-black rounded-full text-[10px] font-semibold hover:bg-[#B8E55A] transition-colors"
+                    >
+                      <Plus size={14} />
+                      Quick Add
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -474,7 +480,9 @@ export const AllWalletPage: React.FC = () => {
             <div className="flex-1">
               <h3 className="text-white text-base font-semibold mb-1">
                 Predict and win
-                <span className="text-white/90 text-xs ml-2 bg-[#2a2a2a] rounded-full px-2 py-1">coming soon</span>
+                <span className="text-white/90 text-xs ml-2 bg-[#2a2a2a] rounded-full px-2 py-1">
+                  coming soon
+                </span>
               </h3>
               <p className="text-white/60 text-sm">
                 Trade on real-world events like sports and politics
@@ -507,12 +515,21 @@ export const AllWalletPage: React.FC = () => {
               </div>
             </div>
 
-            <button
-              onClick={() => navigate("/wallet/savings")}
-              className="mt-4 px-6 py-2.5 bg-[#438af6] text-white rounded-full text-xs font-semibold hover:bg-[#96C3F7] transition-colors relative z-10"
-            >
-              Get USD
-            </button>
+            {isProduction() ? (
+              <button
+                disabled
+                className="mt-4 px-3 py-1.5 bg-[#7daff6] text-white/90 rounded-full text-sm font-semibold cursor-not-allowed relative z-10"
+              >
+                coming soon
+              </button>
+            ) : (
+              <button
+                onClick={() => navigate("/wallet/savings")}
+                className="mt-4 px-6 py-2.5 bg-[#438af6] text-white rounded-full text-xs font-semibold hover:bg-[#96C3F7] transition-colors relative z-10"
+              >
+                Get USD
+              </button>
+            )}
 
             {/* Bottom Right Image */}
             <img

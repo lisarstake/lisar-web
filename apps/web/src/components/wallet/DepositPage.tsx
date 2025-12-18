@@ -47,7 +47,7 @@ export const DepositPage: React.FC = () => {
   const coinCode = isStables ? "usdc" : "lpt";
   const network = isStables
     ? selectedProvider === "maple"
-      ? "ethereum"
+      ? "erc20"
       : selectedProvider === "perena"
       ? "spl"
       : "spl"

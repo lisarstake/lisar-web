@@ -1,12 +1,9 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { OrchestratorList } from "../validator/OrchestratorList";
 import { WalletActionButtons } from "./WalletActionButtons";
 import { RecentTransactionsCard } from "./RecentTransactionsCard";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
-import { LisarLines } from "@/components/general/lisar-lines";
-import { useOrchestrators } from "@/contexts/OrchestratorContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWallet } from "@/contexts/WalletContext";
 import { useDelegation } from "@/contexts/DelegationContext";
@@ -19,13 +16,10 @@ import { priceService } from "@/lib/priceService";
 import { formatEarnings } from "@/lib/formatters";
 import { TransactionData } from "@/services/transactions/types";
 import {
-  Search,
-  Bell,
   CircleQuestionMark,
   ChevronLeft,
   Eye,
   EyeOff,
-  ChevronRight,
 } from "lucide-react";
 
 interface WalletPageProps {
@@ -53,7 +47,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
     ethereumLoading,
   } = useWallet();
   const { isLoading: delegationLoading } = useDelegation();
-  const { unreadCount } = useNotification();
+  useNotification();
   const { transactions, isLoading: transactionsLoading } = useTransactions();
   const { prices } = usePrices();
 
