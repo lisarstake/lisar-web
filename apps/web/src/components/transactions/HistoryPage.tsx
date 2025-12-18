@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   ChevronLeft,
   CircleQuestionMark,
@@ -12,12 +12,32 @@ import { TransactionData } from "@/services/transactions/types";
 
 export const HistoryPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
   const { transactions, isLoading, error, refetch } = useTransactions();
 
   const handleBackClick = () => {
     navigate(-1);
   };
+
+  const walletTypeFromState =
+    (location.state as { walletType?: string } | null)?.walletType;
+
+  const filteredTransactions = useMemo(() => {
+    if (walletTypeFromState === "staking") {
+      return transactions.filter(
+        (tx) => tx.token_symbol?.toUpperCase() === "LPT"
+      );
+    }
+
+    if (walletTypeFromState === "savings") {
+      return transactions.filter(
+        (tx) => tx.token_symbol?.toUpperCase() !== "LPT"
+      );
+    }
+
+    return transactions;
+  }, [transactions, walletTypeFromState]);
 
   const handleTransactionClick = (transaction: TransactionData) => {
     navigate(`/transaction-detail/${transaction.id}`);
@@ -49,10 +69,10 @@ export const HistoryPage: React.FC = () => {
       </div>
 
       {/* Transaction List */}
-      {transactions.length === 0 && !isLoading && !error ? (
+      {filteredTransactions.length === 0 && !isLoading && !error ? (
         <div className="flex-1 flex flex-col items-center justify-center px-6 mb-32">
           <TransactionList
-            transactions={transactions}
+            transactions={filteredTransactions}
             isLoading={isLoading}
             error={error}
             onRetry={refetch}
@@ -63,7 +83,7 @@ export const HistoryPage: React.FC = () => {
       ) : (
         <div className="flex-1 overflow-y-auto px-6 pb-20 scrollbar-hide">
           <TransactionList
-            transactions={transactions}
+            transactions={filteredTransactions}
             isLoading={isLoading}
             error={error}
             onRetry={refetch}

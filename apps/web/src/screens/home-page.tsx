@@ -11,7 +11,7 @@ function HomePage() {
   // Track landing page visit
   usePageTracking('Landing Page', { page_type: 'home' });
   return (
-    <div className="lg:px-20">
+    <div className="lg:px-24">
       <Navbar />
       <Hero />
       <Currencies />

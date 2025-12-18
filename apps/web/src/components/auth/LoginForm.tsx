@@ -188,10 +188,10 @@ export const LoginForm: React.FC = () => {
 
         {/* Title */}
         <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-white mb-2">
+          <h2 className="text-2xl font-bold text-white mb-2">
             Log in to your account
           </h2>
-          <p className="text-white/70 text-lg">
+          <p className="text-white/70 text-base">
             Welcome back! Please enter your details
           </p>
         </div>

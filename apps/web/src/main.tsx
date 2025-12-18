@@ -7,7 +7,7 @@ import { queryClient } from "@/providers/queryClient";
 import "./styles/index.css";
 import mixpanel from "mixpanel-browser";
 
-// Initialize Mixpanel
+// Mixpanel
 mixpanel.init(import.meta.env.VITE_MIXPANEL_TOKEN || "", {
   debug: false,
   api_host: "https://nginx-proxy-mctg.onrender.com",
@@ -19,7 +19,6 @@ mixpanel.init(import.meta.env.VITE_MIXPANEL_TOKEN || "", {
 
 // Handle chunk loading errors globally
 window.addEventListener("error", (event) => {
-  // Check if it's a chunk loading error
   if (
     event.message.includes("Failed to fetch dynamically imported module") ||
     event.message.includes("Importing a module script failed") ||

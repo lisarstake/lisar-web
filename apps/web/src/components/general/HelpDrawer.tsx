@@ -29,7 +29,7 @@ export const HelpDrawer: React.FC<HelpDrawerProps> = ({
           </DrawerTitle>
         </DrawerHeader>
 
-        <div className="p-4 space-y-2.5">
+        <div className="pt-4 space-y-1">
           {content.map((section, index) => (
             <div key={index}>
               <p className="text-gray-300 text-sm leading-relaxed">{section}</p>

@@ -4,3 +4,4 @@
  */
 
 export * from "./learn";
+export * from "./tiers";

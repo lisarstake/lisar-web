@@ -159,6 +159,26 @@ class PriceService {
     }
   }
 
+  async convertFiatToUsd(fiatAmount: number, fiatCode: string): Promise<number> {
+    const prices = await this.getPrices();
+
+    switch (fiatCode.toUpperCase()) {
+      case "USD":
+        return fiatAmount;
+      case "NGN":
+        // prices.ngn is the rate where 1 USD = prices.ngn NGN
+        return fiatAmount / prices.ngn;
+      case "EUR":
+        // prices.eur is the rate where 1 USD = prices.eur EUR
+        return fiatAmount / prices.eur;
+      case "GBP":
+        // prices.gbp is the rate where 1 USD = prices.gbp GBP
+        return fiatAmount / prices.gbp;
+      default:
+        return fiatAmount;
+    }
+  }
+
   getCurrencySymbol(fiatCode: string): string {
     const currency = SUPPORTED_CURRENCIES.find(
       (c) => c.code === fiatCode.toUpperCase()

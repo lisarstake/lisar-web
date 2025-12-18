@@ -10,6 +10,8 @@ interface OrchestratorItemProps {
   onClick?: () => void;
   isLoading?: boolean;
   tourId?: string;
+  tierNumber?: number;
+  tierTitle?: string;
 }
 
 export const OrchestratorItem: React.FC<OrchestratorItemProps> = ({
@@ -17,6 +19,8 @@ export const OrchestratorItem: React.FC<OrchestratorItemProps> = ({
   onClick,
   isLoading = false,
   tourId,
+  tierNumber,
+  tierTitle,
 }) => {
   const navigate = useNavigate();
   const qrCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -28,38 +32,11 @@ export const OrchestratorItem: React.FC<OrchestratorItemProps> = ({
     if (onClick) {
       onClick();
     } else {
-      navigate(`/validator-details/${orchestrator.address}`);
+      navigate(`/validator-details/${orchestrator.address}`, {
+        state: { tierNumber, tierTitle },
+      });
     }
   };
-
-  // Generate QR code when there's no avatar or avatar fails to load
-  useEffect(() => {
-    if (!orchestrator || !qrCanvasRef.current) return;
-
-    const avatar = orchestrator?.avatar || orchestrator?.ensIdentity?.avatar;
-    if (avatar && !avatarError) return;
-
-    const address = orchestrator.address;
-    if (!address) return;
-
-    const subtleColor = getSubtleColorForAddress(address);
-
-    QRCode.toCanvas(
-      qrCanvasRef.current,
-      address,
-      {
-        width: 48,
-        margin: 1,
-        color: {
-          dark: subtleColor,
-          light: "#2a2a2a",
-        },
-      },
-      (error) => {
-        if (error) console.error("QR Code generation error:", error);
-      }
-    );
-  }, [orchestrator, avatarError]);
 
   if (isLoading) {
     return (
@@ -87,8 +64,6 @@ export const OrchestratorItem: React.FC<OrchestratorItemProps> = ({
     orchestrator?.ensIdentity?.name ||
     orchestrator?.ensName ||
     "Unknown Validator";
-  const avatar = orchestrator?.avatar || orchestrator?.ensIdentity?.avatar;
-  const displayInitial = displayName.charAt(0)?.toUpperCase() || "?";
 
   return (
     <div
@@ -97,20 +72,14 @@ export const OrchestratorItem: React.FC<OrchestratorItemProps> = ({
       data-tour={tourId}
     >
       <div className="flex items-center space-x-3">
-        {avatar && !avatarError ? (
+        <div className="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center bg-[#111] shrink-0">
           <img
-            src={avatar}
+            src={"/highyield-1.svg"}
             alt={displayName}
-            className="w-12 h-12 rounded-full object-cover"
-            onError={() => {
-              setAvatarError(true);
-            }}
+            className="w-[75%] h-[75%] object-contain"
           />
-        ) : (
-          <div className="w-12 h-12 rounded-full bg-[#1a1a1a] flex items-center justify-center overflow-hidden">
-            <canvas ref={qrCanvasRef} className="w-full h-full rounded-full" />
-          </div>
-        )}
+        </div>
+
         <div>
           <h3 className="text-gray-100 font-medium text-base">
             {displayName.length > 20
@@ -129,13 +98,13 @@ export const OrchestratorItem: React.FC<OrchestratorItemProps> = ({
 
       <div className="text-right">
         <p className="text-[#C7EF6B] font-medium text-sm">
-          APY: {orchestrator?.apy || "0%"}
+          {orchestrator?.apy || "0%"} p/a
         </p>
         <p className="text-gray-400 text-xs mt-1">
-          Fee:{" "}
           {orchestrator?.reward
             ? (parseFloat(orchestrator.reward) / 10000).toFixed(1) + "%"
-            : "0%"}
+            : "0%"}{" "}
+          fee
         </p>
       </div>
     </div>
