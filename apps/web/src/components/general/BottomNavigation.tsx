@@ -1,9 +1,10 @@
 import {
   Calculator,
   CircleDollarSign,
-  LayoutGrid,
+  CoinsIcon,
+  House,
+  Landmark,
   TvMinimalPlay,
-  Wallet2,
 } from "lucide-react";
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
@@ -32,14 +33,13 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
             isActive("/wallet") ? "text-[#C7EF6B]" : "text-gray-400"
           }`}
         >
-          <Wallet2 size={22} className="mb-1" />
+          <House size={22} className="mb-1" />
 
-          <span className="text-xs">Wallet</span>
+          <span className="text-xs">Home</span>
           {isActive("/wallet") && (
             <div className="w-6 h-0.5 bg-[#C7EF6B] mt-1 rounded-full"></div>
           )}
         </Link>
-
 
         {/* Forecast */}
         <Link
@@ -49,8 +49,8 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
             isActive("/forecast") ? "text-[#C7EF6B]" : "text-gray-400"
           }`}
         >
-          <Calculator size={22} className="mb-1" />
-          <span className="text-xs">Yield</span>
+          <Landmark size={22} className="mb-1" />
+          <span className="text-xs">Yields</span>
           {isActive("/forecast") && (
             <div className="w-6 h-0.5 bg-[#C7EF6B] mt-1 rounded-full"></div>
           )}
@@ -70,7 +70,6 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
             <div className="w-6 h-0.5 bg-[#C7EF6B] mt-1 rounded-full"></div>
           )}
         </Link>
-
 
         {/* Earn */}
         <Link

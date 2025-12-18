@@ -24,21 +24,45 @@ export const WithdrawPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const locationState = location.state as {
+    lptAmount?: string;
+    walletType?: string;
+    provider?: "maple" | "perena";
+    tierNumber?: number;
+    tierTitle?: string;
+  } | null;
+
   const [lptAmount, setLptAmount] = useState(() => {
-    const state = location.state as { lptAmount?: string } | null;
-    return state?.lptAmount || "0";
+    return locationState?.lptAmount || "0";
   });
 
   const [withdrawalAddress, setWithdrawalAddress] = useState("");
   const [isWithdrawalLaunched, setIsWithdrawalLaunched] = useState(false);
-  const network = "Arbitrum";
+  
+  const walletType = locationState?.walletType;
+  const selectedProvider = locationState?.provider;
+  const isStables = walletType === "savings";
+  const coinCode = isStables
+    ? selectedProvider === "maple"
+      ? "usdc"
+      : selectedProvider === "perena"
+      ? "usdc"
+      : "usdc"
+    : "lpt";
+  const network = isStables
+    ? selectedProvider === "maple"
+      ? "ethereum"
+      : selectedProvider === "perena"
+      ? "spl"
+      : "spl"
+    : "arbitrum";
+  const tokenName = isStables ? "USDC" : "LPT";
 
   useEffect(() => {
-    const state = location.state as { lptAmount?: string } | null;
-    if (state?.lptAmount) {
-      setLptAmount(state.lptAmount);
+    if (locationState?.lptAmount) {
+      setLptAmount(locationState.lptAmount);
     }
-  }, [location.state]);
+  }, [locationState]);
 
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
   const [isWithdrawing, setIsWithdrawing] = useState(false);
@@ -48,7 +72,7 @@ export const WithdrawPage: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const [fiatEquivalent, setFiatEquivalent] = useState(0);
   const { state } = useAuth();
-  const { wallet } = useWallet();
+  const { wallet, solanaBalance } = useWallet();
   const { refetch: refetchDelegation } = useDelegation();
   const { refetch: refetchWallet } = useWallet();
   const { refetch: refetchTransactions } = useTransactions();
@@ -57,8 +81,11 @@ export const WithdrawPage: React.FC = () => {
   const userCurrency = state.user?.fiat_type || "NGN";
   const currencySymbol = priceService.getCurrencySymbol(userCurrency);
 
-  // User's wallet balance
-  const walletBalanceLpt = wallet?.balanceLpt || 0;
+  // User's wallet balance:
+  // - For High Yield: LPT balance
+  // - For Stables: combined stables balance from WalletContext (Solana + EVM)
+  const walletBalance =
+    isStables ? solanaBalance || 0 : wallet?.balanceLpt || 0;
 
   const pageTitle = "Withdraw";
 
@@ -88,14 +115,20 @@ export const WithdrawPage: React.FC = () => {
   }, [lptAmount, userCurrency]);
 
   const handleMaxClick = () => {
-    setLptAmount(walletBalanceLpt.toString());
+    setLptAmount(walletBalance.toString());
   };
 
   const handleProceed = async () => {
+    if (isStables && !selectedProvider) {
+      setErrorMessage("Provider not selected. Please go back and select a tier.");
+      setShowErrorDrawer(true);
+      return;
+    }
+
     const numericAmount = parseFloat(lptAmount.replace(/,/g, "")) || 0;
 
     if (!withdrawalAddress || withdrawalAddress.trim() === "") {
-      setErrorMessage("Please enter a fiat receiving address.");
+      setErrorMessage("Please enter a withdrawal address.");
       setShowErrorDrawer(true);
       return;
     }
@@ -122,55 +155,116 @@ export const WithdrawPage: React.FC = () => {
       return;
     }
 
+    if (isStables && !selectedProvider) {
+      setErrorMessage("Please select a provider (USD Base or USD Plus).");
+      setShowErrorDrawer(true);
+      return;
+    }
+
     setIsWithdrawing(true);
     try {
       const numericAmount = lptAmount.replace(/,/g, "");
 
-      //approve withdrawal
-      const approveResponse = await walletService.approveLpt({
-        walletId: state.user.wallet_id,
-        walletAddress: state.user.wallet_address,
-        spender: state.user.wallet_address,
-        amount: numericAmount,
-      });
+      if (isStables && selectedProvider) {
+        if (selectedProvider === "maple") {
+          const ethWalletResp = await walletService.getPrimaryWallet("ethereum");
+          if (!ethWalletResp.success || !ethWalletResp.wallet) {
+            setErrorMessage("Ethereum wallet not found. Please create a wallet first.");
+            setShowErrorDrawer(true);
+            setIsWithdrawing(false);
+            return;
+          }
 
-      if (!approveResponse.success) {
-        const friendlyApprovalMsg =
-          "We couldn't complete the withdrawal. Please double-check the details and try again.";
-        const serverApprovalMsg =
-          approveResponse.message || approveResponse.error || "";
-        setErrorMessage(
-          serverApprovalMsg ? `${friendlyApprovalMsg}` : friendlyApprovalMsg
-        );
-        setShowErrorDrawer(true);
-        return;
+          const sendResponse = await walletService.sendToken(
+            1,
+            "USDC",
+            {
+              walletId: ethWalletResp.wallet.wallet_id,
+              walletAddress: ethWalletResp.wallet.wallet_address,
+              to: withdrawalAddress,
+              amount: numericAmount,
+            }
+          );
+
+          if (!sendResponse.success) {
+            setErrorMessage(
+              sendResponse.error || "Failed to withdraw USDC. Please try again."
+            );
+            setShowErrorDrawer(true);
+            setIsWithdrawing(false);
+            return;
+          }
+        } else if (selectedProvider === "perena") {
+          const solWalletResp = await walletService.getPrimaryWallet("solana");
+          if (!solWalletResp.success || !solWalletResp.wallet) {
+            setErrorMessage("Solana wallet not found. Please create a wallet first.");
+            setShowErrorDrawer(true);
+            setIsWithdrawing(false);
+            return;
+          }
+
+          const sendResponse = await walletService.sendSolana({
+            walletId: solWalletResp.wallet.wallet_id,
+            fromAddress: solWalletResp.wallet.wallet_address,
+            toAddress: withdrawalAddress,
+            token: "USDC",
+            amount: parseFloat(numericAmount),
+          });
+
+          if (!sendResponse.success) {
+            setErrorMessage(
+              sendResponse.error || "Failed to withdraw USDC. Please try again."
+            );
+            setShowErrorDrawer(true);
+            setIsWithdrawing(false);
+            return;
+          }
+        }
+      } else {
+        const approveResponse = await walletService.approveLpt({
+          walletId: state.user.wallet_id,
+          walletAddress: state.user.wallet_address,
+          spender: state.user.wallet_address,
+          amount: numericAmount,
+        });
+
+        if (!approveResponse.success) {
+          const friendlyApprovalMsg =
+            "We couldn't complete the withdrawal. Please double-check the details and try again.";
+          const serverApprovalMsg =
+            approveResponse.message || approveResponse.error || "";
+          setErrorMessage(
+            serverApprovalMsg ? `${friendlyApprovalMsg}` : friendlyApprovalMsg
+          );
+          setShowErrorDrawer(true);
+          setIsWithdrawing(false);
+          return;
+        }
+
+        const sendResponse = await walletService.sendLpt({
+          walletId: state.user.wallet_id,
+          walletAddress: state.user.wallet_address,
+          to: withdrawalAddress,
+          amount: numericAmount,
+        });
+
+        if (!sendResponse.success) {
+          const friendlySendMsg =
+            "We couldn't complete the withdrawal. Please double-check the details and try again.";
+          const serverSendMsg = sendResponse.message || sendResponse.error || "";
+          setErrorMessage(serverSendMsg ? `${friendlySendMsg}` : friendlySendMsg);
+          setShowErrorDrawer(true);
+          setIsWithdrawing(false);
+          return;
+        }
       }
 
-      // send lpt
-      const sendResponse = await walletService.sendLpt({
-        walletId: state.user.wallet_id,
-        walletAddress: state.user.wallet_address,
-        to: withdrawalAddress,
-        amount: numericAmount,
-      });
-
-      if (!sendResponse.success) {
-        const friendlySendMsg =
-          "We couldn't complete the withdrawal. Please double-check the details and try again.";
-        const serverSendMsg = sendResponse.message || sendResponse.error || "";
-        setErrorMessage(serverSendMsg ? `${friendlySendMsg}` : friendlySendMsg);
-        setShowErrorDrawer(true);
-        return;
-      }
-
-      // Refetch delegation, wallet and transaction data
       await Promise.all([
         refetchDelegation(),
         refetchWallet(),
         refetchTransactions(),
       ]);
 
-      // Clear inputs after successful withdrawal
       setWithdrawalAddress("");
       setLptAmount("0");
 
@@ -200,8 +294,8 @@ export const WithdrawPage: React.FC = () => {
 
     const params = new URLSearchParams({
       appId: appId.toString(),
-      coinCode: "lpt",
-      network: "arbitrum",
+      coinCode: coinCode,
+      network: network,
       coinAmount: "0",
       fiatType: "6",
       // fiatType: fiatType.toString(),
@@ -232,7 +326,7 @@ export const WithdrawPage: React.FC = () => {
   // Check if user has insufficient funds
   const numericAmount = parseFloat(lptAmount.replace(/,/g, "")) || 0;
   const hasInsufficientFunds =
-    numericAmount > 0 && numericAmount > walletBalanceLpt;
+    numericAmount > 0 && numericAmount > walletBalance;
 
   return (
     <div className="h-screen bg-[#050505] text-white flex flex-col">
@@ -257,6 +351,31 @@ export const WithdrawPage: React.FC = () => {
 
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto px-6 pb-28 scrollbar-hide">
+        {/* Provider Indicator for Stables */}
+        {isStables && selectedProvider && locationState?.tierTitle && (
+          <div className="py-4">
+            <div className="bg-[#1a1a1a] rounded-lg p-4 border border-[#2a2a2a]">
+              <div className="flex items-center gap-3">
+                <img
+                  src={selectedProvider === "maple" ? "/maple.svg" : "/perena2.png"}
+                  alt={selectedProvider}
+                  className="w-8 h-8 object-contain"
+                />
+                <div>
+                  <p className="text-white/90 text-sm font-medium">
+                    {locationState.tierTitle}
+                  </p>
+                  <p className="text-gray-400 text-xs">
+                    {selectedProvider === "maple"
+                      ? "USD Base - Up to 6.5% APY"
+                      : "USD Plus - Up to 14% APY"}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Withdrawal Address Input */}
         <div className="pt-1">
           <h3 className="text-base font-medium text-white/90 mb-2">
@@ -319,7 +438,7 @@ export const WithdrawPage: React.FC = () => {
                 }
                 setLptAmount(numericValue);
               }}
-              placeholder="LPT"
+              placeholder={tokenName}
               disabled={!isWithdrawalLaunched}
               className={`flex-1 bg-transparent text-base font-medium focus:outline-none ${
                 !isWithdrawalLaunched
@@ -386,7 +505,7 @@ export const WithdrawPage: React.FC = () => {
               <div className="flex-1">
                 <div>
                   <span className="text-gray-400 text-sm">
-                    {walletBalanceLpt.toLocaleString()} LPT
+                    {walletBalance.toLocaleString()} {tokenName}
                   </span>
                 </div>
               </div>
@@ -394,7 +513,7 @@ export const WithdrawPage: React.FC = () => {
           </div>
           {hasInsufficientFunds && (
             <p className="text-red-300 text-xs mt-2 pl-2">
-              Insufficient funds, ensure you have enough LPT in your wallet
+              Insufficient funds, ensure you have enough {tokenName} in your wallet
             </p>
           )}
           {/* Guide */}

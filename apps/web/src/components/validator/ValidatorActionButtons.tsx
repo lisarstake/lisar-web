@@ -4,6 +4,7 @@ import {
   SquareMinus,
   ArrowUpRight,
   Share,
+  PiggyBank,
 } from "lucide-react";
 import { OrchestratorResponse } from "@/services/delegation/types";
 
@@ -32,8 +33,8 @@ export const ValidatorActionButtons: React.FC<ValidatorActionButtonsProps> = ({
         onClick={onStakeClick}
         className="flex flex-col items-center justify-center space-y-2 w-20 h-20 bg-[#2a2a2a] rounded-xl"
       >
-        <ChartSpline size={16} color="#C7EF6B" />
-        <span className="text-gray-300 text-xs">Stake</span>
+        <PiggyBank size={24} color="#C7EF6B" />
+        <span className="text-gray-300 text-xs">Vest</span>
       </button>
 
       <button
@@ -52,7 +53,7 @@ export const ValidatorActionButtons: React.FC<ValidatorActionButtonsProps> = ({
         <span
           className={`text-xs ${hasStakeWithValidator ? "text-gray-300" : "text-gray-500"}`}
         >
-          Unstake
+          Unvest
         </span>
       </button>
 

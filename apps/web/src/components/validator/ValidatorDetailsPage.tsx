@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { ChevronLeft, CircleQuestionMark } from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { ActionDrawer } from "@/components/general/ActionDrawer";
@@ -21,7 +21,13 @@ import { getEarliestUnbondingTime } from "@/lib/unbondingTime";
 
 export const ValidatorDetailsPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { validatorId } = useParams<{ validatorId: string }>();
+
+  const locationState = location.state as {
+    tierNumber?: number;
+    tierTitle?: string;
+  } | null;
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
   const [showShareDrawer, setShowShareDrawer] = useState(false);
   const [showUnstakeRestrictionDrawer, setShowUnstakeRestrictionDrawer] =
@@ -154,7 +160,12 @@ export const ValidatorDetailsPage: React.FC = () => {
     if (hasStakeWithDifferentValidator) {
       setShowMoveStakeDrawer(true);
     } else {
-      navigate(`/stake/${currentValidator?.address}`);
+      navigate(`/stake/${currentValidator?.address}`, {
+        state: {
+          tierNumber: locationState?.tierNumber,
+          tierTitle: locationState?.tierTitle,
+        },
+      });
     }
   };
 

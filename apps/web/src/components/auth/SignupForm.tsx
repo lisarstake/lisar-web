@@ -103,10 +103,10 @@ export const SignupForm: React.FC = () => {
 
         {/* Title */}
         <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-white mb-2">
+          <h2 className="text-2xl font-bold text-white mb-2">
             Create an account
           </h2>
-          <p className="text-white/70 text-lg">
+          <p className="text-white/70 text-base">
             Enter your details to get started with Lisar
           </p>
         </div>
