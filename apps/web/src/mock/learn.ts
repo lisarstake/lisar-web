@@ -160,9 +160,9 @@ export const mockLearnContent: LearnContent[] = [
   {
     id: "11",
     slug: "how-to-unstake",
-    title: "How to Unstake on Lisar",
+    title: "How to Unvest on Lisar",
     subtitle: "Understand the unstaking process and unbonding period",
-    videoUrl: "https://vimeo.com/1141206670?fl=ip&fe=ec",
+    videoUrl: "https://vimeo.com/1148266260?fl=ip&fe=ec",
     brief:
       "Learn how to unstake your staked LPT tokens from a validator.",
     fullContent:
