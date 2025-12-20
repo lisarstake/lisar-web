@@ -40,7 +40,7 @@ export const WalletActionButtons: React.FC<WalletActionButtonsProps> = ({
     <div className="flex items-center justify-around px-6 py-2">
       <div className="flex flex-col items-center">
         <button
-          data-tour="deposit-button"
+          data-tour="wallet-page-deposit-button"
           onClick={onDepositClick}
           className={`flex items-center justify-center w-14 h-14 ${buttonBgColor} rounded-xl transition-colors hover:opacity-80`}
         >
@@ -51,7 +51,7 @@ export const WalletActionButtons: React.FC<WalletActionButtonsProps> = ({
 
       <div className="flex flex-col items-center">
         <button
-          data-tour="stake-button"
+          data-tour="wallet-page-stake-button"
           onClick={onStakeClick}
           className={`flex items-center justify-center w-14 h-14 ${buttonBgColor} rounded-xl transition-colors hover:opacity-80`}
         >
@@ -62,7 +62,7 @@ export const WalletActionButtons: React.FC<WalletActionButtonsProps> = ({
 
       <div className="flex flex-col items-center">
         <button
-          data-tour="portfolio-button"
+          data-tour="wallet-page-portfolio-button"
           onClick={onPortfolioClick}
           className={`flex items-center justify-center w-14 h-14 ${buttonBgColor} rounded-xl transition-colors hover:opacity-80`}
         >
@@ -73,7 +73,7 @@ export const WalletActionButtons: React.FC<WalletActionButtonsProps> = ({
 
       <div className="flex flex-col items-center">
         <button
-          data-tour="withdraw-button"
+          data-tour="wallet-page-withdraw-button"
           onClick={onWithdrawClick}
           className={`flex items-center justify-center w-14 h-14 ${buttonBgColor} rounded-xl transition-colors hover:opacity-80`}
         >

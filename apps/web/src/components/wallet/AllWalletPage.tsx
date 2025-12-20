@@ -1,7 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { OrchestratorList } from "../validator/OrchestratorList";
-import { WalletActionButtons } from "./WalletActionButtons";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { LisarLines } from "@/components/general/lisar-lines";
@@ -12,15 +10,13 @@ import { useDelegation } from "@/contexts/DelegationContext";
 import { useNotification } from "@/contexts/NotificationContext";
 import { useGuidedTour } from "@/hooks/useGuidedTour";
 import { usePrices } from "@/hooks/usePrices";
-import { WALLET_TOUR_ID } from "@/lib/tourConfig";
+import { ALL_WALLET_TOUR_ID } from "@/lib/tourConfig";
 import { priceService } from "@/lib/priceService";
 import { formatEarnings } from "@/lib/formatters";
 import { isProduction } from "@/lib/utils";
 import {
-  Search,
   Bell,
   CircleQuestionMark,
-  ArrowRight,
   Plus,
   Eye,
   EyeOff,
@@ -42,7 +38,7 @@ export const AllWalletPage: React.FC = () => {
   useEffect(() => {
     localStorage.setItem("wallet_show_balance", JSON.stringify(showBalance));
   }, [showBalance]);
-  const { orchestrators, isLoading, error, refetch } = useOrchestrators();
+  const { orchestrators } = useOrchestrators();
   const { state } = useAuth();
   const {
     wallet,
@@ -52,10 +48,7 @@ export const AllWalletPage: React.FC = () => {
     solanaLoading,
     ethereumLoading,
   } = useWallet();
-  const {
-    
-    isLoading: delegationLoading,
-  } = useDelegation();
+  const { isLoading: delegationLoading } = useDelegation();
   const { unreadCount } = useNotification();
   const { prices } = usePrices();
 
@@ -64,42 +57,10 @@ export const AllWalletPage: React.FC = () => {
     return state.user?.is_onboarded === false && !state.isLoading;
   }, [state.user?.is_onboarded, state.isLoading]);
 
-  const { isCompleted: isTourCompleted, startTour } = useGuidedTour({
-    tourId: WALLET_TOUR_ID,
+  const {} = useGuidedTour({
+    tourId: ALL_WALLET_TOUR_ID,
     autoStart: shouldAutoStart,
   });
-
-  const filteredOrchestrators = useMemo(() => {
-    if (!searchQuery.trim()) {
-      return orchestrators;
-    }
-
-    const query = searchQuery.toLowerCase().trim();
-
-    return orchestrators.filter((orchestrator) => {
-      // Search by ENS name
-      const ensName =
-        orchestrator.ensIdentity?.name || orchestrator.ensName || "";
-      if (ensName.toLowerCase().includes(query)) {
-        return true;
-      }
-
-      // Search by address
-      const address = orchestrator.address || "";
-      if (address.toLowerCase().includes(query)) {
-        return true;
-      }
-
-      // Search by description
-      const description =
-        orchestrator.ensIdentity?.description || orchestrator.description || "";
-      if (description.toLowerCase().includes(query)) {
-        return true;
-      }
-
-      return false;
-    });
-  }, [orchestrators, searchQuery]);
 
   const ethereumBalance = contextEthereumBalance || 0;
   const solanaBalance = contextSolanaBalance || 0;
@@ -139,11 +100,6 @@ export const AllWalletPage: React.FC = () => {
         return stableBalance;
     }
   }, [solanaBalance, prices, state.user?.fiat_type]);
-
-  const fiatValue = useMemo(
-    () => ethereumFiatValue + solanaFiatValue,
-    [ethereumFiatValue, solanaFiatValue]
-  );
 
   // Total USD = EVM LPT in USD + all USD stables
   const totalUsdBalance = useMemo(() => {
@@ -307,6 +263,9 @@ export const AllWalletPage: React.FC = () => {
             >
               <div
                 className={`bg-linear-to-br ${card.gradient} rounded-2xl p-6 h-[170px] relative overflow-hidden border border-[#2a2a2a]`}
+                data-tour={
+                  card.id === "main" ? "all-wallet-balance-card" : undefined
+                }
               >
                 {/* Lisar Lines Decoration */}
                 <LisarLines
@@ -329,7 +288,7 @@ export const AllWalletPage: React.FC = () => {
                     setSelectedCardType(card.type);
                     setShowBalanceDrawer(true);
                   }}
-                  data-tour="wallet-help-icon"
+                  data-tour="all-wallet-help-icon"
                   className="absolute top-6 right-6 z-20 w-6 h-6 bg-[#2a2a2a] rounded-full flex items-center justify-center hover:bg-[#3a3a3a] transition-colors cursor-pointer"
                   style={{ pointerEvents: "auto" }}
                 >
@@ -502,7 +461,10 @@ export const AllWalletPage: React.FC = () => {
 
         <div className="space-y-4">
           {/* Stables Card */}
-          <div className="bg-[#6da7fd] rounded-2xl p-5 border-2 border-[#86B3F7]/30 hover:border-[#86B3F7]/50 transition-colors relative overflow-hidden">
+          <div
+            className="bg-[#6da7fd] rounded-2xl p-5 border-2 border-[#86B3F7]/30 hover:border-[#86B3F7]/50 transition-colors relative overflow-hidden"
+            data-tour="all-wallet-stables-card"
+          >
             <div className="flex items-start justify-between mb-3">
               <div className="flex-1 relative z-10">
                 <h3 className="text-white text-base font-semibold mb-2">
@@ -540,7 +502,10 @@ export const AllWalletPage: React.FC = () => {
           </div>
 
           {/* High Yield Card */}
-          <div className="bg-transparent rounded-2xl p-5 border-2 border-[#C7EF6B]/30 hover:border-[#C7EF6B]/50 transition-colors relative overflow-hidden">
+          <div
+            className="bg-transparent rounded-2xl p-5 border-2 border-[#C7EF6B]/30 hover:border-[#C7EF6B]/50 transition-colors relative overflow-hidden"
+            data-tour="all-wallet-high-yield-card"
+          >
             <div className="flex items-start justify-between mb-3">
               <div className="flex-1 relative z-10">
                 <h3 className="text-white text-base font-semibold mb-2">

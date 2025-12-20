@@ -1,7 +1,7 @@
 import React from 'react';
 import { Info } from 'lucide-react';
 import { useGuidedTour } from '@/hooks/useGuidedTour';
-import { WALLET_TOUR_ID } from '@/lib/tourConfig';
+import { ALL_WALLET_TOUR_ID } from '@/lib/tourConfig';
 
 interface TourButtonProps {
   variant?: 'icon' | 'full';
@@ -17,7 +17,7 @@ export const TourButton: React.FC<TourButtonProps> = ({
   className = '' 
 }) => {
   const { startTour, isCompleted } = useGuidedTour({
-    tourId: WALLET_TOUR_ID,
+    tourId: ALL_WALLET_TOUR_ID,
     autoStart: false,
   });
 
