@@ -20,6 +20,8 @@ import {
   ChevronLeft,
   Eye,
   EyeOff,
+  ArrowRight,
+  TvMinimalPlay,
 } from "lucide-react";
 
 interface WalletPageProps {
@@ -121,9 +123,9 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
 
   const currentWalletTitle = useMemo(() => {
     if (walletType === "staking") {
-      return "High Yield";
+      return "Staking";
     } else if (walletType === "savings") {
-      return "Stables";
+      return "Savings";
     }
     return "Total Balance";
   }, [walletType]);
@@ -174,6 +176,10 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
     } else {
       navigate("/history");
     }
+  };
+
+  const handleAcademyClick = () => {
+    navigate("/learn");
   };
 
   const recentTransactions = useMemo(() => {
@@ -371,6 +377,16 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
           skeletonCount={5}
         />
       </div>
+
+      {/* Floating Academy Button */}
+      <button
+        onClick={handleAcademyClick}
+        className="fixed bottom-28 right-8 flex flex-col items-center justify-center bg-[#2a2a2a] rounded-full gap-2 h-14 w-14 text-white/70 hover:text-white transition-colors z-20"
+        aria-label="Watch video guides"
+      >
+        <TvMinimalPlay size={24} />
+     
+      </button>
 
       {/* Bottom Navigation */}
       <BottomNavigation currentPath="/wallet" />

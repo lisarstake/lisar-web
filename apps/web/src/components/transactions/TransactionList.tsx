@@ -173,7 +173,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
           ))
         : transactionGroups.map((group, groupIndex) => (
             <div key={groupIndex} className="mb-6">
-              <h2 className="text-gray-400 text-sm font-medium mb-3">
+              <h2 className="text-gray-400 text-xs font-medium mb-3">
                 {group.date}
               </h2>
               <div className="space-y-3">
@@ -181,7 +181,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                   <div
                     key={transaction.id}
                     onClick={() => onTransactionClick(transaction)}
-                    className="flex items-center justify-between p-4 bg-[#1a1a1a] rounded-xl border border-[#2a2a2a] hover:border-[#C7EF6B]/30 transition-colors cursor-pointer"
+                    className="flex items-center justify-between p-3 bg-[#1a1a1a] rounded-xl border border-[#2a2a2a] hover:border-[#C7EF6B]/30 transition-colors cursor-pointer"
                   >
                     <div className="flex items-center space-x-3">
                       <div className="w-10 h-10 bg-[#2a2a2a] rounded-full flex items-center justify-center">

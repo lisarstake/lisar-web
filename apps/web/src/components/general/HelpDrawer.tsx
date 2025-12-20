@@ -40,7 +40,7 @@ export const HelpDrawer: React.FC<HelpDrawerProps> = ({
         <DrawerFooter>
           <button
             onClick={onClose}
-            className="w-full py-4 rounded-xl font-semibold text-lg bg-[#C7EF6B] text-black hover:bg-[#B8E55A] transition-colors"
+            className="w-full py-3 rounded-xl font-semibold text-lg bg-[#C7EF6B] text-black hover:bg-[#B8E55A] transition-colors"
           >
             Got it
           </button>

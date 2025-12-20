@@ -120,4 +120,18 @@ export const parseFormattedNumber = (value: string): string => {
   return value.replace(/,/g, '');
 };
 
+/**
+ * Format fiat currency values for display
+ * Always shows 2 decimal places with thousand separators
+ * Example: 1234.5 -> "1,234.50", 1000000.99 -> "1,000,000.99"
+ */
+export const formatFiat = (value: number): string => {
+  if (isNaN(value)) return '0.00';
+  
+  return value.toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+};
+
 

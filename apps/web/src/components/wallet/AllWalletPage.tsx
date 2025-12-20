@@ -10,11 +10,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useWallet } from "@/contexts/WalletContext";
 import { useDelegation } from "@/contexts/DelegationContext";
 import { useNotification } from "@/contexts/NotificationContext";
+import { useTransactions } from "@/contexts/TransactionContext";
 import { useGuidedTour } from "@/hooks/useGuidedTour";
 import { usePrices } from "@/hooks/usePrices";
 import { WALLET_TOUR_ID } from "@/lib/tourConfig";
 import { priceService } from "@/lib/priceService";
-import { formatEarnings } from "@/lib/formatters";
+import { formatFiat } from "@/lib/formatters";
 import { isProduction } from "@/lib/utils";
 import {
   Search,
@@ -24,7 +25,22 @@ import {
   Plus,
   Eye,
   EyeOff,
+  ChevronRight,
+  LayersIcon,
+  Landmark,
+  ArrowDown,
+  ArrowUp,
+  ChartSpline,
+  SquareMinus,
+  Headset,
 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export const AllWalletPage: React.FC = () => {
   const navigate = useNavigate();
@@ -39,9 +55,21 @@ export const AllWalletPage: React.FC = () => {
     return saved ? JSON.parse(saved) : false;
   });
 
+  const [selectedCurrency, setSelectedCurrency] = useState<"USD" | "NGN">(
+    () => {
+      const saved = localStorage.getItem("wallet_currency");
+      return (saved as "USD" | "NGN") || "USD";
+    }
+  );
+
   useEffect(() => {
     localStorage.setItem("wallet_show_balance", JSON.stringify(showBalance));
   }, [showBalance]);
+
+  useEffect(() => {
+    localStorage.setItem("wallet_currency", selectedCurrency);
+  }, [selectedCurrency]);
+
   const { orchestrators, isLoading, error, refetch } = useOrchestrators();
   const { state } = useAuth();
   const {
@@ -52,11 +80,9 @@ export const AllWalletPage: React.FC = () => {
     solanaLoading,
     ethereumLoading,
   } = useWallet();
-  const {
-    
-    isLoading: delegationLoading,
-  } = useDelegation();
+  const { isLoading: delegationLoading } = useDelegation();
   const { unreadCount } = useNotification();
+  const { transactions, isLoading: transactionsLoading } = useTransactions();
   const { prices } = usePrices();
 
   // Start tour for non-onboarded users
@@ -149,11 +175,11 @@ export const AllWalletPage: React.FC = () => {
   const totalUsdBalance = useMemo(() => {
     const lptPriceInUsd = prices.lpt || 0;
     const lptUsdValue = ethereumBalance * lptPriceInUsd;
-    const stablesUsdValue = solanaBalance; // already USD-equivalent units
+    const stablesUsdValue = solanaBalance;
     return lptUsdValue + stablesUsdValue;
   }, [ethereumBalance, solanaBalance, prices]);
 
-  // Total NGN equivalent (used under the USD value on the main card)
+  // Total NGN equivalent
   const totalNairaBalance = useMemo(() => {
     const nairaRate = prices.ngn || 0;
     return totalUsdBalance * nairaRate;
@@ -168,6 +194,14 @@ export const AllWalletPage: React.FC = () => {
 
   const handleNotificationClick = () => {
     navigate("/notifications");
+  };
+
+  const handleSupportClick = () => {
+    window.open(
+      "https://t.me/+F0YXOMaiJMxkODVk",
+      "_blank",
+      "noopener,noreferrer"
+    );
   };
 
   const handleProfileClick = () => {
@@ -212,39 +246,57 @@ export const AllWalletPage: React.FC = () => {
   const walletCards = useMemo(
     () => [
       {
-        id: "main",
-        title: "Total Balance",
-        balance: totalUsdBalance, // show total USD value
-        fiatValue: totalNairaBalance, // NGN equivalent
-        type: "main",
+        id: "balance",
+        title: "Wallet Balance",
+        type: "balance",
         gradient: "from-[#0f0f0f] to-[#151515]",
       },
       {
-        id: "savings",
-        title: "Stables ",
-        balance: stakedBalance,
-        fiatValue: stakingFiatValue,
-        type: "savings",
+        id: "earnings",
+        title: "Daily Earnings",
+        type: "earnings",
         gradient: "from-[#151515] to-[#0f0f0f]",
       },
-      {
-        id: "staking",
-        title: "High Yield",
-        balance: walletBalance,
-        fiatValue: savingsFiatValue,
-        type: "staking",
-        gradient: "from-[#0f0f0f] to-[#151515]",
-      },
     ],
-    [
-      totalUsdBalance,
-      totalNairaBalance,
-      stakedBalance,
-      stakingFiatValue,
-      walletBalance,
-      savingsFiatValue,
-    ]
+    []
   );
+
+  // Calculate total balance for display
+  const totalBalance = useMemo(() => {
+    const nairaRate = prices.ngn || 0;
+    return selectedCurrency === "NGN" ? totalNairaBalance : totalUsdBalance;
+  }, [selectedCurrency, totalNairaBalance, totalUsdBalance]);
+
+  // Calculate total daily earnings
+  const totalDailyEarnings = useMemo(() => {
+    const nairaRate = prices.ngn || 0;
+    const lptPriceInUsd = prices.lpt || 0;
+
+    // APY rates
+    const stablesAPY = 14; // 14% APY for stables
+    const highYieldAPY = 68; // Average 68% APY for high yield
+
+    // Calculate daily earnings
+    const stablesDaily = (solanaBalance * stablesAPY) / (100 * 365);
+    const highYieldDaily =
+      (ethereumBalance * lptPriceInUsd * highYieldAPY) / (100 * 365);
+    const totalDaily = stablesDaily + highYieldDaily;
+
+    return selectedCurrency === "NGN" ? totalDaily * nairaRate : totalDaily;
+  }, [selectedCurrency, solanaBalance, ethereumBalance, prices]);
+
+  // Handle scroll to next card
+  const handleScrollToNext = (currentIndex: number) => {
+    if (scrollRef.current) {
+      const cardWidth = scrollRef.current.offsetWidth;
+      const nextIndex = Math.min(currentIndex + 1, walletCards.length - 1);
+      scrollRef.current.scrollTo({
+        left: cardWidth * nextIndex,
+        behavior: "smooth",
+      });
+      setCurrentCardIndex(nextIndex);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#050505] text-white flex flex-col">
@@ -278,15 +330,10 @@ export const AllWalletPage: React.FC = () => {
         </div>
         <div className="flex items-center space-x-2">
           <button
-            onClick={handleNotificationClick}
-            className="relative w-10 h-10 bg-[#2a2a2a] rounded-full flex items-center justify-center hover:bg-[#3a3a3a] transition-colors cursor-pointer"
+            onClick={handleSupportClick}
+            className="w-11 h-11 bg-[#2a2a2a] rounded-full flex items-center justify-center hover:bg-[#3a3a3a] transition-colors cursor-pointer"
           >
-            <Bell size={16} color="#86B3F7" />
-            {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-semibold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
-                {unreadCount > 99 ? "99+" : unreadCount}
-              </span>
-            )}
+            <Headset size={20} color="#9a9a9a" />
           </button>
         </div>
       </div>
@@ -299,176 +346,276 @@ export const AllWalletPage: React.FC = () => {
           className="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-4"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
-          {walletCards.map((card, index) => (
-            <div
-              key={card.id}
-              className="min-w-[calc(100%-1.1rem)] snap-center"
-              style={{ scrollSnapAlign: "center" }}
-            >
+          {walletCards.map((card, index) => {
+            const currencySymbol =
+              selectedCurrency === "NGN" ? nairaSymbol : "$";
+            const isBalanceCard = card.id === "balance";
+            const displayValue = isBalanceCard
+              ? totalBalance
+              : totalDailyEarnings;
+
+            return (
               <div
-                className={`bg-linear-to-br ${card.gradient} rounded-2xl p-6 h-[170px] relative overflow-hidden border border-[#2a2a2a]`}
+                key={card.id}
+                className="min-w-[calc(100%-1.1rem)] snap-center"
+                style={{ scrollSnapAlign: "center" }}
               >
-                {/* Lisar Lines Decoration */}
-                <LisarLines
-                  position="top-right"
-                  className="opacity-100"
-                  width="185px"
-                  height="185px"
-                />
-
-                {/* Decorative elements */}
-                <div className="absolute top-0 right-0 w-32 h-32 bg-[#C7EF6B]/5 rounded-full blur-3xl"></div>
-                <div className="absolute bottom-0 left-0 w-24 h-24 bg-[#86B3F7]/5 rounded-full blur-2xl"></div>
-
-                {/* Help Icon - Top Right */}
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    setSelectedCardType(card.type);
-                    setShowBalanceDrawer(true);
-                  }}
-                  data-tour="wallet-help-icon"
-                  className="absolute top-6 right-6 z-20 w-6 h-6 bg-[#2a2a2a] rounded-full flex items-center justify-center hover:bg-[#3a3a3a] transition-colors cursor-pointer"
-                  style={{ pointerEvents: "auto" }}
+                <div
+                  className={`bg-linear-to-br ${card.gradient} rounded-2xl p-6 h-[150px] relative overflow-hidden border border-[#2a2a2a]`}
                 >
-                  <CircleQuestionMark size={14} color="#6a6a6a" />
-                </button>
+                  {/* Lisar Lines Decoration */}
+                  <LisarLines
+                    position="top-right"
+                    className="opacity-100"
+                    width="185px"
+                    height="185px"
+                  />
 
-                {/* Wallet Title */}
-                <div className="relative z-10">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-white/70 text-sm mb-2">{card.title}</h3>
-                    <button
-                      onClick={() => setShowBalance(!showBalance)}
-                      className="shrink-0 cursor-pointer hover:opacity-70 transition-opacity mb-2"
-                    >
-                      {showBalance ? (
-                        <Eye size={16} color="rgba(255, 255, 255, 0.6)" />
-                      ) : (
-                        <EyeOff size={16} color="rgba(255, 255, 255, 0.6)" />
+                  {/* Decorative elements */}
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-[#C7EF6B]/5 rounded-full blur-3xl"></div>
+                  <div className="absolute bottom-0 left-0 w-24 h-24 bg-[#86B3F7]/5 rounded-full blur-2xl"></div>
+
+                  {/* Wallet Content */}
+                  <div className="relative z-10 h-full flex flex-col">
+                    {/* Centered Currency Select and Balance */}
+                    <div className="flex flex-col items-center justify-center flex-1 gap-2">
+                      {/* Currency Select - Only show on balance card */}
+                      {isBalanceCard && (
+                        <Select
+                          value={selectedCurrency}
+                          onValueChange={(value) =>
+                            setSelectedCurrency(value as "USD" | "NGN")
+                          }
+                        >
+                          <SelectTrigger className="bg-[#1a1a1a] border-[#2a2a2a] text-white/90 hover:bg-[#222] rounded-full px-2.5 py-1.5 h-auto w-fit">
+                            <SelectValue>
+                              <div className="flex items-center gap-2">
+                                <img
+                                  src={
+                                    selectedCurrency === "USD"
+                                      ? "/us-flag.png"
+                                      : "/ng-flag.png"
+                                  }
+                                  alt={
+                                    selectedCurrency === "USD"
+                                      ? "US Flag"
+                                      : "Nigeria Flag"
+                                  }
+                                  className="w-4 h-4 object-contain"
+                                />
+                                <span className="text-xs font-medium">
+                                  {selectedCurrency === "USD"
+                                    ? "US Dollar"
+                                    : "Nigeria Naira"}
+                                </span>
+                              </div>
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent className="bg-[#1a1a1a] border-[#2a2a2a]">
+                            <SelectItem value="USD" className="text-white/90 ">
+                              <div className="flex items-center gap-2">
+                                <img
+                                  src="/us-flag.png"
+                                  alt="US Flag"
+                                  className="w-4 h-4 object-contain"
+                                />
+                                <span>Dollar</span>
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="NGN" className="text-white/90 ">
+                              <div className="flex items-center gap-2">
+                                <img
+                                  src="/ng-flag.png"
+                                  alt="Nigeria Flag"
+                                  className="w-4 h-4 object-contain"
+                                />
+                                <span>Naira</span>
+                              </div>
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
                       )}
-                    </button>
-                  </div>
 
-                  {/* Balance Display */}
-                  <div>
-                    {walletLoading ||
-                    delegationLoading ||
-                    solanaLoading ||
-                    ethereumLoading ? (
-                      <>
-                        <div className="flex items-baseline gap-2 mb-1">
-                          <span className="text-2xl font-bold text-white">
-                            ••••
+                      {/* Value Display */}
+                      {walletLoading ||
+                      delegationLoading ||
+                      solanaLoading ||
+                      ethereumLoading ? (
+                        <div className="flex items-center gap-2">
+                          {currencySymbol}
+                          <span className="text-3xl font-bold text-white">
+                            ••••••
                           </span>
                         </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="flex items-baseline gap-2 mb-1">
+                      ) : (
+                        <div className="flex items-center gap-2">
                           <span
-                            onClick={() => setShowBalance(!showBalance)}
-                            className="text-2xl font-bold text-white cursor-pointer"
+                            onClick={() =>
+                              isBalanceCard && setShowBalance(!showBalance)
+                            }
+                            className={`text-2xl font-semibold text-white ${isBalanceCard ? "cursor-pointer" : ""}`}
                           >
-                            {showBalance
-                              ? formatEarnings(card.balance)
-                              : "••••"}
+                            {currencySymbol}
+                            {isBalanceCard && !showBalance ? (
+                              "••••••"
+                            ) : (
+                              <>{formatFiat(displayValue)}</>
+                            )}
                           </span>
-                          {showBalance && (
-                            <span className="text-sm text-white/70 ml-[-5px]">
-                              {card.type === "main"
-                                ? "USD"
-                                : card.type === "savings"
-                                  ? "USDC"
-                                  : "LPT"}
-                            </span>
+                          {isBalanceCard && (
+                            <button
+                              onClick={() => setShowBalance(!showBalance)}
+                              className="shrink-0 cursor-pointer hover:opacity-70 transition-opacity"
+                            >
+                              {showBalance ? (
+                                <Eye
+                                  size={18}
+                                  color="rgba(255, 255, 255, 0.6)"
+                                />
+                              ) : (
+                                <EyeOff
+                                  size={18}
+                                  color="rgba(255, 255, 255, 0.6)"
+                                />
+                              )}
+                            </button>
                           )}
                         </div>
-                        {showBalance && (
-                          <p className="text-white/50 text-sm">
-                            {card.id === "main" ? (
-                              <>
-                                {nairaSymbol}
-                                {card.fiatValue.toLocaleString(undefined, {
-                                  minimumFractionDigits: 2,
-                                  maximumFractionDigits: 2,
-                                })}
-                              </>
-                            ) : (
-                              <>
-                                ≈{fiatSymbol}
-                                {card.fiatValue.toLocaleString(undefined, {
-                                  minimumFractionDigits: 2,
-                                  maximumFractionDigits: 2,
-                                })}
-                              </>
-                            )}
-                          </p>
+                      )}
+
+                      {/* Daily Earnings Text - Only show on balance card */}
+                      {isBalanceCard &&
+                        !walletLoading &&
+                        !delegationLoading &&
+                        !solanaLoading &&
+                        !ethereumLoading && (
+                          <button
+                            onClick={() => handleScrollToNext(index)}
+                            className="flex items-center gap-0.5 text-xs text-white/60 hover:text-white/80 transition-colors mt-1"
+                          >
+                            <span>
+                              You've earned{" "}
+                              <span className="text-[#C7EF6B]">
+                                {currencySymbol}
+                                {formatFiat(totalDailyEarnings)}
+                              </span>{" "}
+                              today
+                            </span>
+                            <ChevronRight size={14} />
+                          </button>
                         )}
-                      </>
-                    )}
+                    </div>
                   </div>
                 </div>
-
-                {/* Quick Action Buttons */}
-                <div
-                  className={`flex items-center justify-end ${
-                    walletLoading || delegationLoading
-                      ? "mt-8"
-                      : showBalance
-                        ? "mt-2"
-                        : "mt-8"
-                  }`}
-                >
-                  {card.type === "savings" && isProduction() ? (
-                    <button
-                      disabled
-                      className="flex items-center gap-1 px-2.5 py-1.5 bg-[#2a2a2a] text-white/60 rounded-full text-[10px] font-semibold cursor-not-allowed"
-                    >
-                      coming soon
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => handleDepositClick(card.type, index)}
-                      className="flex items-center gap-1 px-2.5 py-1.5 bg-[#C7EF6B] text-black rounded-full text-[10px] font-semibold hover:bg-[#B8E55A] transition-colors"
-                    >
-                      <Plus size={14} />
-                      Quick Add
-                    </button>
-                  )}
-                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
-        {/* Carousel Indicators */}
-        <div className="flex justify-center gap-2 mt-4">
-          {walletCards.map((_, index) => (
+        {/* Action Buttons - Only show once below cards */}
+        <div className="flex gap-3 px-2 justify-center mt-0 mr-2">
+          <button
+            onClick={() => handleDepositClick("savings", 0)}
+            className="flex-1 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg px-4 py-2.5 text-sm font-medium text-white/90 hover:bg-[#222] transition-colors flex items-center justify-center gap-2"
+          >
+            <Plus size={16} />
+            <p>Add funds</p>
+          </button>
+          <button
+            onClick={() => navigate("/wallet/savings")}
+            className="flex-1 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg px-4 py-2.5 text-sm font-medium text-white/90 hover:bg-[#222] transition-colors flex items-center justify-center gap-2"
+          >
+            <Landmark size={16} />
+            <p>Withdraw</p>
+          </button>
+        </div>
+      </div>
+
+      {/* Savings Plans Section */}
+      <div className="px-6 pb-20">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-white/70 text-sm font-medium">
+            Suggested for you
+          </h2>
+        </div>
+
+        <div className="space-y-4">
+          {/* Stables Card */}
+          <div className="bg-[#6da7fd] rounded-2xl py-3 px-5 border-2 border-[#86B3F7]/30 hover:border-[#86B3F7]/50 transition-colors relative overflow-hidden">
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex-1 relative z-10">
+                <h3 className="text-white text-base font-semibold mb-2">
+                  Savings
+                </h3>
+                <p className="text-white/90 text-sm leading-relaxed">
+                  Lock a portion of your balance towards an expectation and earn
+                  rewards.
+                </p>
+              </div>
+            </div>
+
+            {isProduction() ? (
+              <button
+                disabled
+                className="mt-2 px-3 py-1.5 bg-[#7daff6] text-white/90 rounded-full text-sm font-semibold cursor-not-allowed relative z-10"
+              >
+                coming soon
+              </button>
+            ) : (
+              <button
+                onClick={() => navigate("/wallet/savings")}
+                className="mt-2 px-6 py-2.5 bg-[#438af6] text-white rounded-full text-xs font-semibold hover:bg-[#96C3F7] transition-colors relative z-10"
+              >
+                Save Now
+              </button>
+            )}
+
+            {/* Bottom Right Image */}
+            <img
+              src="/highyield-3.svg"
+              alt="Stables"
+              className="absolute bottom-[-20px] right-[-20px]  w-30 h-28 object-contain opacity-80"
+            />
+          </div>
+
+          {/* High Yield Card */}
+          <div className="bg-transparent rounded-2xl py-3 px-5 border-2 border-[#C7EF6B]/30 hover:border-[#C7EF6B]/50 transition-colors relative overflow-hidden">
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex-1 relative z-10">
+                <h3 className="text-white text-base font-semibold mb-2">
+                  Staking
+                </h3>
+                <p className="text-white/60 text-sm leading-relaxed">
+                  Stake your balance on decentralized networks and earn rewards.
+                  Up to 40% APY.
+                </p>
+              </div>
+            </div>
+
             <button
-              key={index}
-              onClick={() => {
-                if (scrollRef.current) {
-                  const cardWidth = scrollRef.current.offsetWidth;
-                  scrollRef.current.scrollTo({
-                    left: cardWidth * index,
-                    behavior: "smooth",
-                  });
-                }
-              }}
-              className={`h-1 rounded-full transition-all ${
-                currentCardIndex === index
-                  ? "w-6 bg-[#C7EF6B]"
-                  : "w-3 bg-white/20"
-              }`}
-            ></button>
-          ))}
+              onClick={() => navigate("/wallet/staking")}
+              className="mt-2 px-6 py-2.5 bg-[#a3d039] text-black rounded-full text-xs font-semibold hover:bg-[#B8E55A] transition-colors relative z-10"
+            >
+              Learn More
+            </button>
+
+            {/* Bottom Right Image */}
+            <img
+              src="/highyield-1.svg"
+              alt="High Yield"
+              className="absolute bottom-[-5px] right-[-5px] w-21 h-21 object-contain opacity-80"
+            />
+          </div>
         </div>
 
         {/* Predict Card */}
-        <div className="mt-6 bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-2xl p-4 border border-[#2a2a2a] relative overflow-hidden">
+        <div className="flex items-center justify-between mt-6 mb-4">
+          <h2 className="text-white/70 text-sm font-medium">
+            Upcoming features
+          </h2>
+        </div>
+
+        <div className="bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-2xl p-4 border border-[#2a2a2a] relative overflow-hidden">
           <div className="flex items-center gap-4">
             <div className="shrink-0">
               <img
@@ -488,84 +635,6 @@ export const AllWalletPage: React.FC = () => {
                 Trade on real-world events like sports and politics
               </p>
             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Savings Plans Section */}
-      <div className="px-6 pb-20">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-white/70 text-sm font-medium">
-            Available Accounts
-          </h2>
-        </div>
-
-        <div className="space-y-4">
-          {/* Stables Card */}
-          <div className="bg-[#6da7fd] rounded-2xl p-5 border-2 border-[#86B3F7]/30 hover:border-[#86B3F7]/50 transition-colors relative overflow-hidden">
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex-1 relative z-10">
-                <h3 className="text-white text-base font-semibold mb-2">
-                  Stables
-                </h3>
-                <p className="text-white/90 text-sm leading-relaxed">
-                  Earn stable yields with low risk. Perfect for your emergency
-                  funds and short-term savings.
-                </p>
-              </div>
-            </div>
-
-            {isProduction() ? (
-              <button
-                disabled
-                className="mt-4 px-3 py-1.5 bg-[#7daff6] text-white/90 rounded-full text-sm font-semibold cursor-not-allowed relative z-10"
-              >
-                coming soon
-              </button>
-            ) : (
-              <button
-                onClick={() => navigate("/wallet/savings")}
-                className="mt-4 px-6 py-2.5 bg-[#438af6] text-white rounded-full text-xs font-semibold hover:bg-[#96C3F7] transition-colors relative z-10"
-              >
-                Get USD
-              </button>
-            )}
-
-            {/* Bottom Right Image */}
-            <img
-              src="/highyield-3.svg"
-              alt="Stables"
-              className="absolute bottom-[-20px] right-[-20px]  w-30 h-28 object-contain opacity-80"
-            />
-          </div>
-
-          {/* High Yield Card */}
-          <div className="bg-transparent rounded-2xl p-5 border-2 border-[#C7EF6B]/30 hover:border-[#C7EF6B]/50 transition-colors relative overflow-hidden">
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex-1 relative z-10">
-                <h3 className="text-white text-base font-semibold mb-2">
-                  High Yield
-                </h3>
-                <p className="text-white/60 text-sm leading-relaxed">
-                  Maximize your returns with higher APY. Long-term growth for
-                  your investment goals.
-                </p>
-              </div>
-            </div>
-
-            <button
-              onClick={() => navigate("/wallet/staking")}
-              className="mt-4 px-6 py-2.5 bg-[#a3d039] text-black rounded-full text-xs font-semibold hover:bg-[#B8E55A] transition-colors relative z-10"
-            >
-              Explore
-            </button>
-
-            {/* Bottom Right Image */}
-            <img
-              src="/highyield-1.svg"
-              alt="High Yield"
-              className="absolute bottom-[-5px] right-[-5px] w-21 h-21 object-contain opacity-80"
-            />
           </div>
         </div>
       </div>

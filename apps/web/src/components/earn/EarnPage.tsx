@@ -35,7 +35,7 @@ export const EarnPage: React.FC = () => {
     },
     {
       id: "3",
-      title: "Connect with us",
+      title: "Join our community",
       description: "Follow us on social media for new updates",
       buttonText: "Follow",
       isComingSoon: false,

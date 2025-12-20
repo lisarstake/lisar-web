@@ -58,7 +58,7 @@ export const HistoryPage: React.FC = () => {
           <ChevronLeft color="#C7EF6B" />
         </button>
 
-        <h1 className="text-lg font-medium text-white">History</h1>
+        <h1 className="text-lg font-medium text-white">Transactions</h1>
 
         <button
           onClick={handleHelpClick}
