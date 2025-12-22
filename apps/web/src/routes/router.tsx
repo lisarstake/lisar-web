@@ -19,7 +19,6 @@ const ValidatorDetailsPage = lazyRetry(() => import('@/screens/validator-details
 const StakePage = lazyRetry(() => import('@/screens/stake-page'))
 const SavePage = lazyRetry(() => import('@/screens/save-page'))
 const TiersPage = lazyRetry(() => import('@/screens/tiers-page'))
-const StableTiersPage = lazyRetry(() => import('@/screens/stable-tiers-page'))
 const WithdrawPage = lazyRetry(() => import('@/screens/withdraw-page'))
 const DepositPage = lazyRetry(() => import('@/screens/deposit-page'))
 const OnchainDepositPage = lazyRetry(() => import('@/screens/onchain-deposit-page'))
@@ -32,7 +31,8 @@ const TransactionDetailPage = lazyRetry(() => import('@/screens/transaction-deta
 const LearnPage = lazyRetry(() => import('@/screens/learn-page'))
 const LearnDetailPage = lazyRetry(() => import('@/screens/learn-detail-page'))
 const ForecastPage = lazyRetry(() => import('@/screens/forecast-page'))
-const EarnPage = lazyRetry(() => import('@/screens/earn-page'))
+const AccountPage = lazyRetry(() => import('@/screens/account-page'))
+const CardsPage = lazyRetry(() => import('@/screens/cards-page'))
 const PortfolioPage = lazyRetry(() => import('@/screens/portfolio-page'))
 const PortfolioSummaryPage = lazyRetry(() => import('@/screens/portfolio-summary-page'))
 const PortfolioPositionsPage = lazyRetry(() => import('@/screens/portfolio-positions-page'))
@@ -42,6 +42,9 @@ const ProfilePage = lazyRetry(() => import('@/screens/profile-page'))
 const NotificationsPage = lazyRetry(() => import('@/screens/notifications-page'))
 const BlogPage = lazyRetry(() => import('@/screens/blog-page'))
 const BlogDetailPage = lazyRetry(() => import('@/screens/blog-detail-page'))
+const GrowPage = lazyRetry(() => import('@/screens/grow-page'))
+const EarnDepositPage = lazyRetry(() => import('@/screens/earn-deposit-page'))
+const EarnWithdrawPage = lazyRetry(() => import('@/screens/earn-withdraw-page'))
 const NotFoundPage = lazyRetry(() => import('@/screens/NotFoundPage'))
 
 const withSuspense = (element: ReactNode) => (
@@ -142,7 +145,15 @@ export const router = createBrowserRouter([
         path: 'stable-tiers',
         element: (
           <ProtectedRoute>
-            {withSuspenseAndErrorBoundary(<StableTiersPage />)}
+            {withSuspenseAndErrorBoundary(<TiersPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'tiers',
+        element: (
+          <ProtectedRoute>
+            {withSuspenseAndErrorBoundary(<TiersPage />)}
           </ProtectedRoute>
         ),
       },
@@ -251,10 +262,18 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'earn',
+        path: 'account',
         element: (
           <ProtectedRoute>
-            {withSuspenseAndErrorBoundary(<EarnPage />)}
+            {withSuspenseAndErrorBoundary(<AccountPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'cards',
+        element: (
+          <ProtectedRoute>
+            {withSuspenseAndErrorBoundary(<CardsPage />)}
           </ProtectedRoute>
         ),
       },
@@ -303,6 +322,30 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             {withSuspenseAndErrorBoundary(<NotificationsPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'grow',
+        element: (
+          <ProtectedRoute>
+            {withSuspenseAndErrorBoundary(<GrowPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'earn/deposit',
+        element: (
+          <ProtectedRoute>
+            {withSuspenseAndErrorBoundary(<EarnDepositPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'earn/withdraw',
+        element: (
+          <ProtectedRoute>
+            {withSuspenseAndErrorBoundary(<EarnWithdrawPage />)}
           </ProtectedRoute>
         ),
       },

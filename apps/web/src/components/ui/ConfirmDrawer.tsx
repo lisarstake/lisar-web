@@ -23,6 +23,7 @@ interface ConfirmDrawerProps {
   confirmText?: string;
   cancelText?: string;
   variant?: "danger" | "warning";
+  image?: string;
 }
 
 export const ConfirmDrawer: React.FC<ConfirmDrawerProps> = ({
@@ -34,6 +35,7 @@ export const ConfirmDrawer: React.FC<ConfirmDrawerProps> = ({
   confirmText = "Confirm",
   cancelText = "Cancel",
   variant = "danger",
+  image,
 }) => {
   const handleConfirm = () => {
     onConfirm();
@@ -44,18 +46,26 @@ export const ConfirmDrawer: React.FC<ConfirmDrawerProps> = ({
     <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DrawerContent>
         <DrawerHeader>
-          <div className="flex justify-center mb-4">
-            <div
-              className={`w-12 h-12 ${
-                variant === "danger" ? "bg-red-500/10" : "bg-yellow-500/10"
-              } rounded-full flex items-center justify-center`}
-            >
-              <AlertTriangle
-                className={`w-6 h-6 ${
-                  variant === "danger" ? "text-red-400" : "text-yellow-400"
-                }`}
+          <div className="flex justify-center mb-2">
+            {image ? (
+              <img
+                src={image}
+                alt="Confirmation"
+                className="w-28 h-28 object-contain"
               />
-            </div>
+            ) : (
+              <div
+                className={`w-12 h-12 ${
+                  variant === "danger" ? "bg-red-500/10" : "bg-yellow-500/10"
+                } rounded-full flex items-center justify-center`}
+              >
+                <AlertTriangle
+                  className={`w-10 h-10 ${
+                    variant === "danger" ? "text-red-400" : "text-yellow-400"
+                  }`}
+                />
+              </div>
+            )}
           </div>
           <DrawerTitle className="text-center text-xl font-semibold text-white">
             {title}
@@ -68,17 +78,17 @@ export const ConfirmDrawer: React.FC<ConfirmDrawerProps> = ({
         <DrawerFooter>
           <button
             onClick={handleConfirm}
-            className={`w-full py-4 rounded-xl font-semibold text-lg transition-colors ${
+            className={`w-full py-2.5 rounded-lg font-semibold text-lg transition-colors ${
               variant === "danger"
                 ? "bg-red-600 text-white hover:bg-red-500"
-                : "bg-yellow-600 text-white hover:bg-yellow-500"
+                : "bg-[#C7EF6B] text-black hover:bg-yellow-500"
             }`}
           >
             {confirmText}
           </button>
           <button
             onClick={onClose}
-            className="w-full py-4 rounded-xl font-semibold text-lg bg-[#2a2a2a] text-white hover:bg-[#3a3a3a] transition-colors"
+            className="w-full py-2.5 rounded-lg font-semibold text-lg bg-[#2a2a2a] text-white hover:bg-[#3a3a3a] transition-colors"
           >
             {cancelText}
           </button>
@@ -87,4 +97,3 @@ export const ConfirmDrawer: React.FC<ConfirmDrawerProps> = ({
     </Drawer>
   );
 };
-

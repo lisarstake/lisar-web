@@ -101,7 +101,7 @@ export const ForgotPasswordForm: React.FC = () => {
   const isFormValid = formData.email && formData.email.includes("@");
 
   return (
-    <div className="min-h-screen bg-black flex flex-col">
+    <div className="min-h-screen bg-[#181818] flex flex-col">
       {/* Main Content */}
       <div className="flex-1 flex flex-col justify-start px-6 py-8">
         {/* Logo */}

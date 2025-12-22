@@ -93,7 +93,7 @@ export const SignupForm: React.FC = () => {
     formData.fullName && formData.email && formData.password.length >= 8;
 
   return (
-    <div className="min-h-screen bg-black flex flex-col">
+    <div className="min-h-screen bg-[#181818] flex flex-col">
       {/* Main Content */}
       <div className="flex-1 flex flex-col justify-center px-6 py-8">
         {/* Logo */}
@@ -228,7 +228,7 @@ export const SignupForm: React.FC = () => {
               <div className="w-full border-t border-gray-700"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-black text-white">Or</span>
+              <span className="px-2 bg-[#181818] text-white">Or</span>
             </div>
           </div>
 
@@ -237,7 +237,7 @@ export const SignupForm: React.FC = () => {
           <button
             type="button"
             onClick={handleGoogleSignup}
-            className="w-full py-3 px-6 rounded-lg font-semibold text-lg border-2 border-[#C7EF6B] bg-black text-white hover:bg-gray-800 transition-colors flex items-center justify-center"
+            className="w-full py-3 px-6 rounded-lg font-semibold text-lg border-2 border-[#C7EF6B] bg-[#181818] text-white hover:bg-gray-800 transition-colors flex items-center justify-center"
           >
             <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
               <path

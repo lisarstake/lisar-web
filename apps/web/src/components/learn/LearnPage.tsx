@@ -43,7 +43,7 @@ export const LearnPage: React.FC = () => {
   };
 
   return (
-    <div className="h-screen bg-[#050505] text-white flex flex-col">
+    <div className="h-screen bg-[#181818] text-white flex flex-col">
       {/* Content List - Scrollable */}
       <div className="flex-1 overflow-y-auto px-6 pb-28 scrollbar-hide">
         {/* Header - Now scrollable */}
@@ -59,7 +59,7 @@ export const LearnPage: React.FC = () => {
             data-tour="learn-help-icon"
             className="w-8 h-8 bg-[#2a2a2a] rounded-full flex items-center justify-center"
           >
-            <CircleQuestionMark color="#86B3F7" size={16} />
+           <CircleQuestionMark color="#9ca3af" size={16} />
           </button>
         </div>
 
@@ -73,7 +73,7 @@ export const LearnPage: React.FC = () => {
               className="bg-[#1a1a1a] rounded-xl overflow-hidden cursor-pointer hover:bg-[#2a2a2a] transition-colors"
             >
               {/* Video Thumbnail */}
-              <div className="w-full h-44 bg-black relative overflow-hidden">
+              <div className="w-full h-44 bg-[#181818] relative overflow-hidden">
                 {(() => {
                   const vimeoId = extractVimeoId(content.videoUrl);
                   const thumbnailUrl = vimeoId
@@ -91,7 +91,7 @@ export const LearnPage: React.FC = () => {
                     <div className="w-full h-full bg-gray-600" />
                   );
                 })()}
-                <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                <div className="absolute inset-0 bg-[#181818]/30 flex items-center justify-center">
                   <div className="w-16 h-16 bg-[#C7EF6B] rounded-full flex items-center justify-center">
                     <Play size={20} color="#000" fill="#000" />
                   </div>

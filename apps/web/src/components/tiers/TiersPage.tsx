@@ -1,13 +1,21 @@
 import React, { useState } from "react";
-import { ChevronLeft, Key, LockKeyhole, CircleQuestionMark } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { ChevronLeft, LockKeyhole, CircleQuestionMark, Sprout } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
-import { highYieldTiers } from "@/mock";
+import { highYieldTiers, stableYieldTiers } from "@/mock";
 
 export const TiersPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
+
+  const locationState = location.state as {
+    walletType?: string;
+    action?: "deposit" | "withdraw" | "vest";
+  } | null;
+
+  const action = locationState?.action || "vest";
 
   const handleBackClick = () => {
     navigate(-1);
@@ -17,7 +25,7 @@ export const TiersPage: React.FC = () => {
     setShowHelpDrawer(true);
   };
 
-  const handleExplore = (tierNumber: number, tierTitle: string) => {
+  const handleHighYieldExplore = (tierNumber: number, tierTitle: string) => {
     if (tierNumber === 1) {
       navigate("/validator", {
         state: {
@@ -29,8 +37,48 @@ export const TiersPage: React.FC = () => {
     }
   };
 
+  const handleStableExplore = (tierNumber: number, tierTitle: string) => {
+    const provider = tierNumber === 1 ? "maple" : "perena";
+
+    if (action === "deposit") {
+      navigate("/deposit", {
+        state: {
+          walletType: "savings",
+          tierNumber,
+          tierTitle,
+          provider,
+        },
+      });
+    } else if (action === "withdraw") {
+      navigate("/withdraw", {
+        state: {
+          walletType: "savings",
+          tierNumber,
+          tierTitle,
+          provider,
+        },
+      });
+    } else {
+      navigate("/save", {
+        state: {
+          walletType: "savings",
+          tierNumber,
+          tierTitle,
+          provider,
+        },
+      });
+    }
+  };
+
+  const getButtonText = (isLocked: boolean, isHighYield: boolean) => {
+    if (isLocked && isHighYield) return "Locked";
+    if (action === "deposit") return "Deposit";
+    if (action === "withdraw") return "Withdraw";
+    return isHighYield ? "Subscribe" : "Subscribe";
+  };
+
   return (
-    <div className="h-screen bg-[#050505] text-white flex flex-col">
+    <div className="h-screen bg-[#181818] text-white flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-8">
         <button
@@ -40,23 +88,63 @@ export const TiersPage: React.FC = () => {
           <ChevronLeft color="#C7EF6B" />
         </button>
 
-        <h1 className="text-lg font-medium text-white">Yield Tiers</h1>
+        <h1 className="text-lg font-medium text-white/90 flex items-center gap-1.5">
+          Earn{" "}
+          <span>
+            <Sprout size={20} />
+          </span>
+        </h1>
 
         <button
           onClick={handleHelpClick}
           className="w-8 h-8 bg-[#2a2a2a] rounded-full flex items-center justify-center"
         >
-          <CircleQuestionMark color="#86B3F7" size={16} />
+         <CircleQuestionMark color="#9ca3af" size={16} />
         </button>
       </div>
 
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto px-6 pb-24">
+        <div className="space-y-4 mb-6">
+          {stableYieldTiers.map((tier) => (
+            <div
+              key={`stable-${tier.id}`}
+              className={`${tier.bgColor} rounded-2xl py-3 px-5 relative overflow-hidden transition-colors`}
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex-1 relative z-10">
+                  <h3 className="text-white/90 text-base font-semibold mb-2">
+                    {tier.title}
+                  </h3>
+                  <p className="text-sm leading-relaxed text-white/80">
+                    {tier.description}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => handleStableExplore(tier.id, tier.title)}
+                className={`mt-4 px-5 py-2 ${tier.buttonBg} ${tier.buttonText} rounded-full text-xs font-semibold transition-colors relative z-10 flex items-center gap-2`}
+              >
+                <span>{getButtonText(false, false)}</span>
+              </button>
+
+              {/* Bottom Right Image with flowing white highlight */}
+              {/* <div className="pointer-events-none absolute bottom-[-20px] right-[-24px] w-32 h-22 rounded-[999px] bg-white/90 rotate-[-18deg]" /> */}
+              <img
+                src={tier.image}
+                alt={tier.title}
+                className={`absolute bottom-[4px] right-[4px] ${tier.imageClass}`}
+              />
+            </div>
+          ))}
+        </div>
+
         <div className="space-y-4">
           {highYieldTiers.map((tier) => (
             <div
-              key={tier.id}
-              className={`${tier.bgColor} rounded-2xl p-5 relative overflow-hidden transition-colors`}
+              key={`high-yield-${tier.id}`}
+              className={`${tier.bgColor} rounded-2xl py-3 px-5 relative overflow-hidden transition-colors`}
             >
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1 relative z-10">
@@ -65,7 +153,7 @@ export const TiersPage: React.FC = () => {
                   </h3>
                   <p
                     className={`text-sm leading-relaxed ${
-                      tier.isLocked ? "text-white/60" : "text-white/90"
+                      tier.isLocked ? "text-white/80" : "text-white/80"
                     }`}
                   >
                     {tier.description}
@@ -74,14 +162,14 @@ export const TiersPage: React.FC = () => {
               </div>
 
               <button
-                onClick={() => handleExplore(tier.id, tier.title)}
+                onClick={() => handleHighYieldExplore(tier.id, tier.title)}
                 disabled={tier.isLocked}
                 className={`mt-4 px-6 py-2.5 ${tier.buttonBg} ${tier.buttonText} rounded-full text-xs font-semibold transition-colors relative z-10 flex items-center gap-2 ${
                   tier.isLocked ? "cursor-not-allowed" : ""
                 }`}
               >
                 {tier.isLocked && <LockKeyhole size={14} />}
-                <span>{tier.isLocked ? "Locked" : "Vest"}</span>
+                <span>{getButtonText(tier.isLocked || false, true)}</span>
               </button>
 
               {/* Bottom Right Image */}
@@ -102,14 +190,34 @@ export const TiersPage: React.FC = () => {
       <HelpDrawer
         isOpen={showHelpDrawer}
         onClose={() => setShowHelpDrawer(false)}
-        title="High Yield Tiers"
-        content={[
-          "High Yield Tiers offer different APY rates for your LPT token investments.",
-          "Flexible Tier - 25% APY: Start your journey with our entry-level tier. Perfect for beginners looking to earn rewards.",
-          "Platinum Tier - 40% APY: Unlock higher yields with enhanced returns for committed members. (Currently locked)",
-          "Diamond Tier - 60% APY: Premium tier with maximum benefits and highest APY. Reserved for our most valued members. (Currently locked)",
-          "Select the Flexible tier to start staking your LPT tokens and earning rewards.",
-        ]}
+        title={
+          action === "deposit"
+            ? "Deposit to Tiers"
+            : action === "withdraw"
+              ? "Withdraw from Tiers"
+              : "Yield Tiers"
+        }
+        content={
+          action === "deposit"
+            ? [
+                "Select a tier to deposit your funds. Each tier offers different APY rates and features.",
+                "High Yield Tiers: Flexible tier offers 25% APY for LPT tokens. Platinum and Diamond tiers are currently locked.",
+                "Stable Yield Tiers: USD Base offers up to 6.5% APY on Ethereum. USD Plus offers up to 14% APY on Solana.",
+              ]
+            : action === "withdraw"
+              ? [
+                  "Select the tier you want to withdraw from.",
+                  "You can only withdraw from the same tier you deposited to.",
+                  "High Yield withdrawals require a 7-day unbonding period.",
+                  "Stable Yield withdrawals are instant.",
+                ]
+              : [
+                  "Yield Tiers offer different APY rates for your investments.",
+                  "High Yield Tiers: Flexible (25% APY), Platinum (40% APY - locked), Diamond (60% APY - locked).",
+                  "Stable Yield Tiers: USD Base (6.5% APY on Ethereum), USD Plus (14% APY on Solana).",
+                  "Select a tier to start earning rewards on your investments.",
+                ]
+        }
       />
     </div>
   );

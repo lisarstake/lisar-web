@@ -255,7 +255,7 @@ export const PortfolioPage: React.FC = () => {
   }
 
   return (
-    <div className="h-screen bg-[#050505] text-white flex flex-col">
+    <div className="h-screen bg-[#181818] text-white flex flex-col">
       <div className="flex-1 overflow-y-auto px-6 pb-20 scrollbar-hide">
         <div className="flex items-center justify-between py-8 mb-2">
           <button
@@ -269,124 +269,12 @@ export const PortfolioPage: React.FC = () => {
             onClick={handleHelpClick}
             className="w-8 h-8 bg-[#2a2a2a] rounded-full flex items-center justify-center"
           >
-            <CircleQuestionMark color="#86B3F7" size={16} />
+           <CircleQuestionMark color="#9ca3af" size={16} />
           </button>
         </div>
-        {/* Main Wallet Card */}
-        <div
-          className={`${isSavings ? "bg-[#6da7fd] border-2 border-[#86B3F7]/30" : "bg-linear-to-br from-[#0f0f0f] to-[#151515] border border-[#2a2a2a]"} rounded-2xl p-6 h-[170px] mb-6 relative overflow-hidden`}
-        >
-          {/* Lisar Lines Decoration */}
-          {!isSavings && (
-            <LisarLines
-              position="top-right"
-              className="opacity-100"
-              width="185px"
-              height="185px"
-            />
-          )}
+       
 
-          {/* Decorative elements */}
-          {isSavings ? (
-            <>
-              <div className="absolute top-0 right-0 w-32 h-32 bg-[#86B3F7]/10 rounded-full blur-3xl"></div>
-              <div className="absolute bottom-0 left-0 w-24 h-24 bg-[#438af6]/10 rounded-full blur-2xl"></div>
-            </>
-          ) : (
-            <>
-              <div className="absolute top-0 right-0 w-32 h-32 bg-[#C7EF6B]/5 rounded-full blur-3xl"></div>
-              <div className="absolute bottom-0 left-0 w-24 h-24 bg-[#86B3F7]/5 rounded-full blur-2xl"></div>
-            </>
-          )}
-
-          {/* Circular Progress - Top Right */}
-          {/* <div className="absolute top-4 right-4 z-20">
-            <PayoutProgressCircle
-              progress={nextPayoutProgress.progress}
-              timeRemaining={nextPayoutProgress.timeRemaining}
-              isSavings={isSavings}
-            />
-          </div> */}
-
-          {/* Content */}
-          <div className="relative z-10">
-            <div className="flex items-center gap-2 mb-2">
-              <h3 className="text-white/70 text-sm">
-                {" "}
-                {isSavings ? "Stables Wallet" : "High Yield Wallet"}
-              </h3>
-              <button
-                onClick={() => setShowBalance(!showBalance)}
-                className="shrink-0 cursor-pointer hover:opacity-70 transition-opacity"
-              >
-                {showBalance ? (
-                  <Eye
-                    size={16}
-                    color={
-                      isSavings
-                        ? "rgba(255, 255, 255, 0.9)"
-                        : "rgba(255, 255, 255, 0.6)"
-                    }
-                  />
-                ) : (
-                  <EyeOff
-                    size={16}
-                    color={
-                      isSavings
-                        ? "rgba(255, 255, 255, 0.9)"
-                        : "rgba(255, 255, 255, 0.6)"
-                    }
-                  />
-                )}
-              </button>
-            </div>
-
-            {/* Main Balance */}
-            <div className="mb-8">
-              <div className="flex items-baseline gap-2 mb-1">
-                <span className="text-2xl font-semibold text-white/90">
-                  {showBalance
-                    ? `${fiatSymbol}${totalStakeFiat.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}`
-                    : "••••"}
-                </span>
-              </div>
-            </div>
-
-            {/* Three Values */}
-            <div className="flex items-center justify-between">
-              {/* Token Amount */}
-              <div className="flex items-center flex-col">
-                <p className="text-white/90 font-semibold text-sm">
-                  {showBalance ? formatEarnings(totalStake) : "••••"}
-                </p>
-                <p className="text-white/60 text-xs">
-                  {isSavings ? "USDC" : "LPT"}
-                </p>
-              </div>
-
-              {/* APY */}
-              <div className="flex items-center flex-col">
-                <p className="text-white/90 font-semibold text-sm">
-                  {showBalance ? `${averageApy.toFixed(1)}%` : "••••"}
-                </p>
-                <p className="text-white/60 text-xs">Per annum</p>
-              </div>
-
-              {/* Total Earnings */}
-              <div className="flex items-center flex-col">
-                <p className="text-white/90 font-semibold text-sm">
-                  {showBalance ? formatLifetime(lifetimeRewards) : "••••"}
-                </p>
-                <p className="text-white/60 text-xs">Total earning</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-1 gap-2 mb-6">
           {/* Summary Card */}
           <div className="bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-2xl p-5 border border-[#2a2a2a] relative overflow-hidden">
             <div className="flex items-start justify-between mb-3">

@@ -7,6 +7,7 @@ import {
   CreditCard,
   ScanQrCode,
   LoaderCircle,
+  Wallet2,
 } from "lucide-react";
 import { OnrampWebSDK } from "@onramp.money/onramp-web-sdk";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
@@ -20,7 +21,7 @@ import { getFiatType } from "@/lib/onramp";
 import { formatNumber, parseFormattedNumber } from "@/lib/formatters";
 import { walletService } from "@/services";
 
-export const DepositPage: React.FC = () => {
+export const EarnDepositPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -49,8 +50,8 @@ export const DepositPage: React.FC = () => {
     ? selectedProvider === "maple"
       ? "erc20"
       : selectedProvider === "perena"
-      ? "spl"
-      : "spl"
+        ? "spl"
+        : "spl"
     : "arbitrum";
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<
     string | null
@@ -63,11 +64,15 @@ export const DepositPage: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const onrampInstanceRef = useRef<OnrampWebSDK | null>(null);
   const { state } = useAuth();
-  const { refetch: refetchWallet } = useWallet();
+  const { wallet, solanaBalance, refetch: refetchWallet } = useWallet();
 
   // Get user's preferred currency
   const userCurrency = state.user?.fiat_type || "NGN";
   const currencySymbol = priceService.getCurrencySymbol(userCurrency);
+
+  const walletBalance = isStables
+    ? solanaBalance || 0
+    : wallet?.balanceLpt || 0;
 
   const pageTitle = "Deposit";
 
@@ -75,10 +80,10 @@ export const DepositPage: React.FC = () => {
   useEffect(() => {
     const initializeFromToken = async () => {
       if (preservedAmount) {
-        const numericAmount = parseFloat(preservedAmount.replace(/,/g, "")) || 0;
+        const numericAmount =
+          parseFloat(preservedAmount.replace(/,/g, "")) || 0;
         if (numericAmount > 0) {
           if (preservedUsdcAmount || walletType === "savings") {
-            // For USDC, convert directly (1 USDC = 1 USD, then to user's currency)
             const prices = await priceService.getPrices();
             let fiatValue = numericAmount;
             switch (userCurrency.toUpperCase()) {
@@ -98,11 +103,11 @@ export const DepositPage: React.FC = () => {
             setFiatAmount(fiatValue.toFixed(2));
           } else {
             // For LPT, convert using LPT price
-          const fiatValue = await priceService.convertLptToFiat(
+            const fiatValue = await priceService.convertLptToFiat(
               numericAmount,
-            userCurrency
-          );
-          setFiatAmount(fiatValue.toFixed(2));
+              userCurrency
+            );
+            setFiatAmount(fiatValue.toFixed(2));
           }
         }
       }
@@ -123,11 +128,11 @@ export const DepositPage: React.FC = () => {
           setTokenEquivalent(usdValue);
           setLptEquivalent(0);
         } else {
-        const lptValue = await priceService.convertFiatToLpt(
-          numericAmount,
-          userCurrency
-        );
-        setLptEquivalent(lptValue);
+          const lptValue = await priceService.convertFiatToLpt(
+            numericAmount,
+            userCurrency
+          );
+          setLptEquivalent(lptValue);
           setTokenEquivalent(0);
         }
       } else {
@@ -165,11 +170,11 @@ export const DepositPage: React.FC = () => {
 
   const handleProceed = async () => {
     if (selectedPaymentMethod === "onchain") {
-      navigate("/deposit-address", { 
-        state: { 
+      navigate("/deposit-address", {
+        state: {
           walletType,
           provider: selectedProvider,
-        } 
+        },
       });
     } else if (selectedPaymentMethod === "fiat") {
       await handleFundWallet();
@@ -184,7 +189,9 @@ export const DepositPage: React.FC = () => {
     }
 
     if (isStables && !selectedProvider) {
-      setErrorMessage("Provider not selected. Please go back and select a tier.");
+      setErrorMessage(
+        "Provider not selected. Please go back and select a tier."
+      );
       setShowErrorDrawer(true);
       return;
     }
@@ -309,8 +316,10 @@ export const DepositPage: React.FC = () => {
       <div className="flex-1 overflow-y-auto px-6 pb-28 scrollbar-hide">
         {/* Amount Input Field */}
         <div className="py-6">
-          <span className="text-white/80 text-base font-medium ml-1">Deposit amount</span>
-          <div className="bg-[#1a1a1a] rounded-lg p-3 mt-1">
+          <span className="text-white/80 text-base font-medium ml-1">
+            Deposit amount
+          </span>
+          <div className="border border-[#2a2a2a] rounded-lg px-3 py-2.5 mt-1">
             <input
               type="text"
               value={fiatAmount ? formatNumber(fiatAmount) : ""}
@@ -327,17 +336,6 @@ export const DepositPage: React.FC = () => {
               className="w-full bg-transparent text-white text-lg font-medium focus:outline-none"
             />
           </div>
-          <p className="text-gray-400 text-xs mt-2 pl-2">
-            ≈{" "}
-            {(isStables ? tokenEquivalent : lptEquivalent).toLocaleString(
-              undefined,
-              {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-              }
-            )}{" "}
-            {tokenName}
-          </p>
         </div>
 
         {/* Predefined Fiat Amounts */}
@@ -354,7 +352,7 @@ export const DepositPage: React.FC = () => {
                   className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-colors ${
                     isActive
                       ? "bg-[#C7EF6B] text-black"
-                      : "bg-[#1a1a1a] text-white/80 hover:bg-[#2a2a2a]"
+                      : "bg-[#2a2a2a] text-white/80 hover:bg-[#2a2a2a]"
                   }`}
                 >
                   {currencySymbol}
@@ -365,93 +363,28 @@ export const DepositPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Provider Indicator for Stables */}
-        {isStables && selectedProvider && locationState?.tierTitle && (
-          <div className="py-4">
-            <div className="bg-[#1a1a1a] rounded-lg p-4 border border-[#2a2a2a]">
-              <div className="flex items-center gap-3">
-                <img
-                  src={selectedProvider === "maple" ? "/maple.svg" : "/perena2.png"}
-                  alt={selectedProvider}
-                  className="w-8 h-8 object-contain"
-                />
+        {/* Wallet Balance Info */}
+        <div className="py-4">
+          <h3 className="text-base font-medium text-white/90 mb-2">
+            Available balance
+          </h3>
+          <div className="bg-[#1a1a1a] rounded-lg p-4 border border-[#2a2a2a]">
+            <div className="flex items-center space-x-3">
+              <Wallet2 size={20} color="#86B3F7" />
+              <div className="flex-1">
                 <div>
-                  <p className="text-white/90 text-sm font-medium">
-                    {locationState.tierTitle}
-                  </p>
-                  <p className="text-gray-400 text-xs">
-                    {selectedProvider === "maple"
-                      ? "USD Base - Up to 6.5% APY"
-                      : "USD Plus - Up to 14% APY"}
-                  </p>
+                  <span className="text-gray-400 text-sm">
+                    {walletBalance.toLocaleString()} {tokenName}
+                  </span>
                 </div>
               </div>
             </div>
-          </div>
-        )}
-
-        {/* Payment Method Selection */}
-        <div className="py-4">
-          <h3 className="text-base font-medium text-white/90 mb-2">
-            Preferred method
-          </h3>
-
-          <div className="space-y-3">
-            <button
-              onClick={() => handlePaymentMethodSelect("fiat")}
-              className={`w-full flex items-center justify-between p-4 rounded-lg transition-colors ${
-                selectedPaymentMethod === "fiat"
-                  ? "bg-[#C7EF6B]/10 border border-[#C7EF6B]"
-                  : "bg-[#1a1a1a] border border-[#2a2a2a] hover:bg-[#2a2a2a]"
-              }`}
-            >
-              <div className="flex items-center space-x-3">
-                <CreditCard
-                  size={20}
-                  color={
-                    selectedPaymentMethod === "fiat" ? "#C7EF6B" : "#86B3F7"
-                  }
-                />
-                <span className="text-white font-normal">
-                 Deposit {userCurrency}
-                </span>
-              </div>
-              <ChevronRight
-                size={20}
-                color={selectedPaymentMethod === "fiat" ? "#C7EF6B" : "#636363"}
-              />
-            </button>
-
-            <button
-              onClick={() => handlePaymentMethodSelect("onchain")}
-              className={`w-full flex items-center justify-between p-4 rounded-lg transition-colors ${
-                selectedPaymentMethod === "onchain"
-                  ? "bg-[#C7EF6B]/10 border border-[#C7EF6B]"
-                  : "bg-[#1a1a1a] border border-[#2a2a2a] hover:bg-[#2a2a2a]"
-              }`}
-            >
-              <div className="flex items-center space-x-3">
-                <ScanQrCode
-                  size={20}
-                  color={
-                    selectedPaymentMethod === "onchain" ? "#C7EF6B" : "#86B3F7"
-                  }
-                />
-                <span className="text-white font-normal">Transfer From Wallet</span>
-              </div>
-              <ChevronRight
-                size={20}
-                color={
-                  selectedPaymentMethod === "onchain" ? "#C7EF6B" : "#636363"
-                }
-              />
-            </button>
           </div>
         </div>
       </div>
 
       {/* Proceed Button - Fixed at bottom */}
-      <div className="px-6 py-4 bg-[#181818] pb-36">
+      <div className="px-6 py-4 bg-[#181818] pb-24">
         <button
           onClick={handleProceed}
           disabled={
@@ -460,7 +393,7 @@ export const DepositPage: React.FC = () => {
             parseFloat(fiatAmount) <= 0 ||
             isStaking
           }
-          className={`w-full py-4 rounded-lg font-semibold text-lg transition-colors ${
+          className={`w-full py-3 rounded-lg font-semibold text-lg transition-colors ${
             selectedPaymentMethod &&
             fiatAmount &&
             parseFloat(fiatAmount) > 0 &&

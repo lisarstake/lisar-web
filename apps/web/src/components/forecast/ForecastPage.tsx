@@ -166,7 +166,7 @@ export const ForecastPage: React.FC = () => {
   }, [numericAmount, apy, selectedPlan, selectedCurrency]);
 
   return (
-    <div className="h-screen bg-[#050505] text-white flex flex-col">
+    <div className="h-screen bg-[#181818] text-white flex flex-col">
       {/* Content - Scrollable */}
       <div className="flex-1 overflow-y-auto px-6 pb-20 scrollbar-hide">
         {/* Header - Scrollable */}
@@ -181,7 +181,7 @@ export const ForecastPage: React.FC = () => {
             onClick={handleHelpClick}
             className="w-8 h-8 bg-[#2a2a2a] rounded-full flex items-center justify-center"
           >
-            <CircleQuestionMark color="#86B3F7" size={16} />
+           <CircleQuestionMark color="#9ca3af" size={16} />
           </button>
         </div>
 
@@ -197,7 +197,7 @@ export const ForecastPage: React.FC = () => {
                 const selected = savingsPlans.find((p) => p.id === e.target.value);
                 if (selected) handlePlanSelect(selected);
               }}
-              className="w-full p-4 bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl text-white appearance-none focus:border-[#C7EF6B] focus:outline-none"
+              className="w-full p-3 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg text-white appearance-none focus:border-[#C7EF6B] focus:outline-none"
             >
               {savingsPlans.map((plan) => (
                 <option className="font-medium" key={plan.id} value={plan.id}>
@@ -258,7 +258,7 @@ export const ForecastPage: React.FC = () => {
             type="text"
             value={delegationAmount ? formatNumber(delegationAmount) : ""}
             onChange={handleAmountChange}
-            className="w-full p-4 bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl text-white focus:border-[#C7EF6B] focus:outline-none"
+            className="w-full p-3 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg text-white focus:border-[#C7EF6B] focus:outline-none"
             placeholder={`Enter amount in ${selectedCurrency}`}
           />
         </div>

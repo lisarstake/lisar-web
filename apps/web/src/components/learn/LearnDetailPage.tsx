@@ -121,7 +121,7 @@ export const LearnDetailPage: React.FC = () => {
 
   if (!content) {
     return (
-      <div className="h-screen bg-[#050505] text-white flex items-center justify-center">
+      <div className="h-screen bg-[#181818] text-white flex items-center justify-center">
         <p>Content not found</p>
       </div>
     );
@@ -206,7 +206,7 @@ export const LearnDetailPage: React.FC = () => {
   };
 
   return (
-    <div className="h-screen bg-[#050505] text-white flex flex-col">
+    <div className="h-screen bg-[#181818] text-white flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-8">
         <button
@@ -220,13 +220,13 @@ export const LearnDetailPage: React.FC = () => {
           onClick={handleHelpClick}
           className="w-8 h-8 bg-[#2a2a2a] rounded-full flex items-center justify-center"
         >
-          <CircleQuestionMark color="#86B3F7" size={16} />
+         <CircleQuestionMark color="#9ca3af" size={16} />
         </button>
       </div>
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-6 scrollbar-hide pb-10">
-        <div className="relative w-full bg-black rounded-xl mb-6 overflow-hidden">
+        <div className="relative w-full bg-[#181818] rounded-xl mb-6 overflow-hidden">
           {/* Dynamic aspect ratio - 4:3 for how-to-guides, 16:9 for academy */}
           <div className={content.category === "how-to-guides" ? "pt-[75%]" : "pt-[56.25%]"} />
           {embedUrl ? (

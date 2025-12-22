@@ -135,7 +135,7 @@ export const OTPPage: React.FC<OTPPageProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] flex flex-col">
+    <div className="min-h-screen bg-[#181818] flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-8">
         <button

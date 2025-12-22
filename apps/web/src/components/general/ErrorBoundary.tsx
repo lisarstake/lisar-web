@@ -108,7 +108,7 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({ error, onReset }) => {
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white flex items-center justify-center px-6">
+    <div className="min-h-screen bg-[#181818] text-white flex items-center justify-center px-6">
       <div className="max-w-md w-full text-center">
         <div className="mb-6 flex justify-center">
           <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center">

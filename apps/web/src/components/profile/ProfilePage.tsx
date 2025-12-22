@@ -4,7 +4,6 @@ import {
   ChevronLeft,
   Camera,
   ChevronDown,
-  ArrowRight,
   CircleArrowOutUpRight,
   Copy,
   Check,
@@ -19,7 +18,7 @@ import { LoadingSpinner } from "../general/LoadingSpinner";
 export const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { state, logout, updateProfile, refreshUser } = useAuth();
+  const { state, updateProfile, refreshUser } = useAuth();
 
   const [formData, setFormData] = useState({
     // username: "",
@@ -133,15 +132,6 @@ export const ProfilePage: React.FC = () => {
     }
   };
 
-  const handleSignOut = async () => {
-    try {
-      await logout();
-      navigate("/");
-    } catch (error) {
-      // Still navigate to home even if logout fails
-      navigate("/");
-    }
-  };
 
   const handleCopyAddress = async () => {
     if (!formData.depositAddress) return;
@@ -210,7 +200,7 @@ export const ProfilePage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#050505] text-gray-100 flex flex-col">
+    <div className="min-h-screen bg-[#181818] text-gray-100 flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-8">
         <button
@@ -405,17 +395,6 @@ export const ProfilePage: React.FC = () => {
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"
               />
             </div>
-
-            {/* 2 FA Status  */}
-            {!formData.is_totp_enabled && (
-              <div
-                onClick={() => navigate("/setup-otp")}
-                className="text-[#C7EF6B] text-[13px] font-normal my-3 cursor-pointer hover:underline"
-              >
-                2 factor authentication is not setup. Click to setup 2FA to make
-                your account more secure.
-              </div>
-            )}
           </div>
         </div>
 
@@ -457,17 +436,6 @@ export const ProfilePage: React.FC = () => {
             ) : (
               "Save Changes"
             )}
-          </button>
-        </div>
-
-        {/* Sign Out Button */}
-        <div className="mt-6">
-          <button
-            onClick={handleSignOut}
-            className="w-full text-red-500 flex items-center justify-center space-x-2 hover:text-red-400 transition-colors py-2 border-t pt-6 border-gray-800"
-          >
-            <ArrowRight size={16} />
-            <span>Sign Out</span>
           </button>
         </div>
       </div>

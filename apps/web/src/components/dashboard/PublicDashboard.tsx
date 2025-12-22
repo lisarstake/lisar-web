@@ -56,7 +56,7 @@ export const PublicDashboard: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white">
+    <div className="min-h-screen bg-[#181818] text-white">
       <DashboardHeader />
 
       <main className="max-w-7xl mx-auto px-6 py-12">

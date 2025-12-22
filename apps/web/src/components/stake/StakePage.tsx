@@ -237,7 +237,7 @@ export const StakePage: React.FC = () => {
     numericAmount > 0 && numericAmount > walletBalanceLpt;
 
   return (
-    <div className="h-screen bg-[#050505] text-white flex flex-col">
+    <div className="h-screen bg-[#181818] text-white flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-8">
         <button
@@ -253,7 +253,7 @@ export const StakePage: React.FC = () => {
           onClick={handleHelpClick}
           className="w-8 h-8 bg-[#2a2a2a] rounded-full flex items-center justify-center"
         >
-          <CircleQuestionMark color="#86B3F7" size={16} />
+         <CircleQuestionMark color="#9ca3af" size={16} />
         </button>
       </div>
 
@@ -364,7 +364,7 @@ export const StakePage: React.FC = () => {
       </div>
 
       {/* Proceed Button - Fixed at bottom */}
-      <div className="px-6 py-4 bg-[#050505] pb-24">
+      <div className="px-6 py-4 bg-[#181818] pb-24">
         <button
           onClick={handleProceed}
           disabled={!lptAmount || parseFloat(lptAmount) <= 0 || isStaking}

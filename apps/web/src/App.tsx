@@ -11,6 +11,7 @@ import { DashboardProvider } from "@/contexts/DashboardContext";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 import { GuidedTourProvider } from "@/contexts/GuidedTourContext";
 import { PortfolioProvider } from "@/contexts/PortfolioContext";
+import { GrowProvider } from "@/contexts/GrowContext";
 import { GuidedTour } from "@/components/general/GuidedTour";
 
 export default function App() {
@@ -24,8 +25,9 @@ export default function App() {
   const pagesWithBottomNav = [
     "/wallet",
     "/validator",
+    "/cards",
     "/portfolio",
-    "/earn",
+    "/account",
     "/learn",
     "/forecast",
     "/history",
@@ -48,23 +50,24 @@ export default function App() {
     <ErrorBoundary>
       <AuthProvider>
         <GuidedTourProvider>
-          <Toaster position="top-right" />
-          <ErrorBoundary>
-            <DashboardProvider>
-              <ErrorBoundary>
-                <OrchestratorProvider>
-                  <ErrorBoundary>
-                    <WalletProvider>
-                      <ErrorBoundary>
-                        <TransactionProvider>
-                          <ErrorBoundary>
-                            <DelegationProvider>
-                              <ErrorBoundary>
-                                <PortfolioProvider>
-                                  <ErrorBoundary>
-                                    <LeaderboardProvider>
-                                      <ErrorBoundary>
-                                        <NotificationProvider>
+          <GrowProvider>
+            <Toaster position="top-right" />
+            <ErrorBoundary>
+              <DashboardProvider>
+                <ErrorBoundary>
+                  <OrchestratorProvider>
+                    <ErrorBoundary>
+                      <WalletProvider>
+                        <ErrorBoundary>
+                          <TransactionProvider>
+                            <ErrorBoundary>
+                              <DelegationProvider>
+                                <ErrorBoundary>
+                                  <PortfolioProvider>
+                                    <ErrorBoundary>
+                                      <LeaderboardProvider>
+                                        <ErrorBoundary>
+                                          <NotificationProvider>
                                     <div className="min-h-screen bg-white relative">
                                       {useDesktopView ? (
                                         <main className="app-main">
@@ -93,22 +96,23 @@ export default function App() {
                                       )}
                                       <GuidedTour />
                                     </div>
-                                        </NotificationProvider>
-                                      </ErrorBoundary>
-                                    </LeaderboardProvider>
-                                  </ErrorBoundary>
-                                </PortfolioProvider>
-                              </ErrorBoundary>
-                            </DelegationProvider>
-                          </ErrorBoundary>
-                        </TransactionProvider>
-                      </ErrorBoundary>
-                    </WalletProvider>
-                  </ErrorBoundary>
-                </OrchestratorProvider>
-              </ErrorBoundary>
-            </DashboardProvider>
-          </ErrorBoundary>
+                                          </NotificationProvider>
+                                        </ErrorBoundary>
+                                      </LeaderboardProvider>
+                                    </ErrorBoundary>
+                                  </PortfolioProvider>
+                                </ErrorBoundary>
+                              </DelegationProvider>
+                            </ErrorBoundary>
+                          </TransactionProvider>
+                        </ErrorBoundary>
+                      </WalletProvider>
+                    </ErrorBoundary>
+                  </OrchestratorProvider>
+                </ErrorBoundary>
+              </DashboardProvider>
+            </ErrorBoundary>
+          </GrowProvider>
         </GuidedTourProvider>
       </AuthProvider>
     </ErrorBoundary>

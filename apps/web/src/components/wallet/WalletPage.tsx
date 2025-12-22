@@ -20,8 +20,6 @@ import {
   ChevronLeft,
   Eye,
   EyeOff,
-  ArrowRight,
-  TvMinimalPlay,
 } from "lucide-react";
 
 interface WalletPageProps {
@@ -178,9 +176,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
     }
   };
 
-  const handleAcademyClick = () => {
-    navigate("/learn");
-  };
+  
 
   const recentTransactions = useMemo(() => {
     const filtered =
@@ -196,7 +192,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
   }, [transactions, walletType]);
 
   return (
-    <div className="h-screen bg-[#050505] text-white flex flex-col">
+    <div className="h-screen bg-[#181818] text-white flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-8">
         <button
@@ -217,7 +213,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
             onClick={handleHelpClick}
             className="w-8 h-8 bg-[#2a2a2a] rounded-full flex items-center justify-center"
           >
-            <CircleQuestionMark color="#86B3F7" size={16} />
+           <CircleQuestionMark color="#9ca3af" size={16} />
           </button>
         </div>
       </div>
@@ -377,16 +373,6 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
           skeletonCount={5}
         />
       </div>
-
-      {/* Floating Academy Button */}
-      <button
-        onClick={handleAcademyClick}
-        className="fixed bottom-28 right-8 flex flex-col items-center justify-center bg-[#2a2a2a] rounded-full gap-2 h-14 w-14 text-white/70 hover:text-white transition-colors z-20"
-        aria-label="Watch video guides"
-      >
-        <TvMinimalPlay size={24} />
-     
-      </button>
 
       {/* Bottom Navigation */}
       <BottomNavigation currentPath="/wallet" />

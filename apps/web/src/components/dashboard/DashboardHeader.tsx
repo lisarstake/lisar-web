@@ -9,7 +9,7 @@ export const DashboardHeader: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <header className="bg-[#050505] border-b border-[#2a2a2a]">
+    <header className="bg-[#181818] border-b border-[#2a2a2a]">
       <div className="max-w-7xl mx-auto px-6 py-6">
         <div className="flex items-center justify-between">
           {/* Logo */}

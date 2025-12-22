@@ -10,7 +10,6 @@ import { ErrorDrawer } from "@/components/ui/ErrorDrawer";
 import { LoadingSpinner } from "@/components/general/LoadingSpinner";
 import { totpService } from "@/services/totp";
 
-
 export const TOTPSetupPage: React.FC = () => {
   const navigate = useNavigate();
 
@@ -66,8 +65,7 @@ export const TOTPSetupPage: React.FC = () => {
   };
 
   const handleBackClick = () => {
-    // Go back to profile, replacing setup in history to prevent loops
-    navigate("/profile", { replace: true });
+    navigate("/account", { replace: true });
   };
 
   const handleCopySecret = async () => {
@@ -91,7 +89,7 @@ export const TOTPSetupPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#050505] flex flex-col">
+    <div className="min-h-screen bg-[#181818] flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-8">
         <button

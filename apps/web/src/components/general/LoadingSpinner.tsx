@@ -15,7 +15,7 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   fullScreen = true,
 }) => {
   const containerClasses = fullScreen
-    ? "fixed inset-0 z-50 bg-[#050505] flex items-center justify-center"
+    ? "fixed inset-0 z-50 bg-[#181818] flex items-center justify-center"
     : "flex items-center justify-center py-12";
 
   return (

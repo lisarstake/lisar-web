@@ -1,7 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { OrchestratorList } from "../validator/OrchestratorList";
-import { WalletActionButtons } from "./WalletActionButtons";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { LisarLines } from "@/components/general/lisar-lines";
@@ -16,23 +14,20 @@ import { usePrices } from "@/hooks/usePrices";
 import { WALLET_TOUR_ID } from "@/lib/tourConfig";
 import { priceService } from "@/lib/priceService";
 import { formatFiat } from "@/lib/formatters";
-import { isProduction } from "@/lib/utils";
+import { TransactionData } from "@/services/transactions/types";
 import {
-  Search,
-  Bell,
-  CircleQuestionMark,
-  ArrowRight,
   Plus,
   Eye,
   EyeOff,
   ChevronRight,
-  LayersIcon,
   Landmark,
-  ArrowDown,
-  ArrowUp,
-  ChartSpline,
-  SquareMinus,
   Headset,
+  Sprout,
+  History,
+  RefreshCcw,
+  MoveUpRight,
+  Send,
+  CirclePlus,
 } from "lucide-react";
 import {
   Select,
@@ -41,9 +36,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { RecentTransactionsCard } from "./RecentTransactionsCard";
+import { GrowDrawer } from "../general/GrowDrawer";
+import { useGrow } from "@/contexts/GrowContext";
 
 export const AllWalletPage: React.FC = () => {
   const navigate = useNavigate();
+  const { setGrowMode } = useGrow();
   const [searchQuery, setSearchQuery] = useState("");
   const [showBalanceDrawer, setShowBalanceDrawer] = useState(false);
   const [selectedCardType, setSelectedCardType] = useState<string | null>(null);
@@ -62,6 +61,8 @@ export const AllWalletPage: React.FC = () => {
     }
   );
 
+  const [showGrowDrawer, setShowGrowDrawer] = useState(false);
+
   useEffect(() => {
     localStorage.setItem("wallet_show_balance", JSON.stringify(showBalance));
   }, [showBalance]);
@@ -70,7 +71,11 @@ export const AllWalletPage: React.FC = () => {
     localStorage.setItem("wallet_currency", selectedCurrency);
   }, [selectedCurrency]);
 
-  const { orchestrators, isLoading, error, refetch } = useOrchestrators();
+  useEffect(() => {
+    setGrowMode(false);
+  }, [setGrowMode]);
+
+  const { orchestrators } = useOrchestrators();
   const { state } = useAuth();
   const {
     wallet,
@@ -95,43 +100,8 @@ export const AllWalletPage: React.FC = () => {
     autoStart: shouldAutoStart,
   });
 
-  const filteredOrchestrators = useMemo(() => {
-    if (!searchQuery.trim()) {
-      return orchestrators;
-    }
-
-    const query = searchQuery.toLowerCase().trim();
-
-    return orchestrators.filter((orchestrator) => {
-      // Search by ENS name
-      const ensName =
-        orchestrator.ensIdentity?.name || orchestrator.ensName || "";
-      if (ensName.toLowerCase().includes(query)) {
-        return true;
-      }
-
-      // Search by address
-      const address = orchestrator.address || "";
-      if (address.toLowerCase().includes(query)) {
-        return true;
-      }
-
-      // Search by description
-      const description =
-        orchestrator.ensIdentity?.description || orchestrator.description || "";
-      if (description.toLowerCase().includes(query)) {
-        return true;
-      }
-
-      return false;
-    });
-  }, [orchestrators, searchQuery]);
-
   const ethereumBalance = contextEthereumBalance || 0;
   const solanaBalance = contextSolanaBalance || 0;
-
-  const walletBalance = useMemo(() => ethereumBalance, [ethereumBalance]);
-  const stakedBalance = useMemo(() => solanaBalance, [solanaBalance]);
 
   const ethereumFiatValue = useMemo(() => {
     const fiatCurrency = (state.user?.fiat_type || "USD").toUpperCase();
@@ -166,11 +136,6 @@ export const AllWalletPage: React.FC = () => {
     }
   }, [solanaBalance, prices, state.user?.fiat_type]);
 
-  const fiatValue = useMemo(
-    () => ethereumFiatValue + solanaFiatValue,
-    [ethereumFiatValue, solanaFiatValue]
-  );
-
   // Total USD = EVM LPT in USD + all USD stables
   const totalUsdBalance = useMemo(() => {
     const lptPriceInUsd = prices.lpt || 0;
@@ -185,16 +150,7 @@ export const AllWalletPage: React.FC = () => {
     return totalUsdBalance * nairaRate;
   }, [totalUsdBalance, prices]);
 
-  const fiatSymbol = useMemo(() => {
-    const fiatCurrency = wallet?.fiatCurrency || state.user?.fiat_type || "USD";
-    return priceService.getCurrencySymbol(fiatCurrency);
-  }, [wallet?.fiatCurrency, state.user?.fiat_type]);
-
   const nairaSymbol = useMemo(() => priceService.getCurrencySymbol("NGN"), []);
-
-  const handleNotificationClick = () => {
-    navigate("/notifications");
-  };
 
   const handleSupportClick = () => {
     window.open(
@@ -205,7 +161,7 @@ export const AllWalletPage: React.FC = () => {
   };
 
   const handleProfileClick = () => {
-    navigate("/profile");
+    navigate("/account");
   };
 
   const handleDepositClick = (walletType?: string, cardIndex?: number) => {
@@ -237,12 +193,6 @@ export const AllWalletPage: React.FC = () => {
     }
   };
 
-  const stakingFiatValue = useMemo(() => solanaFiatValue, [solanaFiatValue]);
-  const savingsFiatValue = useMemo(
-    () => ethereumFiatValue,
-    [ethereumFiatValue]
-  );
-
   const walletCards = useMemo(
     () => [
       {
@@ -263,13 +213,11 @@ export const AllWalletPage: React.FC = () => {
 
   // Calculate total balance for display
   const totalBalance = useMemo(() => {
-    const nairaRate = prices.ngn || 0;
     return selectedCurrency === "NGN" ? totalNairaBalance : totalUsdBalance;
   }, [selectedCurrency, totalNairaBalance, totalUsdBalance]);
 
-  // Calculate total daily earnings
-  const totalDailyEarnings = useMemo(() => {
-    const nairaRate = prices.ngn || 0;
+  // Calculate total daily earnings in USD
+  const totalDailyEarningsUsd = useMemo(() => {
     const lptPriceInUsd = prices.lpt || 0;
 
     // APY rates
@@ -280,10 +228,31 @@ export const AllWalletPage: React.FC = () => {
     const stablesDaily = (solanaBalance * stablesAPY) / (100 * 365);
     const highYieldDaily =
       (ethereumBalance * lptPriceInUsd * highYieldAPY) / (100 * 365);
-    const totalDaily = stablesDaily + highYieldDaily;
+    return stablesDaily + highYieldDaily;
+  }, [solanaBalance, ethereumBalance, prices]);
 
-    return selectedCurrency === "NGN" ? totalDaily * nairaRate : totalDaily;
-  }, [selectedCurrency, solanaBalance, ethereumBalance, prices]);
+  // Calculate total daily earnings in NGN
+  const totalDailyEarningsNgn = useMemo(() => {
+    const nairaRate = prices.ngn || 0;
+    return totalDailyEarningsUsd * nairaRate;
+  }, [totalDailyEarningsUsd, prices]);
+
+  // Calculate total daily earnings
+  const totalDailyEarnings = useMemo(() => {
+    return selectedCurrency === "NGN"
+      ? totalDailyEarningsNgn
+      : totalDailyEarningsUsd;
+  }, [selectedCurrency, totalDailyEarningsNgn, totalDailyEarningsUsd]);
+
+  // Calculate 24 hours balance (current balance - daily earnings) in selected currency
+  const balance24HoursAgo = useMemo(() => {
+    const balanceUsd = totalUsdBalance - totalDailyEarningsUsd;
+    if (selectedCurrency === "NGN") {
+      const nairaRate = prices.ngn || 0;
+      return balanceUsd * nairaRate;
+    }
+    return balanceUsd;
+  }, [totalUsdBalance, totalDailyEarningsUsd, selectedCurrency, prices]);
 
   // Handle scroll to next card
   const handleScrollToNext = (currentIndex: number) => {
@@ -298,8 +267,20 @@ export const AllWalletPage: React.FC = () => {
     }
   };
 
+  const handleTransactionClick = (transaction: TransactionData) => {
+    navigate(`/transaction-detail/${transaction.id}`);
+  };
+
+  const handleViewAllTransactions = () => {
+    navigate("/history");
+  };
+
+  const recentTransactions = useMemo(() => {
+    return transactions.slice(0, 5);
+  }, [transactions]);
+
   return (
-    <div className="min-h-screen bg-[#050505] text-white flex flex-col">
+    <div className="min-h-screen bg-[#181818] text-white flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-8">
         <div className="flex items-center space-x-2.5">
@@ -377,10 +358,10 @@ export const AllWalletPage: React.FC = () => {
 
                   {/* Wallet Content */}
                   <div className="relative z-10 h-full flex flex-col">
-                    {/* Centered Currency Select and Balance */}
-                    <div className="flex flex-col items-center justify-center flex-1 gap-2">
-                      {/* Currency Select - Only show on balance card */}
-                      {isBalanceCard && (
+                    {isBalanceCard ? (
+                      /* Balance Card - Original Layout */
+                      <div className="flex flex-col items-center justify-center flex-1 gap-2">
+                        {/* Currency Select */}
                         <Select
                           value={selectedCurrency}
                           onValueChange={(value) =>
@@ -434,35 +415,31 @@ export const AllWalletPage: React.FC = () => {
                             </SelectItem>
                           </SelectContent>
                         </Select>
-                      )}
 
-                      {/* Value Display */}
-                      {walletLoading ||
-                      delegationLoading ||
-                      solanaLoading ||
-                      ethereumLoading ? (
-                        <div className="flex items-center gap-2">
-                          {currencySymbol}
-                          <span className="text-3xl font-bold text-white">
-                            ••••••
-                          </span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          <span
-                            onClick={() =>
-                              isBalanceCard && setShowBalance(!showBalance)
-                            }
-                            className={`text-2xl font-semibold text-white ${isBalanceCard ? "cursor-pointer" : ""}`}
-                          >
+                        {/* Value Display */}
+                        {walletLoading ||
+                        delegationLoading ||
+                        solanaLoading ||
+                        ethereumLoading ? (
+                          <div className="flex items-center gap-2">
                             {currencySymbol}
-                            {isBalanceCard && !showBalance ? (
-                              "••••••"
-                            ) : (
-                              <>{formatFiat(displayValue)}</>
-                            )}
-                          </span>
-                          {isBalanceCard && (
+                            <span className="text-3xl font-bold text-white">
+                              •••••
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <span
+                              onClick={() => setShowBalance(!showBalance)}
+                              className="text-2xl font-semibold text-white cursor-pointer"
+                            >
+                              {currencySymbol}
+                              {!showBalance ? (
+                                "•••••"
+                              ) : (
+                                <>{formatFiat(displayValue)}</>
+                              )}
+                            </span>
                             <button
                               onClick={() => setShowBalance(!showBalance)}
                               className="shrink-0 cursor-pointer hover:opacity-70 transition-opacity"
@@ -479,32 +456,93 @@ export const AllWalletPage: React.FC = () => {
                                 />
                               )}
                             </button>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Daily Earnings Text - Only show on balance card */}
-                      {isBalanceCard &&
-                        !walletLoading &&
-                        !delegationLoading &&
-                        !solanaLoading &&
-                        !ethereumLoading && (
-                          <button
-                            onClick={() => handleScrollToNext(index)}
-                            className="flex items-center gap-0.5 text-xs text-white/60 hover:text-white/80 transition-colors mt-1"
-                          >
-                            <span>
-                              You've earned{" "}
-                              <span className="text-[#C7EF6B]">
-                                {currencySymbol}
-                                {formatFiat(totalDailyEarnings)}
-                              </span>{" "}
-                              today
-                            </span>
-                            <ChevronRight size={14} />
-                          </button>
+                          </div>
                         )}
-                    </div>
+
+                        {/* Daily Earnings Text */}
+                        {!walletLoading &&
+                          !delegationLoading &&
+                          !solanaLoading &&
+                          !ethereumLoading && (
+                            <button
+                              onClick={() => handleScrollToNext(index)}
+                              className="flex items-center gap-0.5 text-xs text-white/60 hover:text-white/80 transition-colors mt-1"
+                            >
+                              <span>
+                                You've earned{" "}
+                                <span className="text-[#C7EF6B]">
+                                  {currencySymbol}
+                                  {formatFiat(totalDailyEarnings)}
+                                </span>{" "}
+                                today
+                              </span>
+                              <ChevronRight size={14} />
+                            </button>
+                          )}
+                      </div>
+                    ) : (
+                      /* Earnings Card - Grid Layout */
+                      <div className="flex flex-col justify-center flex-1 h-full">
+                        <div className="grid grid-cols-2 h-full">
+                          {/* 24 Hours Balance */}
+                          <div className="flex flex-col items-center justify-center border-r border-b pb-2 border-[#2a2a2a]">
+                            <p className="text-xs text-white/60 mb-1 text-center flex items-center gap-1">
+                              <History size={14} />
+                              24h Balance
+                            </p>
+                            <p className="text-sm font-semibold  text-white/90 text-center">
+                              {selectedCurrency === "USD" ? "$" : "₦"}
+                              {formatFiat(balance24HoursAgo)}
+                            </p>
+                          </div>
+
+                          {/* Exchange Rate */}
+                          <div className="flex flex-col items-center justify-center border-b pb-2 border-[#2a2a2a]">
+                            <p className="text-xs text-white/60 mb-1 text-center flex items-center gap-1">
+                              <RefreshCcw size={14} />
+                              Exchange Rate
+                            </p>
+                            <p className="text-sm font-semibold  text-white/90 text-center">
+                              ₦{formatFiat(prices.ngn || 0)}
+                            </p>
+                          </div>
+
+                          {/* Earnings in USD */}
+                          <div className="flex flex-col items-center justify-center border-r pt-2 border-[#2a2a2a]">
+                            <p className="text-xs text-white/60 mb-1 text-center">
+                              Earnings (USD)
+                            </p>
+                            <div className="flex items-center gap-1.5">
+                              <img
+                                src="/us-flag.png"
+                                alt="US Flag"
+                                className="w-4 h-4 object-contain"
+                              />
+                              <p className="text-sm font-semibold text-white/90 text-center">
+                                ${formatFiat(totalDailyEarningsUsd)}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Earnings in NGN */}
+                          <div className="flex flex-col items-center justify-center pt-2">
+                            <p className="text-xs text-white/60 mb-1 text-center">
+                              Earnings (NGN)
+                            </p>
+                            <div className="flex items-center gap-1.5">
+                              <img
+                                src="/ng-flag.png"
+                                alt="Nigeria Flag"
+                                className="w-4 h-4 object-contain"
+                              />
+                              <p className="text-sm font-semibold text-white/90 text-center">
+                                ₦{formatFiat(totalDailyEarningsNgn)}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -513,108 +551,34 @@ export const AllWalletPage: React.FC = () => {
         </div>
 
         {/* Action Buttons - Only show once below cards */}
-        <div className="flex gap-3 px-2 justify-center mt-0 mr-2">
+        <div className="flex px-2 justify-center mt-0 gap-2">
           <button
             onClick={() => handleDepositClick("savings", 0)}
-            className="flex-1 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg px-4 py-2.5 text-sm font-medium text-white/90 hover:bg-[#222] transition-colors flex items-center justify-center gap-2"
+            className="flex-1 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg py-4 text-sm font-medium text-white/90 hover:bg-[#222] transition-colors flex flex-col  items-center justify-center gap-1"
           >
-            <Plus size={16} />
-            <p>Add funds</p>
+            <CirclePlus size={16} />
+            <p className="text-white/90">Recieve</p>
           </button>
           <button
             onClick={() => navigate("/wallet/savings")}
-            className="flex-1 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg px-4 py-2.5 text-sm font-medium text-white/90 hover:bg-[#222] transition-colors flex items-center justify-center gap-2"
+            className="flex-1 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg py-4 text-sm font-medium text-white/90 hover:bg-[#222] transition-colors flex flex-col items-center justify-center gap-1"
           >
-            <Landmark size={16} />
-            <p>Withdraw</p>
+            <Send size={16} />
+            <p className="text-white/90">Withdraw</p>
+          </button>
+          <button
+            onClick={() => setShowGrowDrawer(true)}
+            className="flex-1 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg py-4 text-sm font-medium text-white/90 hover:bg-[#222] transition-colors flex flex-col items-center justify-center gap-1"
+          >
+            <Sprout size={16} />
+            <p className="text-white/90">Earn</p>
           </button>
         </div>
       </div>
 
       {/* Savings Plans Section */}
       <div className="px-6 pb-20">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-white/70 text-sm font-medium">
-            Suggested for you
-          </h2>
-        </div>
-
-        <div className="space-y-4">
-          {/* Stables Card */}
-          <div className="bg-[#6da7fd] rounded-2xl py-3 px-5 border-2 border-[#86B3F7]/30 hover:border-[#86B3F7]/50 transition-colors relative overflow-hidden">
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex-1 relative z-10">
-                <h3 className="text-white text-base font-semibold mb-2">
-                  Savings
-                </h3>
-                <p className="text-white/90 text-sm leading-relaxed">
-                  Lock a portion of your balance towards an expectation and earn
-                  rewards.
-                </p>
-              </div>
-            </div>
-
-            {isProduction() ? (
-              <button
-                disabled
-                className="mt-2 px-3 py-1.5 bg-[#7daff6] text-white/90 rounded-full text-sm font-semibold cursor-not-allowed relative z-10"
-              >
-                coming soon
-              </button>
-            ) : (
-              <button
-                onClick={() => navigate("/wallet/savings")}
-                className="mt-2 px-6 py-2.5 bg-[#438af6] text-white rounded-full text-xs font-semibold hover:bg-[#96C3F7] transition-colors relative z-10"
-              >
-                Save Now
-              </button>
-            )}
-
-            {/* Bottom Right Image */}
-            <img
-              src="/highyield-3.svg"
-              alt="Stables"
-              className="absolute bottom-[-20px] right-[-20px]  w-30 h-28 object-contain opacity-80"
-            />
-          </div>
-
-          {/* High Yield Card */}
-          <div className="bg-transparent rounded-2xl py-3 px-5 border-2 border-[#C7EF6B]/30 hover:border-[#C7EF6B]/50 transition-colors relative overflow-hidden">
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex-1 relative z-10">
-                <h3 className="text-white text-base font-semibold mb-2">
-                  Staking
-                </h3>
-                <p className="text-white/60 text-sm leading-relaxed">
-                  Stake your balance on decentralized networks and earn rewards.
-                  Up to 40% APY.
-                </p>
-              </div>
-            </div>
-
-            <button
-              onClick={() => navigate("/wallet/staking")}
-              className="mt-2 px-6 py-2.5 bg-[#a3d039] text-black rounded-full text-xs font-semibold hover:bg-[#B8E55A] transition-colors relative z-10"
-            >
-              Learn More
-            </button>
-
-            {/* Bottom Right Image */}
-            <img
-              src="/highyield-1.svg"
-              alt="High Yield"
-              className="absolute bottom-[-5px] right-[-5px] w-21 h-21 object-contain opacity-80"
-            />
-          </div>
-        </div>
-
-        {/* Predict Card */}
-        <div className="flex items-center justify-between mt-6 mb-4">
-          <h2 className="text-white/70 text-sm font-medium">
-            Upcoming features
-          </h2>
-        </div>
-
+        {/* Predict card */}
         <div className="bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-2xl p-4 border border-[#2a2a2a] relative overflow-hidden">
           <div className="flex items-center gap-4">
             <div className="shrink-0">
@@ -636,6 +600,31 @@ export const AllWalletPage: React.FC = () => {
               </p>
             </div>
           </div>
+        </div>
+
+        {/* Recent Transactions */}
+        <div className="flex-1 pb-20 pt-6 overflow-y-auto">
+          <div className="flex items-center justify-between mb-3 px-2">
+            <h2 className="text-white/80 text-sm font-medium">
+              Recent transactions
+            </h2>
+            {transactions.length > 0 && (
+              <button
+                onClick={handleViewAllTransactions}
+                className="text-[#C7EF6B] text-sm hover:opacity-70 transition-opacity"
+              >
+                See all
+              </button>
+            )}
+          </div>
+
+          {/* Transactions Card */}
+          <RecentTransactionsCard
+            transactions={recentTransactions}
+            isLoading={transactionsLoading}
+            onTransactionClick={handleTransactionClick}
+            skeletonCount={5}
+          />
         </div>
       </div>
 
@@ -683,6 +672,16 @@ export const AllWalletPage: React.FC = () => {
                     "You can tap on the balance to show/hide",
                   ]
         }
+      />
+
+      {/* Grow Drawer */}
+      <GrowDrawer
+        isOpen={showGrowDrawer}
+        onClose={() => setShowGrowDrawer(false)}
+        onLaunch={() => {
+          navigate("/grow");
+          setShowGrowDrawer(false);
+        }}
       />
     </div>
   );

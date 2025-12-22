@@ -46,13 +46,13 @@ const actions = [
     path: "/calculator",
   },
   {
-    label: "Earn",
+    label: "Account",
     icon: (isActive: boolean) => (
       <BadgeCent
         className={`w-4 h-4 ${isActive ? "text-white" : "text-[#006400]"}`}
       />
     ),
-    path: "/earn",
+    path: "/account",
   },
 ];
 

@@ -23,7 +23,7 @@ export default function NotFoundPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white flex items-center justify-center px-6">
+    <div className="min-h-screen bg-[#181818] text-white flex items-center justify-center px-6">
       <div className="text-center max-w-md w-full">
         {/* Icon */}
         <div className="flex justify-center mb-6">

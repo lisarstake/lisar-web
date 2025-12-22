@@ -19,22 +19,16 @@ export const WalletActionButtons: React.FC<WalletActionButtonsProps> = ({
   // Determine colors based on wallet type
   const isStables = walletType === "savings";
   const isHighYield = walletType === "staking";
-  
-  const buttonBgColor = isStables 
-    ? "bg-[#86B3F7]/20" 
-    : isHighYield 
+
+  const buttonBgColor = isStables
+    ? "bg-[#86B3F7]/20"
+    : isHighYield
       ? "bg-[#C7EF6B]/20"
       : "bg-[#2a2a2a]";
-  
-  const iconColor = isStables 
-    ? "#86B3F7" 
-    : isHighYield 
-      ? "#C7EF6B"
-      : "#C7EF6B";
-  
-  const textColor = isStables || isHighYield
-    ? "text-white"
-    : "text-gray-300";
+
+  const iconColor = isStables ? "#86B3F7" : isHighYield ? "#C7EF6B" : "#C7EF6B";
+
+  const textColor = isStables || isHighYield ? "text-white" : "text-gray-300";
 
   return (
     <div className="flex items-center justify-around px-6 py-2">
@@ -57,7 +51,7 @@ export const WalletActionButtons: React.FC<WalletActionButtonsProps> = ({
         >
           <PiggyBank size={25} color={iconColor} />
         </button>
-        <span className="text-white/80 text-xs mt-2">Vest</span>
+        <span className="text-white/80 text-xs mt-2">Earn</span>
       </div>
 
       <div className="flex flex-col items-center">
@@ -84,4 +78,3 @@ export const WalletActionButtons: React.FC<WalletActionButtonsProps> = ({
     </div>
   );
 };
-
