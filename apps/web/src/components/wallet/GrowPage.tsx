@@ -493,7 +493,7 @@ export const GrowPage: React.FC = () => {
           onClose={() => setShowExitDrawer(false)}
           onConfirm={handleExitGrow}
           title=""
-          message=" Exit Earn? You can always return later."
+          message=" Exit earn? You can always return later."
           confirmText="Exit Earn"
           cancelText="Stay"
           variant="warning"

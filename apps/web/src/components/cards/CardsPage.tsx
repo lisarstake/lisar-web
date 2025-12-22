@@ -54,7 +54,7 @@ export const CardsPage: React.FC = () => {
 
         {/* Virtual Card */}
         <div className="mb-6 opacity-70">
-          <div className="relative rounded-2xl p-6 h-[200px] bg-linear-to-br from-black via-gray-900 to-black overflow-hidden border border-gray-800/50">
+          <div className="relative rounded-2xl p-6 h-[200px] bg-linear-to-br from-gray-850 via-gray-850 to-black overflow-hidden border border-gray-800/50">
             {/* Decorative elements */}
             <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full blur-3xl"></div>
             <div className="absolute bottom-0 left-0 w-32 h-32 bg-gray-500/10 rounded-full blur-2xl"></div>

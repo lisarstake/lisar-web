@@ -1,5 +1,10 @@
 import React, { useState } from "react";
-import { ChevronLeft, LockKeyhole, CircleQuestionMark, Sprout } from "lucide-react";
+import {
+  ChevronLeft,
+  LockKeyhole,
+  CircleQuestionMark,
+  Sprout,
+} from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
@@ -99,7 +104,7 @@ export const TiersPage: React.FC = () => {
           onClick={handleHelpClick}
           className="w-8 h-8 bg-[#2a2a2a] rounded-full flex items-center justify-center"
         >
-         <CircleQuestionMark color="#9ca3af" size={16} />
+          <CircleQuestionMark color="#9ca3af" size={16} />
         </button>
       </div>
 

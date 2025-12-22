@@ -115,25 +115,8 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
               )}
             </Link>
 
-         
-
-            {/* Cards */}
+            {/* Transfers */}
             <Link
-              to="/cards"
-              data-tour="nav-cards"
-              className={`flex flex-col items-center py-2 px-3 ${
-                isActive("/cards") ? "text-[#C7EF6B]" : "text-gray-400"
-              }`}
-            >
-              <CreditCard size={22} className="mb-1" />
-              <span className="text-xs">Cards</span>
-              {isActive("/cards") && (
-                <div className="w-6 h-0.5 bg-[#C7EF6B] mt-1 rounded-full"></div>
-              )}
-            </Link>
-
-               {/* Transfers */}
-               <Link
               to="/history"
               data-tour="nav-transactions"
               className={`flex flex-col items-center py-2 px-3 ${
@@ -143,6 +126,21 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
               <ListMinus size={22} className="mb-1" />
               <span className="text-xs">Transfers</span>
               {isActive("/history") && (
+                <div className="w-6 h-0.5 bg-[#C7EF6B] mt-1 rounded-full"></div>
+              )}
+            </Link>
+
+              {/* Cards */}
+              <Link
+              to="/cards"
+              data-tour="nav-cards"
+              className={`flex flex-col items-center py-2 px-3 ${
+                isActive("/cards") ? "text-[#C7EF6B]" : "text-gray-400"
+              }`}
+            >
+              <CreditCard size={22} className="mb-1" />
+              <span className="text-xs">Cards</span>
+              {isActive("/cards") && (
                 <div className="w-6 h-0.5 bg-[#C7EF6B] mt-1 rounded-full"></div>
               )}
             </Link>

@@ -132,7 +132,6 @@ export const ProfilePage: React.FC = () => {
     }
   };
 
-
   const handleCopyAddress = async () => {
     if (!formData.depositAddress) return;
 
@@ -224,8 +223,13 @@ export const ProfilePage: React.FC = () => {
       {/* Content - Scrollable */}
       <div className="flex-1 overflow-y-auto px-6 pb-6 scrollbar-hide">
         {/* Profile Picture Section */}
-        <div className="flex flex-col items-center mb-8">
-          <div className="w-24 h-24 bg-[#1a1a1a] rounded-full border-2 border-[#2a2a2a] flex items-center justify-center mb-4 overflow-hidden">
+        <div className="flex flex-col items-center mb-4">
+          <div
+            onClick={handleUploadPhoto}
+            className={`w-18 h-18 bg-[#1a1a1a] rounded-full border-2 border-[#2a2a2a] flex items-center justify-center mb-4 overflow-hidden cursor-pointer hover:border-[#C7EF6B]/50 transition-colors relative group ${
+              isUploadingImage ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+          >
             {formData.profileImage ? (
               <img
                 src={formData.profileImage}
@@ -249,25 +253,18 @@ export const ProfilePage: React.FC = () => {
                   : "User"}
               </span>
             </div>
+            {/* Camera Icon Overlay */}
+            <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <Camera size={16} color="white" />
+            </div>
           </div>
-
-          <button
-            onClick={handleUploadPhoto}
-            disabled={isUploadingImage}
-            className={`bg-[#C7EF6B] text-black px-3 py-1.5 rounded-full font-medium flex items-center space-x-2 hover:bg-[#B8E55A] transition-colors ${
-              isUploadingImage ? "opacity-50 cursor-not-allowed" : ""
-            }`}
-          >
-            <Camera size={16} />
-            <span>{isUploadingImage ? "Uploading..." : "Upload"}</span>
-          </button>
         </div>
 
         {/* Form Fields */}
         <div className="space-y-6">
           {/* Username */}
           {/* <div>
-            <label className="block text-gray-100 text-sm font-medium mb-2">
+            <label className="block ml-1 text-gray-100 text-sm font-medium mb-2">
               Username
             </label>
             <input
@@ -280,7 +277,7 @@ export const ProfilePage: React.FC = () => {
 
           {/* Full Name */}
           <div>
-            <label className="block text-gray-100 text-sm font-medium mb-2">
+            <label className="block ml-1 text-gray-100 text-sm font-medium mb-2">
               Full Name
             </label>
             <input
@@ -293,7 +290,7 @@ export const ProfilePage: React.FC = () => {
 
           {/* Date of Birth */}
           <div>
-            <label className="block text-gray-100 text-sm font-medium mb-2">
+            <label className="block ml-1 text-gray-100 text-sm font-medium mb-2">
               Date of Birth
             </label>
             <input
@@ -306,7 +303,7 @@ export const ProfilePage: React.FC = () => {
 
           {/* Country */}
           <div>
-            <label className="block text-gray-100 text-sm font-medium mb-2">
+            <label className="block ml-1 text-gray-100 text-sm font-medium mb-2">
               Country
             </label>
             <input
@@ -320,7 +317,7 @@ export const ProfilePage: React.FC = () => {
 
           {/* State */}
           <div>
-            <label className="block text-gray-100 text-sm font-medium mb-2">
+            <label className="block ml-1 text-gray-100 text-sm font-medium mb-2">
               State/Province
             </label>
             <input
@@ -334,7 +331,7 @@ export const ProfilePage: React.FC = () => {
 
           {/* Deposit Address */}
           <div>
-            <label className="block text-gray-100 text-sm font-medium mb-2">
+            <label className="block ml-1 text-gray-100 text-sm font-medium mb-2">
               Deposit Address
             </label>
             <div className="relative">
@@ -366,7 +363,7 @@ export const ProfilePage: React.FC = () => {
 
           {/* Preferred Currency */}
           <div>
-            <label className="block text-gray-100 text-sm font-medium mb-2">
+            <label className="block ml-1 text-gray-100 text-sm font-medium mb-2">
               Preferred Currency
             </label>
             <div className="relative">
