@@ -1,1 +1,13 @@
+.env 
+.env.local
+dist
+.next
+.turbo
+.vscode
+.idea
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 node_modules
