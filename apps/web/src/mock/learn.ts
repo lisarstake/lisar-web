@@ -134,7 +134,7 @@ export const mockLearnContent: LearnContent[] = [
     slug: "how-to-deposit",
     title: "How to Deposit",
     subtitle: "Learn how to add funds to your Lisar wallet",
-    videoUrl: "https://vimeo.com/1141206170?fl=ip&fe=ec",
+    videoUrl: "https://vimeo.com/1148260957?fl=ip&fe=ec",
     brief:
       "A quick guide on depositing funds into your Lisar wallet to get started.",
     fullContent:
@@ -146,9 +146,9 @@ export const mockLearnContent: LearnContent[] = [
   {
     id: "10",
     slug: "how-to-stake",
-    title: "How to Stake on Lisar",
+    title: "How to Vest on Lisar",
     subtitle: "Step-by-step guide to staking your LPT",
-    videoUrl: "https://vimeo.com/1141206477?fl=ip&fe=ec",
+    videoUrl: "https://vimeo.com/1148260986?fl=ip&fe=ec",
     brief:
       "Learn how to stake your LPT tokens and start earning rewards.",
     fullContent:
@@ -160,9 +160,9 @@ export const mockLearnContent: LearnContent[] = [
   {
     id: "11",
     slug: "how-to-unstake",
-    title: "How to Unstake on Lisar",
+    title: "How to Unvest on Lisar",
     subtitle: "Understand the unstaking process and unbonding period",
-    videoUrl: "https://vimeo.com/1141206670?fl=ip&fe=ec",
+    videoUrl: "https://vimeo.com/1148266260?fl=ip&fe=ec",
     brief:
       "Learn how to unstake your staked LPT tokens from a validator.",
     fullContent:
@@ -176,7 +176,7 @@ export const mockLearnContent: LearnContent[] = [
     slug: "how-to-withdraw",
     title: "How to Withdraw ",
     subtitle: "Withdraw your funds from your Lisar wallet to your bank account",
-    videoUrl: "https://vimeo.com/1143904039?fl=sv&fe=ci",
+    videoUrl: "https://vimeo.com/1148261031?fl=ip&fe=ec",
     brief:
       "A simple guide to withdrawing from your Lisar wallet to your bank account.",
     fullContent:

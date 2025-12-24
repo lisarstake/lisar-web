@@ -11,7 +11,7 @@ import { useNotification } from "@/contexts/NotificationContext";
 import { useTransactions } from "@/contexts/TransactionContext";
 import { useGuidedTour } from "@/hooks/useGuidedTour";
 import { usePrices } from "@/hooks/usePrices";
-import { WALLET_TOUR_ID } from "@/lib/tourConfig";
+import { WALLET_PAGE_TOUR_ID } from "@/lib/tourConfig";
 import { priceService } from "@/lib/priceService";
 import { formatEarnings } from "@/lib/formatters";
 import { TransactionData } from "@/services/transactions/types";
@@ -57,7 +57,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
   }, [state.user?.is_onboarded, state.isLoading]);
 
   const { isCompleted: isTourCompleted, startTour } = useGuidedTour({
-    tourId: WALLET_TOUR_ID,
+    tourId: WALLET_PAGE_TOUR_ID,
     autoStart: shouldAutoStart,
   });
 
@@ -210,6 +210,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
           <button
             onClick={handleHelpClick}
             className="w-8 h-8 bg-[#2a2a2a] rounded-full flex items-center justify-center"
+            data-tour="wallet-page-help-icon"
           >
             <CircleQuestionMark color="#86B3F7" size={16} />
           </button>
@@ -225,6 +226,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
                 ? "bg-[#6da7fd] border-2 border-[#86B3F7]/30 hover:border-[#86B3F7]/50"
                 : "bg-transparent border-2 border-[#C7EF6B]/30 hover:border-[#C7EF6B]/50"
             } rounded-2xl p-5 relative overflow-hidden transition-colors h-[170px]`}
+            data-tour="wallet-page-balance"
           >
             <div className="flex items-start justify-between mb-4">
               <div className="flex-1 relative z-10">

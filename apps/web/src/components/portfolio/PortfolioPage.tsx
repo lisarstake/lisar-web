@@ -1,27 +1,16 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import {
-  ChevronLeft,
-  Trophy,
-  ChevronDown,
-  CircleQuestionMark,
-  ChevronUp,
-  Info,
-  CircleDollarSign,
-  Eye,
-  EyeOff,
-  TrendingUp,
-} from "lucide-react";
+import { ChevronLeft, CircleQuestionMark, Eye, EyeOff } from "lucide-react";
 import QRCode from "qrcode";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
-import { EmptyState } from "@/components/general/EmptyState";
 import { LisarLines } from "@/components/general/lisar-lines";
-import { PayoutProgressCircle } from "@/components/general/PayoutProgressCircle";
 import { useDelegation } from "@/contexts/DelegationContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTransactions } from "@/contexts/TransactionContext";
 import { usePortfolio, type StakeEntry } from "@/contexts/PortfolioContext";
+import { useWallet } from "@/contexts/WalletContext";
+import { usePrices } from "@/hooks/usePrices";
 import { RecentTransactionsCard } from "@/components/wallet/RecentTransactionsCard";
 import { PortfolioSkeleton } from "./PortfolioSkeleton";
 import { formatEarnings, formatLifetime } from "@/lib/formatters";
@@ -132,6 +121,8 @@ export const PortfolioPage: React.FC = () => {
     stakeEntries,
     isLoading: portfolioLoading,
   } = usePortfolio();
+  const { solanaBalance, ethereumBalance } = useWallet();
+  const { prices } = usePrices();
 
   useEffect(() => {
     setMode(isSavings ? "savings" : "staking");
@@ -196,43 +187,33 @@ export const PortfolioPage: React.FC = () => {
   const lifetimeRewards = summary?.lifetimeRewards || 0;
   const averageApy = summary?.averageApy || 0;
 
-  // Calculate fiat value for total stake
-  const [totalStakeFiat, setTotalStakeFiat] = useState(0);
   const fiatCurrency = state.user?.fiat_type || "USD";
   const fiatSymbol = useMemo(() => {
     return priceService.getCurrencySymbol(fiatCurrency);
   }, [fiatCurrency]);
 
-  useEffect(() => {
-    const calculateFiat = async () => {
-      if (isSavings) {
-        const prices = await priceService.getPrices();
-        let fiatValue = totalStake;
-        switch (fiatCurrency.toUpperCase()) {
-          case "NGN":
-            fiatValue = totalStake * prices.ngn;
-            break;
-          case "EUR":
-            fiatValue = totalStake * prices.eur;
-            break;
-          case "GBP":
-            fiatValue = totalStake * prices.gbp;
-            break;
-          case "USD":
-          default:
-            fiatValue = totalStake;
-        }
-        setTotalStakeFiat(fiatValue);
-      } else {
-        const fiatValue = await priceService.convertLptToFiat(
-          totalStake,
-          fiatCurrency
-        );
-        setTotalStakeFiat(fiatValue);
-      }
-    };
-    calculateFiat();
-  }, [totalStake, fiatCurrency, isSavings]);
+  // Calculate total balance (staked + unstaked) similar to wallet page
+  const totalBalanceFiat = useMemo(() => {
+    const ethereumBal = ethereumBalance || 0;
+
+    // Calculate total USD value: (LPT balance * LPT price)
+    const lptPriceInUsd = prices.lpt || 0;
+    const lptUsdValue = ethereumBal * lptPriceInUsd;
+    const totalUsdBalance = lptUsdValue;
+
+    // Convert to user's fiat currency
+    switch (fiatCurrency.toUpperCase()) {
+      case "NGN":
+        return totalUsdBalance * (prices.ngn || 0);
+      case "EUR":
+        return totalUsdBalance * (prices.eur || 0);
+      case "GBP":
+        return totalUsdBalance * (prices.gbp || 0);
+      case "USD":
+      default:
+        return totalUsdBalance;
+    }
+  }, [ethereumBalance, solanaBalance, prices, fiatCurrency]);
 
   const handleBackClick = () => {
     navigate(-1);
@@ -346,10 +327,13 @@ export const PortfolioPage: React.FC = () => {
               <div className="flex items-baseline gap-2 mb-1">
                 <span className="text-2xl font-semibold text-white/90">
                   {showBalance
-                    ? `${fiatSymbol}${totalStakeFiat.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}`
+                    ? `${fiatSymbol}${totalBalanceFiat.toLocaleString(
+                        undefined,
+                        {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        }
+                      )}`
                     : "••••"}
                 </span>
               </div>
@@ -360,10 +344,11 @@ export const PortfolioPage: React.FC = () => {
               {/* Token Amount */}
               <div className="flex items-center flex-col">
                 <p className="text-white/90 font-semibold text-sm">
-                  {showBalance ? formatEarnings(totalStake) : "••••"}
+                  {showBalance ? formatEarnings(totalStake) : "••••"}{" "}
+                  {showBalance ? (isSavings ? "USDC" : "LPT") : ""}
                 </p>
                 <p className="text-white/60 text-xs">
-                  {isSavings ? "USDC" : "LPT"}
+                  {isSavings ? "Active vest" : "Active vest"}
                 </p>
               </div>
 
