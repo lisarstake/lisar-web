@@ -14,13 +14,7 @@ import { ALL_WALLET_TOUR_ID } from "@/lib/tourConfig";
 import { priceService } from "@/lib/priceService";
 import { formatEarnings } from "@/lib/formatters";
 import { isProduction } from "@/lib/utils";
-import {
-  Bell,
-  CircleQuestionMark,
-  Plus,
-  Eye,
-  EyeOff,
-} from "lucide-react";
+import { Bell, CircleQuestionMark, Plus, Eye, EyeOff } from "lucide-react";
 
 export const AllWalletPage: React.FC = () => {
   const navigate = useNavigate();
@@ -262,7 +256,17 @@ export const AllWalletPage: React.FC = () => {
               style={{ scrollSnapAlign: "center" }}
             >
               <div
-                className={`bg-linear-to-br ${card.gradient} rounded-2xl p-6 h-[170px] relative overflow-hidden border border-[#2a2a2a]`}
+                onClick={() => {
+                  // Only make clickable for savings and staking when not coming soon
+                  if (card.type !== "main" && !(card.type === "savings" && isProduction())) {
+                    handleDepositClick(card.type, index);
+                  }
+                }}
+                className={`bg-linear-to-br ${card.gradient} rounded-2xl p-6 h-[170px] relative overflow-hidden border border-[#2a2a2a] ${
+                  card.type !== "main" && !(card.type === "savings" && isProduction())
+                    ? "cursor-pointer hover:opacity-95 transition-opacity"
+                    : ""
+                }`}
                 data-tour={
                   card.id === "main" ? "all-wallet-balance-card" : undefined
                 }
@@ -300,7 +304,10 @@ export const AllWalletPage: React.FC = () => {
                   <div className="flex items-center gap-2">
                     <h3 className="text-white/70 text-sm mb-2">{card.title}</h3>
                     <button
-                      onClick={() => setShowBalance(!showBalance)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowBalance(!showBalance);
+                      }}
                       className="shrink-0 cursor-pointer hover:opacity-70 transition-opacity mb-2"
                     >
                       {showBalance ? (
@@ -328,7 +335,10 @@ export const AllWalletPage: React.FC = () => {
                       <>
                         <div className="flex items-baseline gap-2 mb-1">
                           <span
-                            onClick={() => setShowBalance(!showBalance)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setShowBalance(!showBalance);
+                            }}
                             className="text-2xl font-bold text-white cursor-pointer"
                           >
                             {showBalance
@@ -388,13 +398,26 @@ export const AllWalletPage: React.FC = () => {
                     >
                       coming soon
                     </button>
-                  ) : (
+                  ) : card.type === "main" ? (
                     <button
-                      onClick={() => handleDepositClick(card.type, index)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDepositClick(card.type, index);
+                      }}
                       className="flex items-center gap-1 px-2.5 py-1.5 bg-[#C7EF6B] text-black rounded-full text-[10px] font-semibold hover:bg-[#B8E55A] transition-colors"
                     >
-                      <Plus size={14} />
-                      Quick Add
+                    
+                      View wallets
+                    </button>
+                  ) : (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDepositClick(card.type, index);
+                      }}
+                      className="flex items-center gap-1 px-2.5 py-1.5 bg-[#C7EF6B] text-black rounded-full text-[10px] font-semibold hover:bg-[#B8E55A] transition-colors"
+                    >
+                      View balance
                     </button>
                   )}
                 </div>
