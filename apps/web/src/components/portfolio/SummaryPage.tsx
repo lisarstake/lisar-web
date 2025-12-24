@@ -99,7 +99,11 @@ export const SummaryPage: React.FC = () => {
       (sum, tx) => sum + parseFloat(tx.amount || "0"),
       0
     );
-    const validatorId = completed.length > 0 ? completed[0].delegate.id : null;
+    // Find the first completed transaction with a valid delegate
+    const firstValidTransaction = completed.find(
+      (tx) => tx?.delegate?.id
+    );
+    const validatorId = firstValidTransaction?.delegate?.id || null;
 
     return {
       count,
@@ -115,6 +119,8 @@ export const SummaryPage: React.FC = () => {
   const handleWithdrawClick = () => {
     if (completedUnbondingData.validatorId) {
       navigate(`/validator-details/${completedUnbondingData.validatorId}`);
+    } else {
+      console.error("Cannot withdraw: validator ID is missing");
     }
   };
 
@@ -222,7 +228,7 @@ export const SummaryPage: React.FC = () => {
 
         {/* Withdrawal Available Section - Only for High Yield */}
         {!isSavings && completedUnbondingData.count > 0 && (
-          <div className="bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-xl p-5 mb-4 border border-[#C7EF6B]/30">
+          <div className="bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-xl p-5 mb-4">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 bg-[#C7EF6B]/20 rounded-lg flex items-center justify-center">
                 <CheckCircle size={20} color="#C7EF6B" />
@@ -235,9 +241,9 @@ export const SummaryPage: React.FC = () => {
               </div>
             </div>
             <div className="space-y-3">
-              <div className="flex items-center justify-between bg-[#0f0f0f] rounded-lg p-3">
+              <div className="flex items-center justify-between bg-[#0f0f0f] rounded-lg py-2.5 px-3">
                 <span className="text-gray-400 text-sm">Amount</span>
-                <span className="text-white font-bold text-lg">
+                <span className="text-white/90 font-medium text-sm">
                   {formatEarnings(completedUnbondingData.totalAmount)}{" "}
                   {isSavings ? "USDC" : "LPT"}
                 </span>

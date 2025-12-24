@@ -23,7 +23,7 @@ export const LoginForm: React.FC = () => {
   });
 
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorDrawer, setErrorDrawer] = useState({
     isOpen: false,

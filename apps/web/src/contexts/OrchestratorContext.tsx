@@ -50,7 +50,7 @@ export const OrchestratorProvider: React.FC<OrchestratorProviderProps> = ({
 
       const queryParams: OrchestratorQueryParams = params || {
         page: 1,
-        limit: 8,
+        limit: 12,
         sortBy: "apy",
         sortOrder: "desc",
         active: true,
@@ -61,28 +61,11 @@ export const OrchestratorProvider: React.FC<OrchestratorProviderProps> = ({
       let fetchedOrchestrators: OrchestratorResponse[] = [];
       if (response.success && response.data && Array.isArray(response.data)) {
         fetchedOrchestrators = response.data;
-        
-        // TODO: Enable ENS fetching when backend support is implemented
-        // Fetch ENS identities for all orchestrators
-        // try {
-        //   const addresses = fetchedOrchestrators.map((orch) => 
-        //     orch.ensName || orch.address
-        //   );
-        //   const ensIdentities = await ensService.getBatchEnsIdentities(addresses);
-        //   
-        //   // Attach ENS identities to orchestrators
-        //   fetchedOrchestrators = fetchedOrchestrators.map((orch) => ({
-        //     ...orch,
-        //     ensIdentity: ensIdentities[orch.ensName || orch.address],
-        //   }));
-        // } catch (ensError) {
-        //   console.error("Failed to fetch ENS identities:", ensError);
-        //   // Continue without ENS data if it fails
-        // }
-        
-        // Filter out orchestrators whose names start with "0x" 
-        fetchedOrchestrators = filterOrchestratorsWithoutNames(fetchedOrchestrators);
-        
+
+        // Filter out orchestrators whose names start with "0x"
+        fetchedOrchestrators =
+          filterOrchestratorsWithoutNames(fetchedOrchestrators);
+
         setOrchestrators(fetchedOrchestrators);
       } else {
         console.error("Invalid response data:", response.data);

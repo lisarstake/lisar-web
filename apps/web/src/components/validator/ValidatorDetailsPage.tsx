@@ -87,7 +87,7 @@ export const ValidatorDetailsPage: React.FC = () => {
   // Check if user has a stake with validator
   const hasStakeWithValidator = Boolean(
     userDelegation &&
-      userDelegation.delegate.id === validatorId &&
+      userDelegation.delegate?.id === validatorId &&
       parseFloat(userDelegation.bondedAmount) > 0
   );
 
@@ -115,9 +115,9 @@ export const ValidatorDetailsPage: React.FC = () => {
     if (!userDelegation || !validatorId) {
       return false;
     }
-    const delegateId = userDelegation.delegate.id;
+    const delegateId = userDelegation.delegate?.id;
     const bondedAmount = parseFloat(userDelegation.bondedAmount || "0");
-    return bondedAmount > 0 && delegateId !== validatorId;
+    return bondedAmount > 0 && delegateId && delegateId !== validatorId;
   }, [userDelegation, validatorId]);
 
   const pendingUnbondingTransactions = validatorTransactions.pending;
@@ -278,7 +278,7 @@ export const ValidatorDetailsPage: React.FC = () => {
       !state.user?.wallet_id ||
       !state.user?.wallet_address ||
       !validatorId ||
-      !userDelegation?.delegate.id
+      !userDelegation?.delegate?.id
     ) {
       setErrorMessage("Missing required information");
       setShowErrorDrawer(true);

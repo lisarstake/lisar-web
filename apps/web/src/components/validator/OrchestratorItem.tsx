@@ -98,7 +98,7 @@ export const OrchestratorItem: React.FC<OrchestratorItemProps> = ({
 
       <div className="text-right">
         <p className="text-[#C7EF6B] font-medium text-sm">
-          {orchestrator?.apy || "0%"} p/a
+          {orchestrator?.apy || "0%"} APY
         </p>
         <p className="text-gray-400 text-xs mt-1">
           {orchestrator?.reward
