@@ -192,28 +192,48 @@ export const PortfolioPage: React.FC = () => {
     return priceService.getCurrencySymbol(fiatCurrency);
   }, [fiatCurrency]);
 
-  // Calculate total balance (staked + unstaked) similar to wallet page
+  // Calculate total balance 
   const totalBalanceFiat = useMemo(() => {
-    const ethereumBal = ethereumBalance || 0;
+    if (isSavings) {
+      // For savings: use solanaBalance (staked stables)
+      const stableBalance = solanaBalance || 0;
+      
+      // Convert to user's fiat currency
+      switch (fiatCurrency.toUpperCase()) {
+        case "NGN":
+          return stableBalance * (prices.ngn || 0);
+        case "EUR":
+          return stableBalance * (prices.eur || 0);
+        case "GBP":
+          return stableBalance * (prices.gbp || 0);
+        case "USD":
+        default:
+          return stableBalance;
+      }
+    } else {
+      // For staking: unstaked LPT + staked LPT
+      const unstakedLpt = ethereumBalance || 0;
+      const stakedLpt = totalStake || 0;
+      const totalLpt = unstakedLpt + stakedLpt;
 
-    // Calculate total USD value: (LPT balance * LPT price)
-    const lptPriceInUsd = prices.lpt || 0;
-    const lptUsdValue = ethereumBal * lptPriceInUsd;
-    const totalUsdBalance = lptUsdValue;
+      // Calculate total USD value: (total LPT balance * LPT price)
+      const lptPriceInUsd = prices.lpt || 0;
+      const totalUsdBalance = totalLpt * lptPriceInUsd;
 
-    // Convert to user's fiat currency
-    switch (fiatCurrency.toUpperCase()) {
-      case "NGN":
-        return totalUsdBalance * (prices.ngn || 0);
-      case "EUR":
-        return totalUsdBalance * (prices.eur || 0);
-      case "GBP":
-        return totalUsdBalance * (prices.gbp || 0);
-      case "USD":
-      default:
-        return totalUsdBalance;
+      // Convert to user's fiat currency
+      switch (fiatCurrency.toUpperCase()) {
+        case "NGN":
+          return totalUsdBalance * (prices.ngn || 0);
+        case "EUR":
+          return totalUsdBalance * (prices.eur || 0);
+        case "GBP":
+          return totalUsdBalance * (prices.gbp || 0);
+        case "USD":
+        default:
+          return totalUsdBalance;
+      }
     }
-  }, [ethereumBalance, solanaBalance, prices, fiatCurrency]);
+  }, [isSavings, ethereumBalance, solanaBalance, totalStake, prices, fiatCurrency]);
 
   const handleBackClick = () => {
     navigate(-1);
