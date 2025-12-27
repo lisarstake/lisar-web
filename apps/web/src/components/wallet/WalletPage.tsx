@@ -46,7 +46,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
     solanaLoading,
     ethereumLoading,
   } = useWallet();
-  const { isLoading: delegationLoading } = useDelegation();
+  const { delegatorStakeProfile, isLoading: delegationLoading } = useDelegation();
   useNotification();
   const { transactions, isLoading: transactionsLoading } = useTransactions();
   const { prices } = usePrices();
@@ -66,10 +66,15 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
       return solanaBalance ?? 0;
     }
     if (walletType === "staking") {
-      return ethereumBalance ?? 0;
+      // Include both unstaked (ethereumBalance) and staked (currentStake) LPT
+      const unstakedLpt = ethereumBalance ?? 0;
+      const stakedLpt = delegatorStakeProfile
+        ? parseFloat(delegatorStakeProfile.currentStake || "0")
+        : 0;
+      return unstakedLpt + stakedLpt;
     }
     return 0;
-  }, [walletType, solanaBalance, ethereumBalance]);
+  }, [walletType, solanaBalance, ethereumBalance, delegatorStakeProfile]);
 
   const fiatSymbol = useMemo(() => {
     const fiatCurrency = wallet?.fiatCurrency || state.user?.fiat_type || "USD";
