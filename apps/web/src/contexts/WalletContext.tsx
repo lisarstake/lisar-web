@@ -4,8 +4,10 @@ import React, {
   useEffect,
   useMemo,
   useState,
+  useRef,
+  useCallback,
 } from "react";
-import { walletService } from "@/services";
+import { walletService, mapleService, perenaService } from "@/services";
 import { priceService } from "@/lib/priceService";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -15,8 +17,8 @@ type WalletState = {
   fiatSymbol: string;
   address?: string;
   walletId?: string;
-  solanaBalance?: number;
-  ethereumBalance?: number;
+  stablesBalance?: number;
+  highyieldBalance?: number;
 };
 
 type WalletContextValue = {
@@ -24,14 +26,19 @@ type WalletContextValue = {
   isLoading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
-  solanaBalance: number | null;
-  ethereumBalance: number | null;
+  stablesBalance: number | null;
+  highyieldBalance: number | null;
   solanaWalletAddress: string | null;
   ethereumWalletAddress: string | null;
-  loadSolanaBalance: () => Promise<void>;
-  loadEthereumBalance: () => Promise<void>;
-  solanaLoading: boolean;
-  ethereumLoading: boolean;
+  loadStablesBalance: () => Promise<void>;
+  loadHighyieldBalance: () => Promise<void>;
+  stablesLoading: boolean;
+  highyieldLoading: boolean;
+  // APY values (cached)
+  mapleApy: number | null;
+  perenaApy: number | null;
+  apyLoading: boolean;
+  loadApys: () => Promise<void>;
 };
 
 const WalletContext = createContext<WalletContextValue | undefined>(undefined);
@@ -43,19 +50,24 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
   const [wallet, setWallet] = useState<WalletState | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [solanaBalance, setSolanaBalance] = useState<number | null>(null);
-  const [ethereumBalance, setEthereumBalance] = useState<number | null>(null);
+  const [stablesBalance, setStablesBalance] = useState<number | null>(null);
+  const [highyieldBalance, setHighyieldBalance] = useState<number | null>(null);
   const [solanaWalletAddress, setSolanaWalletAddress] = useState<string | null>(null);
   const [ethereumWalletAddress, setEthereumWalletAddress] = useState<string | null>(null);
-  const [solanaLoading, setSolanaLoading] = useState<boolean>(false);
-  const [ethereumLoading, setEthereumLoading] = useState<boolean>(false);
+  const [stablesLoading, setStablesLoading] = useState<boolean>(false);
+  const [highyieldLoading, setHighyieldLoading] = useState<boolean>(false);
+  const [mapleApy, setMapleApy] = useState<number | null>(null);
+  const [perenaApy, setPerenaApy] = useState<number | null>(null);
+  const [apyLoading, setApyLoading] = useState<boolean>(false);
+  const apyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const apyFetchedRef = useRef({ maple: false, perena: false });
 
-  const loadSolanaBalance = async () => {
-    if (solanaBalance !== null || solanaLoading) return;
+  const loadStablesBalance = async () => {
+    if (stablesBalance !== null || stablesLoading) return;
     
     if (!state.user) return;
     
-    setSolanaLoading(true);
+    setStablesLoading(true);
     try {
       // Fetch Solana USD balances (USDC, USDT, USD*)
       let solStableBalance = 0;
@@ -85,7 +97,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
         }
       }
 
-      // xFetch Ethereum USDC + USDT balances
+      // Fetch Ethereum USDC + USDT balances
       let evmStableBalance = 0;
       const ethWalletResp = await walletService.getPrimaryWallet("ethereum");
 
@@ -108,23 +120,23 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
 
       const totalStableBalance = solStableBalance + evmStableBalance;
 
-      setSolanaBalance(totalStableBalance);
+      setStablesBalance(totalStableBalance);
       if (wallet) {
-        setWallet({ ...wallet, solanaBalance: totalStableBalance });
+        setWallet({ ...wallet, stablesBalance: totalStableBalance });
       }
     } catch (error) {
       console.error("Failed to fetch stables balance:", error);
     } finally {
-      setSolanaLoading(false);
+      setStablesLoading(false);
     }
   };
 
-  const loadEthereumBalance = async () => {
-    if (ethereumBalance !== null || ethereumLoading) return;
+  const loadHighyieldBalance = async () => {
+    if (highyieldBalance !== null || highyieldLoading) return;
     
     if (!state.user) return;
     
-    setEthereumLoading(true);
+    setHighyieldLoading(true);
     try {
       const walletResp = await walletService.getPrimaryWallet("ethereum");
       
@@ -136,18 +148,92 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
         );
         if (balanceResp.success) {
           const balance = parseFloat(balanceResp.balance || "0");
-          setEthereumBalance(balance);
+          setHighyieldBalance(balance);
           if (wallet) {
-            setWallet({ ...wallet, ethereumBalance: balance });
+            setWallet({ ...wallet, highyieldBalance: balance });
           }
         }
       }
     } catch (error) {
-      console.error("Failed to fetch Ethereum balance:", error);
+      console.error("Failed to fetch High Yield balance:", error);
     } finally {
-      setEthereumLoading(false);
+      setHighyieldLoading(false);
     }
   };
+
+  const loadApys = useCallback(async () => {
+    // Only fetch if not already cached
+    if ((mapleApy !== null && perenaApy !== null) || apyLoading) return;
+    
+    setApyLoading(true);
+    apyFetchedRef.current = { maple: false, perena: false };
+
+    // Set timeout to use fallback after 1 minute if still loading
+    apyTimeoutRef.current = setTimeout(() => {
+      setMapleApy((prev) => {
+        if (prev === null) {
+          return 0.065; // Fallback 6.5% if still null after 1 minute
+        }
+        return prev;
+      });
+      setPerenaApy((prev) => {
+        if (prev === null) {
+          return 0.14; // Fallback 14% if still null after 1 minute
+        }
+        return prev;
+      });
+      setApyLoading(false);
+    }, 60000); // 1 minute
+
+    // Fetch Maple APY
+    try {
+      const maplePoolId = import.meta.env.VITE_MAPLE_POOL_ID;
+      
+      if (maplePoolId) {
+        const mapleResp = await mapleService.getPoolApy(maplePoolId);
+        
+        if (mapleResp.success && mapleResp.data) {
+          const weeklyApy = mapleResp.data.weeklyApy;
+          const mapleApyDecimal = weeklyApy / 100;
+          setMapleApy(mapleApyDecimal);
+        } else {
+          setMapleApy(0.065);
+        }
+      } else {
+        setMapleApy(0.065);
+      }
+      apyFetchedRef.current.maple = true;
+    } catch (err) {
+      setMapleApy(0.065);
+      apyFetchedRef.current.maple = true;
+    }
+
+    // Fetch Perena APY
+    try {
+      const currentTime = new Date().toISOString();
+      const perenaResp = await perenaService.getApy(currentTime);
+      
+      if (perenaResp.success && perenaResp.data) {
+        const apyValue = perenaResp.data.apy;
+        const perenaApyDecimal = apyValue / 100;
+        setPerenaApy(perenaApyDecimal);
+      } else {
+        setPerenaApy(0.14);
+      }
+      apyFetchedRef.current.perena = true;
+    } catch (err) {
+      setPerenaApy(0.14);
+      apyFetchedRef.current.perena = true;
+    }
+
+    // Clear timeout and set loading to false if both values are fetched
+    if (apyFetchedRef.current.maple && apyFetchedRef.current.perena) {
+      if (apyTimeoutRef.current) {
+        clearTimeout(apyTimeoutRef.current);
+      }
+      setApyLoading(false);
+    }
+  }, [mapleApy, perenaApy, apyLoading]);
 
   const load = async () => {
     if (!state.user?.wallet_id || !state.user?.wallet_address) {
@@ -176,8 +262,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
         fiatSymbol,
         address: state.user.wallet_address,
         walletId: state.user.wallet_id,
-        solanaBalance: solanaBalance || undefined,
-        ethereumBalance: ethereumBalance || undefined,
+        stablesBalance: stablesBalance || undefined,
+        highyieldBalance: highyieldBalance || undefined,
       });
     } catch (e: any) {
       setError(e?.message || "Failed to load wallet data");
@@ -188,11 +274,21 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
 
   useEffect(() => {
     if (state.user) {
-      loadSolanaBalance();
-      loadEthereumBalance();
+      loadStablesBalance();
+      loadHighyieldBalance();
+      loadApys();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.user]);
+
+  // Cleanup APY timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (apyTimeoutRef.current) {
+        clearTimeout(apyTimeoutRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (state.user?.wallet_id && state.user?.wallet_address) {
@@ -214,16 +310,20 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
       isLoading,
       error,
       refetch: load,
-      solanaBalance,
-      ethereumBalance,
+      stablesBalance,
+      highyieldBalance,
       solanaWalletAddress,
       ethereumWalletAddress,
-      loadSolanaBalance,
-      loadEthereumBalance,
-      solanaLoading,
-      ethereumLoading,
+      loadStablesBalance,
+      loadHighyieldBalance,
+      stablesLoading,
+      highyieldLoading,
+      mapleApy,
+      perenaApy,
+      apyLoading,
+      loadApys,
     }),
-    [wallet, isLoading, error, solanaBalance, ethereumBalance, solanaWalletAddress, ethereumWalletAddress, solanaLoading, ethereumLoading, loadSolanaBalance, loadEthereumBalance]
+    [wallet, isLoading, error, stablesBalance, highyieldBalance, solanaWalletAddress, ethereumWalletAddress, stablesLoading, highyieldLoading, loadStablesBalance, loadHighyieldBalance, mapleApy, perenaApy, apyLoading, loadApys]
   );
 
   return (

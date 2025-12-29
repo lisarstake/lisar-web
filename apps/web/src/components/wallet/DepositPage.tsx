@@ -19,6 +19,7 @@ import { priceService } from "@/lib/priceService";
 import { getFiatType } from "@/lib/onramp";
 import { formatNumber, parseFormattedNumber } from "@/lib/formatters";
 import { walletService } from "@/services";
+import { useStablesApy } from "@/hooks/useStablesApy";
 
 export const DepositPage: React.FC = () => {
   const navigate = useNavigate();
@@ -64,6 +65,7 @@ export const DepositPage: React.FC = () => {
   const onrampInstanceRef = useRef<OnrampWebSDK | null>(null);
   const { state } = useAuth();
   const { refetch: refetchWallet } = useWallet();
+  const { maple: mapleApy, perena: perenaApy, isLoading: apyLoading } = useStablesApy();
 
   // Get user's preferred currency
   const userCurrency = state.user?.fiat_type || "NGN";
@@ -381,8 +383,8 @@ export const DepositPage: React.FC = () => {
                   </p>
                   <p className="text-gray-400 text-xs">
                     {selectedProvider === "maple"
-                      ? "USD Base - Up to 6.5% APY"
-                      : "USD Plus - Up to 14% APY"}
+                      ? `USD Base - Up to ${apyLoading && mapleApy === null ? "..." : mapleApy ? (mapleApy * 100).toFixed(1) : "6.5"}% APY`
+                      : `USD Plus - Up to ${apyLoading && perenaApy === null ? "..." : perenaApy ? (perenaApy * 100).toFixed(1) : "14"}% APY`}
                   </p>
                 </div>
               </div>

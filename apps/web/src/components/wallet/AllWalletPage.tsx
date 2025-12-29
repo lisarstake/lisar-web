@@ -37,10 +37,10 @@ export const AllWalletPage: React.FC = () => {
   const {
     wallet,
     isLoading: walletLoading,
-    solanaBalance: contextSolanaBalance,
-    ethereumBalance: contextEthereumBalance,
-    solanaLoading,
-    ethereumLoading,
+    stablesBalance: contextStablesBalance,
+    highyieldBalance: contextHighyieldBalance,
+    stablesLoading,
+    highyieldLoading,
   } = useWallet();
   const { delegatorStakeProfile, isLoading: delegationLoading } = useDelegation();
   const { unreadCount } = useNotification();
@@ -56,25 +56,25 @@ export const AllWalletPage: React.FC = () => {
     autoStart: shouldAutoStart,
   });
 
-  const ethereumBalance = contextEthereumBalance || 0;
-  const solanaBalance = contextSolanaBalance || 0;
+  const highyieldBalance = contextHighyieldBalance || 0;
+  const stablesBalance = contextStablesBalance || 0;
 
   // For staking: include both unstaked and staked LPT
   const walletBalance = useMemo(() => {
-    const unstakedLpt = ethereumBalance;
+    const unstakedLpt = highyieldBalance;
     const stakedLpt = delegatorStakeProfile
       ? parseFloat(delegatorStakeProfile.currentStake || "0")
       : 0;
     return unstakedLpt + stakedLpt;
-  }, [ethereumBalance, delegatorStakeProfile]);
+  }, [highyieldBalance, delegatorStakeProfile]);
   
-  const stakedBalance = useMemo(() => solanaBalance, [solanaBalance]);
+  const stakedBalance = useMemo(() => stablesBalance, [stablesBalance]);
 
   const ethereumFiatValue = useMemo(() => {
     const fiatCurrency = (state.user?.fiat_type || "USD").toUpperCase();
     const lptPriceInUsd = prices.lpt || 0;
     // Include both unstaked and staked LPT
-    const unstakedLpt = ethereumBalance;
+    const unstakedLpt = highyieldBalance;
     const stakedLpt = delegatorStakeProfile
       ? parseFloat(delegatorStakeProfile.currentStake || "0")
       : 0;
@@ -91,11 +91,11 @@ export const AllWalletPage: React.FC = () => {
       default:
         return usdValue;
     }
-  }, [ethereumBalance, prices, state.user?.fiat_type, delegatorStakeProfile]);
+  }, [highyieldBalance, prices, state.user?.fiat_type, delegatorStakeProfile]);
 
   const solanaFiatValue = useMemo(() => {
     const fiatCurrency = (state.user?.fiat_type || "USD").toUpperCase();
-    const stableBalance = solanaBalance; // already in USD-equivalent units
+    const stableBalance = stablesBalance; // already in USD-equivalent units
 
     switch (fiatCurrency) {
       case "NGN":
@@ -107,21 +107,21 @@ export const AllWalletPage: React.FC = () => {
       default:
         return stableBalance;
     }
-  }, [solanaBalance, prices, state.user?.fiat_type]);
+  }, [stablesBalance, prices, state.user?.fiat_type]);
 
   // Total USD = EVM LPT in USD (unstaked + staked) + all USD stables
   const totalUsdBalance = useMemo(() => {
     const lptPriceInUsd = prices.lpt || 0;
     // Include both unstaked and staked LPT
-    const unstakedLpt = ethereumBalance;
+    const unstakedLpt = highyieldBalance;
     const stakedLpt = delegatorStakeProfile
       ? parseFloat(delegatorStakeProfile.currentStake || "0")
       : 0;
     const totalLpt = unstakedLpt + stakedLpt;
     const lptUsdValue = totalLpt * lptPriceInUsd;
-    const stablesUsdValue = solanaBalance; // already USD-equivalent units
+    const stablesUsdValue = stablesBalance; // already USD-equivalent units
     return lptUsdValue + stablesUsdValue;
-  }, [ethereumBalance, solanaBalance, prices, delegatorStakeProfile]);
+  }, [highyieldBalance, stablesBalance, prices, delegatorStakeProfile]);
 
   // Total NGN equivalent (used under the USD value on the main card)
   const totalNairaBalance = useMemo(() => {
@@ -340,10 +340,10 @@ export const AllWalletPage: React.FC = () => {
 
                   {/* Balance Display */}
                   <div>
-                    {walletLoading ||
-                    delegationLoading ||
-                    solanaLoading ||
-                    ethereumLoading ? (
+                        {walletLoading ||
+                        delegationLoading ||
+                        stablesLoading ||
+                        highyieldLoading ? (
                       <>
                         <div className="flex items-baseline gap-2 mb-1">
                           <span className="text-2xl font-bold text-white">

@@ -14,7 +14,8 @@ import {
   ExecuteAuthorizedDepositRequest,
   ExecuteAuthorizedDepositResponse,
   RequestRedeemRequest,
-  RequestRedeemResponse
+  RequestRedeemResponse,
+  GetPoolApyResponse
 } from './types';
 
 export interface IMapleApiService {
@@ -23,6 +24,9 @@ export interface IMapleApiService {
 
   // Get Syrup pool by ID
   getPool(poolId: string): Promise<GetPoolResponse>;
+
+  // Get pool APY metrics
+  getPoolApy(poolId: string): Promise<GetPoolApyResponse>;
 
   // Check user authorization for Syrup deposits
   getAuthorization(walletAddress: string): Promise<GetAuthorizationResponse>;

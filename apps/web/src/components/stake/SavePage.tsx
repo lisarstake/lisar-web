@@ -22,6 +22,7 @@ import { priceService } from "@/lib/priceService";
 import { useWallet } from "@/contexts/WalletContext";
 import { formatNumber, parseFormattedNumber } from "@/lib/formatters";
 import { usePageTracking } from "@/hooks/usePageTracking";
+import { useStablesApy } from "@/hooks/useStablesApy";
 
 export const SavePage: React.FC = () => {
   // Track save page visit
@@ -57,10 +58,11 @@ export const SavePage: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const { state } = useAuth();
   const {
-    solanaBalance,
-    loadSolanaBalance,
+    stablesBalance,
+    loadStablesBalance,
   } = useWallet();
   const { refetch: refetchTransactions } = useTransactions();
+  const { maple: mapleApy, perena: perenaApy, isLoading: apyLoading } = useStablesApy();
 
   const provider = locationState?.provider;
   const tierTitle = locationState?.tierTitle;
@@ -68,15 +70,15 @@ export const SavePage: React.FC = () => {
   const isStables = walletType === "savings" || !!provider;
 
   useEffect(() => {
-    if (isStables && solanaBalance === null) {
-      loadSolanaBalance();
+    if (isStables && stablesBalance === null) {
+      loadStablesBalance();
     }
-  }, [isStables, solanaBalance, loadSolanaBalance]);
+  }, [isStables, stablesBalance, loadStablesBalance]);
 
   const userCurrency = state.user?.fiat_type || "NGN";
   const currencySymbol = priceService.getCurrencySymbol(userCurrency);
 
-  const walletBalance = solanaBalance ?? 0;
+  const walletBalance = stablesBalance ?? 0;
 
   const [fiatEquivalent, setFiatEquivalent] = useState(0);
 
@@ -239,7 +241,7 @@ export const SavePage: React.FC = () => {
           setShowSuccessDrawer(true);
           setShowConfirmDrawer(false);
 
-          await loadSolanaBalance();
+          await loadStablesBalance();
           refetchTransactions();
           setIsSaving(false);
           return;
@@ -287,7 +289,7 @@ export const SavePage: React.FC = () => {
           setShowSuccessDrawer(true);
           setShowConfirmDrawer(false);
 
-          await loadSolanaBalance();
+          await loadStablesBalance();
           refetchTransactions();
           setIsSaving(false);
           return;
@@ -366,8 +368,8 @@ export const SavePage: React.FC = () => {
                   </p>
                   <p className="text-gray-400 text-xs">
                     {provider === "maple"
-                      ? "USD Base - Up to 6.5% APY"
-                      : "USD Plus - Up to 14% APY"}
+                      ? `USD Base - Up to ${apyLoading && mapleApy === null ? "..." : mapleApy ? (mapleApy * 100).toFixed(1) : "6.5"}% APY`
+                      : `USD Plus - Up to ${apyLoading && perenaApy === null ? "..." : perenaApy ? (perenaApy * 100).toFixed(1) : "14"}% APY`}
                   </p>
                 </div>
               </div>

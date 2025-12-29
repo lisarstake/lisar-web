@@ -19,6 +19,7 @@ import { useWallet } from "@/contexts/WalletContext";
 import { formatNumber, parseFormattedNumber } from "@/lib/formatters";
 import { walletService } from "@/services/wallet";
 import { getFiatType } from "@/lib/onramp";
+import { useStablesApy } from "@/hooks/useStablesApy";
 
 export const WithdrawPage: React.FC = () => {
   const navigate = useNavigate();
@@ -72,10 +73,10 @@ export const WithdrawPage: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const [fiatEquivalent, setFiatEquivalent] = useState(0);
   const { state } = useAuth();
-  const { wallet, solanaBalance } = useWallet();
+  const { wallet, stablesBalance, refetch: refetchWallet } = useWallet();
   const { refetch: refetchDelegation } = useDelegation();
-  const { refetch: refetchWallet } = useWallet();
   const { refetch: refetchTransactions } = useTransactions();
+  const { maple: mapleApy, perena: perenaApy, isLoading: apyLoading } = useStablesApy();
 
   // Get user's preferred currency
   const userCurrency = state.user?.fiat_type || "NGN";
@@ -85,7 +86,7 @@ export const WithdrawPage: React.FC = () => {
   // - For High Yield: LPT balance
   // - For Stables: combined stables balance from WalletContext (Solana + EVM)
   const walletBalance =
-    isStables ? solanaBalance || 0 : wallet?.balanceLpt || 0;
+    isStables ? stablesBalance || 0 : wallet?.balanceLpt || 0;
 
   const pageTitle = "Withdraw";
 
@@ -367,8 +368,8 @@ export const WithdrawPage: React.FC = () => {
                   </p>
                   <p className="text-gray-400 text-xs">
                     {selectedProvider === "maple"
-                      ? "USD Base - Up to 6.5% APY"
-                      : "USD Plus - Up to 14% APY"}
+                      ? `USD Base - Up to ${apyLoading && mapleApy === null ? "..." : mapleApy ? (mapleApy * 100).toFixed(1) : "6.5"}% APY`
+                      : `USD Plus - Up to ${apyLoading && perenaApy === null ? "..." : perenaApy ? (perenaApy * 100).toFixed(1) : "14"}% APY`}
                   </p>
                 </div>
               </div>

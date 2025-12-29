@@ -108,6 +108,31 @@ export interface BurnResponse {
   error?: string;
 }
 
+// APY Types
+export interface ApyData {
+  period: string;
+  apy: number;
+  timestamp: string;
+}
+
+export interface GetApyResponse {
+  success: boolean;
+  data: ApyData;
+  error?: string;
+}
+
+// Price API Types (updated to match new endpoint)
+export interface PriceApiData {
+  price: number;
+  timestamp: string;
+}
+
+export interface GetPriceApiResponse {
+  success: boolean;
+  data: PriceApiData;
+  error?: string;
+}
+
 // Configuration
 export interface PerenaConfig {
   baseUrl: string;
