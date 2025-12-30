@@ -28,6 +28,8 @@ type WalletContextValue = {
   refetch: () => Promise<void>;
   stablesBalance: number | null;
   highyieldBalance: number | null;
+  solanaUsdcBalance: number | null; // Solana USDC balance (for Perena)
+  ethereumUsdcBalance: number | null; // Ethereum USDC balance (for Maple)
   solanaWalletAddress: string | null;
   ethereumWalletAddress: string | null;
   loadStablesBalance: () => Promise<void>;
@@ -52,6 +54,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
   const [error, setError] = useState<string | null>(null);
   const [stablesBalance, setStablesBalance] = useState<number | null>(null);
   const [highyieldBalance, setHighyieldBalance] = useState<number | null>(null);
+  const [solanaUsdcBalance, setSolanaUsdcBalance] = useState<number | null>(null);
+  const [ethereumUsdcBalance, setEthereumUsdcBalance] = useState<number | null>(null);
   const [solanaWalletAddress, setSolanaWalletAddress] = useState<string | null>(null);
   const [ethereumWalletAddress, setEthereumWalletAddress] = useState<string | null>(null);
   const [stablesLoading, setStablesLoading] = useState<boolean>(false);
@@ -90,11 +94,19 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
         if (balanceResp.success && balanceResp.balances) {
           const { usdc, usdt, ["usd*"]: usdStar } = balanceResp.balances;
 
-          solStableBalance =
-            (usdc ? parseFloat(usdc.balance || "0") : 0) +
-            (usdt ? parseFloat(usdt.balance || "0") : 0) +
-            (usdStar ? parseFloat(usdStar.balance || "0") : 0);
+          const solUsdc = usdc ? parseFloat(usdc.balance || "0") : 0;
+          const solUsdt = usdt ? parseFloat(usdt.balance || "0") : 0;
+          const solUsdStar = usdStar ? parseFloat(usdStar.balance || "0") : 0;
+
+          solStableBalance = solUsdc + solUsdt + solUsdStar;
+          
+          // Store Solana USDC balance separately
+          setSolanaUsdcBalance(solUsdc);
+        } else {
+          setSolanaUsdcBalance(0);
         }
+      } else {
+        setSolanaUsdcBalance(0);
       }
 
       // Fetch Ethereum USDC + USDT balances
@@ -110,12 +122,15 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
           walletService.getBalance(evmAddress, "USDT"),
         ]);
 
-        if (usdcResp.success) {
-          evmStableBalance += parseFloat(usdcResp.balance || "0");
-        }
-        if (usdtResp.success) {
-          evmStableBalance += parseFloat(usdtResp.balance || "0");
-        }
+        const ethUsdc = usdcResp.success ? parseFloat(usdcResp.balance || "0") : 0;
+        const ethUsdt = usdtResp.success ? parseFloat(usdtResp.balance || "0") : 0;
+
+        evmStableBalance = ethUsdc + ethUsdt;
+        
+        // Store Ethereum USDC balance separately
+        setEthereumUsdcBalance(ethUsdc);
+      } else {
+        setEthereumUsdcBalance(0);
       }
 
       const totalStableBalance = solStableBalance + evmStableBalance;
@@ -312,6 +327,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
       refetch: load,
       stablesBalance,
       highyieldBalance,
+      solanaUsdcBalance,
+      ethereumUsdcBalance,
       solanaWalletAddress,
       ethereumWalletAddress,
       loadStablesBalance,
@@ -323,7 +340,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
       apyLoading,
       loadApys,
     }),
-    [wallet, isLoading, error, stablesBalance, highyieldBalance, solanaWalletAddress, ethereumWalletAddress, stablesLoading, highyieldLoading, loadStablesBalance, loadHighyieldBalance, mapleApy, perenaApy, apyLoading, loadApys]
+    [wallet, isLoading, error, stablesBalance, highyieldBalance, solanaUsdcBalance, ethereumUsdcBalance, solanaWalletAddress, ethereumWalletAddress, stablesLoading, highyieldLoading, loadStablesBalance, loadHighyieldBalance, mapleApy, perenaApy, apyLoading, loadApys]
   );
 
   return (
