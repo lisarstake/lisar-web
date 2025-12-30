@@ -367,7 +367,7 @@ export const PublicationEditorPage: React.FC = () => {
 
       // Navigate after a short delay
       setTimeout(() => {
-        navigate("/publications");
+        navigate("/");
       }, 1500);
     } catch (error) {
       console.error("Failed to save publication:", error);

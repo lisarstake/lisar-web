@@ -15,7 +15,7 @@ const getApiBaseUrl = (): string => {
 
   // Development fallback
   return (
-    import.meta.env.VITE_API_BASE_URL ||
+    import.meta.env.VITE_API_BASE_URL_STAGING ||
     "https://lisar-api-1.onrender.com/api/v1"
   );
 };

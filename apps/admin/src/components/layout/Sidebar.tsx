@@ -2,63 +2,63 @@ import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import {
-  LayoutDashboard,
-  Users,
-  CreditCard,
-  CheckCircle2,
-  Activity,
-  CircleUser,
   LogOut,
   Settings,
   FileText,
+  // LayoutDashboard,
+  // Users,
+  // CreditCard,
+  // CheckCircle2,
+  // Activity,
+  // CircleUser,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const menuItems = [
   {
-    label: "Overview",
-    path: "/",
-    icon: LayoutDashboard,
-  },
-  {
-    label: "Users",
-    path: "/users",
-    icon: Users,
-  },
-  {
-    label: "Transactions",
-    path: "/transactions",
-    icon: CreditCard,
-  },
-  {
-    label: "Validators",
-    path: "/validators",
-    icon: CheckCircle2,
-  },
-  {
     label: "Publications",
-    path: "/publications",
+    path: "/",
     icon: FileText,
   },
-  {
-    label: "Health",
-    path: "/health",
-    icon: Activity,
-  },
-  {
-    label: "Settings",
-    path: "/settings",
-    icon: Settings,
-  },
+  // {
+  //   label: "Settings",
+  //   path: "/settings",
+  //   icon: Settings,
+  // },
+  // {
+  //   label: "Overview",
+  //   path: "/",
+  //   icon: LayoutDashboard,
+  // },
+  // {
+  //   label: "Users",
+  //   path: "/users",
+  //   icon: Users,
+  // },
+  // {
+  //   label: "Transactions",
+  //   path: "/transactions",
+  //   icon: CreditCard,
+  // },
+  // {
+  //   label: "Validators",
+  //   path: "/validators",
+  //   icon: CheckCircle2,
+  // },
+  // {
+  //   label: "Health",
+  //   path: "/health",
+  //   icon: Activity,
+  //   },
 ];
 
-const toolsItems = [
-  {
-    label: "Admin",
-    path: "/admin",
-    icon: CircleUser,
-  },
-];
+// const toolsItems = [
+//   {
+//     label: "Admin",
+//     path: "/admin",
+//     icon: CircleUser,
+//   },
+// ];
 
 interface SidebarProps {
   isOpen: boolean;
@@ -103,7 +103,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           <div className="px-2 lg:px-4 space-y-1.5 lg:space-y-2">
             {menuItems.map((item) => {
               const Icon = item.icon;
-              const isActive = location.pathname === item.path;
+              // For Publications (root path), also match publication routes
+              const isActive = item.path === "/"
+                ? location.pathname === "/" || location.pathname.startsWith("/publications")
+                : location.pathname === item.path;
 
               return (
                 <Link

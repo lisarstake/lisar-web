@@ -167,7 +167,7 @@ export const AdminLogin: React.FC = () => {
               </button>
 
               {/* Divider (no Google for admin) */}
-              {!isProduction() && (
+              { (
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
                     <div className="w-full border-t border-gray-200"></div>
@@ -180,12 +180,12 @@ export const AdminLogin: React.FC = () => {
             </form>
 
             {/* Footer Link */}
-            {!isProduction() && (
+            { (
               <div className="text-center mt-8">
                 <p className="text-gray-900">
-                  Don't have an admin account?{" "}
+                  Don't have an account?{" "}
                   <Link to="/signup" className="text-[#235538] hover:underline">
-                    Create admin
+                    Create account
                   </Link>
                 </p>
               </div>

@@ -87,10 +87,10 @@ export const AdminSignup: React.FC = () => {
             {/* Title */}
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold text-gray-900 mb-2">
-                Create an admin account
+                Create an account
               </h2>
               <p className="text-gray-600 text-lg">
-                Enter details to add a new admin
+                Enter details to create a new account
               </p>
             </div>
 
@@ -110,7 +110,7 @@ export const AdminSignup: React.FC = () => {
                   name="fullName"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Jane Admin"
+                  placeholder="Jane"
                   className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#235538] transition-colors"
                 />
               </div>
@@ -209,7 +209,7 @@ export const AdminSignup: React.FC = () => {
             {/* Footer Link */}
             <div className="text-center mt-8">
               <p className="text-gray-900">
-                Already have an admin account?{" "}
+                Already have an account?{" "}
                 <Link to="/login" className="text-[#235538] hover:underline">
                   Log in
                 </Link>

@@ -106,82 +106,82 @@ const router = createBrowserRouter([
         index: true,
         element: (
           <ProtectedRoute>
-            {withSuspenseAndErrorBoundary(<OverviewPage />)}
+            {withSuspenseAndErrorBoundary(<PublicationsPage />)}
           </ProtectedRoute>
         ),
       },
-      {
-        path: "users",
-        element: (
-          <ProtectedRoute>
-            {withSuspenseAndErrorBoundary(<UsersPage />)}
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "users/:userId",
-        element: (
-          <ProtectedRoute>
-            {withSuspenseAndErrorBoundary(<UserDetailPage />)}
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "transactions",
-        element: (
-          <ProtectedRoute>
-            {withSuspenseAndErrorBoundary(<TransactionsPage />)}
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "transactions/:transactionId",
-        element: (
-          <ProtectedRoute>
-            {withSuspenseAndErrorBoundary(<TransactionDetailPage />)}
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "validators",
-        element: (
-          <ProtectedRoute>
-            {withSuspenseAndErrorBoundary(<ValidatorsPage />)}
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "validators/create",
-        element: (
-          <ProtectedRoute>
-            {withSuspenseAndErrorBoundary(<CreateValidatorPage />)}
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "validators/:validatorId",
-        element: (
-          <ProtectedRoute>
-            {withSuspenseAndErrorBoundary(<ValidatorDetailPage />)}
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "health",
-        element: (
-          <ProtectedRoute>
-            {withSuspenseAndErrorBoundary(<HealthPage />)}
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "admin",
-        element: (
-          <ProtectedRoute>
-            {withSuspenseAndErrorBoundary(<AdminPage />)}
-          </ProtectedRoute>
-        ),
-      },
+      // {
+      //   path: "users",
+      //   element: (
+      //     <ProtectedRoute>
+      //       {withSuspenseAndErrorBoundary(<UsersPage />)}
+      //     </ProtectedRoute>
+      //   ),
+      // },
+      // {
+      //   path: "users/:userId",
+      //   element: (
+      //     <ProtectedRoute>
+      //       {withSuspenseAndErrorBoundary(<UserDetailPage />)}
+      //     </ProtectedRoute>
+      //   ),
+      // },
+      // {
+      //   path: "transactions",
+      //   element: (
+      //     <ProtectedRoute>
+      //       {withSuspenseAndErrorBoundary(<TransactionsPage />)}
+      //     </ProtectedRoute>
+      //   ),
+      // },
+      // {
+      //   path: "transactions/:transactionId",
+      //   element: (
+      //     <ProtectedRoute>
+      //       {withSuspenseAndErrorBoundary(<TransactionDetailPage />)}
+      //     </ProtectedRoute>
+      //   ),
+      // },
+      // {
+      //   path: "validators",
+      //   element: (
+      //     <ProtectedRoute>
+      //       {withSuspenseAndErrorBoundary(<ValidatorsPage />)}
+      //     </ProtectedRoute>
+      //   ),
+      // },
+      // {
+      //   path: "validators/create",
+      //   element: (
+      //     <ProtectedRoute>
+      //       {withSuspenseAndErrorBoundary(<CreateValidatorPage />)}
+      //     </ProtectedRoute>
+      //   ),
+      // },
+      // {
+      //   path: "validators/:validatorId",
+      //   element: (
+      //     <ProtectedRoute>
+      //       {withSuspenseAndErrorBoundary(<ValidatorDetailPage />)}
+      //     </ProtectedRoute>
+      //   ),
+      // },
+      // {
+      //   path: "health",
+      //   element: (
+      //     <ProtectedRoute>
+      //       {withSuspenseAndErrorBoundary(<HealthPage />)}
+      //     </ProtectedRoute>
+      //   ),
+      // },
+      // {
+      //   path: "admin",
+      //   element: (
+      //     <ProtectedRoute>
+      //       {withSuspenseAndErrorBoundary(<AdminPage />)}
+      //     </ProtectedRoute>
+      //   ),
+      // },
       {
         path: "settings",
         element: (
@@ -190,14 +190,14 @@ const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
-      {
-        path: "publications",
-        element: (
-          <ProtectedRoute>
-            {withSuspenseAndErrorBoundary(<PublicationsPage />)}
-          </ProtectedRoute>
-        ),
-      },
+      // {
+      //   path: "publications",
+      //   element: (
+      //     <ProtectedRoute>
+      //       {withSuspenseAndErrorBoundary(<PublicationsPage />)}
+      //     </ProtectedRoute>
+      //   ),
+      // },
       {
         path: "publications/create",
         element: (
