@@ -11,16 +11,12 @@ import { useNotification } from "@/contexts/NotificationContext";
 import { useTransactions } from "@/contexts/TransactionContext";
 import { useGuidedTour } from "@/hooks/useGuidedTour";
 import { usePrices } from "@/hooks/usePrices";
+import { useStablesApy } from "@/hooks/useStablesApy";
 import { WALLET_PAGE_TOUR_ID } from "@/lib/tourConfig";
 import { priceService } from "@/lib/priceService";
-import { formatEarnings } from "@/lib/formatters";
+import { formatEarnings, formatStables } from "@/lib/formatters";
 import { TransactionData } from "@/services/transactions/types";
-import {
-  CircleQuestionMark,
-  ChevronLeft,
-  Eye,
-  EyeOff,
-} from "lucide-react";
+import { CircleQuestionMark, ChevronLeft, Eye, EyeOff } from "lucide-react";
 
 interface WalletPageProps {
   walletType?: string;
@@ -41,15 +37,17 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
   const {
     wallet,
     isLoading: walletLoading,
-    solanaBalance,
-    ethereumBalance,
-    solanaLoading,
-    ethereumLoading,
+    stablesBalance,
+    highyieldBalance,
+    stablesLoading,
+    highyieldLoading,
   } = useWallet();
-  const { isLoading: delegationLoading } = useDelegation();
+  const { delegatorStakeProfile, isLoading: delegationLoading } =
+    useDelegation();
   useNotification();
   const { transactions, isLoading: transactionsLoading } = useTransactions();
   const { prices } = usePrices();
+  const { perena: perenaApy, maple: mapleApy, isLoading: apyLoading } = useStablesApy();
 
   // Start tour for non-onboarded users
   const shouldAutoStart = useMemo(() => {
@@ -63,13 +61,17 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
 
   const rawBalance = useMemo(() => {
     if (walletType === "savings") {
-      return solanaBalance ?? 0;
+      return stablesBalance ?? 0;
     }
     if (walletType === "staking") {
-      return ethereumBalance ?? 0;
+      const unstakedLpt = highyieldBalance ?? 0;
+      const stakedLpt = delegatorStakeProfile
+        ? parseFloat(delegatorStakeProfile.currentStake || "0")
+        : 0;
+      return unstakedLpt + stakedLpt;
     }
     return 0;
-  }, [walletType, solanaBalance, ethereumBalance]);
+  }, [walletType, stablesBalance, highyieldBalance, delegatorStakeProfile]);
 
   const fiatSymbol = useMemo(() => {
     const fiatCurrency = wallet?.fiatCurrency || state.user?.fiat_type || "USD";
@@ -83,7 +85,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
   const currentWalletFiatValue = useMemo(() => {
     const fiatCurrency = (state.user?.fiat_type || "USD").toUpperCase();
 
-    // Staking (High Yield) - LPT based
+    // Staking (High Yield)
     if (walletType === "staking") {
       const lptPriceInUsd = prices.lpt || 0;
       const usdValue = rawBalance * lptPriceInUsd;
@@ -100,7 +102,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
       }
     }
 
-    // Savings (Stables) - already USD-equivalent stable coins
+    // Savings (Stables)
     if (walletType === "savings") {
       const stableBalance = rawBalance;
 
@@ -265,8 +267,8 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
                   {walletLoading ||
                   delegationLoading ||
                   (walletType === "savings"
-                    ? solanaLoading
-                    : ethereumLoading) ? (
+                    ? stablesLoading
+                    : highyieldLoading) ? (
                     <div className="flex items-baseline gap-2 mb-1">
                       <span className="text-2xl font-bold text-white">
                         ••••
@@ -277,7 +279,9 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
                       <div className="flex items-baseline gap-2 mb-1">
                         <span className="text-2xl font-bold text-white">
                           {showBalance
-                            ? formatEarnings(currentWalletBalance)
+                            ? walletType === "savings"
+                              ? formatStables(currentWalletBalance)
+                              : formatEarnings(currentWalletBalance)
                             : "••••"}
                         </span>
                         {showBalance && (
@@ -318,7 +322,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
             {/* Bottom Left Text */}
             <div className="absolute bottom-2 left-2 z-10">
               <span className="text-white/70 text-[10px] bg-[#2a2a2a] rounded-full px-3 py-1 inline-block  leading-relaxed">
-                {` Interest will be accrued daily ${walletType === "savings" ? "up to 14%" : "up to 60%"} per annum`}
+                {` Interest will be accrued daily ${walletType === "savings" ? `up to ${apyLoading && perenaApy === null ? ".." : perenaApy ? (perenaApy * 100).toFixed(1) : "14"}%` : "up to 60%"} per annum`}
               </span>
             </div>
 
@@ -392,7 +396,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
                 "Stables offers lower yields with instant withdrawal capabilities.",
                 "Your funds are available for withdrawal at any time without waiting periods.",
                 "Perfect for emergency funds and short-term savings with stable returns.",
-                "Interest is accrued daily and paid out monthly at 14% APY.",
+                `Interest is accrued daily and paid out monthly at ${apyLoading && perenaApy === null ? "..." : perenaApy ? (perenaApy * 100).toFixed(1) : "14"}% APY.`,
               ]
             : [
                 "High Yield offers higher APYs for maximum returns on your investment.",

@@ -202,6 +202,20 @@ export interface RequestRedeemResponse {
   error?: string;
 }
 
+// Pool APY Types
+export interface PoolApyData {
+  poolName: string;
+  weeklyApy: number;
+  monthlyApy: number;
+  dripsYieldBoost: number;
+}
+
+export interface GetPoolApyResponse {
+  success: boolean;
+  data: PoolApyData;
+  error?: string;
+}
+
 // Configuration
 export interface MapleConfig {
   baseUrl: string;

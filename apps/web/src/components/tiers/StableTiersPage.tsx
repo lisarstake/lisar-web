@@ -4,6 +4,8 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { stableYieldTiers } from "@/mock";
+import { useStablesApy } from "@/hooks/useStablesApy";
+import { useWallet } from "@/contexts/WalletContext";
 
 export const StableTiersPage: React.FC = () => {
   const navigate = useNavigate();
@@ -16,6 +18,13 @@ export const StableTiersPage: React.FC = () => {
   } | null;
 
   const action = locationState?.action || "vest";
+  const {
+    maple: mapleApy,
+    perena: perenaApy,
+    isLoading: apyLoading,
+  } = useStablesApy();
+  const { solanaUsdcBalance, ethereumUsdcBalance, stablesLoading } =
+    useWallet();
 
   const handleBackClick = () => {
     navigate(-1);
@@ -47,15 +56,54 @@ export const StableTiersPage: React.FC = () => {
         },
       });
     } else {
-      navigate("/save", {
-        state: {
-          walletType: "savings",
-          tierNumber,
-          tierTitle,
-          provider,
-        },
-      });
+      // For vest action, check if user has required balance
+      const balance =
+        tierNumber === 1
+          ? (ethereumUsdcBalance ?? 0)
+          : (solanaUsdcBalance ?? 0);
+
+      if (balance > 0) {
+        navigate("/save", {
+          state: {
+            walletType: "savings",
+            tierNumber,
+            tierTitle,
+            provider,
+          },
+        });
+      } else {
+        // Navigate to deposit if no balance
+        navigate("/deposit", {
+          state: {
+            walletType: "savings",
+            tierNumber,
+            tierTitle,
+            provider,
+            returnTo: "/stable-tiers",
+          },
+        });
+      }
     }
+  };
+
+  const getButtonText = (tierNumber: number) => {
+    if (action === "deposit") return "Deposit";
+    if (action === "withdraw") return "Withdraw";
+
+    // For vest action, check balance
+    const balance =
+      tierNumber === 1 ? (ethereumUsdcBalance ?? 0) : (solanaUsdcBalance ?? 0);
+
+    return balance > 0 ? "Vest" : "Top up";
+  };
+
+  const hasRequiredBalance = (tierNumber: number) => {
+    if (action !== "vest") return true; // Always enabled for deposit/withdraw
+
+    const balance =
+      tierNumber === 1 ? (ethereumUsdcBalance ?? 0) : (solanaUsdcBalance ?? 0);
+
+    return balance > 0;
   };
 
   return (
@@ -99,21 +147,34 @@ export const StableTiersPage: React.FC = () => {
                     {tier.title}
                   </h3>
                   <p className="text-sm leading-relaxed text-white/60">
-                    {tier.description}
+                    {tier.id === 1
+                      ? `Earn stable yields with flexible access to your savings. Up to ${
+                          apyLoading && mapleApy === null
+                            ? ".."
+                            : mapleApy
+                              ? `${(mapleApy * 100).toFixed(1)}%`
+                              : "6.5%"
+                        } per annum.`
+                      : `Higher stable yields with flexible access to your savings. Up to ${
+                          apyLoading && perenaApy === null
+                            ? ".."
+                            : perenaApy
+                              ? `${(perenaApy * 100).toFixed(1)}%`
+                              : "14%"
+                        } per annum.`}
                   </p>
                 </div>
               </div>
 
               <button
                 onClick={() => handleExplore(tier.id, tier.title)}
-                className={`mt-4 px-5 py-2 ${tier.buttonBg} ${tier.buttonText} rounded-full text-sm font-semibold transition-colors relative z-10 flex items-center gap-2`}
+                disabled={stablesLoading}
+                className={`mt-4 px-5 py-2 ${tier.buttonBg} ${tier.buttonText} rounded-full text-sm font-semibold transition-colors relative z-10 flex items-center gap-2 ${
+                  stablesLoading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
               >
                 <span>
-                  {action === "deposit"
-                    ? "Deposit"
-                    : action === "withdraw"
-                      ? "Withdraw"
-                      : "Vest"}
+                  {stablesLoading ? "A moment.." : getButtonText(tier.id)}
                 </span>
               </button>
 
@@ -147,18 +208,42 @@ export const StableTiersPage: React.FC = () => {
           action === "deposit"
             ? [
                 "Select a tier to deposit your USDC funds. Each tier offers different APY rates and features.",
-                "USD Base offers up to 6.5% APY on Ethereum network with flexible withdrawals.",
-                "USD Plus offers up to 14% APY on Solana network with instant access to your funds.",
+                `USD Base offers up to ${
+                  apyLoading && mapleApy === null
+                    ? ".."
+                    : mapleApy
+                      ? `${(mapleApy * 100).toFixed(1)}%`
+                      : "6.5%"
+                } APY on Ethereum network with flexible withdrawals.`,
+                `USD Plus offers up to ${
+                  apyLoading && perenaApy === null
+                    ? ".."
+                    : perenaApy
+                      ? `${(perenaApy * 100).toFixed(1)}%`
+                      : "14%"
+                } APY on Solana network with instant access to your funds.`,
               ]
             : action === "withdraw"
               ? [
                   "Select the tier you want to withdraw from.",
-                  "You can only withdraw from the same tier you deposited to."
+                  "You can only withdraw from the same tier you deposited to.",
                 ]
               : [
                   "Stable Yield Tiers offer different APY rates for your USDC investments.",
-                  "USD Base - Up to 6.5% APY: Invest on Ethereum network with flexible withdrawal options.",
-                  "USD Plus - Up to 14% APY: Invest on Solana network with instant access to funds.",
+                  `USD Base - Up to ${
+                    apyLoading && mapleApy === null
+                      ? ".."
+                      : mapleApy
+                        ? `${(mapleApy * 100).toFixed(1)}%`
+                        : "6.5%"
+                  } APY: Invest on Ethereum network with flexible withdrawal options.`,
+                  `USD Plus - Up to ${
+                    apyLoading && perenaApy === null
+                      ? ".."
+                      : perenaApy
+                        ? `${(perenaApy * 100).toFixed(1)}%`
+                        : "14%"
+                  } APY: Invest on Solana network with instant access to funds.`,
                 ]
         }
       />

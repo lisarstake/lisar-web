@@ -10,7 +10,9 @@ import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { useDelegation } from "@/contexts/DelegationContext";
 import { useWallet } from "@/contexts/WalletContext";
-import { formatEarnings, formatLifetime } from "@/lib/formatters";
+import { usePortfolio } from "@/contexts/PortfolioContext";
+import { useStablesApy } from "@/hooks/useStablesApy";
+import { formatEarnings, formatLifetime, formatStables } from "@/lib/formatters";
 import { getEarliestUnbondingTime } from "@/lib/unbondingTime";
 
 export const SummaryPage: React.FC = () => {
@@ -22,41 +24,32 @@ export const SummaryPage: React.FC = () => {
   const isSavings = walletType === "savings";
 
   const { delegatorStakeProfile, delegatorTransactions } = useDelegation();
-  const { solanaBalance } = useWallet();
+  const { stablesBalance } = useWallet();
+  const { summary, setMode } = usePortfolio();
+  const { perena: perenaApy, isLoading: apyLoading } = useStablesApy();
 
-  // Get lifetime data - use staking (LPT) profile only for High Yield
+  // Set portfolio mode based on wallet type
+  React.useEffect(() => {
+    setMode(isSavings ? "savings" : "staking");
+  }, [isSavings, setMode]);
+
+  // Get lifetime data - use calculated metrics from PortfolioContext for both modes
   const lifetimeRewards = useMemo(() => {
-    if (isSavings) {
-    
-      return 0;
-    }
-    return delegatorStakeProfile
-      ? parseFloat(delegatorStakeProfile.lifetimeRewards || "0")
-      : 0;
-  }, [isSavings, delegatorStakeProfile]);
+    return summary?.lifetimeRewards || 0;
+  }, [summary]);
 
   const lifetimeUnbonded = useMemo(() => {
-    if (isSavings) {
-   
-      return 0;
-    }
-    return delegatorStakeProfile
-      ? parseFloat(delegatorStakeProfile.lifetimeUnbonded || "0")
-      : 0;
-  }, [isSavings, delegatorStakeProfile]);
+    return summary?.lifetimeUnbonded || 0;
+  }, [summary]);
 
-  // Current balance for Stables
+  // Current balance/stake from summary
   const currentBalance = useMemo(() => {
-    return isSavings ? solanaBalance || 0 : 0;
-  }, [isSavings, solanaBalance]);
+    return summary?.currentStake || 0;
+  }, [summary]);
 
-  // Current stake for High Yield
   const currentStake = useMemo(() => {
-    if (isSavings) return 0;
-    return delegatorStakeProfile
-      ? parseFloat(delegatorStakeProfile.currentStake || "0")
-      : 0;
-  }, [isSavings, delegatorStakeProfile]);
+    return summary?.currentStake || 0;
+  }, [summary]);
 
   // Calculate pending unbonding data
   const pendingUnbondingData = useMemo(() => {
@@ -154,7 +147,7 @@ export const SummaryPage: React.FC = () => {
                 Your total vested amount
               </p>
               <p className="text-white text-2xl font-bold">
-                {formatEarnings(currentBalance)}{" "}
+                {formatStables(currentBalance)}{" "}
                 <span className="text-lg">USDC</span>
               </p>
             </div>
@@ -165,7 +158,7 @@ export const SummaryPage: React.FC = () => {
               <div className="bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-xl p-4 border border-[#2a2a2a]">
                 <p className="text-gray-400 text-sm mb-2">Total Rewards</p>
                 <p className="text-[#86B3F7] text-xl font-semibold">
-                  {formatLifetime(lifetimeRewards)}
+                  {formatStables(lifetimeRewards)}
                   <span className="text-sm ml-1">USDC</span>
                 </p>
               </div>
@@ -174,7 +167,7 @@ export const SummaryPage: React.FC = () => {
               <div className="bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-xl p-4 border border-[#2a2a2a]">
                 <p className="text-gray-400 text-sm mb-2">Total Withdrawn</p>
                 <p className="text-[#86B3F7] text-xl font-semibold">
-                {formatLifetime(lifetimeUnbonded)}
+                {formatStables(lifetimeUnbonded)}
                 <span className="text-sm ml-1">USDC</span>
                 </p>
               </div>
@@ -183,8 +176,13 @@ export const SummaryPage: React.FC = () => {
             {/* Info Card - Stables */}
             <div className="bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-xl p-5 border border-[#2a2a2a]">
               <p className="text-gray-300 text-xs leading-relaxed">
-                Your stable vests earn daily interest at up to 14% APY. Withdrawals
-                are instant with no waiting periods.
+                Your stable vests earn daily interest at up to{" "}
+                {apyLoading && perenaApy === null
+                  ? ".."
+                  : perenaApy
+                    ? `${(perenaApy * 100).toFixed(1)}%`
+                    : "14%"}{" "}
+                APY. Withdrawals are instant with no waiting periods.
               </p>
             </div>
           </>
