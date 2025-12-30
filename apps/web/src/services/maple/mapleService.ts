@@ -7,6 +7,7 @@ import { IMapleApiService } from "./api";
 import {
   GetPoolsResponse,
   GetPoolResponse,
+  GetPoolApyResponse,
   GetAuthorizationResponse,
   GetPositionsResponse,
   GetWithdrawalQueueResponse,
@@ -128,6 +129,38 @@ export class MapleService implements IMapleApiService {
           },
         },
         error: error.response?.data?.error || error.message || "Failed to fetch pool",
+      };
+    }
+  }
+
+  // Get pool APY metrics
+  async getPoolApy(poolId: string): Promise<GetPoolApyResponse> {
+    try {
+      const headers = {
+        "Content-Type": "application/json",
+      };
+
+      const response = await http.request({
+        url: `${this.baseUrl}/maple/syrup/pools/${poolId}/apy`,
+        method: "GET",
+        headers,
+        timeout: this.timeout,
+      });
+
+      return {
+        success: true,
+        data: response.data.data,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        data: {
+          poolName: "",
+          weeklyApy: 0,
+          monthlyApy: 0,
+          dripsYieldBoost: 0,
+        },
+        error: error.response?.data?.error || error.message || "Failed to fetch pool APY",
       };
     }
   }

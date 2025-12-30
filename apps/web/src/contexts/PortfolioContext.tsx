@@ -9,9 +9,12 @@ import React, {
 import { useDelegation } from "./DelegationContext";
 import { useOrchestrators } from "./OrchestratorContext";
 import { useWallet } from "./WalletContext";
-import { walletService, mapleService } from "@/services";
+import { useTransactions } from "./TransactionContext";
+import { walletService, mapleService, perenaService } from "@/services";
 import { getEarliestUnbondingTime } from "@/lib/unbondingTime";
 import { DelegatorTransaction } from "@/services/delegation/types";
+import { Position } from "@/services/maple/types";
+import { calculateSavingsMetrics, SavingsMetrics } from "@/lib/stablesPortfolio";
 
 export type PortfolioMode = "staking" | "savings";
 
@@ -73,6 +76,8 @@ export const PortfolioProvider: React.FC<PortfolioProviderProps> = ({
 }) => {
   const [mode, setMode] = useState<PortfolioMode>("staking");
   const [savingsEntries, setSavingsEntries] = useState<StakeEntry[]>([]);
+  const [savingsMetrics, setSavingsMetrics] = useState<SavingsMetrics | null>(null);
+  const [maplePositions, setMaplePositions] = useState<Position[]>([]);
   const [savingsLoading, setSavingsLoading] = useState(false);
   const [hasFetchedSavings, setHasFetchedSavings] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -84,7 +89,8 @@ export const PortfolioProvider: React.FC<PortfolioProviderProps> = ({
     delegatorStakeProfile,
     isLoading: delegationLoading,
   } = useDelegation();
-  const { solanaBalance, loadSolanaBalance, solanaLoading } = useWallet();
+  const { stablesBalance, loadStablesBalance, stablesLoading } = useWallet();
+  const { transactions } = useTransactions();
 
   const lptStakeEntries: StakeEntry[] = useMemo(() => {
     const entries: StakeEntry[] = [];
@@ -135,10 +141,10 @@ export const PortfolioProvider: React.FC<PortfolioProviderProps> = ({
   }, [userDelegation, orchestrators]);
 
   useEffect(() => {
-    if (mode === "savings" && solanaBalance === null && !solanaLoading) {
-      loadSolanaBalance();
+    if (mode === "savings" && stablesBalance === null && !stablesLoading) {
+      loadStablesBalance();
     }
-  }, [mode, solanaBalance, solanaLoading, loadSolanaBalance]);
+  }, [mode, stablesBalance, stablesLoading, loadStablesBalance]);
 
   useEffect(() => {
     if (mode !== "savings") {
@@ -153,10 +159,13 @@ export const PortfolioProvider: React.FC<PortfolioProviderProps> = ({
       setSavingsLoading(true);
       setError(null);
       const entries: StakeEntry[] = [];
+      let positions: Position[] = [];
+      let perenaBalance = 0;
 
       try {
         const maplePoolId = import.meta.env.VITE_MAPLE_POOL_ID;
 
+        // Fetch Maple positions
         const ethWalletResp = await walletService.getPrimaryWallet("ethereum");
         if (ethWalletResp.success && ethWalletResp.wallet) {
           const ethAddress = ethWalletResp.wallet.wallet_address;
@@ -172,7 +181,8 @@ export const PortfolioProvider: React.FC<PortfolioProviderProps> = ({
             mapleResp.data.positions &&
             mapleResp.data.positions.length > 0
           ) {
-            const totalAvailable = mapleResp.data.positions.reduce(
+            positions = mapleResp.data.positions;
+            const totalAvailable = positions.reduce(
               (sum, position) => {
                 const value = parseFloat(position.availableBalance || "0");
                 return sum + (isNaN(value) ? 0 : value);
@@ -181,11 +191,22 @@ export const PortfolioProvider: React.FC<PortfolioProviderProps> = ({
             );
 
             if (totalAvailable > 0) {
+              // Fetch real-time APY for Maple
+              let mapleApy = 0.065;
+              try {
+                const apyResp = await mapleService.getPoolApy(maplePoolId);
+                if (apyResp.success && apyResp.data) {
+                  mapleApy = apyResp.data.weeklyApy / 100;
+                }
+              } catch (err) {
+                console.error("Failed to fetch Maple APY:", err);
+              }
+
               entries.push({
                 id: `maple-${maplePoolId}`,
                 name: "Maple",
                 yourStake: totalAvailable,
-                apy: 0.25,
+                apy: mapleApy,
                 fee: 0.01,
                 isSavings: true,
               });
@@ -193,6 +214,7 @@ export const PortfolioProvider: React.FC<PortfolioProviderProps> = ({
           }
         }
 
+        // Fetch Perena balance
         const solWalletResp = await walletService.getPrimaryWallet("solana");
         if (solWalletResp.success && solWalletResp.wallet) {
           const solBalanceResp = await walletService.getSolanaBalance(
@@ -205,18 +227,44 @@ export const PortfolioProvider: React.FC<PortfolioProviderProps> = ({
             solBalanceResp.balances["usd*"]
           ) {
             const usdStar = solBalanceResp.balances["usd*"];
-            const perenaAmount = parseFloat(usdStar.balance || "0");
+            perenaBalance = parseFloat(usdStar.balance || "0");
 
-            if (!isNaN(perenaAmount) && perenaAmount > 0) {
+            if (!isNaN(perenaBalance) && perenaBalance > 0) {
+              // Fetch real-time APY for Perena
+              let perenaApy = 0.149;
+              try {
+                const currentTime = new Date().toISOString();
+                const apyResp = await perenaService.getApy(currentTime);
+                if (apyResp.success && apyResp.data) {
+                  perenaApy = apyResp.data.apy / 100;
+                }
+              } catch (err) {
+                console.error("Failed to fetch Perena APY:", err);
+              }
+
               entries.push({
                 id: "perena-usd*",
                 name: "Perena",
-                yourStake: perenaAmount,
-                apy: 0.149,
+                yourStake: perenaBalance,
+                apy: perenaApy,
                 fee: 0.01,
                 isSavings: true,
               });
             }
+          }
+        }
+
+        // Calculate savings metrics using transactions
+        if (transactions.length > 0) {
+          try {
+            const metrics = await calculateSavingsMetrics(
+              perenaBalance,
+              positions,
+              transactions
+            );
+            setSavingsMetrics(metrics);
+          } catch (err) {
+            console.error("Failed to calculate savings metrics:", err);
           }
         }
       } catch (err) {
@@ -224,13 +272,14 @@ export const PortfolioProvider: React.FC<PortfolioProviderProps> = ({
         setError("Failed to fetch savings positions");
       } finally {
         setSavingsEntries(entries);
+        setMaplePositions(positions);
         setHasFetchedSavings(true);
         setSavingsLoading(false);
       }
     };
 
     fetchSavingsPositions();
-  }, [mode, hasFetchedSavings]);
+  }, [mode, hasFetchedSavings, transactions]);
 
   const stakeEntries: StakeEntry[] = useMemo(
     () => (mode === "savings" ? savingsEntries : lptStakeEntries),
@@ -247,13 +296,16 @@ export const PortfolioProvider: React.FC<PortfolioProviderProps> = ({
     let monthlyEarnings = 0;
 
     if (mode === "savings") {
-      totalStake = solanaBalance || 0;
-      currentStake = solanaBalance || 0;
-      if (delegatorStakeProfile) {
-        lifetimeRewards =
-          parseFloat(delegatorStakeProfile.lifetimeRewards) || 0;
-        lifetimeUnbonded =
-          parseFloat(delegatorStakeProfile.lifetimeUnbonded) || 0;
+      // Use calculated savings metrics if available
+      if (savingsMetrics) {
+        totalStake = savingsMetrics.totalStake;
+        currentStake = savingsMetrics.currentStake;
+        lifetimeRewards = savingsMetrics.lifetimeRewards;
+        lifetimeUnbonded = savingsMetrics.lifetimeUnbonded;
+      } else {
+        // Fallback to basic balance if metrics not yet calculated
+        totalStake = stablesBalance || 0;
+        currentStake = stablesBalance || 0;
       }
     } else {
       if (delegatorStakeProfile) {
@@ -316,7 +368,8 @@ export const PortfolioProvider: React.FC<PortfolioProviderProps> = ({
     };
   }, [
     mode,
-    solanaBalance,
+    stablesBalance,
+    savingsMetrics,
     delegatorStakeProfile,
     userDelegation,
     orchestrators,
@@ -361,14 +414,14 @@ export const PortfolioProvider: React.FC<PortfolioProviderProps> = ({
 
   const isLoading = useMemo(() => {
     if (mode === "savings") {
-      return savingsLoading || (solanaLoading && solanaBalance === null);
+      return savingsLoading || (stablesLoading && stablesBalance === null);
     }
     return delegationLoading && !userDelegation && !delegatorStakeProfile;
   }, [
     mode,
     savingsLoading,
-    solanaLoading,
-    solanaBalance,
+    stablesLoading,
+    stablesBalance,
     delegationLoading,
     userDelegation,
     delegatorStakeProfile,
@@ -377,7 +430,7 @@ export const PortfolioProvider: React.FC<PortfolioProviderProps> = ({
   const refetch = async () => {
     if (mode === "savings") {
       setHasFetchedSavings(false);
-      await loadSolanaBalance();
+      await loadStablesBalance();
     }
   };
 

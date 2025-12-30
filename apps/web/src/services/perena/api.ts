@@ -12,12 +12,20 @@ import {
   MintQuoteRequest,
   BurnQuoteRequest,
   MintRequest,
-  BurnRequest
+  BurnRequest,
+  GetApyResponse,
+  GetPriceApiResponse
 } from './types';
 
 export interface IPerenaApiService {
   // Get current USD* price
   getPrice(): Promise<GetPriceResponse>;
+
+  // Get USDStar price from Perena API (with timestamp)
+  getPriceApi(time?: string): Promise<GetPriceApiResponse>;
+
+  // Get USDStar APY from Perena API
+  getApy(time?: string): Promise<GetApyResponse>;
 
   // Get quote for minting USD*
   getMintQuote(request: MintQuoteRequest): Promise<QuoteResponse>;

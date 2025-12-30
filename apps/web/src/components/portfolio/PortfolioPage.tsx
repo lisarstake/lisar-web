@@ -11,9 +11,14 @@ import { useTransactions } from "@/contexts/TransactionContext";
 import { usePortfolio, type StakeEntry } from "@/contexts/PortfolioContext";
 import { useWallet } from "@/contexts/WalletContext";
 import { usePrices } from "@/hooks/usePrices";
+import { useStablesApy } from "@/hooks/useStablesApy";
 import { RecentTransactionsCard } from "@/components/wallet/RecentTransactionsCard";
 import { PortfolioSkeleton } from "./PortfolioSkeleton";
-import { formatEarnings, formatLifetime } from "@/lib/formatters";
+import {
+  formatEarnings,
+  formatLifetime,
+  formatStables,
+} from "@/lib/formatters";
 import { getColorForAddress } from "@/lib/qrcode";
 import { priceService } from "@/lib/priceService";
 
@@ -121,8 +126,13 @@ export const PortfolioPage: React.FC = () => {
     stakeEntries,
     isLoading: portfolioLoading,
   } = usePortfolio();
-  const { solanaBalance, ethereumBalance } = useWallet();
+  const { stablesBalance, highyieldBalance } = useWallet();
   const { prices } = usePrices();
+  const {
+    perena: perenaApy,
+    maple: mapleApy,
+    isLoading: apyLoading,
+  } = useStablesApy();
 
   useEffect(() => {
     setMode(isSavings ? "savings" : "staking");
@@ -140,7 +150,7 @@ export const PortfolioPage: React.FC = () => {
     localStorage.setItem("portfolio_show_balance", JSON.stringify(showBalance));
   }, [showBalance]);
 
-  // Get recent transactions (last 5), filtered like wallet view
+  // Get recent transactions
   const recentTransactions = useMemo(() => {
     const filtered =
       walletType === "staking"
@@ -185,19 +195,44 @@ export const PortfolioPage: React.FC = () => {
 
   const totalStake = summary?.totalStake || 0;
   const lifetimeRewards = summary?.lifetimeRewards || 0;
-  const averageApy = summary?.averageApy || 0;
+
+  const averageApy = useMemo(() => {
+    if (isSavings) {
+      return perenaApy ? perenaApy * 100 : 14.9;
+    } else {
+      if (stakeEntries.length === 0) {
+        return 68;
+      }
+      // Get the entry with the highest stake
+      const primaryEntry = stakeEntries.reduce(
+        (max, entry) => (entry.yourStake > (max?.yourStake || 0) ? entry : max),
+        stakeEntries[0]
+      );
+      return primaryEntry ? primaryEntry.apy * 100 : 68;
+    }
+  }, [isSavings, perenaApy, stakeEntries]);
 
   const fiatCurrency = state.user?.fiat_type || "USD";
   const fiatSymbol = useMemo(() => {
     return priceService.getCurrencySymbol(fiatCurrency);
   }, [fiatCurrency]);
 
-  // Calculate total balance 
+  // Calculate total token balance
+  const totalTokenBalance = useMemo(() => {
+    if (isSavings) {
+      return stablesBalance || 0;
+    } else {
+      const unstakedLpt = highyieldBalance || 0;
+      const stakedLpt = totalStake || 0;
+      return unstakedLpt + stakedLpt;
+    }
+  }, [isSavings, highyieldBalance, stablesBalance, totalStake]);
+
+  // Calculate total balance in fiat
   const totalBalanceFiat = useMemo(() => {
     if (isSavings) {
-      // For savings: use solanaBalance (staked stables)
-      const stableBalance = solanaBalance || 0;
-      
+      const stableBalance = totalTokenBalance;
+
       // Convert to user's fiat currency
       switch (fiatCurrency.toUpperCase()) {
         case "NGN":
@@ -211,14 +246,9 @@ export const PortfolioPage: React.FC = () => {
           return stableBalance;
       }
     } else {
-      // For staking: unstaked LPT + staked LPT
-      const unstakedLpt = ethereumBalance || 0;
-      const stakedLpt = totalStake || 0;
-      const totalLpt = unstakedLpt + stakedLpt;
-
-      // Calculate total USD value: (total LPT balance * LPT price)
+      // For staking: convert LPT to USD, then to fiat
       const lptPriceInUsd = prices.lpt || 0;
-      const totalUsdBalance = totalLpt * lptPriceInUsd;
+      const totalUsdBalance = totalTokenBalance * lptPriceInUsd;
 
       // Convert to user's fiat currency
       switch (fiatCurrency.toUpperCase()) {
@@ -233,7 +263,7 @@ export const PortfolioPage: React.FC = () => {
           return totalUsdBalance;
       }
     }
-  }, [isSavings, ethereumBalance, solanaBalance, totalStake, prices, fiatCurrency]);
+  }, [isSavings, totalTokenBalance, prices, fiatCurrency]);
 
   const handleBackClick = () => {
     navigate(-1);
@@ -275,7 +305,7 @@ export const PortfolioPage: React.FC = () => {
         </div>
         {/* Main Wallet Card */}
         <div
-          className={`${isSavings ? "bg-[#6da7fd] border-2 border-[#86B3F7]/30" : "bg-linear-to-br from-[#0f0f0f] to-[#151515] border border-[#2a2a2a]"} rounded-2xl p-6 h-[170px] mb-6 relative overflow-hidden`}
+          className={`${isSavings ? "bg-[#6da7fd] border-2 border-[#86B3F7]/30" : "bg-linear-to-br from-[#0f0f0f] to-[#151515] border border-[#2a2a2a]"} rounded-2xl p-5 h-[190px] mb-6 relative overflow-hidden`}
         >
           {/* Lisar Lines Decoration */}
           {!isSavings && (
@@ -345,17 +375,37 @@ export const PortfolioPage: React.FC = () => {
             {/* Main Balance */}
             <div className="mb-8">
               <div className="flex items-baseline gap-2 mb-1">
-                <span className="text-2xl font-semibold text-white/90">
+                <span className="text-2xl font-bold text-white">
                   {showBalance
-                    ? `${fiatSymbol}${totalBalanceFiat.toLocaleString(
-                        undefined,
-                        {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        }
-                      )}`
+                    ? isSavings
+                      ? formatStables(totalTokenBalance)
+                      : formatEarnings(totalTokenBalance)
                     : "••••"}
                 </span>
+                {showBalance && (
+                  <span
+                    className={`text-sm ml-[-5px] ${
+                      isSavings ? "text-white/90" : "text-white/70"
+                    }`}
+                  >
+                    {isSavings ? "USDC" : "LPT"}
+                  </span>
+                )}
+              </div>
+              <div className="min-h-[20px]">
+                {showBalance && (
+                  <p
+                    className={`text-sm ${
+                      isSavings ? "text-white/90" : "text-white/60"
+                    }`}
+                  >
+                    ≈{fiatSymbol}
+                    {totalBalanceFiat.toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -364,7 +414,11 @@ export const PortfolioPage: React.FC = () => {
               {/* Token Amount */}
               <div className="flex items-center flex-col">
                 <p className="text-white/90 font-semibold text-sm">
-                  {showBalance ? formatEarnings(totalStake) : "••••"}{" "}
+                  {showBalance
+                    ? isSavings
+                      ? `${formatStables(totalStake)} `
+                      : `${formatEarnings(totalStake)} `
+                    : "•••• "}
                   {showBalance ? (isSavings ? "USDC" : "LPT") : ""}
                 </p>
                 <p className="text-white/60 text-xs">
@@ -375,7 +429,11 @@ export const PortfolioPage: React.FC = () => {
               {/* APY */}
               <div className="flex items-center flex-col">
                 <p className="text-white/90 font-semibold text-sm">
-                  {showBalance ? `${averageApy.toFixed(1)}%` : "••••"}
+                  {showBalance
+                    ? isSavings && apyLoading && perenaApy === null
+                      ? "..."
+                      : `${averageApy.toFixed(1)}%`
+                    : "••••"}
                 </p>
                 <p className="text-white/60 text-xs">Per annum</p>
               </div>

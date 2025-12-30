@@ -5,7 +5,7 @@ import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { EmptyState } from "@/components/general/EmptyState";
 import { usePortfolio, type StakeEntry } from "@/contexts/PortfolioContext";
-import { formatEarnings } from "@/lib/formatters";
+import { formatEarnings, formatStables } from "@/lib/formatters";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Drawer,
@@ -55,7 +55,9 @@ const StakeEntryItem: React.FC<StakeEntryItemProps> = ({ entry, onClick }) => {
                 : entry.name}
             </p>
             <p className="text-gray-400 text-xs">
-              {formatEarnings(entry.yourStake)}{" "}
+              {entry.isSavings
+                ? formatStables(entry.yourStake)
+                : formatEarnings(entry.yourStake)}{" "}
               {entry.isSavings ? "USDC" : "LPT"}
             </p>
           </div>
@@ -64,7 +66,7 @@ const StakeEntryItem: React.FC<StakeEntryItemProps> = ({ entry, onClick }) => {
           <p
             className={`font-medium mb-0.5 text-sm ${entry.isSavings ? "text-[#86B3F7]" : "text-[#C7EF6B]"}`}
           >
-            {(entry.apy * 100).toFixed(1)}% p/a
+            {(entry.apy * 100).toFixed(1)}% APY
           </p>
           <p className="text-gray-400 text-xs">{entry.fee * 100}% fee</p>
         </div>
@@ -362,7 +364,7 @@ export const PositionsPage: React.FC = () => {
                 <div className="flex justify-between items-center">
                   <span className="text-white/70 text-sm">Vested Amount</span>
                   <span className="text-white/90 font-medium">
-                    {formatEarnings(selectedEntry.yourStake)} USDC
+                    {formatStables(selectedEntry.yourStake)} USDC
                   </span>
                 </div>
                 <div className="flex justify-between items-center">

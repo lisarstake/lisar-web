@@ -6,6 +6,8 @@
 import { IPerenaApiService } from "./api";
 import {
   GetPriceResponse,
+  GetPriceApiResponse,
+  GetApyResponse,
   QuoteResponse,
   GetStatsResponse,
   MintResponse,
@@ -84,6 +86,73 @@ export class PerenaService implements IPerenaApiService {
           timestamp: "",
         },
         error: error.response?.data?.error || error.message || "Failed to fetch price",
+      };
+    }
+  }
+
+  // Get USDStar price from Perena API (with timestamp parameter)
+  async getPriceApi(time?: string): Promise<GetPriceApiResponse> {
+    try {
+      const headers = {
+        "Content-Type": "application/json",
+      };
+
+      const currentTime = time || new Date().toISOString();
+      const url = `${this.baseUrl}/perena/price-api?time=${encodeURIComponent(currentTime)}`;
+
+      const response = await http.request({
+        url,
+        method: "GET",
+        headers,
+        timeout: this.timeout,
+      });
+
+      return {
+        success: true,
+        data: response.data.data,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        data: {
+          price: 0,
+          timestamp: "",
+        },
+        error: error.response?.data?.error || error.message || "Failed to fetch price",
+      };
+    }
+  }
+
+  // Get USDStar APY from Perena API
+  async getApy(time?: string): Promise<GetApyResponse> {
+    try {
+      const headers = {
+        "Content-Type": "application/json",
+      };
+
+      const currentTime = time || new Date().toISOString();
+      const url = `${this.baseUrl}/perena/apy?time=${encodeURIComponent(currentTime)}`;
+
+      const response = await http.request({
+        url,
+        method: "GET",
+        headers,
+        timeout: this.timeout,
+      });
+
+      return {
+        success: true,
+        data: response.data.data,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        data: {
+          period: "",
+          apy: 0,
+          timestamp: "",
+        },
+        error: error.response?.data?.error || error.message || "Failed to fetch APY",
       };
     }
   }

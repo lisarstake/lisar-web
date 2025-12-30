@@ -40,6 +40,23 @@ export const formatEarnings = (value: number): string => {
 };
 
 /**
+ * Format stables (USDC) values for display
+ * - Always shows 1 decimal place
+ * - Values >= 1000: Use K notation with 1 decimal place
+ */
+export const formatStables = (value: number): string => {
+  if (value >= 100000) {
+    return `${(value / 1000).toFixed(1)}k`;
+  } else if (value >= 10000) {
+    return `${(value / 1000).toFixed(1)}k`;
+  } else if (value >= 1000) {
+    return `${(value / 1000).toFixed(1)}k`;
+  } else {
+    return value.toFixed(1);
+  }
+};
+
+/**
  * Format lifetime values for display
  * - Values < 1000: Show 2 decimal places (no K approximation)
  * - Values >= 1000: Use K notation

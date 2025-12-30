@@ -106,7 +106,7 @@ export const ActionDrawer: React.FC<ActionDrawerProps> = ({
               <button
                 onClick={handleConfirm}
                 disabled={isProcessing}
-                className={`w-full py-3 rounded-xl font-semibold text-lg transition-colors ${
+                className={`w-full py-2.5 rounded-lg font-semibold text-lg transition-colors ${
                   isProcessing
                     ? "bg-[#A8CF5B] text-black cursor-not-allowed opacity-70"
                     : "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
@@ -124,7 +124,7 @@ export const ActionDrawer: React.FC<ActionDrawerProps> = ({
               <button
                 onClick={handleCancel}
                 disabled={isProcessing}
-                className={`w-full py-3 rounded-xl font-semibold text-lg transition-colors ${
+                className={`w-full py-2.5 rounded-lg font-semibold text-lg transition-colors ${
                   isProcessing
                     ? "bg-[#1a1a1a] text-gray-500 cursor-not-allowed opacity-50"
                     : "bg-[#2a2a2a] text-white hover:bg-[#3a3a3a]"
@@ -143,7 +143,7 @@ export const ActionDrawer: React.FC<ActionDrawerProps> = ({
                   key={index}
                   onClick={() => handleActionClick(action)}
                   disabled={isProcessingThisAction}
-                  className={`w-full py-3 rounded-xl font-semibold text-lg transition-colors ${
+                  className={`w-full py-2.5 rounded-lg font-semibold text-lg transition-colors ${
                     action.variant === "secondary"
                       ? "bg-[#2a2a2a] text-white hover:bg-[#3a3a3a]"
                       : isProcessingThisAction
