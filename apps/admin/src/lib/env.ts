@@ -1,13 +1,13 @@
 // Environment configuration
 const getApiBaseUrl = (): string => {
   const isProduction = import.meta.env.MODE === "production";
-  const isStaging =
-    import.meta.env.VITE_ENV === "staging" ||
-    import.meta.env.MODE === "staging";
+  // const isStaging =
+  //   import.meta.env.VITE_ENV === "staging" ||
+  //   import.meta.env.MODE === "staging";
 
-  if (isStaging && import.meta.env.VITE_API_BASE_URL_STAGING) {
-    return import.meta.env.VITE_API_BASE_URL_STAGING;
-  }
+  // if (isStaging && import.meta.env.VITE_API_BASE_URL_STAGING) {
+  //   return import.meta.env.VITE_API_BASE_URL_STAGING;
+  // }
 
   if (isProduction && import.meta.env.VITE_API_BASE_URL) {
     return import.meta.env.VITE_API_BASE_URL;
