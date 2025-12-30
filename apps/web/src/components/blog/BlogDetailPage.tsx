@@ -6,6 +6,7 @@ import { formatDistanceToNow, format } from "date-fns";
 import Navbar from "@/components/general/nav-bar";
 import Footer from "@/components/general/footer";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { BlogCard } from "./BlogCard";
 import { BlogPost } from "@/types/blog";
 import { trackBlogRead, trackPageView } from "@/lib/mixpanel";
@@ -226,7 +227,9 @@ export const BlogDetailPage: React.FC = () => {
           {/* Article Content */}
           <div className="prose prose-sm sm:prose-base lg:prose-lg max-w-none">
             <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
               components={{
+                // Headings
                 h1: ({ children }) => (
                   <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4 sm:mb-6 mt-8 sm:mt-10">
                     {children}
@@ -242,11 +245,28 @@ export const BlogDetailPage: React.FC = () => {
                     {children}
                   </h3>
                 ),
+                h4: ({ children }) => (
+                  <h4 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-2 mt-4">
+                    {children}
+                  </h4>
+                ),
+                h5: ({ children }) => (
+                  <h5 className="text-sm sm:text-base md:text-lg font-semibold text-gray-900 mb-2 mt-3">
+                    {children}
+                  </h5>
+                ),
+                h6: ({ children }) => (
+                  <h6 className="text-xs sm:text-sm md:text-base font-semibold text-gray-900 mb-2 mt-3">
+                    {children}
+                  </h6>
+                ),
+                // Paragraphs
                 p: ({ children }) => (
                   <p className="text-sm sm:text-base md:text-lg text-gray-700 leading-relaxed mb-4 sm:mb-6">
                     {children}
                   </p>
                 ),
+                // Lists
                 ul: ({ children }) => (
                   <ul className="list-disc list-inside space-y-2 mb-4 sm:mb-6 text-sm sm:text-base md:text-lg text-gray-700">
                     {children}
@@ -260,21 +280,108 @@ export const BlogDetailPage: React.FC = () => {
                 li: ({ children }) => (
                   <li className="ml-4 sm:ml-6">{children}</li>
                 ),
+                // Blockquote
                 blockquote: ({ children }) => (
-                  <blockquote className="border-l-4 border-[#235538] pl-4 sm:pl-6 italic text-gray-700 my-4 sm:my-6">
+                  <blockquote className="border-l-4 border-[#235538] pl-4 sm:pl-6 italic text-gray-700 my-4 sm:my-6 bg-gray-50 py-2">
                     {children}
                   </blockquote>
                 ),
-                code: ({ children }) => (
+                // Code (inline)
+                code: ({ inline, children }: any) => {
+                  if (inline) {
+                    return (
                   <code className="bg-gray-100 text-[#235538] px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-xs sm:text-sm font-mono">
                     {children}
                   </code>
+                    );
+                  }
+                  // Code block
+                  return (
+                    <code className="block bg-gray-900 text-gray-100 px-4 py-3 sm:px-6 sm:py-4 rounded-lg text-xs sm:text-sm font-mono overflow-x-auto my-4 sm:my-6">
+                      {children}
+                    </code>
+                  );
+                },
+                // Pre (code block wrapper)
+                pre: ({ children }) => (
+                  <pre className="bg-gray-900 rounded-lg overflow-x-auto my-4 sm:my-6">
+                    {children}
+                  </pre>
                 ),
+                // Images
                 img: ({ src, alt }) => (
                   <img
                     src={src}
                     alt={alt || "Article image"}
                     className="w-full h-auto rounded-xl sm:rounded-2xl my-6 sm:my-8 object-cover"
+                  />
+                ),
+                // Links
+                a: ({ href, children }) => (
+                  <a
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#235538] hover:text-[#1a4028] underline font-medium transition-colors"
+                  >
+                    {children}
+                  </a>
+                ),
+                // Tables
+                table: ({ children }) => (
+                  <div className="overflow-x-auto my-6 sm:my-8">
+                    <table className="min-w-full divide-y divide-gray-300 border border-gray-300 rounded-lg">
+                      {children}
+                    </table>
+                  </div>
+                ),
+                thead: ({ children }) => (
+                  <thead className="bg-gray-50">{children}</thead>
+                ),
+                tbody: ({ children }) => (
+                  <tbody className="divide-y divide-gray-200 bg-white">
+                    {children}
+                  </tbody>
+                ),
+                tr: ({ children }) => (
+                  <tr className="hover:bg-gray-50 transition-colors">
+                    {children}
+                  </tr>
+                ),
+                th: ({ children }) => (
+                  <th className="px-3 py-3 sm:px-6 sm:py-4 text-left text-xs sm:text-sm font-semibold text-gray-900 border-b border-gray-300">
+                    {children}
+                  </th>
+                ),
+                td: ({ children }) => (
+                  <td className="px-3 py-3 sm:px-6 sm:py-4 text-xs sm:text-sm text-gray-700 border-b border-gray-200">
+                    {children}
+                  </td>
+                ),
+                // Horizontal Rule
+                hr: () => (
+                  <hr className="my-6 sm:my-8 border-t-2 border-gray-200" />
+                ),
+                // Strong (bold)
+                strong: ({ children }) => (
+                  <strong className="font-bold text-gray-900">{children}</strong>
+                ),
+                // Emphasis (italic)
+                em: ({ children }) => (
+                  <em className="italic text-gray-800">{children}</em>
+                ),
+                // Strikethrough (requires remark-gfm)
+                del: ({ children }) => (
+                  <del className="line-through text-gray-500">{children}</del>
+                ),
+                // Task list items (requires remark-gfm)
+                input: ({ checked, disabled }: any) => (
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    disabled={disabled}
+                    className="mr-2 rounded border-gray-300 text-[#235538] focus:ring-[#235538]"
+                    readOnly
                   />
                 ),
               }}
