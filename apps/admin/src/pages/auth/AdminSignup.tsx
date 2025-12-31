@@ -9,16 +9,6 @@ import { isProduction } from "@/lib/utils";
 export const AdminSignup: React.FC = () => {
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (isProduction()) {
-      navigate("/login", { replace: true });
-    }
-  }, [navigate]);
-
-  if (isProduction()) {
-    return null;
-  }
-
   const { createAdmin } = useAuth();
 
   const [name, setName] = useState("");
