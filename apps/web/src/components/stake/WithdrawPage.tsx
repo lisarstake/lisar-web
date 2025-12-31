@@ -73,7 +73,7 @@ export const WithdrawPage: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const [fiatEquivalent, setFiatEquivalent] = useState(0);
   const { state } = useAuth();
-  const { wallet, stablesBalance, refetch: refetchWallet } = useWallet();
+  const { wallet, stablesBalance, refetch: refetchWallet, ethereumWalletAddress, solanaWalletAddress, ethereumWalletId, solanaWalletId } = useWallet();
   const { refetch: refetchDelegation } = useDelegation();
   const { refetch: refetchTransactions } = useTransactions();
   const { maple: mapleApy, perena: perenaApy, isLoading: apyLoading } = useStablesApy();
@@ -168,8 +168,7 @@ export const WithdrawPage: React.FC = () => {
 
       if (isStables && selectedProvider) {
         if (selectedProvider === "maple") {
-          const ethWalletResp = await walletService.getPrimaryWallet("ethereum");
-          if (!ethWalletResp.success || !ethWalletResp.wallet) {
+          if (!ethereumWalletAddress || !ethereumWalletId) {
             setErrorMessage("Ethereum wallet not found. Please create a wallet first.");
             setShowErrorDrawer(true);
             setIsWithdrawing(false);
@@ -180,8 +179,8 @@ export const WithdrawPage: React.FC = () => {
             1,
             "USDC",
             {
-              walletId: ethWalletResp.wallet.wallet_id,
-              walletAddress: ethWalletResp.wallet.wallet_address,
+              walletId: ethereumWalletId,
+              walletAddress: ethereumWalletAddress,
               to: withdrawalAddress,
               amount: numericAmount,
             }
@@ -196,8 +195,7 @@ export const WithdrawPage: React.FC = () => {
             return;
           }
         } else if (selectedProvider === "perena") {
-          const solWalletResp = await walletService.getPrimaryWallet("solana");
-          if (!solWalletResp.success || !solWalletResp.wallet) {
+          if (!solanaWalletAddress || !solanaWalletId) {
             setErrorMessage("Solana wallet not found. Please create a wallet first.");
             setShowErrorDrawer(true);
             setIsWithdrawing(false);
@@ -205,8 +203,8 @@ export const WithdrawPage: React.FC = () => {
           }
 
           const sendResponse = await walletService.sendSolana({
-            walletId: solWalletResp.wallet.wallet_id,
-            fromAddress: solWalletResp.wallet.wallet_address,
+            walletId: solanaWalletId,
+            fromAddress: solanaWalletAddress,
             toAddress: withdrawalAddress,
             token: "USDC",
             amount: parseFloat(numericAmount),

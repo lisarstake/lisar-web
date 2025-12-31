@@ -1,11 +1,5 @@
 import React from "react";
-import {
-  ArrowDown,
-  ArrowUp,
-  SquareMinus,
-  PiggyBank,
-  Info,
-} from "lucide-react";
+import { ArrowDown, ArrowUp, SquareMinus, PiggyBank, Info } from "lucide-react";
 import { TransactionData } from "@/services/transactions/types";
 import { EmptyState } from "@/components/general/EmptyState";
 
@@ -31,7 +25,11 @@ export const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
       case "delegation":
         return <PiggyBank size={18} className="text-[#C7EF6B]" />;
       case "undelegation":
-        return <SquareMinus size={18} className="text-[#86B3F7]" />;
+        return <SquareMinus size={18} className="text-[#FF6B6B]" />;
+      case "mint":
+        return <PiggyBank size={18} className="text-[#C7EF6B]" />;
+      case "burn":
+        return <SquareMinus size={18} className="text-[#FF6B6B]" />;
       default:
         return <PiggyBank size={18} className="text-[#C7EF6B]" />;
     }
@@ -42,11 +40,15 @@ export const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
       case "deposit":
         return "Deposit";
       case "withdrawal":
-        return "Send";
-      case "delegation":
-        return "Save";
-      case "undelegation":
         return "Withdraw";
+      case "delegation":
+        return "Vest";
+      case "undelegation":
+        return "Redeem";
+      case "mint":
+        return "Vest";
+      case "burn":
+        return "Redeem";
       default:
         return "Transaction";
     }
@@ -55,26 +57,29 @@ export const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
   const getIconBackgroundColor = (
     type: TransactionData["transaction_type"]
   ) => {
-    return type === "deposit" || type === "delegation"
+    return type === "deposit" || type === "delegation" || type === "mint"
       ? "bg-[#C7EF6B]/10"
       : "bg-[#FF6B6B]/10";
   };
 
   const getAmountColor = (type: TransactionData["transaction_type"]) => {
-    return type === "deposit" || type === "delegation"
+    return type === "deposit" || type === "delegation" || type === "mint"
       ? "text-[#C7EF6B]"
       : "text-[#FF6B6B]";
   };
 
   const getAmountPrefix = (type: TransactionData["transaction_type"]) => {
-    return type === "deposit" || type === "delegation" ? "+" : "-";
+    return type === "deposit" || type === "delegation" || type === "mint" ? "+" : "-";
   };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       day: "numeric",
       month: "short",
-      year: "numeric",
+      // year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
     });
   };
 

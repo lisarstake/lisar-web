@@ -15,7 +15,7 @@ export interface TransactionApiResponse<T> {
 }
 
 // Transaction Types
-export type TransactionType = 'deposit' | 'withdrawal' | 'delegation' | 'undelegation';
+export type TransactionType = 'deposit' | 'withdrawal' | 'delegation' | 'undelegation' | 'mint' | 'burn';
 
 // Transaction Data
 export interface TransactionData {

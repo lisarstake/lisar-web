@@ -99,8 +99,7 @@ export const HistoryPage: React.FC = () => {
         onClose={() => setShowHelpDrawer(false)}
         title="History Guide"
         content={[
-          "View all your staking activities and transactions in one place.",
-          "Green arrows show money coming in, red arrows show money going out.",
+          "View all your transactions in one place.",
           "Click any transaction to see details like date, amount, and status.",
         ]}
       />
