@@ -163,12 +163,14 @@ export const PortfolioProvider: React.FC<PortfolioProviderProps> = ({
       let perenaBalance = 0;
 
       try {
-        const maplePoolId = import.meta.env.VITE_MAPLE_POOL_ID;
+        const maplePoolId = import.meta.env.VITE_MAPLE_USDC_POOL_ID;
 
         // Fetch Maple positions
         const ethWalletResp = await walletService.getPrimaryWallet("ethereum");
+        
         if (ethWalletResp.success && ethWalletResp.wallet) {
           const ethAddress = ethWalletResp.wallet.wallet_address;
+          
           const mapleResp = await mapleService.getPositions(
             ethAddress,
             maplePoolId
@@ -182,6 +184,7 @@ export const PortfolioProvider: React.FC<PortfolioProviderProps> = ({
             mapleResp.data.positions.length > 0
           ) {
             positions = mapleResp.data.positions;
+            
             const totalAvailable = positions.reduce(
               (sum, position) => {
                 const value = parseFloat(position.availableBalance || "0");
@@ -202,14 +205,16 @@ export const PortfolioProvider: React.FC<PortfolioProviderProps> = ({
                 console.error("Failed to fetch Maple APY:", err);
               }
 
-              entries.push({
+              const mapleEntry = {
                 id: `maple-${maplePoolId}`,
                 name: "Maple",
                 yourStake: totalAvailable,
                 apy: mapleApy,
                 fee: 0.01,
                 isSavings: true,
-              });
+              };
+              
+              entries.push(mapleEntry);
             }
           }
         }

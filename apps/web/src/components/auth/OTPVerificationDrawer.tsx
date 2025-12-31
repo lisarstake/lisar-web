@@ -222,7 +222,7 @@ export const OTPVerificationDrawer: React.FC<OTPVerificationDrawerProps> = ({
                     handleSetupOTP(e as any);
                   }
                 }}
-                className="text-[#C7EF6B] text-sm font-medium hover:underline cursor-pointer"
+                className="text-[#C7EF6B] text-xs font-medium hover:underline cursor-pointer"
               >
                 No authenticator app? Setup a new one.
               </div>

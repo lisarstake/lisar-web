@@ -18,6 +18,7 @@ const ValidatorPage = lazyRetry(() => import('@/screens/validator-page'))
 const ValidatorDetailsPage = lazyRetry(() => import('@/screens/validator-details-page'))
 const StakePage = lazyRetry(() => import('@/screens/stake-page'))
 const SavePage = lazyRetry(() => import('@/screens/save-page'))
+const RedeemPage = lazyRetry(() => import('@/screens/redeem-page'))
 const TiersPage = lazyRetry(() => import('@/screens/tiers-page'))
 const StableTiersPage = lazyRetry(() => import('@/screens/stable-tiers-page'))
 const WithdrawPage = lazyRetry(() => import('@/screens/withdraw-page'))
@@ -127,6 +128,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             {withSuspenseAndErrorBoundary(<SavePage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'redeem',
+        element: (
+          <ProtectedRoute>
+            {withSuspenseAndErrorBoundary(<RedeemPage />)}
           </ProtectedRoute>
         ),
       },

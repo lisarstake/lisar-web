@@ -7,7 +7,7 @@ import {
   Info,
   AlertCircle,
   RefreshCw,
-  ChartSpline,
+  PiggyBank,
 } from "lucide-react";
 import { EmptyState } from "@/components/general/EmptyState";
 
@@ -35,38 +35,26 @@ export const TransactionList: React.FC<TransactionListProps> = ({
       case "withdrawal":
         return <ArrowUp size={20} color="#FF6B6B" />;
       case "delegation":
-        return <ChartSpline size={20} color="#C7EF6B" />;
+        return <PiggyBank size={20} color="#C7EF6B" />;
       case "undelegation":
-        return <SquareMinus size={20} color="#86B3F7" />;
+        return <SquareMinus size={20} color="#FF6B6B" />;
+      case "mint":
+        return <PiggyBank size={20} color="#C7EF6B" />;
+      case "burn":
+        return <SquareMinus size={20} color="#FF6B6B" />;
       default:
-        return <ChartSpline size={20} color="#C7EF6B" />;
+        return <PiggyBank size={20} color="#C7EF6B" />;
     }
   };
 
   const getAmountColor = (type: TransactionType) => {
-    switch (type) {
-      case "deposit":
-      case "delegation":
-        return "text-[#C7EF6B]";
-      case "withdrawal":
-      case "undelegation":
-        return "text-[#FF6B6B]";
-      default:
-        return "text-[#86B3F7]";
-    }
+    return type === "deposit" || type === "delegation" || type === "mint"
+      ? "text-[#C7EF6B]"
+      : "text-[#FF6B6B]";
   };
 
   const getAmountPrefix = (type: TransactionType) => {
-    switch (type) {
-      case "deposit":
-      case "delegation":
-        return "+";
-      case "withdrawal":
-      case "undelegation":
-        return "-";
-      default:
-        return "+";
-    }
+    return type === "deposit" || type === "delegation" || type === "mint" ? "+" : "-";
   };
 
   const getTransactionTitle = (type: TransactionType) => {
@@ -74,11 +62,15 @@ export const TransactionList: React.FC<TransactionListProps> = ({
       case "deposit":
         return "Deposit";
       case "withdrawal":
-        return "Withdrawal";
+        return "Send";
       case "delegation":
-        return "Stake";
+        return "Vest";
       case "undelegation":
-        return "Unstake";
+        return "Redeem";
+      case "mint":
+        return "Vest";
+      case "burn":
+        return "Redeem";
       default:
         return "Transaction";
     }
@@ -110,6 +102,17 @@ export const TransactionList: React.FC<TransactionListProps> = ({
       transactions,
     }));
   }, [transactions]);
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      day: "numeric",
+      month: "short",
+      // year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
 
   if (error) {
     return (
@@ -173,7 +176,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
           ))
         : transactionGroups.map((group, groupIndex) => (
             <div key={groupIndex} className="mb-6">
-              <h2 className="text-gray-400 text-sm font-medium mb-3">
+              <h2 className="text-gray-400 text-xs font-medium mb-3">
                 {group.date}
               </h2>
               <div className="space-y-3">
@@ -191,8 +194,8 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                         <p className="text-white font-medium">
                           {getTransactionTitle(transaction.transaction_type)}
                         </p>
-                        <p className="text-gray-400 text-sm capitalize">
-                          {transaction.status}
+                        <p className="text-white/40 text-xs">
+                        {formatDate(transaction.created_at)}
                         </p>
                       </div>
                     </div>
@@ -201,7 +204,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                         className={`font-semibold ${getAmountColor(transaction.transaction_type)}`}
                       >
                         {getAmountPrefix(transaction.transaction_type)}
-                        {parseFloat(transaction.amount).toFixed(4)}{" "}
+                        {parseFloat(transaction.amount).toFixed(2)}{" "}
                         {transaction.token_symbol}
                       </p>
                     </div>

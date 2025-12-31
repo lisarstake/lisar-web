@@ -5,6 +5,7 @@ import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { EmptyState } from "@/components/general/EmptyState";
 import { usePortfolio, type StakeEntry } from "@/contexts/PortfolioContext";
+import { useWallet } from "@/contexts/WalletContext";
 import { formatEarnings, formatStables } from "@/lib/formatters";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -45,14 +46,16 @@ const StakeEntryItem: React.FC<StakeEntryItemProps> = ({ entry, onClick }) => {
             <img
               src={avatar}
               alt={entry.name}
-              className={`w-12 h-12 rounded-full ${avatar.includes("highyield") ? "object-cover" : "object-contain"}`}
+              className={`w-10 h-10 rounded-full ${avatar.includes("highyield") ? "object-cover" : "object-contain"}`}
             />
           )}
           <div>
             <p className="text-gray-100 font-medium mb-0.5">
-              {entry.name.length > 20
-                ? `${entry.name.substring(0, 16)}..`
-                : entry.name}
+              {entry.name.toLowerCase().includes("maple")
+                ? "USD Base"
+                : entry.name.toLowerCase().includes("perena")
+                  ? "USD Plus"
+                  : entry.name}
             </p>
             <p className="text-gray-400 text-xs">
               {entry.isSavings
@@ -112,6 +115,7 @@ export const PositionsPage: React.FC = () => {
   const isSavings = walletType === "savings";
 
   const { setMode, stakeEntries, isLoading } = usePortfolio();
+  const { ethereumWalletAddress, solanaWalletAddress, ethereumWalletId, solanaWalletId } = useWallet();
 
   useEffect(() => {
     setMode(isSavings ? "savings" : "staking");
@@ -132,7 +136,12 @@ export const PositionsPage: React.FC = () => {
 
   const handleWithdrawClick = () => {
     setShowPositionDrawer(false);
-    setShowOTPDrawer(true);
+    navigate("/redeem", {
+      state: {
+        entry: selectedEntry,
+        walletType: walletType,
+      },
+    });
   };
 
   const handleOTPVerify = async (code: string) => {
@@ -152,9 +161,7 @@ export const PositionsPage: React.FC = () => {
 
       try {
         if (isMaple) {
-          const ethWalletResp =
-            await walletService.getPrimaryWallet("ethereum");
-          if (!ethWalletResp.success || !ethWalletResp.wallet) {
+          if (!ethereumWalletAddress) {
             setErrorMessage(
               "Ethereum wallet not found. Please create a wallet first."
             );
@@ -163,10 +170,9 @@ export const PositionsPage: React.FC = () => {
             return response;
           }
 
-          const maplePoolId =
-            import.meta.env.VITE_MAPLE_POOL_ID;
+          const maplePoolId = import.meta.env.VITE_MAPLE_USDC_POOL_ID;
           const positionsResp = await mapleService.getPositions(
-            ethWalletResp.wallet.wallet_address,
+            ethereumWalletAddress,
             maplePoolId
           );
 
@@ -197,9 +203,18 @@ export const PositionsPage: React.FC = () => {
             return response;
           }
 
+          if (!ethereumWalletId) {
+            setErrorMessage(
+              "Ethereum wallet ID not found. Please try again."
+            );
+            setShowErrorDrawer(true);
+            setIsProcessing(false);
+            return response;
+          }
+
           const redeemResp = await mapleService.requestRedeem({
-            walletId: ethWalletResp.wallet.wallet_id,
-            walletAddress: ethWalletResp.wallet.wallet_address,
+            walletId: ethereumWalletId,
+            walletAddress: ethereumWalletAddress,
             poolAddress: maplePoolId,
             shares: totalShares.toString(),
           });
@@ -217,8 +232,7 @@ export const PositionsPage: React.FC = () => {
             setShowErrorDrawer(true);
           }
         } else {
-          const solWalletResp = await walletService.getPrimaryWallet("solana");
-          if (!solWalletResp.success || !solWalletResp.wallet) {
+          if (!solanaWalletAddress) {
             setErrorMessage(
               "Solana wallet not found. Please create a wallet first."
             );
@@ -227,9 +241,18 @@ export const PositionsPage: React.FC = () => {
             return response;
           }
 
+          if (!solanaWalletId) {
+            setErrorMessage(
+              "Solana wallet ID not found. Please try again."
+            );
+            setShowErrorDrawer(true);
+            setIsProcessing(false);
+            return response;
+          }
+
           const burnResp = await perenaService.burn({
-            walletId: solWalletResp.wallet.wallet_id,
-            walletAddress: solWalletResp.wallet.wallet_address,
+            walletId: solanaWalletId,
+            walletAddress: solanaWalletAddress,
             usdStarAmount: selectedEntry.yourStake,
           });
 
@@ -340,25 +363,25 @@ export const PositionsPage: React.FC = () => {
           open={showPositionDrawer}
           onOpenChange={(open) => !open && setShowPositionDrawer(false)}
         >
-            <DrawerContent>
-              <DrawerHeader>
-                <div className="flex items-center justify-center gap-1.5 mb-3">
-                  <img
-                    src={
-                      selectedEntry.name.toLowerCase().includes("maple")
-                        ? "/maple.svg"
-                        : "/perena2.png"
-                    }
-                    alt={selectedEntry.name}
-                    className="w-8 h-8 object-contain"
-                  />
-                  <DrawerTitle className="text-xl font-semibold text-white/90">
-                    {selectedEntry.name.toLowerCase().includes("maple")
-                      ? "USD Base"
-                      : "USD Plus"}
-                  </DrawerTitle>
-                </div>
-              </DrawerHeader>
+          <DrawerContent>
+            <DrawerHeader>
+              <div className="flex items-center justify-center gap-1.5 mb-3">
+                <img
+                  src={
+                    selectedEntry.name.toLowerCase().includes("maple")
+                      ? "/maple.svg"
+                      : "/perena2.png"
+                  }
+                  alt={selectedEntry.name}
+                  className="w-8 h-8 object-contain"
+                />
+                <DrawerTitle className="text-xl font-semibold text-white/90">
+                  {selectedEntry.name.toLowerCase().includes("maple")
+                    ? "USD Base"
+                    : "USD Plus"}
+                </DrawerTitle>
+              </div>
+            </DrawerHeader>
             <div className="space-y-3">
               <div className="bg-[#1a1a1a] rounded-lg p-4 border border-[#2a2a2a] space-y-3">
                 <div className="flex justify-between items-center">
@@ -380,8 +403,7 @@ export const PositionsPage: React.FC = () => {
                   </span>
                 </div>
                 <p className="text-xs text-white/50 mt-2">
-                  Withdrawals are processed instantly but might take longer when
-                  processing many withdrawals.
+                  Withdrawals are processed instantly in minutes, if any delay please contact support.
                 </p>
               </div>
             </div>
@@ -390,7 +412,7 @@ export const PositionsPage: React.FC = () => {
               <button
                 onClick={handleWithdrawClick}
                 disabled={isProcessing}
-                className={`w-full py-4 rounded-xl font-semibold text-lg transition-colors ${
+                className={`w-full py-3 rounded-xl font-semibold text-lg transition-colors ${
                   isProcessing
                     ? "bg-[#636363] text-white cursor-not-allowed opacity-70"
                     : "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
@@ -402,7 +424,7 @@ export const PositionsPage: React.FC = () => {
                     Processing...
                   </span>
                 ) : (
-                  "Withdraw"
+                  "Redeem"
                 )}
               </button>
             </DrawerFooter>
