@@ -64,7 +64,7 @@ export const DepositPage: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const onrampInstanceRef = useRef<OnrampWebSDK | null>(null);
   const { state } = useAuth();
-  const { refetch: refetchWallet } = useWallet();
+  const { refetch: refetchWallet, ethereumWalletAddress, solanaWalletAddress } = useWallet();
   const { maple: mapleApy, perena: perenaApy, isLoading: apyLoading } = useStablesApy();
 
   // Get user's preferred currency
@@ -195,16 +195,25 @@ export const DepositPage: React.FC = () => {
       let walletAddress = state.user.wallet_address;
 
       if (isStables && selectedProvider) {
-        const chainType = selectedProvider === "maple" ? "ethereum" : "solana";
-        const walletResp = await walletService.getPrimaryWallet(chainType);
-        if (!walletResp.success || !walletResp.wallet) {
-          setErrorMessage(
-            `No ${chainType} wallet available. Please create a wallet first.`
-          );
-          setShowErrorDrawer(true);
-          return;
+        if (selectedProvider === "maple") {
+          if (!ethereumWalletAddress) {
+            setErrorMessage(
+              "No ethereum wallet available. Please create a wallet first."
+            );
+            setShowErrorDrawer(true);
+            return;
+          }
+          walletAddress = ethereumWalletAddress;
+        } else {
+          if (!solanaWalletAddress) {
+            setErrorMessage(
+              "No solana wallet available. Please create a wallet first."
+            );
+            setShowErrorDrawer(true);
+            return;
+          }
+          walletAddress = solanaWalletAddress;
         }
-        walletAddress = walletResp.wallet.wallet_address;
       }
 
       if (!walletAddress) {

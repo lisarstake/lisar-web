@@ -1,11 +1,21 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ChevronLeft, CircleQuestionMark, AlertCircle, RefreshCw, ExternalLink } from "lucide-react";
+import {
+  ChevronLeft,
+  CircleQuestionMark,
+  AlertCircle,
+  RefreshCw,
+  ExternalLink,
+} from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { transactionService } from "@/services";
-import { TransactionData, TransactionType } from "@/services/transactions/types";
+import {
+  TransactionData,
+  TransactionType,
+} from "@/services/transactions/types";
 import { getArbitrumScanUrl } from "@/lib/utils";
+import LoadingSpinner from "../general/LoadingSpinner";
 
 export const TransactionDetailPage: React.FC = () => {
   const navigate = useNavigate();
@@ -18,13 +28,14 @@ export const TransactionDetailPage: React.FC = () => {
   useEffect(() => {
     const fetchTransaction = async () => {
       if (!transactionId) return;
-      
+
       try {
         setIsLoading(true);
         setError(null);
-        
-        const response = await transactionService.getTransactionById(transactionId);
-        
+
+        const response =
+          await transactionService.getTransactionById(transactionId);
+
         if (response.success && response.data) {
           setTransaction(response.data);
         } else {
@@ -49,29 +60,15 @@ export const TransactionDetailPage: React.FC = () => {
   };
 
   const getAmountColor = (type: TransactionType) => {
-    switch (type) {
-      case "deposit":
-      case "delegation":
-        return "text-[#C7EF6B]";
-      case "withdrawal":
-      case "undelegation":
-        return "text-[#FF6B6B]";
-      default:
-        return "text-[#C7EF6B]";
-    }
+    return type === "deposit" || type === "delegation" || type === "mint"
+      ? "text-[#C7EF6B]"
+      : "text-[#FF6B6B]";
   };
 
   const getAmountPrefix = (type: TransactionType) => {
-    switch (type) {
-      case "deposit":
-      case "delegation":
-        return "+";
-      case "withdrawal":
-      case "undelegation":
-        return "-";
-      default:
-        return "+";
-    }
+    return type === "deposit" || type === "delegation" || type === "mint"
+      ? "+"
+      : "-";
   };
 
   const getTransactionTitle = (type: TransactionType) => {
@@ -79,11 +76,15 @@ export const TransactionDetailPage: React.FC = () => {
       case "deposit":
         return "Deposit";
       case "withdrawal":
-        return "Withdrawal";
+        return "Send";
       case "delegation":
-        return "Stake";
+        return "Vest";
       case "undelegation":
-        return "Unstake";
+        return "Redeem";
+      case "mint":
+        return "Vest";
+      case "burn":
+        return "Redeem";
       default:
         return "Transaction";
     }
@@ -103,13 +104,14 @@ export const TransactionDetailPage: React.FC = () => {
 
   const handleRetry = async () => {
     if (!transactionId) return;
-    
+
     try {
       setIsLoading(true);
       setError(null);
-      
-      const response = await transactionService.getTransactionById(transactionId);
-      
+
+      const response =
+        await transactionService.getTransactionById(transactionId);
+
       if (response.success && response.data) {
         setTransaction(response.data);
       } else {
@@ -123,24 +125,7 @@ export const TransactionDetailPage: React.FC = () => {
   };
 
   if (isLoading) {
-    return (
-      <div className="h-screen bg-[#050505] text-white flex flex-col">
-        <div className="flex items-center justify-between px-6 py-8">
-          <button
-            onClick={handleBackClick}
-            className="w-8 h-8 flex items-center justify-center"
-          >
-            <ChevronLeft color="#C7EF6B" />
-          </button>
-          <h1 className="text-lg font-medium text-white">Transaction Details</h1>
-          <div className="w-8 h-8"></div>
-        </div>
-        <div className="flex flex-col items-center justify-center flex-1">
-          <div className="w-8 h-8 border-2 border-[#C7EF6B] border-t-transparent rounded-full animate-spin mb-4"></div>
-          <p className="text-gray-400">Loading transaction..</p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner message="Loading transaction.." />;
   }
 
   if (error || !transaction) {
@@ -153,7 +138,9 @@ export const TransactionDetailPage: React.FC = () => {
           >
             <ChevronLeft color="#C7EF6B" />
           </button>
-          <h1 className="text-lg font-medium text-white">Transaction Details</h1>
+          <h1 className="text-lg font-medium text-white">
+            Transaction Details
+          </h1>
           <div className="w-8 h-8"></div>
         </div>
         <div className="flex flex-col items-center justify-center flex-1 px-6">
@@ -187,7 +174,9 @@ export const TransactionDetailPage: React.FC = () => {
           <ChevronLeft color="#C7EF6B" />
         </button>
 
-        <h1 className="text-lg font-medium text-white">{getTransactionTitle(transaction.transaction_type)}</h1>
+        <h1 className="text-lg font-medium text-white">
+          {getTransactionTitle(transaction.transaction_type)}
+        </h1>
 
         <button
           onClick={handleHelpClick}
@@ -200,10 +189,10 @@ export const TransactionDetailPage: React.FC = () => {
       {/* Transaction Amount */}
       <div className="text-center px-6 py-8">
         <h2
-          className={`text-4xl font-bold ${getAmountColor(transaction.transaction_type)}`}
+          className={`text-3xl font-bold ${getAmountColor(transaction.transaction_type)}`}
         >
           {getAmountPrefix(transaction.transaction_type)}
-          {parseFloat(transaction.amount).toFixed(4)} {transaction.token_symbol}
+          {parseFloat(transaction.amount).toFixed(2)} {transaction.token_symbol}
         </h2>
       </div>
 
@@ -229,7 +218,8 @@ export const TransactionDetailPage: React.FC = () => {
               <span className="text-gray-400">Transaction Hash</span>
               <div className="flex items-center gap-2">
                 <span className="text-white font-medium text-xs">
-                  {transaction.transaction_hash.slice(0, 8)}...{transaction.transaction_hash.slice(-8)}
+                  {transaction.transaction_hash.slice(0, 8)}...
+                  {transaction.transaction_hash.slice(-8)}
                 </span>
                 <a
                   href={getArbitrumScanUrl(transaction.transaction_hash)}
@@ -245,7 +235,8 @@ export const TransactionDetailPage: React.FC = () => {
             <div className="flex items-center justify-between">
               <span className="text-gray-400">Wallet Address</span>
               <span className="text-white font-medium text-xs">
-                {transaction.wallet_address.slice(0, 8)}...{transaction.wallet_address.slice(-8)}
+                {transaction.wallet_address.slice(0, 8)}...
+                {transaction.wallet_address.slice(-8)}
               </span>
             </div>
 
@@ -274,7 +265,6 @@ export const TransactionDetailPage: React.FC = () => {
         content={[
           "View detailed information about your transaction including amount, date, status, and fees.",
           "Status shows if your transaction succeeded, failed, or is pending.",
-          "All transactions are recorded on the blockchain for transparency."
         ]}
       />
 

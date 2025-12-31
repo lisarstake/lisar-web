@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { ArrowLeft, Clock, Calendar, Tag, Share2 } from "lucide-react";
 import { blogService } from "@/services/blog";
 import { formatDistanceToNow, format } from "date-fns";
@@ -139,8 +140,44 @@ export const BlogDetailPage: React.FC = () => {
     addSuffix: true,
   });
 
+  // Get the full URL for sharing
+  const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
+  const siteUrl = typeof window !== 'undefined' ? window.location.origin : 'https://lisar.io';
+
   return (
     <div className="min-h-screen bg-white flex flex-col">
+      <Helmet>
+        {/* Primary Meta Tags */}
+        <title>{post.title} - Lisar Blog</title>
+        <meta name="title" content={`${post.title} - Lisar Blog`} />
+        <meta name="description" content={post.excerpt} />
+        
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="article" />
+        <meta property="og:url" content={currentUrl} />
+        <meta property="og:title" content={`${post.title} - Lisar Blog`} />
+        <meta property="og:description" content={post.excerpt} />
+        <meta property="og:image" content={post.cover_image} />
+        <meta property="article:published_time" content={post.published_at} />
+        <meta property="article:author" content={post.author.name} />
+        <meta property="article:section" content={post.category} />
+        {post.tags.map((tag) => (
+          <meta key={tag} property="article:tag" content={tag} />
+        ))}
+        
+        {/* Twitter */}
+        <meta property="twitter:card" content="summary_large_image" />
+        <meta property="twitter:url" content={currentUrl} />
+        <meta property="twitter:title" content={`${post.title} - Lisar Blog`} />
+        <meta property="twitter:description" content={post.excerpt} />
+        <meta property="twitter:image" content={post.cover_image} />
+        
+        {/* Additional Meta Tags */}
+        <meta name="author" content={post.author.name} />
+        <meta name="keywords" content={post.tags.join(', ')} />
+        <link rel="canonical" href={currentUrl} />
+      </Helmet>
+      
       <Navbar />
 
       {/* Main Content - flex-1 to push footer down */}
