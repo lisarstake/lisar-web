@@ -53,9 +53,7 @@ export const BlogDetailPage: React.FC = () => {
           });
 
           if (relatedResponse.success && relatedResponse.data) {
-            // Handle both response structures:
-            // 1. { data: { posts: [...] } } - expected structure
-            // 2. { data: [...] } - array directly (fallback)
+          
             const posts = Array.isArray(relatedResponse.data)
               ? relatedResponse.data
               : relatedResponse.data.posts || [];
@@ -143,6 +141,11 @@ export const BlogDetailPage: React.FC = () => {
   // Get the full URL for sharing
   const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
   const siteUrl = typeof window !== 'undefined' ? window.location.origin : 'https://lisar.io';
+  
+  // Ensure cover image is absolute URL for social sharing
+  const absoluteCoverImage = post.cover_image?.startsWith('http')
+    ? post.cover_image
+    : `${siteUrl}${post.cover_image?.startsWith('/') ? '' : '/'}${post.cover_image}`;
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
@@ -157,7 +160,7 @@ export const BlogDetailPage: React.FC = () => {
         <meta property="og:url" content={currentUrl} />
         <meta property="og:title" content={`${post.title} - Lisar Blog`} />
         <meta property="og:description" content={post.excerpt} />
-        <meta property="og:image" content={post.cover_image} />
+        <meta property="og:image" content={absoluteCoverImage} />
         <meta property="article:published_time" content={post.published_at} />
         <meta property="article:author" content={post.author.name} />
         <meta property="article:section" content={post.category} />
@@ -170,7 +173,7 @@ export const BlogDetailPage: React.FC = () => {
         <meta property="twitter:url" content={currentUrl} />
         <meta property="twitter:title" content={`${post.title} - Lisar Blog`} />
         <meta property="twitter:description" content={post.excerpt} />
-        <meta property="twitter:image" content={post.cover_image} />
+        <meta property="twitter:image" content={absoluteCoverImage} />
         
         {/* Additional Meta Tags */}
         <meta name="author" content={post.author.name} />

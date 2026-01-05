@@ -26,7 +26,6 @@ export const AdminSignup: React.FC = () => {
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-
   const [successOpen, setSuccessOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState(
     "Admin account created successfully"
@@ -36,7 +35,6 @@ export const AdminSignup: React.FC = () => {
 
   const isFormValid = name && email && password.length >= 8;
 
-  // Auto-redirect after 2 seconds when success opens
   useEffect(() => {
     if (successOpen) {
       const timer = setTimeout(() => {
