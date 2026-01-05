@@ -161,6 +161,11 @@ export const BlogDetailPage: React.FC = () => {
         <meta property="og:title" content={`${post.title} - Lisar Blog`} />
         <meta property="og:description" content={post.excerpt} />
         <meta property="og:image" content={absoluteCoverImage} />
+        <meta property="og:image:secure_url" content={absoluteCoverImage} />
+        <meta property="og:image:type" content="image/jpeg" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:image:alt" content={post.title} />
         <meta property="article:published_time" content={post.published_at} />
         <meta property="article:author" content={post.author.name} />
         <meta property="article:section" content={post.category} />
@@ -174,6 +179,9 @@ export const BlogDetailPage: React.FC = () => {
         <meta property="twitter:title" content={`${post.title} - Lisar Blog`} />
         <meta property="twitter:description" content={post.excerpt} />
         <meta property="twitter:image" content={absoluteCoverImage} />
+        <meta property="twitter:image:alt" content={post.title} />
+        <meta property="twitter:site" content="@LisarGlobal" />
+        <meta property="twitter:creator" content="@LisarGlobal" />
         
         {/* Additional Meta Tags */}
         <meta name="author" content={post.author.name} />

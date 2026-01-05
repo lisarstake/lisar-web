@@ -64,10 +64,22 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     const siteUrl = env.VITE_SITE_URL || 'https://lisar.io';
     const currentUrl = `${siteUrl}/blog/${slug}`;
     
-    // Ensure cover image is absolute URL
-    const coverImageUrl = post.cover_image?.startsWith('http')
-      ? post.cover_image
-      : `${siteUrl}${post.cover_image?.startsWith('/') ? '' : '/'}${post.cover_image || '/lisar.png'}`;
+    // Ensure cover image is absolute URL - this is critical for social media
+    let coverImageUrl = post.cover_image || '/lisar.png';
+    
+    if (!coverImageUrl.startsWith('http://') && !coverImageUrl.startsWith('https://')) {
+      // If it's a relative URL, make it absolute
+      if (coverImageUrl.startsWith('/')) {
+        coverImageUrl = `${siteUrl}${coverImageUrl}`;
+      } else {
+        coverImageUrl = `${siteUrl}/${coverImageUrl}`;
+      }
+    }
+    
+    // Log for debugging (will show in Cloudflare Pages function logs)
+    console.log('Blog post:', slug);
+    console.log('Cover image from API:', post.cover_image);
+    console.log('Final cover image URL:', coverImageUrl);
 
     // Escape HTML entities
     const escapeHtml = (text: string): string => {
@@ -104,6 +116,11 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     <meta property="og:title" content="${title} - Lisar Blog" />
     <meta property="og:description" content="${excerpt}" />
     <meta property="og:image" content="${coverImageUrl}" />
+    <meta property="og:image:secure_url" content="${coverImageUrl}" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="${title}" />
     <meta property="og:site_name" content="Lisar" />
     ${post.published_at ? `<meta property="article:published_time" content="${post.published_at}" />` : ''}
     <meta property="article:author" content="${authorName}" />
@@ -116,7 +133,9 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     <meta name="twitter:title" content="${title} - Lisar Blog" />
     <meta name="twitter:description" content="${excerpt}" />
     <meta name="twitter:image" content="${coverImageUrl}" />
+    <meta name="twitter:image:alt" content="${title}" />
     <meta name="twitter:site" content="@LisarGlobal" />
+    <meta name="twitter:creator" content="@LisarGlobal" />
 
     <!-- Canonical -->
     <link rel="canonical" href="${currentUrl}" />
