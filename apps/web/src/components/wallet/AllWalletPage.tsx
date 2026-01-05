@@ -13,7 +13,7 @@ import { usePrices } from "@/hooks/usePrices";
 import { ALL_WALLET_TOUR_ID } from "@/lib/tourConfig";
 import { priceService } from "@/lib/priceService";
 import { formatEarnings } from "@/lib/formatters";
-import { isProduction } from "@/lib/utils";
+import { isStaging } from "@/lib/utils";
 import { Bell, CircleQuestionMark, Plus, Eye, EyeOff } from "lucide-react";
 
 export const AllWalletPage: React.FC = () => {
@@ -277,13 +277,13 @@ export const AllWalletPage: React.FC = () => {
             >
               <div
                 onClick={() => {
-                  // Only make clickable for savings and staking when not coming soon
-                  if (card.type !== "main" && !(card.type === "savings" && isProduction())) {
+                  // Only make clickable for savings and staking when not coming soon (coming soon only in production)
+                  if (card.type !== "main" && !(card.type === "savings" && !isStaging())) {
                     handleDepositClick(card.type, index);
                   }
                 }}
                 className={`bg-linear-to-br ${card.gradient} rounded-2xl p-6 h-[170px] relative overflow-hidden border border-[#2a2a2a] ${
-                  card.type !== "main" && !(card.type === "savings" && isProduction())
+                  card.type !== "main" && !(card.type === "savings" && !isStaging())
                     ? "cursor-pointer hover:opacity-95 transition-opacity"
                     : ""
                 }`}
@@ -411,7 +411,7 @@ export const AllWalletPage: React.FC = () => {
                         : "mt-8"
                   }`}
                 >
-                  {card.type === "savings" && isProduction() ? (
+                  {card.type === "savings" && !isStaging() ? (
                     <button
                       disabled
                       className="flex items-center gap-1 px-2.5 py-1.5 bg-[#2a2a2a] text-white/60 rounded-full text-[10px] font-semibold cursor-not-allowed"
@@ -520,7 +520,7 @@ export const AllWalletPage: React.FC = () => {
               </div>
             </div>
 
-            {isProduction() ? (
+            {!isStaging() ? (
               <button
                 disabled
                 className="mt-4 px-3 py-1.5 bg-[#7daff6] text-white/90 rounded-full text-sm font-semibold cursor-not-allowed relative z-10"
