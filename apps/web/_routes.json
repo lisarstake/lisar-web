@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "include": [
+    "/blog/*"
+  ],
+  "exclude": [
+    "/assets/*",
+    "/*.png",
+    "/*.jpg",
+    "/*.jpeg",
+    "/*.gif",
+    "/*.svg",
+    "/*.ico",
+    "/*.css",
+    "/*.js",
+    "/*.json",
+    "/*.txt",
+    "/*.xml",
+    "/*.webp"
+  ]
+}
