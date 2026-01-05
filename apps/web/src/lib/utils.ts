@@ -1,8 +1,8 @@
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
 }
 
 /**
@@ -47,17 +47,19 @@ export const getArbitrumScanUrl = (hash: string): string => {
 /**
  * Extract first 6 letters from email (avoiding @, gmail, and numbers)
  */
-export const getEmailDisplayName = (email: string | undefined | null): string | null => {
+export const getEmailDisplayName = (
+  email: string | undefined | null
+): string | null => {
   if (!email || !email.trim()) {
     return null;
   }
 
   // Extract part before @
-  const emailPart = email.split('@')[0];
+  const emailPart = email.split("@")[0];
   // Remove all non-alphabetic characters (numbers, dots, etc.) and "gmail"
   const lettersOnly = emailPart
-    .replace(/[^a-zA-Z]/g, '')
-    .replace(/gmail/gi, '');
+    .replace(/[^a-zA-Z]/g, "")
+    .replace(/gmail/gi, "");
   // Take first 6 letters
   return lettersOnly.slice(0, 6) || emailPart.slice(0, 6);
 };
@@ -83,4 +85,10 @@ export const getLeaderboardDisplayName = (
  */
 export const isProduction = (): boolean => {
   return import.meta.env.MODE === "production";
+};
+
+export const isStaging = (): boolean => {
+  return (
+    import.meta.env.VITE_ENV === "staging" || import.meta.env.MODE === "staging"
+  );
 };
