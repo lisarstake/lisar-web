@@ -244,11 +244,11 @@ export const CampaignUserDetailPage: React.FC = () => {
     <div className="space-y-6">
       {/* User Info Card */}
       <Card>
-        <CardContent className="p-6">
+        <CardContent className="px-6 sm:py-6">
           <div className="flex flex-col sm:flex-row sm:items-start gap-6">
-            <Avatar className="w-20 h-20">
+            <Avatar className="w-16 h-16">
               <AvatarImage src={user.img || undefined} />
-              <AvatarFallback className="text-2xl">
+              <AvatarFallback className="text-xl">
                 {getInitials(user.full_name)}
               </AvatarFallback>
             </Avatar>
@@ -256,10 +256,10 @@ export const CampaignUserDetailPage: React.FC = () => {
             <div className="flex-1">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900">
+                  <h1 className="text-xl font-bold text-gray-900">
                     {user.full_name}
                   </h1>
-                  <p className="text-gray-500">{user.email}</p>
+                  <p className="text-gray-500 text-sm">{user.email}</p>
                 </div>
                 <Badge className={statusInfo.color}>
                   <StatusIcon className="w-3 h-3 mr-1" />
@@ -267,7 +267,7 @@ export const CampaignUserDetailPage: React.FC = () => {
                 </Badge>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-6">
                 <div className="flex items-center gap-2 text-sm">
                   <Calendar className="w-4 h-4 text-gray-400" />
                   <div>
@@ -286,7 +286,7 @@ export const CampaignUserDetailPage: React.FC = () => {
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 text-sm">
+                <div className="items-center gap-2 text-sm hidden sm:flex">
                   <Trophy className="w-4 h-4 text-gray-400" />
                   <div>
                     <p className="text-gray-500 text-xs">Current Tier</p>
