@@ -31,7 +31,7 @@ export const PublicationsPage: React.FC = () => {
     error,
   } = state;
 
-  console.log(paginatedPublications)
+
 
   const [filters, setFilters] = useState<BlogFilters>({
     page: 1,

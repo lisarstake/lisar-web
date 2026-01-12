@@ -45,6 +45,12 @@ const PublicationsPage = lazy(() =>
 const PublicationEditorPage = lazy(() => 
   import("@/pages/screens/PublicationEditorPage").then(module => ({ default: module.PublicationEditorPage }))
 );
+const CampaignsPage = lazy(() => 
+  import("@/pages/screens/CampaignsPage").then(module => ({ default: module.CampaignsPage }))
+);
+const CampaignUserDetailPage = lazy(() => 
+  import("@/pages/screens/CampaignUserDetailPage").then(module => ({ default: module.CampaignUserDetailPage }))
+);
 const NotFoundPage = lazy(() => 
   import("@/pages/screens/NotFoundPage").then(module => ({ default: module.NotFoundPage }))
 );
@@ -219,6 +225,22 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             {withSuspenseAndErrorBoundary(<PublicationEditorPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "campaigns",
+        element: (
+          <ProtectedRoute>
+            {withSuspenseAndErrorBoundary(<CampaignsPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "campaigns/:userId",
+        element: (
+          <ProtectedRoute>
+            {withSuspenseAndErrorBoundary(<CampaignUserDetailPage />)}
           </ProtectedRoute>
         ),
       },

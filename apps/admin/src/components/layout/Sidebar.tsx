@@ -5,6 +5,7 @@ import {
   LogOut,
   Settings,
   FileText,
+  Trophy,
   // LayoutDashboard,
   // Users,
   // CreditCard,
@@ -19,6 +20,11 @@ const menuItems = [
     label: "Publications",
     path: "/",
     icon: FileText,
+  },
+  {
+    label: "Campaigns",
+    path: "/campaigns",
+    icon: Trophy,
   },
   // {
   //   label: "Settings",
@@ -104,8 +110,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             {menuItems.map((item) => {
               const Icon = item.icon;
               // For Publications (root path), also match publication routes
+              // For Campaigns, also match campaign detail routes
               const isActive = item.path === "/"
                 ? location.pathname === "/" || location.pathname.startsWith("/publications")
+                : item.path === "/campaigns"
+                ? location.pathname.startsWith("/campaigns")
                 : location.pathname === item.path;
 
               return (

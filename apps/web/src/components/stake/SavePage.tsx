@@ -140,21 +140,16 @@ export const SavePage: React.FC = () => {
   };
 
   const handleSave = async () => {
-    console.log("[SavePage] handleSave called");
     setIsSaving(true);
 
-    console.log("[SavePage] Validating usdcAmount:", usdcAmount);
     if (!usdcAmount || parseFloat(usdcAmount.replace(/,/g, "")) <= 0) {
-      console.error("[SavePage] Invalid amount:", usdcAmount);
       setErrorMessage("Please enter a valid amount to vest.");
       setShowErrorDrawer(true);
       setIsSaving(false);
       return;
     }
 
-    console.log("[SavePage] Checking user authentication");
     if (!state.user) {
-      console.error("[SavePage] User not authenticated");
       setErrorMessage("User not authenticated. Please log in and try again.");
       setShowErrorDrawer(true);
       setIsSaving(false);
@@ -162,21 +157,12 @@ export const SavePage: React.FC = () => {
     }
 
     const numericAmount = parseFloat(usdcAmount.replace(/,/g, ""));
-    console.log("[SavePage] Parsed numeric amount:", numericAmount);
-    console.log("[SavePage] Provider:", provider);
 
     if (provider === "maple") {
-      console.log("[SavePage] Processing Maple vest");
       try {
-        console.log("[SavePage] Step 1: Fetching Ethereum wallet");
         const ethWalletResp = await walletService.getPrimaryWallet("ethereum");
-        console.log("[SavePage] Ethereum wallet response:", {
-          success: ethWalletResp.success,
-          hasWallet: !!ethWalletResp.wallet,
-        });
 
         if (!ethWalletResp.success || !ethWalletResp.wallet) {
-          console.error("[SavePage] Ethereum wallet not found");
           setErrorMessage("Wallet not found. Please create a wallet first.");
           setShowErrorDrawer(true);
           setIsSaving(false);
@@ -185,28 +171,11 @@ export const SavePage: React.FC = () => {
 
         const ethAddress = ethWalletResp.wallet.wallet_address;
         const ethWalletId = ethWalletResp.wallet.wallet_id;
-        console.log("[SavePage] Step 2: Got wallet", {
-          address: ethAddress,
-          walletId: ethWalletId,
-        });
 
-        console.log(
-          "[SavePage] Step 3: Checking authorization for:",
-          ethAddress
-        );
         const authorizationResp =
           await mapleService.getAuthorization(ethAddress);
-        console.log("[SavePage] Authorization response:", {
-          success: authorizationResp.success,
-          isAuthorized: authorizationResp.data?.isAuthorized,
-          error: authorizationResp.error,
-        });
 
         if (!authorizationResp.success) {
-          console.error(
-            "[SavePage] Authorization check failed:",
-            authorizationResp.error
-          );
           setErrorMessage("Sorry, something went wrong. Please try again.");
           setShowErrorDrawer(true);
           setIsSaving(false);
@@ -225,20 +194,7 @@ export const SavePage: React.FC = () => {
           : import.meta.env.VITE_MAPLE_USDT_SYRUP_ROUTER_ADDRESS;
         const amountString = numericAmount.toString();
         const depositData = import.meta.env.VITE_MAPLE_DEPOSIT_DATA;
-        console.log("[SavePage] Step 4: Maple config", {
-          tokenType,
-          poolId: maplePoolId,
-          syrupRouter: syrupRouterAddress,
-          amount: amountString,
-          hasDepositData: !!depositData,
-        });
 
-        console.log("[SavePage] Step 5: Approving token", {
-          chainId: 1,
-          token: tokenType,
-          amount: amountString,
-          spender: maplePoolId,
-        });
         const approveResponse = await walletService.approveToken(
           1,
           tokenType,
@@ -249,16 +205,8 @@ export const SavePage: React.FC = () => {
           },
           maplePoolId
         );
-        console.log("[SavePage] Approve response:", {
-          success: approveResponse.success,
-          error: approveResponse.error,
-        });
 
         if (!approveResponse.success) {
-          console.error(
-            "[SavePage] Token approval failed:",
-            approveResponse.error
-          );
           setErrorMessage("Sorry, something went wrong. Please try again.");
           setShowErrorDrawer(true);
           setIsSaving(false);
@@ -267,13 +215,8 @@ export const SavePage: React.FC = () => {
 
         let depositResponse;
         const isAuthorized = authorizationResp.data.isAuthorized;
-        console.log("[SavePage] Step 6: Executing deposit", {
-          isAuthorized,
-          method: isAuthorized ? "executeDeposit" : "executeAuthorizedDeposit",
-        });
 
         if (isAuthorized) {
-          console.log("[SavePage] Using executeDeposit");
           depositResponse = await mapleService.executeDeposit({
             walletId: ethWalletId,
             walletAddress: ethAddress,
@@ -282,7 +225,6 @@ export const SavePage: React.FC = () => {
             depositData,
           });
         } else {
-          console.log("[SavePage] Using executeAuthorizedDeposit");
           depositResponse = await mapleService.executeAuthorizedDeposit({
             walletId: ethWalletId,
             walletAddress: ethAddress,
@@ -292,39 +234,25 @@ export const SavePage: React.FC = () => {
             depositData,
           });
         }
-        console.log("[SavePage] Deposit response:", {
-          success: depositResponse.success,
-          error: depositResponse.error,
-          data: depositResponse.data,
-        });
 
         if (depositResponse.success) {
-          console.log("[SavePage] ✅ Maple vest successful");
           setSuccessMessage(
             "Vesting successful! Rewards will begin accruing daily at the current APY."
           );
           setShowSuccessDrawer(true);
           setShowConfirmDrawer(false);
 
-          console.log("[SavePage] Refreshing balances and transactions");
           await loadStablesBalance();
           refetchTransactions();
           setIsSaving(false);
           return;
         } else {
-          console.error("[SavePage] ❌ Deposit failed:", depositResponse.error);
           setErrorMessage("Sorry, something went wrong. Please try again.");
           setShowErrorDrawer(true);
           setIsSaving(false);
           return;
         }
       } catch (error) {
-        console.error("[SavePage] ❌ Maple vest error:", error);
-        console.error("[SavePage] Error details:", {
-          message: error instanceof Error ? error.message : "Unknown error",
-          stack: error instanceof Error ? error.stack : undefined,
-          error,
-        });
         setErrorMessage("Sorry, something went wrong. Please try again.");
         setShowErrorDrawer(true);
         setIsSaving(false);
@@ -333,17 +261,10 @@ export const SavePage: React.FC = () => {
     }
 
     if (provider === "perena") {
-      console.log("[SavePage] Processing Perena vest");
       try {
-        console.log("[SavePage] Step 1: Fetching Solana wallet");
         const solWalletResp = await walletService.getPrimaryWallet("solana");
-        console.log("[SavePage] Solana wallet response:", {
-          success: solWalletResp.success,
-          hasWallet: !!solWalletResp.wallet,
-        });
 
         if (!solWalletResp.success || !solWalletResp.wallet) {
-          console.error("[SavePage] Solana wallet not found");
           setErrorMessage("Wallet not found. Please create a wallet first.");
           setShowErrorDrawer(true);
           setIsSaving(false);
@@ -352,54 +273,31 @@ export const SavePage: React.FC = () => {
 
         const solWalletId = solWalletResp.wallet.wallet_id;
         const solWalletAddress = solWalletResp.wallet.wallet_address;
-        console.log("[SavePage] Step 2: Got wallet", {
-          address: solWalletAddress,
-          walletId: solWalletId,
-        });
 
-        console.log("[SavePage] Step 3: Minting USD*", {
-          walletId: solWalletId,
-          walletAddress: solWalletAddress,
-          usdcAmount: numericAmount,
-        });
         const mintResponse = await perenaService.mint({
           walletId: solWalletId,
           walletAddress: solWalletAddress,
           usdcAmount: numericAmount,
         });
-        console.log("[SavePage] Mint response:", {
-          success: mintResponse.success,
-          error: mintResponse.error,
-          data: mintResponse.data,
-        });
 
         if (mintResponse.success) {
-          console.log("[SavePage] ✅ Perena vest successful");
           setSuccessMessage(
             `Vesting successful! Rewards will begin accruing daily at the current APY.`
           );
           setShowSuccessDrawer(true);
           setShowConfirmDrawer(false);
 
-          console.log("[SavePage] Refreshing balances and transactions");
           await loadStablesBalance();
           refetchTransactions();
           setIsSaving(false);
           return;
         } else {
-          console.error("[SavePage] ❌ Mint failed:", mintResponse.error);
           setErrorMessage("Sorry, something went wrong. Please try again.");
           setShowErrorDrawer(true);
           setIsSaving(false);
           return;
         }
       } catch (error) {
-        console.error("[SavePage] ❌ Perena vest error:", error);
-        console.error("[SavePage] Error details:", {
-          message: error instanceof Error ? error.message : "Unknown error",
-          stack: error instanceof Error ? error.stack : undefined,
-          error,
-        });
         setErrorMessage("Sorry, something went wrong. Please try again.");
         setShowErrorDrawer(true);
         setIsSaving(false);
@@ -408,14 +306,11 @@ export const SavePage: React.FC = () => {
     }
 
     if (!provider || (provider !== "maple" && provider !== "perena")) {
-      console.error("[SavePage] ❌ Invalid provider:", provider);
       setErrorMessage("Invalid provider. Please select a valid tier.");
       setShowErrorDrawer(true);
       setIsSaving(false);
       return;
     }
-
-    console.log("[SavePage] handleSave completed");
   };
 
   const handleHelpClick = () => {
