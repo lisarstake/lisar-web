@@ -5,21 +5,50 @@
 
 import {
   CampaignApiResponse,
-  CampaignStats,
-  CampaignFilters,
+  CampaignOverview,
+  CampaignUser,
   PaginatedCampaignUsersResponse,
+  CampaignSearchFilters,
+  TopupHistory,
 } from './types';
 
 export interface ICampaignApiService {
   /**
-   * Get campaign statistics (counts for each tier)
+   * Get campaign overview statistics and recent activity
+   * GET /early-savers/dashboard/overview
    */
-  getCampaignStats(): Promise<CampaignApiResponse<CampaignStats>>;
+  getCampaignOverview(): Promise<CampaignApiResponse<CampaignOverview>>;
 
   /**
-   * Get paginated campaign users based on filters
+   * Get paginated list of all enrolled campaign users
+   * GET /early-savers/dashboard/users
    */
   getCampaignUsers(
-    filters: CampaignFilters
+    page?: number,
+    limit?: number
   ): Promise<CampaignApiResponse<PaginatedCampaignUsersResponse>>;
+
+  /**
+   * Search and filter campaign users
+   * GET /early-savers/dashboard/search
+   */
+  searchCampaignUsers(
+    filters: CampaignSearchFilters
+  ): Promise<CampaignApiResponse<PaginatedCampaignUsersResponse>>;
+
+  /**
+   * Get detailed campaign status for a specific user
+   * GET /early-savers/dashboard/user/:userId
+   */
+  getCampaignUserDetail(
+    userId: string
+  ): Promise<CampaignApiResponse<CampaignUser>>;
+
+  /**
+   * Get bonus transfer history for a user
+   * GET /early-savers/dashboard/user/:userId/topups
+   */
+  getUserTopups(
+    userId: string
+  ): Promise<CampaignApiResponse<TopupHistory[]>>;
 }

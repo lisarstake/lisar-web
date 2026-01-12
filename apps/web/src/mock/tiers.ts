@@ -58,9 +58,10 @@ export const stableYieldTiers: YieldTier[] = [
     title: "USD Base",
     description:
       "Earn stable yields with flexible access to your savings. Up to 6.5% per annum.",
+    isLocked: true,
     bgColor: "bg-transparent border-2 border-[#2a2a2a]",
-    buttonBg: "bg-[#86B3F7] hover:bg-[#6da7fd]",
-    buttonText: "text-black",
+    buttonBg: "bg-[#2a2a2a] cursor-not-allowed opacity-50",
+    buttonText: "text-white/50",
     image: "/maple.svg",
     imageClass: "w-16 h-16 object-contain opacity-90",
   },

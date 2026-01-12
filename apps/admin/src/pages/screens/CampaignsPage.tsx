@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useCampaign } from "@/contexts/CampaignContext";
-import { CampaignFilters, CampaignTier } from "@/services/campaigns/types";
+import { CampaignTier, CampaignStatus } from "@/services/campaigns/types";
 import { CampaignList } from "../../components/screens/CampaignList";
 import {
   SummaryCard,
@@ -9,52 +9,53 @@ import {
 
 export const CampaignsPage: React.FC = () => {
   const {
-    campaignStats,
+    campaignOverview,
     paginatedUsers,
     isLoading,
-    isLoadingStats,
-    getCampaignStats,
-    getCampaignUsers,
+    isLoadingOverview,
+    getCampaignOverview,
+    searchCampaignUsers,
   } = useCampaign();
 
-  const [selectedTier, setSelectedTier] = useState<CampaignTier>("tier_1");
-  const [filters, setFilters] = useState<CampaignFilters>({
-    page: 1,
-    limit: 50,
-    tier: "tier_1",
-    status: "all",
-    sortOrder: "desc",
-  });
+  const [selectedTier, setSelectedTier] = useState<CampaignTier>(1);
+  const [selectedStatus, setSelectedStatus] = useState<CampaignStatus | "all">(
+    "all"
+  );
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageLimit = 50;
 
+  // Load overview on mount
   useEffect(() => {
-    if (!campaignStats && !isLoadingStats) {
-      getCampaignStats();
+    if (!campaignOverview && !isLoadingOverview) {
+      getCampaignOverview();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Load users based on filters
   useEffect(() => {
-    getCampaignUsers(filters);
-  }, [filters, getCampaignUsers]);
+    const filters: any = {
+      tier: selectedTier,
+      page: currentPage,
+      limit: pageLimit,
+    };
+
+    if (selectedStatus !== "all") {
+      filters.status = selectedStatus;
+    }
+
+    searchCampaignUsers(filters);
+  }, [selectedTier, selectedStatus, currentPage, searchCampaignUsers]);
 
   const handlePageChange = (newPage: number) => {
-    setFilters((prev) => ({ ...prev, page: newPage }));
+    setCurrentPage(newPage);
   };
-
-  const handleTierSelect = (tier: CampaignTier) => {
-    setSelectedTier(tier);
-    setFilters((prev) => ({ ...prev, tier, page: 1 }));
-  };
-
-  const tier1Count = campaignStats?.tier1Count || 0;
-  const tier2Count = campaignStats?.tier2Count || 0;
-  const tier3Count = campaignStats?.tier3Count || 0;
 
   return (
-    <div className="space-y-6 lg:space-y-8">
-      {/* Tier Cards - Clickable */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {isLoadingStats ? (
+    <div className="space-y-4 sm:space-y-6 lg:space-y-8">
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+        {isLoadingOverview ? (
           <>
             <SummaryCardSkeleton color="green" />
             <SummaryCardSkeleton color="blue" />
@@ -62,116 +63,79 @@ export const CampaignsPage: React.FC = () => {
           </>
         ) : (
           <>
-            <div
-              onClick={() => handleTierSelect("tier_1")}
-              className="cursor-pointer transition-transform hover:scale-105"
-            >
-              <SummaryCard
-                title="Early Savers"
-                subtitle="Active participants"
-                value={tier1Count.toLocaleString()}
-                color="green"
-                isLoading={isLoadingStats}
-              />
-            </div>
-            <div
-              onClick={() => handleTierSelect("tier_2")}
-              className="cursor-pointer transition-transform hover:scale-105"
-            >
-              <SummaryCard
-                title="Consistent Savers"
-                subtitle="Active participants"
-                value={tier2Count.toLocaleString()}
-                color="blue"
-                isLoading={isLoadingStats}
-              />
-            </div>
-            <div
-              onClick={() => handleTierSelect("tier_3")}
-              className="cursor-pointer transition-transform hover:scale-105"
-            >
-              <SummaryCard
-                title="Champion Savers"
-                subtitle="Active participants"
-                value={tier3Count.toLocaleString()}
-                color="orange"
-                isLoading={isLoadingStats}
-              />
-            </div>
+            {/* Card 1: Enrollments */}
+            <SummaryCard
+              title="Campaign Enrollments"
+              subtitle={`${campaignOverview?.active_enrollments || 0} Active Users`}
+              value={(
+                campaignOverview?.total_enrollments || 0
+              ).toLocaleString()}
+              color="green"
+              isLoading={isLoadingOverview}
+            />
+
+            {/* Card 2: Tier Breakdown */}
+            <SummaryCard
+              title="Tier Distribution"
+              subtitle="Users per tier"
+              value={`${(campaignOverview?.users_by_tier.tier_1 || 0).toLocaleString()} -  ${(campaignOverview?.users_by_tier.tier_2 || 0).toLocaleString()} - ${(campaignOverview?.users_by_tier.tier_3 || 0).toLocaleString()}`}
+              color="blue"
+              isLoading={isLoadingOverview}
+            />
+
+            {/* Card 3: Total Bonus Paid */}
+            <SummaryCard
+              title="Campaign rewards"
+              subtitle=" Total Bonuses Paid"
+              value={`₦${(campaignOverview?.total_bonuses_paid_ngn || 0).toLocaleString()}`}
+              color="orange"
+              isLoading={isLoadingOverview}
+            />
           </>
         )}
       </div>
 
       {/* Users Table */}
-      <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <h2 className="text-lg sm:text-xl font-bold text-gray-900">
-            {selectedTier === "tier_1"
+      <div className="space-y-3 sm:space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+          <h2 className="text-base sm:text-lg lg:text-xl font-bold text-gray-900">
+            {selectedTier === 1
               ? "Early Savers"
-              : selectedTier === "tier_2"
+              : selectedTier === 2
                 ? "Consistent Savers"
-                : "Champion Savers"}{" "}
+                : "Champion Savers"}
           </h2>
           <div className="flex flex-wrap items-center gap-2">
             <select
-              value={filters.status || "all"}
-              onChange={(e) =>
-                setFilters((prev) => ({
-                  ...prev,
-                  status: e.target.value as
-                    | "all"
-                    | "in_progress"
-                    | "completed"
-                    | "failed",
-                  page: 1,
-                }))
-              }
-              className="text-xs sm:text-sm px-2 sm:px-3 py-1.5 border border-gray-300 rounded-md bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#235538] focus:border-transparent"
+              value={selectedTier}
+              onChange={(e) => {
+                setSelectedTier(Number(e.target.value) as CampaignTier);
+                setCurrentPage(1);
+              }}
+              className="text-xs sm:text-sm px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#235538] focus:border-transparent min-w-[100px]"
+            >
+              <option value={1}>Tier 1</option>
+              <option value={2}>Tier 2</option>
+              <option value={3}>Tier 3</option>
+            </select>
+            <select
+              value={selectedStatus}
+              onChange={(e) => {
+                setSelectedStatus(e.target.value as CampaignStatus | "all");
+                setCurrentPage(1);
+              }}
+              className="text-xs sm:text-sm px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#235538] focus:border-transparent min-w-[100px]"
             >
               <option value="all">All Status</option>
-              <option value="in_progress">In Progress</option>
+              <option value="active">Active</option>
               <option value="completed">Completed</option>
-              <option value="failed">Failed</option>
-            </select>
-            <select
-              value={filters.sortBy || ""}
-              onChange={(e) =>
-                setFilters((prev) => ({
-                  ...prev,
-                  sortBy: e.target.value as
-                    | "wallet_balance"
-                    | "joined_campaign"
-                    | "full_name"
-                    | undefined,
-                  page: 1,
-                }))
-              }
-              className="text-xs sm:text-sm px-2 sm:px-3 py-1.5 border border-gray-300 rounded-md bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#235538] focus:border-transparent"
-            >
-              <option value="">Sort By</option>
-              <option value="wallet_balance">Wallet Balance</option>
-              <option value="joined_campaign">Joined Date</option>
-              <option value="full_name">Name</option>
-            </select>
-            <select
-              value={filters.sortOrder || "desc"}
-              onChange={(e) =>
-                setFilters((prev) => ({
-                  ...prev,
-                  sortOrder: e.target.value as "asc" | "desc",
-                  page: 1,
-                }))
-              }
-              className="text-xs sm:text-sm px-2 sm:px-3 py-1.5 border border-gray-300 rounded-md bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#235538] focus:border-transparent"
-            >
-              <option value="desc">Descending</option>
-              <option value="asc">Ascending</option>
+              <option value="champion">Champion</option>
+              <option value="withdrawn">Withdrawn</option>
             </select>
           </div>
         </div>
         <CampaignList
           users={paginatedUsers}
-          filters={filters}
           isLoading={isLoading}
           error={null}
           onPageChange={handlePageChange}

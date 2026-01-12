@@ -481,13 +481,14 @@ export const AllWalletPage: React.FC = () => {
             </div>
             <div className="flex-1">
               <h3 className="text-white text-base font-semibold mb-1">
-                Predict and win
-                <span className="text-white/90 text-xs ml-2 bg-[#2a2a2a] rounded-full px-2 py-1">
-                  coming soon
+                Early Savers 
+                <span className="text-black text-xs ml-2 bg-[#C7EF6B] rounded-full px-2.5 py-1 animate-pulse mb-0.5
+                ">
+                 Live
                 </span>
               </h3>
               <p className="text-white/60 text-sm">
-                Trade on real-world events like sports and politics
+                Earn rewards building healthy savings habits!  Click to get started.
               </p>
             </div>
           </div>

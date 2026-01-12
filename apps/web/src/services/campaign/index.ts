@@ -5,6 +5,8 @@
 
 export * from './types';
 export * from './api';
+export * from './campaignService';
 
 // Export the service instance
-export { default as campaignService } from './campaignService';
+import { CampaignService } from './campaignService';
+export const campaignService = new CampaignService();

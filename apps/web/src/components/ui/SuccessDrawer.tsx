@@ -55,7 +55,7 @@ export const SuccessDrawer: React.FC<SuccessDrawerProps> = ({
          
           <button
             onClick={onClose}
-            className="w-full py-3 px-6 rounded-lg font-semibold text-lg border-2 border-[#C7EF6B] bg-transparent text-[#C7EF6B] hover:bg-[#C7EF6B] hover:text-black transition-colors"
+            className="w-full py-3 px-6 rounded-lg font-semibold text-lg border border-[#C7EF6B] bg-transparent text-[#C7EF6B] hover:bg-[#C7EF6B] hover:text-black transition-colors"
           >
             Close
           </button>
