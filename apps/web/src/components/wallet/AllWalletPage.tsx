@@ -482,10 +482,10 @@ export const AllWalletPage: React.FC = () => {
             <div className="flex-1">
               <h3 className="text-white text-base font-semibold mb-1">
                 Early Savers 
-                <span className="text-black text-xs ml-2 bg-[#C7EF6B] rounded-full px-2.5 py-1 animate-pulse mb-0.5
+                {/* <span className="text-black text-xs ml-2 bg-[#C7EF6B] rounded-full px-2.5 py-1  mb-0.5
                 ">
-                 Live
-                </span>
+                 Active
+                </span> */}
               </h3>
               <p className="text-white/60 text-sm">
                 Earn rewards building healthy savings habits!  Click to get started.

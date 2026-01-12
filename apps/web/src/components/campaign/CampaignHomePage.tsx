@@ -18,8 +18,10 @@ import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { SuccessDrawer } from "@/components/ui/SuccessDrawer";
 import { ErrorDrawer } from "@/components/ui/ErrorDrawer";
+import { ActivitySelectionDrawer } from "@/components/ui/ActivitySelectionDrawer";
 import { useCampaign } from "@/contexts/CampaignContext";
 import { Button } from "../ui/button";
+import { campaignService } from "@/services";
 
 interface TierRequirement {
   label: string;
@@ -32,6 +34,7 @@ export const CampaignHomePage: React.FC = () => {
   const {
     campaignStatus,
     referralCode,
+    referralStats,
     isLoading,
     copySuccess,
     handleCopyReferralCode,
@@ -45,6 +48,8 @@ export const CampaignHomePage: React.FC = () => {
   const [showErrorDrawer, setShowErrorDrawer] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [showActivityDrawer, setShowActivityDrawer] = useState(false);
+  const [isSubmittingActivities, setIsSubmittingActivities] = useState(false);
 
   // Get tier information based on current tier
   const getTierInfo = (
@@ -104,7 +109,7 @@ export const CampaignHomePage: React.FC = () => {
             {
               label: "C: UGC / Social",
               description:
-                "Share earnings + story on social (50+ words, screenshot, tag @LISAR #LISARWins)",
+                "Share earnings + story on social, tag @LISAR #LISARWins",
               completed: false,
             },
           ],
@@ -113,7 +118,7 @@ export const CampaignHomePage: React.FC = () => {
         return {
           title: "Champion Saver (3/3)",
           subtitle: "Premium Perks",
-          reward: "Brand Merch + Perks",
+          reward: "Merch + Perks",
           timeline: "60 days",
           color: "bg-blue-100 text-blue-800",
           requirements: [
@@ -137,7 +142,7 @@ export const CampaignHomePage: React.FC = () => {
             {
               label: "Storytelling",
               description:
-                "Create detailed testimonial (60-90s video OR 300+ word case study OR 3+ post social series)",
+                "Share a testimonial (60-90s video)",
               completed: false,
             },
           ],
@@ -161,6 +166,52 @@ export const CampaignHomePage: React.FC = () => {
   const handleHelpClick = () => {
     setShowHelpDrawer(true);
   };
+
+  const handleSaveActivities = async (selectedActivities: string[]) => {
+    setIsSubmittingActivities(true);
+    try {
+      const response = await campaignService.setTier2Milestones({
+        activities: selectedActivities,
+      });
+
+      if (response.success) {
+        setShowActivityDrawer(false);
+        setSuccessMessage("Your activity selection has been saved successfully!");
+        setShowSuccessDrawer(true);
+      } else {
+        setShowActivityDrawer(false);
+        setErrorMessage("Sorry, couldn't complete action. Please try again.");
+        setShowErrorDrawer(true);
+      }
+    } catch (error) {
+      console.error("Failed to save activities:", error);
+      setShowActivityDrawer(false);
+      setErrorMessage("Sorry, couldn't complete action. Please try again.");
+      setShowErrorDrawer(true);
+    } finally {
+      setIsSubmittingActivities(false);
+    }
+  };
+
+  // Tier 2 activities 
+  const tier2Activities = [
+    {
+      id: "consistent_saver",
+      label: "A: Consistent Saver",
+      description: "Maintain ₦30K+ average balance for 30 days",
+    },
+    {
+      id: "community_builder",
+      label: "B: Community Builder",
+      description: "Refer 2 friends who deposit minimum amount each",
+    },
+    {
+      id: "social_proof",
+      label: "C: UGC / Social",
+      description:
+        "Share earnings + story on social, tag @LISAR #LISARWins",
+    },
+  ];
 
   if (isLoading) {
     return (
@@ -367,7 +418,7 @@ export const CampaignHomePage: React.FC = () => {
               <div className="mb-3">
                 <CardTitle className="flex items-center gap-1 text-white text-sm">
                   <Users className="w-4 h-4 text-[#C7EF6B]" />
-                  Your Referral Code
+                   Referral Code
                 </CardTitle>
                 <p className="text-xs text-gray-400">
                   Share your code and earn rewards when friends join
@@ -392,6 +443,10 @@ export const CampaignHomePage: React.FC = () => {
                       )}
                     </button>
                   </div>
+                  <p className="text-xs text-gray-400">
+                    You currently have {referralStats?.totalReferrals || 0} referral(s)
+                    {referralStats && referralStats.totalReferrals > 0 && " 🎉"}
+                  </p>
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
@@ -420,36 +475,82 @@ export const CampaignHomePage: React.FC = () => {
                       "Generate"
                     )}
                   </Button>
+                  
                 </div>
               )}
             </CardContent>
           </Card>
 
           {/* Call to Action */}
-          <div className="p-4 bg-gradient-to-r from-[#C7EF6B]/20 to-[#86B3F7]/20 border border-[#C7EF6B]/30 rounded-lg mb-6">
-            <h3 className="text-white font-semibold mb-1 text-sm">
-              Ready to begin?
-            </h3>
-            <p className="text-xs text-gray-300 mb-3">
-              Make your first deposit of ₦18,000 or more to begin your journey
-              to the Welcome Bonus.
-            </p>
-            <button
-              onClick={() =>
-                navigate("/deposit", {
-                  state: {
-                    walletType: "savings",
-                    provider: "perena",
-                    tierNumber: 2,
-                    tierTitle: "USD Plus",
-                  },
-                })
-              }
-              className="w-full py-2.5 bg-[#C7EF6B] hover:bg-[#B8E55A] text-black font-medium rounded-lg transition-colors text-sm"
-            >
-              Make a Deposit
-            </button>
-          </div>
+          {currentTier === 1 && (
+            <div className="p-4 bg-linear-to-r from-[#C7EF6B]/20 to-[#86B3F7]/20 border border-[#C7EF6B]/30 rounded-lg mb-6">
+              <h3 className="text-white font-semibold mb-1 text-sm">
+                Ready to begin?
+              </h3>
+              <p className="text-xs text-gray-300 mb-3">
+                Make your first deposit of ₦18,000 or more to begin your journey
+                to the Welcome Bonus.
+              </p>
+              <button
+                onClick={() =>
+                  navigate("/deposit", {
+                    state: {
+                      walletType: "savings",
+                      provider: "perena",
+                      tierNumber: 2,
+                      tierTitle: "USD Plus",
+                    },
+                  })
+                }
+                className="w-full py-2.5 bg-[#C7EF6B] hover:bg-[#B8E55A] text-black font-medium rounded-lg transition-colors text-sm"
+              >
+                Make a Deposit
+              </button>
+            </div>
+          )}
+
+          {currentTier === 2 && (
+            <div className="p-4 bg-linear-to-r from-[#C7EF6B]/20 to-[#86B3F7]/20 border border-[#C7EF6B]/30 rounded-lg mb-6">
+              <h3 className="text-white font-semibold mb-1 text-sm">
+                Choose Your Path 
+              </h3>
+              <p className="text-xs text-gray-300 mb-3">
+                Select 2 out of 3 activities to complete in order to earn the Growth Bonus.
+              </p>
+              <button
+                onClick={() => setShowActivityDrawer(true)}
+                className="w-full py-2.5 bg-[#C7EF6B] hover:bg-[#B8E55A] text-black font-medium rounded-lg transition-colors text-sm"
+              >
+                Choose Your Activities
+              </button>
+            </div>
+          )}
+
+          {currentTier === 3 && (
+            <div className="p-4 bg-gradient-to-r from-[#C7EF6B]/20 to-[#86B3F7]/20 border border-[#C7EF6B]/30 rounded-lg mb-6">
+              <h3 className="text-white font-semibold mb-1 text-sm">
+                Champion Level Challenge
+              </h3>
+              <p className="text-xs text-gray-300 mb-3">
+                Complete all activities to unlock premium perks and brand merchandise.
+              </p>
+              <button
+                onClick={() =>
+                  navigate("/deposit", {
+                    state: {
+                      walletType: "savings",
+                      provider: "perena",
+                      tierNumber: 2,
+                      tierTitle: "USD Plus",
+                    },
+                  })
+                }
+                className="w-full py-2.5 bg-[#C7EF6B] hover:bg-[#B8E55A] text-black font-medium rounded-lg transition-colors text-sm"
+              >
+                Make a Deposit
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -477,6 +578,15 @@ export const CampaignHomePage: React.FC = () => {
         isOpen={showErrorDrawer}
         onClose={() => setShowErrorDrawer(false)}
         message={errorMessage}
+      />
+
+      {/* Activity Selection Drawer */}
+      <ActivitySelectionDrawer
+        isOpen={showActivityDrawer}
+        onClose={() => setShowActivityDrawer(false)}
+        onSave={handleSaveActivities}
+        activities={tier2Activities}
+        isSubmitting={isSubmittingActivities}
       />
 
       {/* Bottom Navigation */}

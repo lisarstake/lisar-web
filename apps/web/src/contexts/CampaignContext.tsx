@@ -6,17 +6,24 @@ import React, {
   ReactNode,
 } from "react";
 import { campaignService } from "@/services";
-import type { CampaignStatusData } from "@/services/campaign/types";
+import type {
+  CampaignStatusData,
+  ReferralStatsData,
+} from "@/services/campaign/types";
 
 interface CampaignContextType {
   campaignStatus: CampaignStatusData | null;
   referralCode: string | null;
+  referralStats: ReferralStatsData | null;
   isLoading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
   copySuccess: boolean;
   handleCopyReferralCode: () => Promise<void>;
-  handleGenerateReferralCode: () => Promise<{ success: boolean; message: string }>;
+  handleGenerateReferralCode: () => Promise<{
+    success: boolean;
+    message: string;
+  }>;
   isGenerating: boolean;
 }
 
@@ -34,6 +41,9 @@ export const CampaignProvider: React.FC<CampaignProviderProps> = ({
   const [campaignStatus, setCampaignStatus] =
     useState<CampaignStatusData | null>(null);
   const [referralCode, setReferralCode] = useState<string | null>(null);
+  const [referralStats, setReferralStats] = useState<ReferralStatsData | null>(
+    null
+  );
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [copySuccess, setCopySuccess] = useState(false);
@@ -44,20 +54,26 @@ export const CampaignProvider: React.FC<CampaignProviderProps> = ({
     setError(null);
 
     try {
-      // Fetch campaign status and referral code in parallel
-      const [statusResponse, referralResponse] = await Promise.all([
-        campaignService.getCampaignStatus(),
-        campaignService.getReferralCode(),
-      ]);
+      // Fetch campaign status, referral code, and referral stats in parallel
+      const [statusResponse, referralResponse, statsResponse] =
+        await Promise.all([
+          campaignService.getCampaignStatus(),
+          campaignService.getReferralCode(),
+          campaignService.getReferralStats(),
+        ]);
 
       // If user is enrolled, use their campaign status
       if (statusResponse.success && statusResponse.data) {
         setCampaignStatus(statusResponse.data);
       }
-      // If not enrolled, that's okay - we'll show tier 1 by default
+    
 
       if (referralResponse.success && referralResponse.data) {
         setReferralCode(referralResponse.data.referralCode);
+      }
+
+      if (statsResponse.success && statsResponse.data) {
+        setReferralStats(statsResponse.data);
       }
     } catch (err) {
       console.error("Error fetching campaign data:", err);
@@ -119,6 +135,7 @@ export const CampaignProvider: React.FC<CampaignProviderProps> = ({
   const value: CampaignContextType = {
     campaignStatus,
     referralCode,
+    referralStats,
     isLoading,
     error,
     refetch,
