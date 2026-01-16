@@ -51,11 +51,13 @@ export const EarnPage: React.FC = () => {
 
   const handleCardClick = (card: EarnCard) => {
     if (card.id === "1") {
-      // Navigate to campaign page
       navigate("/campaign");
     } else if (card.isComingSoon) {
-      // Open Telegram link
-      window.open("https://t.me/+F0YXOMaiJMxkODVk", "_blank", "noopener,noreferrer");
+      window.open(
+        "https://t.me/+F0YXOMaiJMxkODVk",
+        "_blank",
+        "noopener,noreferrer"
+      );
     }
   };
 
@@ -68,7 +70,7 @@ export const EarnPage: React.FC = () => {
           <div>
             <h1 className="text-lg font-medium text-white">Earn on Lisar</h1>
             <p className="text-xs text-gray-500">
-              Get paid creating content or inviting friends
+              Discover earning opportunities on Lisar
             </p>
           </div>
           <button
@@ -85,7 +87,9 @@ export const EarnPage: React.FC = () => {
             <div
               key={card.id}
               className={`bg-[#1a1a1a] rounded-xl overflow-hidden ${
-                card.isSocialCard ? "cursor-pointer hover:bg-[#2a2a2a] transition-colors" : ""
+                card.isSocialCard
+                  ? "cursor-pointer hover:bg-[#2a2a2a] transition-colors"
+                  : ""
               }`}
               onClick={() => card.isSocialCard && handleCardClick(card)}
             >
