@@ -212,7 +212,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
             }
           }
         } catch (error) {
-          console.error("Proactive token refresh failed:", error);
         }
       }
     };

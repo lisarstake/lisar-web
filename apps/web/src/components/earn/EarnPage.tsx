@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { CircleQuestionMark } from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
@@ -14,25 +15,26 @@ interface EarnCard {
 }
 
 export const EarnPage: React.FC = () => {
+  const navigate = useNavigate();
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
 
   const earnCards: EarnCard[] = [
     {
       id: "1",
-      title: "Invite Friends",
-      description: "Earn inviting your friends to Lisar",
-      image: "/earn1.jpeg",
-      buttonText: "Get started",
-      isComingSoon: true,
+      title: "Early Savers 🎯⚡",
+      description: "Earn rewards building healthy savings habits!  ",
+      image: "/1.png",
+      buttonText: "Join Campaign",
+      isComingSoon: false,
     },
-    {
-      id: "2",
-      title: "Creator Program",
-      description: "Get paid creating content for Lisar",
-      image: "/earn2.jpeg",
-      buttonText: "Get started",
-      isComingSoon: true,
-    },
+    // {
+    //   id: "2",
+    //   title: "Creator Program",
+    //   description: "Get paid creating content for Lisar",
+    //   image: "/earn2.jpeg",
+    //   buttonText: "Get started",
+    //   isComingSoon: true,
+    // },
     {
       id: "3",
       title: "Connect with us",
@@ -48,9 +50,14 @@ export const EarnPage: React.FC = () => {
   };
 
   const handleCardClick = (card: EarnCard) => {
-    if (card.isComingSoon) {
-      // Open Telegram link
-      window.open("https://t.me/+F0YXOMaiJMxkODVk", "_blank", "noopener,noreferrer");
+    if (card.id === "1") {
+      navigate("/campaign");
+    } else if (card.isComingSoon) {
+      window.open(
+        "https://t.me/+F0YXOMaiJMxkODVk",
+        "_blank",
+        "noopener,noreferrer"
+      );
     }
   };
 
@@ -63,7 +70,7 @@ export const EarnPage: React.FC = () => {
           <div>
             <h1 className="text-lg font-medium text-white">Earn on Lisar</h1>
             <p className="text-xs text-gray-500">
-              Get paid creating content or inviting friends
+              Discover earning opportunities on Lisar
             </p>
           </div>
           <button
@@ -80,7 +87,9 @@ export const EarnPage: React.FC = () => {
             <div
               key={card.id}
               className={`bg-[#1a1a1a] rounded-xl overflow-hidden ${
-                card.isSocialCard ? "cursor-pointer hover:bg-[#2a2a2a] transition-colors" : ""
+                card.isSocialCard
+                  ? "cursor-pointer hover:bg-[#2a2a2a] transition-colors"
+                  : ""
               }`}
               onClick={() => card.isSocialCard && handleCardClick(card)}
             >
@@ -90,7 +99,7 @@ export const EarnPage: React.FC = () => {
                   <img
                     src={card.image}
                     alt={card.title}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover object-top"
                   />
                 </div>
               )}

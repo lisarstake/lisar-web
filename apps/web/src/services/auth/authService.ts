@@ -84,7 +84,7 @@ export class AuthService implements IAuthApiService {
                 return this.makeRequest<T>(endpoint, options, false);
               }
             } catch (error) {
-              console.error("Token refresh failed during API call:", error);
+              // Token refresh failed - will remove tokens and return error
             }
           }
           this.removeStoredTokens();

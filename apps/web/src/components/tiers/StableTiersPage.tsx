@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ChevronLeft, CircleQuestionMark } from "lucide-react";
+import { ChevronLeft, CircleQuestionMark, LockKeyhole } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
@@ -143,18 +143,26 @@ export const StableTiersPage: React.FC = () => {
             >
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1 relative z-10">
-                  <h3 className="text-white/90 text-base font-semibold mb-2">
+                  <h3 className={`text-base font-semibold mb-2 ${tier.isLocked ? "text-white/60" : "text-white/90"}`}>
                     {tier.title}
                   </h3>
-                  <p className="text-sm leading-relaxed text-white/60">
+                  <p className={`text-sm leading-relaxed ${tier.isLocked ? "text-white/40" : "text-white/60"}`}>
                     {tier.id === 1
-                      ? `Earn stable yields with flexible access to your savings. Up to ${
-                          apyLoading && mapleApy === null
-                            ? ".."
-                            : mapleApy
-                              ? `${(mapleApy * 100).toFixed(1)}%`
-                              : "6.5%"
-                        } per annum.`
+                      ? tier.isLocked
+                        ? `Earn stable yields with flexible access to your savings. Up to ${
+                            apyLoading && mapleApy === null
+                              ? ".."
+                              : mapleApy
+                                ? `${(mapleApy * 100).toFixed(1)}%`
+                                : "6.5%"
+                          } per annum.`
+                        : `Earn stable yields with flexible access to your savings. Up to ${
+                            apyLoading && mapleApy === null
+                              ? ".."
+                              : mapleApy
+                                ? `${(mapleApy * 100).toFixed(1)}%`
+                                : "6.5%"
+                          } per annum.`
                       : `Higher stable yields with flexible access to your savings. Up to ${
                           apyLoading && perenaApy === null
                             ? ".."
@@ -168,13 +176,14 @@ export const StableTiersPage: React.FC = () => {
 
               <button
                 onClick={() => handleExplore(tier.id, tier.title)}
-                disabled={stablesLoading}
+                disabled={stablesLoading || tier.isLocked}
                 className={`mt-4 px-5 py-2 ${tier.buttonBg} ${tier.buttonText} rounded-full text-sm font-semibold transition-colors relative z-10 flex items-center gap-2 ${
-                  stablesLoading ? "opacity-50 cursor-not-allowed" : ""
+                  stablesLoading || tier.isLocked ? "opacity-50 cursor-not-allowed" : ""
                 }`}
               >
+                {tier.isLocked && <LockKeyhole size={14} />}
                 <span>
-                  {stablesLoading ? "A moment.." : getButtonText(tier.id)}
+                  {stablesLoading ? "A moment.." : tier.isLocked ? "Locked" : getButtonText(tier.id)}
                 </span>
               </button>
 

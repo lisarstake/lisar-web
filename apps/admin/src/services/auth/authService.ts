@@ -71,7 +71,6 @@ export class AuthService {
               return this.makeRequest<T>(endpoint, options, false);
             }
           } catch (error) {
-            console.error("Token refresh failed:", error);
           }
         }
         this.removeStoredTokens();
@@ -174,7 +173,6 @@ export class AuthService {
       try {
         await this.revokeToken({ refreshToken });
       } catch (error) {
-        console.error("Failed to revoke token:", error);
       }
     }
 

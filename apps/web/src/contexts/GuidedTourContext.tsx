@@ -21,7 +21,6 @@ export const GuidedTourProvider: React.FC<GuidedTourProviderProps> = ({ children
   const startTour = (tourId: string) => {
     const tourConfig = getTourConfig(tourId);
     if (!tourConfig) {
-      console.error(`Tour config not found for ${tourId}`);
       return;
     }
 

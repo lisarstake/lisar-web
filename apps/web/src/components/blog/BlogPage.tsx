@@ -43,7 +43,7 @@ export const BlogPage: React.FC = () => {
           setCategories(categoriesResponse.data);
         }
       } catch (error) {
-        console.error("Error fetching blog data:", error);
+        // Failed to fetch blog data - will show empty state
       } finally {
         setIsLoading(false);
       }

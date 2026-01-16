@@ -13,7 +13,6 @@ import { usePrices } from "@/hooks/usePrices";
 import { ALL_WALLET_TOUR_ID } from "@/lib/tourConfig";
 import { priceService } from "@/lib/priceService";
 import { formatEarnings } from "@/lib/formatters";
-import { isProduction } from "@/lib/utils";
 import { Bell, CircleQuestionMark, Plus, Eye, EyeOff } from "lucide-react";
 
 export const AllWalletPage: React.FC = () => {
@@ -42,7 +41,8 @@ export const AllWalletPage: React.FC = () => {
     stablesLoading,
     highyieldLoading,
   } = useWallet();
-  const { delegatorStakeProfile, isLoading: delegationLoading } = useDelegation();
+  const { delegatorStakeProfile, isLoading: delegationLoading } =
+    useDelegation();
   const { unreadCount } = useNotification();
   const { prices } = usePrices();
 
@@ -67,7 +67,7 @@ export const AllWalletPage: React.FC = () => {
       : 0;
     return unstakedLpt + stakedLpt;
   }, [highyieldBalance, delegatorStakeProfile]);
-  
+
   const stakedBalance = useMemo(() => stablesBalance, [stablesBalance]);
 
   const ethereumFiatValue = useMemo(() => {
@@ -277,13 +277,13 @@ export const AllWalletPage: React.FC = () => {
             >
               <div
                 onClick={() => {
-                  // Only make clickable for savings and staking when not coming soon
-                  if (card.type !== "main" && !(card.type === "savings" && isProduction())) {
+                  // Make clickable for savings and staking cards
+                  if (card.type !== "main") {
                     handleDepositClick(card.type, index);
                   }
                 }}
                 className={`bg-linear-to-br ${card.gradient} rounded-2xl p-6 h-[170px] relative overflow-hidden border border-[#2a2a2a] ${
-                  card.type !== "main" && !(card.type === "savings" && isProduction())
+                  card.type !== "main"
                     ? "cursor-pointer hover:opacity-95 transition-opacity"
                     : ""
                 }`}
@@ -340,10 +340,10 @@ export const AllWalletPage: React.FC = () => {
 
                   {/* Balance Display */}
                   <div>
-                        {walletLoading ||
-                        delegationLoading ||
-                        stablesLoading ||
-                        highyieldLoading ? (
+                    {walletLoading ||
+                    delegationLoading ||
+                    stablesLoading ||
+                    highyieldLoading ? (
                       <>
                         <div className="flex items-baseline gap-2 mb-1">
                           <span className="text-2xl font-bold text-white">
@@ -411,14 +411,7 @@ export const AllWalletPage: React.FC = () => {
                         : "mt-8"
                   }`}
                 >
-                  {card.type === "savings" && isProduction() ? (
-                    <button
-                      disabled
-                      className="flex items-center gap-1 px-2.5 py-1.5 bg-[#2a2a2a] text-white/60 rounded-full text-[10px] font-semibold cursor-not-allowed"
-                    >
-                      coming soon
-                    </button>
-                  ) : card.type === "main" ? (
+                  {card.type === "main" ? (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -426,7 +419,6 @@ export const AllWalletPage: React.FC = () => {
                       }}
                       className="flex items-center gap-1 px-2.5 py-1.5 bg-[#C7EF6B] text-black rounded-full text-[10px] font-semibold hover:bg-[#B8E55A] transition-colors"
                     >
-                    
                       View wallets
                     </button>
                   ) : (
@@ -470,24 +462,29 @@ export const AllWalletPage: React.FC = () => {
         </div>
 
         {/* Predict Card */}
-        <div className="mt-6 bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-2xl p-4 border border-[#2a2a2a] relative overflow-hidden">
-          <div className="flex items-center gap-4">
+        <div
+          onClick={() => navigate("/earn")}
+          className="mt-6 bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-2xl p-4 border border-[#2a2a2a] relative overflow-hidden cursor-pointer hover:opacity-95 transition-opacity"
+        >
+          <div className="flex items-center gap-2">
             <div className="shrink-0">
               <img
-                src="/pred1.png"
+                src="/tt1.png"
                 alt="Predict"
                 className="w-16 h-16 object-contain rounded-lg"
               />
             </div>
             <div className="flex-1">
               <h3 className="text-white text-base font-semibold mb-1">
-                Predict and win
-                <span className="text-white/90 text-xs ml-2 bg-[#2a2a2a] rounded-full px-2 py-1">
-                  coming soon
-                </span>
+                Early Savers
+                {/* <span className="text-black text-xs ml-2 bg-[#C7EF6B] rounded-full px-2.5 py-1  mb-0.5
+                ">
+                 Active
+                </span> */}
               </h3>
               <p className="text-white/60 text-sm">
-                Trade on real-world events like sports and politics
+                Earn rewards building healthy savings habits! Click to get
+                started.
               </p>
             </div>
           </div>
@@ -520,21 +517,12 @@ export const AllWalletPage: React.FC = () => {
               </div>
             </div>
 
-            {isProduction() ? (
-              <button
-                disabled
-                className="mt-4 px-3 py-1.5 bg-[#7daff6] text-white/90 rounded-full text-sm font-semibold cursor-not-allowed relative z-10"
-              >
-                coming soon
-              </button>
-            ) : (
-              <button
-                onClick={() => navigate("/wallet/savings")}
-                className="mt-4 px-6 py-2.5 bg-[#438af6] text-white rounded-full text-xs font-semibold hover:bg-[#96C3F7] transition-colors relative z-10"
-              >
-                Get USD
-              </button>
-            )}
+            <button
+              onClick={() => navigate("/wallet/savings")}
+              className="mt-4 px-6 py-2.5 bg-[#438af6] text-white rounded-full text-xs font-semibold hover:bg-[#96C3F7] transition-colors relative z-10"
+            >
+              Get USD
+            </button>
 
             {/* Bottom Right Image */}
             <img

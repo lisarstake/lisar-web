@@ -91,7 +91,7 @@ export const LearnDetailPage: React.FC = () => {
         }, 1000);
       }
     } catch (error) {
-      console.error("Failed to update onboarding status:", error);
+      // Failed to update onboarding status - user can proceed anyway
     }
   };
 

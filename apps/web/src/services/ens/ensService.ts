@@ -132,7 +132,6 @@ export class EnsService implements IEnsApiService {
 
       return identityMap;
     } catch (error) {
-      console.error("Failed to batch fetch ENS identities:", error);
       // Return empty map on error
       return {};
     }

@@ -1,14 +1,24 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { ErrorDrawer } from "@/components/ui/ErrorDrawer";
 import { EmailConfirmationDrawer } from "@/components/ui/EmailConfirmationDrawer";
-import { EyeClosed, EyeIcon, LoaderCircle } from "lucide-react";
+import {
+  EyeClosed,
+  EyeIcon,
+  LoaderCircle,
+  CheckCircle2,
+  XCircle,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
+import { campaignService } from "@/services";
 
 interface SignupFormData {
   fullName: string;
   email: string;
   password: string;
+  referralCode: string;
 }
 
 export const SignupForm: React.FC = () => {
@@ -19,6 +29,7 @@ export const SignupForm: React.FC = () => {
     fullName: "",
     email: "",
     password: "",
+    referralCode: "",
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -30,6 +41,12 @@ export const SignupForm: React.FC = () => {
     details: "",
   });
   const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
+  const [showReferralCode, setShowReferralCode] = useState(false);
+  const [isValidatingReferral, setIsValidatingReferral] = useState(false);
+  const [referralValidation, setReferralValidation] = useState<{
+    isValid: boolean | null;
+    message: string;
+  }>({ isValid: null, message: "" });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -38,6 +55,52 @@ export const SignupForm: React.FC = () => {
       [name]: value,
     }));
   };
+
+  // Validate referral code with debouncing
+  const validateReferralCode = useCallback(async (code: string) => {
+    if (!code) {
+      setReferralValidation({ isValid: null, message: "" });
+      return;
+    }
+
+    setIsValidatingReferral(true);
+    try {
+      const response = await campaignService.validateReferralCode(code);
+      if (response.success && response.data) {
+        setReferralValidation({
+          isValid: response.data.valid,
+          message: response.data.valid
+            ? "Valid referral code"
+            : "Invalid referral code",
+        });
+      } else {
+        setReferralValidation({
+          isValid: false,
+          message: "Invalid referral code",
+        });
+      }
+    } catch (error) {
+      setReferralValidation({
+        isValid: false,
+        message: "Failed to validate code",
+      });
+    } finally {
+      setIsValidatingReferral(false);
+    }
+  }, []);
+
+  // Debounce referral code validation
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (formData.referralCode) {
+        validateReferralCode(formData.referralCode);
+      } else {
+        setReferralValidation({ isValid: null, message: "" });
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [formData.referralCode, validateReferralCode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,6 +118,21 @@ export const SignupForm: React.FC = () => {
       );
 
       if (walletResponse.success && walletResponse.data) {
+        // Apply referral code if provided and valid
+        if (formData.referralCode && referralValidation.isValid) {
+          try {
+            const applyResponse = await campaignService.applyReferralCode({
+              code: formData.referralCode,
+            });
+
+            if (!applyResponse.success) {
+              // Don't block signup if referral code application fails
+            }
+          } catch (error) {
+            // Don't block signup if referral code application fails
+          }
+        }
+
         // Show email confirmation drawer
         setShowEmailConfirmation(true);
       } else {
@@ -90,7 +168,11 @@ export const SignupForm: React.FC = () => {
   };
 
   const isFormValid =
-    formData.fullName && formData.email && formData.password.length >= 8;
+    formData.fullName &&
+    formData.email &&
+    formData.password.length >= 8 &&
+    // If referral code is provided, it must be valid
+    (!formData.referralCode || referralValidation.isValid === true);
 
   return (
     <div className="min-h-screen bg-black flex flex-col">
@@ -197,6 +279,67 @@ export const SignupForm: React.FC = () => {
                   />
                 </svg>
                 Must be at least 8 characters
+              </div>
+            )}
+          </div>
+
+          {/* Referral Code (Optional) - Collapsible */}
+          <div>
+            <button
+              type="button"
+              onClick={() => setShowReferralCode(!showReferralCode)}
+              className="w-full flex items-center justify-between  text-white"
+            >
+              <span className="text-white text-sm font-medium">
+                Referral code{" "}
+                <span className="text-gray-400">(Optional)</span>
+              </span>
+              {showReferralCode ? (
+                <ChevronUp className="w-5 h-5 text-gray-400" />
+              ) : (
+                <ChevronDown className="w-5 h-5 text-gray-400" />
+              )}
+            </button>
+
+            {showReferralCode && (
+              <div className="mt-3 space-y-2">
+                <div className="relative">
+                  <input
+                    type="text"
+                    id="referralCode"
+                    name="referralCode"
+                    value={formData.referralCode}
+                    onChange={handleInputChange}
+                    placeholder="Enter referral code"
+                    className="w-full px-4 py-3 bg-[#121212] border border-[#121212] rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-[#C7EF6B] transition-colors pr-12"
+                  />
+                  {formData.referralCode && (
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      {isValidatingReferral ? (
+                        <LoaderCircle className="w-5 h-5 text-gray-400 animate-spin" />
+                      ) : referralValidation.isValid === true ? (
+                        <CheckCircle2 className="w-5 h-5 text-[#C7EF6B]" />
+                      ) : referralValidation.isValid === false ? (
+                        <XCircle className="w-5 h-5 text-red-400" />
+                      ) : null}
+                    </div>
+                  )}
+                </div>
+
+                {/* Referral Code Validation */}
+                {formData.referralCode &&
+                  !isValidatingReferral &&
+                  referralValidation.message && (
+                    <div
+                      className={`flex items-center text-sm ${
+                        referralValidation.isValid
+                          ? "text-[#C7EF6B]"
+                          : "text-red-400"
+                      }`}
+                    >
+                      {referralValidation.message}
+                    </div>
+                  )}
               </div>
             )}
           </div>

@@ -91,8 +91,7 @@ export const HealthProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         dispatch({ type: "HEALTH_ADMIN_SUCCESS", payload: response.data });
       }
     } catch (err) {
-      // Admin health is optional, so we don't show errors for it
-      console.error("Failed to fetch admin health:", err);
+  
     }
   }, []);
 

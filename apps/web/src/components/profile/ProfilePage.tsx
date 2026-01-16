@@ -167,7 +167,7 @@ export const ProfilePage: React.FC = () => {
           setAddressCopied(false);
         }, 2000);
       } catch (err) {
-        console.error("Failed to copy address:", err);
+        // Copy failed - silent fail
       }
       document.body.removeChild(textArea);
     }

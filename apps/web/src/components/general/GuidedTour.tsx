@@ -227,10 +227,6 @@ export const GuidedTour: React.FC = () => {
       } else if (attemptCount < maxAttempts) {
         attemptCount++;
         setTimeout(tryCalculate, 100);
-      } else {
-        console.error(
-          `Could not find element: ${step.target} after ${maxAttempts} attempts`
-        );
       }
     };
 
@@ -396,7 +392,7 @@ export const GuidedTour: React.FC = () => {
           await refreshUser();
         }
       } catch (error) {
-        console.error("Failed to update onboarding status:", error);
+        // Failed to update onboarding status - user can proceed anyway
       }
       
       // Complete the tour and navigate to first video

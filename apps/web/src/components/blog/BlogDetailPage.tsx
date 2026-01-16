@@ -69,7 +69,6 @@ export const BlogDetailPage: React.FC = () => {
           setPost(null);
         }
       } catch (error) {
-        console.error("Error fetching blog post:", error);
         setPost(null);
       } finally {
         setIsLoading(false);
@@ -90,7 +89,7 @@ export const BlogDetailPage: React.FC = () => {
           url: url,
         });
       } catch (error) {
-        console.error("Error sharing:", error);
+        // Share failed - silent fail
       }
     } else {
       // Fallback: copy to clipboard

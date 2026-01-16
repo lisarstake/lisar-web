@@ -60,7 +60,7 @@ export const ConfirmDrawer: React.FC<ConfirmDrawerProps> = ({
           <DrawerTitle className="text-center text-xl font-semibold text-white">
             {title}
           </DrawerTitle>
-          <DrawerDescription className="text-center">
+          <DrawerDescription className="text-center text-sm">
             {message}
           </DrawerDescription>
         </DrawerHeader>
@@ -68,7 +68,7 @@ export const ConfirmDrawer: React.FC<ConfirmDrawerProps> = ({
         <DrawerFooter>
           <button
             onClick={handleConfirm}
-            className={`w-full py-4 rounded-xl font-semibold text-lg transition-colors ${
+            className={`w-full py-3 rounded-xl font-semibold text-lg transition-colors ${
               variant === "danger"
                 ? "bg-red-600 text-white hover:bg-red-500"
                 : "bg-yellow-600 text-white hover:bg-yellow-500"
@@ -78,7 +78,7 @@ export const ConfirmDrawer: React.FC<ConfirmDrawerProps> = ({
           </button>
           <button
             onClick={onClose}
-            className="w-full py-4 rounded-xl font-semibold text-lg bg-[#2a2a2a] text-white hover:bg-[#3a3a3a] transition-colors"
+            className="w-full py-3 rounded-xl font-semibold text-lg bg-[#2a2a2a] text-white hover:bg-[#3a3a3a] transition-colors"
           >
             {cancelText}
           </button>

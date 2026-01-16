@@ -66,3 +66,7 @@ export * from "./notifications";
 export * from "./perena";
 // Export maple services
 export * from "./maple";
+// Export KYC services
+export * from "./kyc";
+// Export campaign services
+export * from "./campaign";

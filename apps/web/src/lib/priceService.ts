@@ -70,7 +70,6 @@ class PriceService {
         return prices;
       })
       .catch((error) => {
-        console.error("Error fetching prices:", error);
         this.pendingFetch = null;
         
         if (!this.cache) {

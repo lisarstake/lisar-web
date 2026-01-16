@@ -109,7 +109,7 @@ export const ExportWalletDrawer: React.FC<ExportWalletDrawerProps> = ({
       setOtpCode(sanitized);
       setExportError("");
     } catch (err) {
-      console.error("Failed to paste:", err);
+      // Paste failed - silent fail
     }
   };
 

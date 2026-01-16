@@ -92,7 +92,7 @@ export const useVimeoPlayer = ({
           setIsPlaying(!paused);
         }).catch(() => {});
       } catch (error) {
-        console.error('Error initializing Vimeo Player:', error);
+        // Vimeo player initialization failed
       }
     };
 
