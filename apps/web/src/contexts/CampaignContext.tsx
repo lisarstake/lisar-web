@@ -3,6 +3,7 @@ import React, {
   useContext,
   useEffect,
   useState,
+  useCallback,
   ReactNode,
 } from "react";
 import { campaignService } from "@/services";
@@ -10,6 +11,7 @@ import type {
   CampaignStatusData,
   ReferralStatsData,
 } from "@/services/campaign/types";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface CampaignContextType {
   campaignStatus: CampaignStatusData | null;
@@ -38,18 +40,25 @@ interface CampaignProviderProps {
 export const CampaignProvider: React.FC<CampaignProviderProps> = ({
   children,
 }) => {
+  const { state } = useAuth();
   const [campaignStatus, setCampaignStatus] =
     useState<CampaignStatusData | null>(null);
   const [referralCode, setReferralCode] = useState<string | null>(null);
   const [referralStats, setReferralStats] = useState<ReferralStatsData | null>(
     null
   );
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [copySuccess, setCopySuccess] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const fetchCampaignData = async () => {
+  const fetchCampaignData = useCallback(async () => {
+    // Don't fetch if user is not authenticated
+    if (!state.user || state.isLoading) {
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
@@ -80,11 +89,11 @@ export const CampaignProvider: React.FC<CampaignProviderProps> = ({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [state.user, state.isLoading]);
 
-  const refetch = async () => {
+  const refetch = useCallback(async () => {
     await fetchCampaignData();
-  };
+  }, [fetchCampaignData]);
 
   const handleCopyReferralCode = async () => {
     if (!referralCode) return;
@@ -126,9 +135,18 @@ export const CampaignProvider: React.FC<CampaignProviderProps> = ({
     }
   };
 
+  // Only fetch campaign data when user is authenticated
   useEffect(() => {
-    fetchCampaignData();
-  }, []);
+    if (state.user && !state.isLoading) {
+      fetchCampaignData();
+    } else {
+      // Reset state when user logs out
+      setCampaignStatus(null);
+      setReferralCode(null);
+      setReferralStats(null);
+      setIsLoading(false);
+    }
+  }, [state.user, state.isLoading, fetchCampaignData]);
 
   const value: CampaignContextType = {
     campaignStatus,

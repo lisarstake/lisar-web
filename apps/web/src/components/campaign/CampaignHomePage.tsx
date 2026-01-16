@@ -333,7 +333,7 @@ export const CampaignHomePage: React.FC = () => {
                 onClick={() => setRequirementsExpanded(!requirementsExpanded)}
                 className="flex items-center justify-between w-full mb-0"
               >
-                <CardTitle className="text-white text-base">
+                <CardTitle className="text-white text-sm">
                   Requirements
                 </CardTitle>
                 <ChevronDown
@@ -384,7 +384,7 @@ export const CampaignHomePage: React.FC = () => {
                   {currentTier === 1 && (
                     <div className={`mt-3 p-2 ${tierInfo.color} rounded-md`}>
                       <p className="text-xs font-medium">
-                        Complete the activities above to earn the Welcome Bonus
+                        Complete the activities above to claim the Welcome Bonus
                       </p>
                     </div>
                   )}
@@ -392,7 +392,7 @@ export const CampaignHomePage: React.FC = () => {
                   {currentTier === 2 && (
                     <div className={`mt-3 p-2 ${tierInfo.color} rounded-md`}>
                       <p className="text-xs font-medium">
-                        Complete ANY 2 of the 3 activities above to earn the
+                        Complete ANY 2 of the 3 activities above to claim the
                         Growth Bonus
                       </p>
                     </div>
