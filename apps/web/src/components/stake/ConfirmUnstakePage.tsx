@@ -108,7 +108,6 @@ export const ConfirmUnstakePage: React.FC = () => {
         setShowErrorDrawer(true);
       }
     } catch (error) {
-      console.error("Unbonding error:", error);
       setErrorMessage("An unexpected error occurred. Please try again.");
       setShowErrorDrawer(true);
     } finally {

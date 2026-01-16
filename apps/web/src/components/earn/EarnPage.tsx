@@ -23,7 +23,7 @@ export const EarnPage: React.FC = () => {
       id: "1",
       title: "Early Savers 🎯⚡",
       description: "Earn rewards building healthy savings habits!  ",
-      image: "/earn1.jpeg",
+      image: "/1.png",
       buttonText: "Join Campaign",
       isComingSoon: false,
     },
@@ -95,7 +95,7 @@ export const EarnPage: React.FC = () => {
                   <img
                     src={card.image}
                     alt={card.title}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover object-top"
                   />
                 </div>
               )}

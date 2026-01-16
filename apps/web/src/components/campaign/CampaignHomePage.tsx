@@ -184,7 +184,6 @@ export const CampaignHomePage: React.FC = () => {
         setShowErrorDrawer(true);
       }
     } catch (error) {
-      console.error("Failed to save activities:", error);
       setShowActivityDrawer(false);
       setErrorMessage("Sorry, couldn't complete action. Please try again.");
       setShowErrorDrawer(true);
@@ -289,9 +288,9 @@ export const CampaignHomePage: React.FC = () => {
           {/* Campaign Image */}
           <div className="w-full h-48 relative rounded-lg overflow-hidden">
             <img
-              src="/earn1.jpeg"
+              src="/1.png"
               alt="Early Savers Campaign"
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover object-top"
             />
           </div>
 
@@ -489,7 +488,7 @@ export const CampaignHomePage: React.FC = () => {
               </h3>
               <p className="text-xs text-gray-300 mb-3">
                 Make your first deposit of ₦18,000 or more to begin your journey
-                to the Welcome Bonus.
+                to claiming the Welcome Bonus.
               </p>
               <button
                 onClick={() =>

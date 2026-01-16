@@ -285,7 +285,6 @@ export const DepositPage: React.FC = () => {
 
       onramp.show();
     } catch (error) {
-      console.error("Failed to initialize onramp widget:", error);
       setErrorMessage("Failed to initialize payment widget. Please try again.");
       setShowErrorDrawer(true);
     }

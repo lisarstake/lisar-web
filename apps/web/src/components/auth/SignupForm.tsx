@@ -126,14 +126,9 @@ export const SignupForm: React.FC = () => {
             });
 
             if (!applyResponse.success) {
-              console.error(
-                "Failed to apply referral code:",
-                applyResponse.error
-              );
               // Don't block signup if referral code application fails
             }
           } catch (error) {
-            console.error("Failed to apply referral code:", error);
             // Don't block signup if referral code application fails
           }
         }

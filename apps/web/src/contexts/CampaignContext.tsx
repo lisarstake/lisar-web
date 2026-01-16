@@ -76,7 +76,6 @@ export const CampaignProvider: React.FC<CampaignProviderProps> = ({
         setReferralStats(statsResponse.data);
       }
     } catch (err) {
-      console.error("Error fetching campaign data:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setIsLoading(false);
@@ -95,7 +94,7 @@ export const CampaignProvider: React.FC<CampaignProviderProps> = ({
       setCopySuccess(true);
       setTimeout(() => setCopySuccess(false), 2000);
     } catch (err) {
-      console.error("Failed to copy referral code:", err);
+      // Silent fail - copy functionality not critical
     }
   };
 
@@ -118,7 +117,6 @@ export const CampaignProvider: React.FC<CampaignProviderProps> = ({
         message: response.error || "Failed to generate referral code",
       };
     } catch (err) {
-      console.error("Failed to generate referral code:", err);
       return {
         success: false,
         message: err instanceof Error ? err.message : "An error occurred",

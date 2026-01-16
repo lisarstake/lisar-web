@@ -308,7 +308,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             }
           }
         } catch (error) {
-          console.error("Proactive token refresh failed:", error);
+          // Proactive token refresh failed - will retry on next interval
         }
       }
     };

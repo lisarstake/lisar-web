@@ -59,7 +59,7 @@ export const NotificationsPage: React.FC = () => {
     try {
       await markAsRead(id);
     } catch (error) {
-      console.error("Failed to mark notification as read:", error);
+      // Mark as read failed - silent fail
     }
   };
 
@@ -67,7 +67,7 @@ export const NotificationsPage: React.FC = () => {
     try {
       await markAllAsRead();
     } catch (error) {
-      console.error("Failed to mark all as read:", error);
+      // Mark all as read failed - silent fail
     }
   };
 
@@ -89,7 +89,7 @@ export const NotificationsPage: React.FC = () => {
           notificationTitle: "",
         });
       } catch (error) {
-        console.error("Failed to delete notification:", error);
+        // Delete failed - silent fail
       }
     }
   };

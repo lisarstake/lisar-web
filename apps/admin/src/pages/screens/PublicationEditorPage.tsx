@@ -201,7 +201,6 @@ export const PublicationEditorPage: React.FC = () => {
         return null;
       }
     } catch (error) {
-      console.error("Upload error:", error);
       alert("Failed to upload image. Please try again.");
       return null;
     } finally {
@@ -370,7 +369,6 @@ export const PublicationEditorPage: React.FC = () => {
         navigate("/publications");
       }, 1500);
     } catch (error) {
-      console.error("Failed to save publication:", error);
       const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
       
       setErrorDrawer({

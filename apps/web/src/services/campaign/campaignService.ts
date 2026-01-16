@@ -66,7 +66,7 @@ export class CampaignService implements ICampaignApiService {
               return this.makeRequest<T>(endpoint, options, false);
             }
           } catch (error) {
-            console.error("Token refresh failed during API call:", error);
+            // Token refresh failed - will remove tokens and return error
           }
         }
         this.removeStoredTokens();
@@ -155,7 +155,6 @@ export class CampaignService implements ICampaignApiService {
 
       return { success: false };
     } catch (error) {
-      console.error("Token refresh error:", error);
       return { success: false };
     }
   }

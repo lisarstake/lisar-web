@@ -66,7 +66,7 @@ export class KycService implements IKycApiService {
               return this.makeRequest<T>(endpoint, options, false);
             }
           } catch (error) {
-            console.error("Token refresh failed during KYC API call:", error);
+            // Token refresh failed - will remove tokens and return error
           }
         }
         this.removeStoredTokens();
@@ -152,7 +152,6 @@ export class KycService implements IKycApiService {
 
       return { success: false };
     } catch (error) {
-      console.error("Token refresh failed:", error);
       return { success: false };
     }
   }

@@ -310,7 +310,7 @@ export const WithdrawPage: React.FC = () => {
       const text = await navigator.clipboard.readText();
       setWithdrawalAddress(text.trim());
     } catch (err) {
-      console.error("Failed to paste:", err);
+      // Paste failed - silent fail
     }
   };
   const handlePasteAmount = async () => {
@@ -318,7 +318,7 @@ export const WithdrawPage: React.FC = () => {
       const text = await navigator.clipboard.readText();
       setLptAmount(text.trim());
     } catch (err) {
-      console.error("Failed to paste:", err);
+      // Paste failed - silent fail
     }
   };
 

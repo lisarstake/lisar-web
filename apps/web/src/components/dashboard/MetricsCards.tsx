@@ -41,7 +41,6 @@ export const MetricsCards: React.FC<MetricsCardsProps> = ({
         );
         setFiatValue(usdValue);
       } catch (error) {
-        console.error("Error calculating fiat value:", error);
         setFiatValue(null);
       }
     };

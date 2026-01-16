@@ -167,7 +167,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
           setWallet({ ...wallet, stablesBalance: totalStableBalance });
         }
       } catch (error) {
-        console.error("Failed to fetch stables balance:", error);
+        // Silent fail - balance will remain null
       } finally {
         setStablesLoading(false);
         stablesLoadingRef.current = false;
@@ -206,7 +206,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
           }
         }
       } catch (error) {
-        console.error("Failed to fetch High Yield balance:", error);
+        // Silent fail - balance will remain null
       } finally {
         setHighyieldLoading(false);
         highyieldLoadingRef.current = false;

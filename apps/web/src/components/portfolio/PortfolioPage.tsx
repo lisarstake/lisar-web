@@ -53,7 +53,7 @@ const StakeEntryItem: React.FC<StakeEntryItemProps> = ({ entry, onClick }) => {
         },
       },
       (error) => {
-        if (error) console.error("QR Code generation error:", error);
+        // QR code generation failed - will not display QR
       }
     );
   }, [entry.id, avatar, avatarError]);
