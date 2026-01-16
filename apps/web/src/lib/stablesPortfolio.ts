@@ -130,8 +130,7 @@ export async function calculatePerenaMetrics(
         totalRewards += Math.max(0, rewardForThisTx);
       }
     } catch (err) {
-      console.error("Failed to calculate Perena rewards for tx:", tx.id, err);
-      // Continue with other transactions
+      // Continue with other transactions if calculation fails
     }
   }
 

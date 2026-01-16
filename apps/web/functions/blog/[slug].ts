@@ -76,10 +76,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       }
     }
     
-    // Log for debugging (will show in Cloudflare Pages function logs)
-    console.log('Blog post:', slug);
-    console.log('Cover image from API:', post.cover_image);
-    console.log('Final cover image URL:', coverImageUrl);
+ 
 
     // Escape HTML entities
     const escapeHtml = (text: string): string => {
@@ -162,7 +159,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       },
     });
   } catch (error) {
-    console.error('Error generating OG page:', error);
+   
     return context.next();
   }
 };

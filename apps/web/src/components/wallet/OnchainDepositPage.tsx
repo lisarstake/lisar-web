@@ -61,7 +61,7 @@ export const OnchainDepositPage: React.FC = () => {
           },
         },
         (error) => {
-          if (error) console.error("QR Code generation error:", error);
+          // QR code generation failed - will not display QR
         }
       );
     }

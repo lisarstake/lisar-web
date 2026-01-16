@@ -25,8 +25,6 @@ export class ErrorBoundary extends Component<
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error("ErrorBoundary caught an error:", error, errorInfo);
-
     const isChunkError =
       error.message?.includes("Failed to fetch dynamically imported module") ||
       error.message?.includes("Importing a module script failed") ||
@@ -156,4 +154,3 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({ error, onReset }) => {
     </div>
   );
 };
-

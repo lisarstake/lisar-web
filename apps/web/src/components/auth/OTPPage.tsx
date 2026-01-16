@@ -59,7 +59,7 @@ export const OTPPage: React.FC<OTPPageProps> = ({
         }, 100);
       }
     } catch (err) {
-      console.error("Failed to paste:", err);
+      // Paste failed - silent fail
     }
   };
 

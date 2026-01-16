@@ -202,7 +202,7 @@ export const PortfolioProvider: React.FC<PortfolioProviderProps> = ({
                   mapleApy = apyResp.data.weeklyApy / 100;
                 }
               } catch (err) {
-                console.error("Failed to fetch Maple APY:", err);
+                // Use default APY if fetch fails
               }
 
               const mapleEntry = {
@@ -244,7 +244,7 @@ export const PortfolioProvider: React.FC<PortfolioProviderProps> = ({
                   perenaApy = apyResp.data.apy / 100;
                 }
               } catch (err) {
-                console.error("Failed to fetch Perena APY:", err);
+                // Use default APY if fetch fails
               }
 
               entries.push({
@@ -269,11 +269,10 @@ export const PortfolioProvider: React.FC<PortfolioProviderProps> = ({
             );
             setSavingsMetrics(metrics);
           } catch (err) {
-            console.error("Failed to calculate savings metrics:", err);
+            // Metrics calculation failed - continue without metrics
           }
         }
       } catch (err) {
-        console.error("Failed to fetch savings positions:", err);
         setError("Failed to fetch savings positions");
       } finally {
         setSavingsEntries(entries);

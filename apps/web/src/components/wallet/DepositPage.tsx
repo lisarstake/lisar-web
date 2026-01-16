@@ -206,12 +206,12 @@ export const DepositPage: React.FC = () => {
           walletAddress = ethereumWalletAddress;
         } else {
           if (!solanaWalletAddress) {
-            setErrorMessage(
+          setErrorMessage(
               "No solana wallet available. Please create a wallet first."
-            );
-            setShowErrorDrawer(true);
-            return;
-          }
+          );
+          setShowErrorDrawer(true);
+          return;
+        }
           walletAddress = solanaWalletAddress;
         }
       }
@@ -285,7 +285,6 @@ export const DepositPage: React.FC = () => {
 
       onramp.show();
     } catch (error) {
-      console.error("Failed to initialize onramp widget:", error);
       setErrorMessage("Failed to initialize payment widget. Please try again.");
       setShowErrorDrawer(true);
     }
@@ -354,7 +353,7 @@ export const DepositPage: React.FC = () => {
         {/* Predefined Fiat Amounts */}
         <div className="pb-4">
           <div className="flex space-x-3">
-            {["15000", "50000", "100000"].map((amount) => {
+            {["18000", "50000", "75000"].map((amount) => {
               const isActive =
                 fiatAmount === amount ||
                 parseFloat(fiatAmount || "0") === parseFloat(amount);

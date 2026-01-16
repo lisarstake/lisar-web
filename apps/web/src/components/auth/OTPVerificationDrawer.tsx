@@ -94,7 +94,7 @@ export const OTPVerificationDrawer: React.FC<OTPVerificationDrawerProps> = ({
         }, 100);
       }
     } catch (err) {
-      console.error("Failed to paste:", err);
+      // Paste failed - silent fail
     }
   };
 

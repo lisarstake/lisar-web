@@ -34,6 +34,7 @@ const LearnPage = lazyRetry(() => import('@/screens/learn-page'))
 const LearnDetailPage = lazyRetry(() => import('@/screens/learn-detail-page'))
 const ForecastPage = lazyRetry(() => import('@/screens/forecast-page'))
 const EarnPage = lazyRetry(() => import('@/screens/earn-page'))
+const CampaignPage = lazyRetry(() => import('@/screens/campaign-page'))
 const PortfolioPage = lazyRetry(() => import('@/screens/portfolio-page'))
 const PortfolioSummaryPage = lazyRetry(() => import('@/screens/portfolio-summary-page'))
 const PortfolioPositionsPage = lazyRetry(() => import('@/screens/portfolio-positions-page'))
@@ -264,6 +265,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             {withSuspenseAndErrorBoundary(<EarnPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'campaign',
+        element: (
+          <ProtectedRoute>
+            {withSuspenseAndErrorBoundary(<CampaignPage />)}
           </ProtectedRoute>
         ),
       },

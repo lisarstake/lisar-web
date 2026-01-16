@@ -23,7 +23,6 @@ const NewsSection = () => {
           setFeaturedPosts(Array.isArray(posts) ? posts : []);
         }
       } catch (error) {
-        console.error("Error fetching featured posts:", error);
         setFeaturedPosts([]);
       } finally {
         setIsLoading(false);

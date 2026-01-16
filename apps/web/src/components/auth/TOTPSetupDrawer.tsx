@@ -95,7 +95,7 @@ export const TOTPSetupDrawer: React.FC<TOTPSetupDrawerProps> = ({
         setTimeout(() => setCopied(false), 2000);
       }
     } catch (err) {
-      console.error("Failed to copy:", err);
+      // Copy failed - silent fail
     }
   };
 

@@ -83,7 +83,6 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
       
       toast.dismiss(toastId);
     } catch (error) {
-      console.error("Failed to skip onboarding:", error);
       toast.dismiss(toastId);
     }
   };

@@ -11,6 +11,7 @@ import {
   LogOut,
   Settings,
   FileText,
+  Trophy,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -39,6 +40,11 @@ const menuItems = [
     label: "Publications",
     path: "/publications",
     icon: FileText,
+  },
+  {
+    label: "Campaign",
+    path: "/campaigns",
+    icon: Trophy,
   },
   {
     label: "Health",

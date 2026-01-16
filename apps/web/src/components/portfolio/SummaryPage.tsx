@@ -112,8 +112,6 @@ export const SummaryPage: React.FC = () => {
   const handleWithdrawClick = () => {
     if (completedUnbondingData.validatorId) {
       navigate(`/validator-details/${completedUnbondingData.validatorId}`);
-    } else {
-      console.error("Cannot withdraw: validator ID is missing");
     }
   };
 

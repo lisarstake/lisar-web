@@ -68,7 +68,6 @@ export const OrchestratorProvider: React.FC<OrchestratorProviderProps> = ({
 
         setOrchestrators(fetchedOrchestrators);
       } else {
-        console.error("Invalid response data:", response.data);
         setError(response.message || "Failed to fetch orchestrators");
       }
 

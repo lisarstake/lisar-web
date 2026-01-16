@@ -79,7 +79,6 @@ export class BlogService implements IBlogApiService {
         error: 'Invalid response structure',
       };
     } catch (error: any) {
-      console.error('Error fetching blog posts:', error);
       return {
         success: false,
         data: {
@@ -110,7 +109,6 @@ export class BlogService implements IBlogApiService {
         data: response.data as any,
       };
     } catch (error: any) {
-      console.error('Error fetching blog post:', error);
       return {
         success: false,
         data: null,
@@ -137,7 +135,6 @@ export class BlogService implements IBlogApiService {
         data: response.data as any,
       };
     } catch (error: any) {
-      console.error('Error fetching blog categories:', error);
       return {
         success: false,
         data: [],
