@@ -35,7 +35,7 @@ const Hero = () => {
                 className="bg-[#C7EF6B] rounded-lg cursor-pointer text-[#060E0A] px-8 py-3 font-semibold transition-colors"
                 onClick={() => navigate("/login")}
               >
-                Create Account
+                Get Started
               </button>
             </div>
           </div>

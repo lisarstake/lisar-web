@@ -26,6 +26,7 @@ interface NotificationContextType {
   markAllAsRead: () => Promise<void>;
   markAsRead: (id: string) => Promise<void>;
   deleteNotification: (id: string) => Promise<void>;
+  clearAllNotifications: () => Promise<void>;
   refetch: () => Promise<void>;
 }
 
@@ -168,6 +169,25 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     [notifications]
   );
 
+  const clearAllNotifications = useCallback(async () => {
+    try {
+      // Delete all notifications one by one
+      const deletePromises = notifications.map((notif) =>
+        notificationService.deleteNotification({ id: notif.id })
+      );
+      
+      await Promise.all(deletePromises);
+      
+      // Clear local state
+      setNotifications([]);
+      setTotal(0);
+      setUnreadCount(0);
+    } catch (err: any) {
+      setError(err?.message || "Failed to clear all notifications");
+      throw err;
+    }
+  }, [notifications]);
+
   const refetch = useCallback(async () => {
     await Promise.all([fetchNotifications(), fetchUnreadCount()]);
   }, [fetchNotifications, fetchUnreadCount]);
@@ -196,6 +216,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
       markAllAsRead,
       markAsRead,
       deleteNotification,
+      clearAllNotifications,
       refetch,
     }),
     [
@@ -209,6 +230,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
       markAllAsRead,
       markAsRead,
       deleteNotification,
+      clearAllNotifications,
       refetch,
     ]
   );

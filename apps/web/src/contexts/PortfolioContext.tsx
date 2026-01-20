@@ -210,7 +210,7 @@ export const PortfolioProvider: React.FC<PortfolioProviderProps> = ({
                 name: "Maple",
                 yourStake: totalAvailable,
                 apy: mapleApy,
-                fee: 0.01,
+                fee: 0,
                 isSavings: true,
               };
               
@@ -252,7 +252,7 @@ export const PortfolioProvider: React.FC<PortfolioProviderProps> = ({
                 name: "Perena",
                 yourStake: perenaBalance,
                 apy: perenaApy,
-                fee: 0.01,
+                fee: 0,
                 isSavings: true,
               });
             }
