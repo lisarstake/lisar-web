@@ -31,6 +31,7 @@ export const NotificationsPage: React.FC = () => {
     notificationId: null,
     notificationTitle: "",
   });
+  const [clearAllConfirm, setClearAllConfirm] = useState(false);
 
   const {
     notifications,
@@ -39,6 +40,7 @@ export const NotificationsPage: React.FC = () => {
     markAsRead,
     markAllAsRead,
     deleteNotification,
+    clearAllNotifications,
     refetch: refetchNotifications,
   } = useNotification();
 
@@ -89,7 +91,7 @@ export const NotificationsPage: React.FC = () => {
           notificationTitle: "",
         });
       } catch (error) {
-        // Delete failed - silent fail
+       
       }
     }
   };
@@ -100,6 +102,19 @@ export const NotificationsPage: React.FC = () => {
 
   const handleHelpClick = () => {
     setShowHelpDrawer(true);
+  };
+
+  const handleClearAllClick = () => {
+    setClearAllConfirm(true);
+  };
+
+  const handleClearAllConfirm = async () => {
+    try {
+      await clearAllNotifications();
+      setClearAllConfirm(false);
+    } catch (error) {
+      
+    }
   };
 
   return (
@@ -118,13 +133,22 @@ export const NotificationsPage: React.FC = () => {
         </h1>
 
         <div className="flex items-center gap-3">
-          {viewMode === "notifications" && hasUnread && !isLoadingNotifications && (
-            <button
-              onClick={handleMarkAllAsRead}
-              className="text-xs text-[#C7EF6B] hover:text-[#B8E55A] transition-colors"
-            >
-              Mark all
-            </button>
+          {viewMode === "notifications" && !isLoadingNotifications && notifications.length > 0 && (
+            hasUnread ? (
+              <button
+                onClick={handleMarkAllAsRead}
+                className="text-sm text-[#C7EF6B] hover:text-[#B8E55A] transition-colors"
+              >
+                Read all
+              </button>
+            ) : (
+              <button
+                onClick={handleClearAllClick}
+                className="text-sm text-red-400 hover:text-red-300 transition-colors"
+              >
+                Clear all
+              </button>
+            )
           )}
           {viewMode === "history" && (
             <button
@@ -213,15 +237,7 @@ export const NotificationsPage: React.FC = () => {
                             {formatTimeAgo(notification.created_at)}
                           </span>
                           <div className="flex items-center space-x-3">
-                            {!notification.is_read && (
-                              <button
-                                onClick={() => handleMarkAsRead(notification.id)}
-                                className="text-xs text-[#C7EF6B] hover:text-[#96C3F7] transition-colors flex items-center space-x-1"
-                              >
-                                <CheckCheck size={12} />
-                                <span>Mark read</span>
-                              </button>
-                            )}
+                         
                             <button
                               onClick={() => handleDeleteClick(notification.id, notification.title)}
                               className="text-xs text-gray-500 hover:text-red-400 transition-colors flex items-center space-x-1"
@@ -320,6 +336,17 @@ export const NotificationsPage: React.FC = () => {
         title="Delete Notification"
         message={`Are you sure you want to delete? This action cannot be undone.`}
         confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+      />
+
+      <ConfirmDrawer
+        isOpen={clearAllConfirm}
+        onClose={() => setClearAllConfirm(false)}
+        onConfirm={handleClearAllConfirm}
+        title="Clear All Notifications"
+        message="Are you sure you want to delete all notifications? This action cannot be undone."
+        confirmText="Clear All"
         cancelText="Cancel"
         variant="danger"
       />
