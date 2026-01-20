@@ -55,7 +55,9 @@ const StakeEntryItem: React.FC<StakeEntryItemProps> = ({ entry, onClick }) => {
                 ? "USD Base"
                 : entry.name.toLowerCase().includes("perena")
                   ? "USD Plus"
-                  : entry.name}
+                  : entry.name.length > 20
+                    ? `${entry.name.substring(0, 16)}..`
+                    : entry.name}
             </p>
             <p className="text-gray-400 text-xs">
               {entry.isSavings

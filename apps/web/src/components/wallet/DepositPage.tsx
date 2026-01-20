@@ -337,7 +337,7 @@ export const DepositPage: React.FC = () => {
               className="w-full bg-transparent text-white text-lg font-medium focus:outline-none"
             />
           </div>
-          <p className="text-gray-400 text-xs mt-2 pl-2">
+          {/* <p className="text-gray-400 text-xs mt-2 pl-2">
             ≈{" "}
             {(isStables ? tokenEquivalent : lptEquivalent).toLocaleString(
               undefined,
@@ -347,7 +347,7 @@ export const DepositPage: React.FC = () => {
               }
             )}{" "}
             {tokenName}
-          </p>
+          </p> */}
         </div>
 
         {/* Predefined Fiat Amounts */}
@@ -470,7 +470,7 @@ export const DepositPage: React.FC = () => {
             parseFloat(fiatAmount) <= 0 ||
             isStaking
           }
-          className={`w-full py-4 rounded-lg font-semibold text-lg transition-colors ${
+          className={`w-full py-3 rounded-lg font-semibold text-lg transition-colors ${
             selectedPaymentMethod &&
             fiatAmount &&
             parseFloat(fiatAmount) > 0 &&
