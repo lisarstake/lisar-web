@@ -102,11 +102,14 @@ class PriceService {
       throw new Error("LPT price not found in API response");
     }
 
+    // Add markup to the NGN rate to match onramper (temporary this we fix our onramp)
+    const ngnRate = (fiatData.rates?.NGN || FALLBACK_PRICES.ngn) + 100;
+
     return {
       sol: cryptoData.solana?.usd || FALLBACK_PRICES.sol,
       lpt: cryptoData.livepeer.usd,
       usdc: 1,
-      ngn: fiatData.rates?.NGN || FALLBACK_PRICES.ngn,
+      ngn: ngnRate,
       eur: fiatData.rates?.EUR || FALLBACK_PRICES.eur,
       gbp: fiatData.rates?.GBP || FALLBACK_PRICES.gbp,
     };
