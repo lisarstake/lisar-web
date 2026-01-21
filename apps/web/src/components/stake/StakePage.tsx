@@ -307,13 +307,13 @@ export const StakePage: React.FC = () => {
               Max
             </button>
           </div>
-          <p className="text-gray-400 text-xs mt-2 pl-2">
+          {/* <p className="text-gray-400 text-xs mt-2 pl-2">
             ≈ {currencySymbol}
             {fiatEquivalent.toLocaleString(undefined, {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             })}
-          </p>
+          </p> */}
         </div>
 
         {/* Predefined LPT Amounts */}
@@ -368,7 +368,7 @@ export const StakePage: React.FC = () => {
         <button
           onClick={handleProceed}
           disabled={!lptAmount || parseFloat(lptAmount) <= 0 || isStaking}
-          className={`w-full py-4 rounded-lg font-semibold text-lg transition-colors ${
+          className={`w-full py-3 rounded-lg font-semibold text-lg transition-colors ${
             lptAmount && parseFloat(lptAmount) > 0 && !isStaking
               ? "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
               : "bg-[#636363] text-white cursor-not-allowed"

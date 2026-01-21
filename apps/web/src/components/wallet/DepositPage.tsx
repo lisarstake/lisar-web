@@ -461,7 +461,7 @@ export const DepositPage: React.FC = () => {
       </div>
 
       {/* Proceed Button - Fixed at bottom */}
-      <div className="px-6 py-4 bg-[#050505] pb-36">
+      <div className="px-6 py-3 bg-[#050505] pb-36">
         <button
           onClick={handleProceed}
           disabled={
