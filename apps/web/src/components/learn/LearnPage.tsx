@@ -21,7 +21,7 @@ export const LearnPage: React.FC = () => {
   const shouldAutoStart = state.user?.is_onboarded === false;
   useGuidedTour({
     tourId: LEARN_TOUR_ID,
-    autoStart: shouldAutoStart,
+    autoStart: false,
   });
 
   const learnContent = mockLearnContent;

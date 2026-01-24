@@ -13,7 +13,8 @@ import { usePrices } from "@/hooks/usePrices";
 import { ALL_WALLET_TOUR_ID } from "@/lib/tourConfig";
 import { priceService } from "@/lib/priceService";
 import { formatEarnings } from "@/lib/formatters";
-import { Bell, CircleQuestionMark, Plus, Eye, EyeOff } from "lucide-react";
+import { Bell, CircleQuestionMark, Plus, Eye, EyeOff, X } from "lucide-react";
+import { notificationService, SystemNotification } from "@/services/notifications";
 
 export const AllWalletPage: React.FC = () => {
   const navigate = useNavigate();
@@ -28,9 +29,52 @@ export const AllWalletPage: React.FC = () => {
     return saved ? JSON.parse(saved) : false;
   });
 
+  // System notifications state
+  const [systemNotifications, setSystemNotifications] = useState<SystemNotification[]>([]);
+  const [dismissedNotificationIds, setDismissedNotificationIds] = useState<Set<string>>(() => {
+    const saved = localStorage.getItem("dismissed_system_notifications");
+    return saved ? new Set(JSON.parse(saved)) : new Set();
+  });
+
   useEffect(() => {
     localStorage.setItem("wallet_show_balance", JSON.stringify(showBalance));
   }, [showBalance]);
+
+  // Persist dismissed notifications
+  useEffect(() => {
+    localStorage.setItem(
+      "dismissed_system_notifications",
+      JSON.stringify([...dismissedNotificationIds])
+    );
+  }, [dismissedNotificationIds]);
+
+  // Fetch system notifications
+  useEffect(() => {
+    const fetchSystemNotifications = async () => {
+      try {
+        const response = await notificationService.getSystemNotifications({ limit: 10 });
+        if (response.success && response.data) {
+          setSystemNotifications(response.data);
+        }
+      } catch (error) {
+       
+      }
+    };
+
+    fetchSystemNotifications();
+  }, []);
+
+  // Filter out dismissed notifications
+  const activeSystemNotifications = useMemo(() => {
+    return systemNotifications.filter(
+      (notification) => !dismissedNotificationIds.has(notification.id)
+    );
+  }, [systemNotifications, dismissedNotificationIds]);
+
+  const handleDismissNotification = (notificationId: string) => {
+    setDismissedNotificationIds((prev) => new Set([...prev, notificationId]));
+  };
+
   const { orchestrators } = useOrchestrators();
   const { state } = useAuth();
   const {
@@ -53,7 +97,7 @@ export const AllWalletPage: React.FC = () => {
 
   const {} = useGuidedTour({
     tourId: ALL_WALLET_TOUR_ID,
-    autoStart: shouldAutoStart,
+    autoStart: false,
   });
 
   const highyieldBalance = contextHighyieldBalance || 0;
@@ -461,34 +505,108 @@ export const AllWalletPage: React.FC = () => {
           ))}
         </div>
 
-        {/* Predict Card */}
-        <div
-          onClick={() => navigate("/earn")}
-          className="mt-6 bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-2xl p-4 border border-[#2a2a2a] relative overflow-hidden cursor-pointer hover:opacity-95 transition-opacity"
-        >
-          <div className="flex items-center gap-2">
-            <div className="shrink-0">
-              <img
-                src="/tt1.png"
-                alt="Predict"
-                className="w-16 h-16 object-contain rounded-lg"
+        {/* System Notification Card - Stacked effect */}
+        {activeSystemNotifications.length > 0 ? (
+          <div className="mt-6 relative">
+            {/* Background cards for stacked effect */}
+            {activeSystemNotifications.length > 2 && (
+              <div
+                className="absolute inset-0 bg-[#151515] rounded-2xl border border-[#2a2a2a]"
+                style={{ transform: "translateY(8px) scale(0.96)", opacity: 0.4 }}
               />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-white text-base font-semibold mb-1">
-                Early Savers
-                {/* <span className="text-black text-xs ml-2 bg-[#C7EF6B] rounded-full px-2.5 py-1  mb-0.5
-                ">
-                 Active
-                </span> */}
-              </h3>
-              <p className="text-white/60 text-sm">
-                Earn rewards building healthy savings habits! Click to get
-                started.
-              </p>
+            )}
+            {activeSystemNotifications.length > 1 && (
+              <div
+                className="absolute inset-0 bg-[#121212] rounded-2xl border border-[#2a2a2a]"
+                style={{ transform: "translateY(4px) scale(0.98)", opacity: 0.6 }}
+              />
+            )}
+
+            {/* Top card - the active notification */}
+            {(() => {
+              const notification = activeSystemNotifications[0];
+              return (
+                <div
+                  key={notification.id}
+                  className={`relative bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-2xl p-4 border overflow-hidden ${
+                    notification.metadata?.severity === "warning"
+                      ? "border-yellow-500/30"
+                      : notification.metadata?.severity === "error" || notification.metadata?.severity === "critical"
+                        ? "border-red-500/30"
+                        : "border-[#86B3F7]/30"
+                  }`}
+                >
+                  {/* Close Button */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDismissNotification(notification.id);
+                    }}
+                    className="absolute top-3 right-3 w-6 h-6 bg-[#2a2a2a] rounded-full flex items-center justify-center hover:bg-[#3a3a3a] transition-colors z-10"
+                  >
+                    <X size={14} color="#9a9a9a" />
+                  </button>
+
+                  <div className="flex items-start gap-3 pr-6">
+                    <div
+                      className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
+                        notification.metadata?.severity === "warning"
+                          ? "bg-yellow-500/20"
+                          : notification.metadata?.severity === "error" || notification.metadata?.severity === "critical"
+                            ? "bg-red-500/20"
+                            : "bg-[#86B3F7]/20"
+                      }`}
+                    >
+                      <Bell
+                        size={18}
+                        color={
+                          notification.metadata?.severity === "warning"
+                            ? "#eab308"
+                            : notification.metadata?.severity === "error" || notification.metadata?.severity === "critical"
+                              ? "#ef4444"
+                              : "#86B3F7"
+                        }
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-white text-sm font-semibold mb-1">
+                        {notification.title}
+                      </h3>
+                      <p className="text-white/60 text-xs leading-relaxed">
+                        {notification.message}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+        ) : (
+          /* Early Savers Campaign Card - Show when no system notifications */
+          <div
+            onClick={() => navigate("/earn")}
+            className="mt-6 bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-2xl p-4 border border-[#2a2a2a] relative overflow-hidden cursor-pointer hover:opacity-95 transition-opacity"
+          >
+            <div className="flex items-center gap-2">
+              <div className="shrink-0">
+                <img
+                  src="/tt1.png"
+                  alt="Predict"
+                  className="w-16 h-16 object-contain rounded-lg"
+                />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-white text-base font-semibold mb-1">
+                  Early Savers
+                </h3>
+                <p className="text-white/60 text-sm">
+                  Earn rewards building healthy savings habits! Click to get
+                  started.
+                </p>
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Savings Plans Section */}

@@ -10,13 +10,18 @@ import {
   UnreadCountResponse,
   ReadAllResponse,
   GetNotificationsRequest,
+  GetSystemNotificationsRequest,
   MarkNotificationReadRequest,
   DeleteNotificationRequest,
+  SystemNotification,
 } from './types';
 
 export interface INotificationApiService {
   // Get all notifications for authenticated user
   getNotifications(request?: GetNotificationsRequest): Promise<NotificationApiResponse<PaginatedNotificationsResponse>>;
+  
+  // Get active system notifications
+  getSystemNotifications(request?: GetSystemNotificationsRequest): Promise<NotificationApiResponse<SystemNotification[]>>;
   
   // Get unread notification count
   getUnreadCount(): Promise<NotificationApiResponse<UnreadCountResponse>>;
