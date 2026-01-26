@@ -50,7 +50,7 @@ interface AuthContextType {
     rememberMe?: boolean
   ) => Promise<AuthApiResponse<any>>;
   signinWithGoogle: () => Promise<void>;
-  handleGoogleCallback: () => Promise<AuthApiResponse<any>>;
+  handleGoogleCallback: (rememberMe?: boolean) => Promise<AuthApiResponse<any>>;
   logout: () => Promise<void>;
   forgotPassword: (email: string) => Promise<AuthApiResponse<any>>;
   resetPassword: (
@@ -544,7 +544,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const handleGoogleCallback = async (): Promise<AuthApiResponse<any>> => {
+  const handleGoogleCallback = async (rememberMe: boolean = true): Promise<AuthApiResponse<any>> => {
     try {
       dispatch({ type: "AUTH_START" });
 
@@ -552,6 +552,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       if (response.success && response.data) {
         const data = response.data as any;
+
+        // Choose storage based on rememberMe
+        const storage = rememberMe ? localStorage : sessionStorage;
+
+        // Store tokens based on rememberMe
+        const { session } = data;
+        if (session?.access_token && session?.refresh_token) {
+          storage.setItem("auth_token", session.access_token);
+          storage.setItem("refresh_token", session.refresh_token);
+
+          // Store expiration if rememberMe is true
+          if (rememberMe && session.expires_at) {
+            storage.setItem(
+              "auth_expiry",
+              session.expires_at.toString()
+            );
+          }
+        }
 
         const avatarUrl =
           data.user.user_metadata?.avatar_url ||

@@ -10,8 +10,10 @@ import {
   UnreadCountResponse,
   ReadAllResponse,
   GetNotificationsRequest,
+  GetSystemNotificationsRequest,
   MarkNotificationReadRequest,
   DeleteNotificationRequest,
+  SystemNotification,
   NOTIFICATION_CONFIG,
 } from "./types";
 import { http } from "@/lib/http";
@@ -33,9 +35,9 @@ export class NotificationService implements INotificationApiService {
     // Check if token has expired (if rememberMe was used)
     const expiry = localStorage.getItem("auth_expiry");
     if (token && expiry) {
-      const expiryTime = parseInt(expiry) * 1000; // Convert to milliseconds
+      const expiryTime = parseInt(expiry) * 1000; 
       if (Date.now() > expiryTime) {
-        // Token expired, clear it
+    
         this.removeStoredTokens();
         return null;
       }
@@ -100,6 +102,19 @@ export class NotificationService implements INotificationApiService {
     const { limit = 50, offset = 0 } = request;
     const endpoint = `/notifications?limit=${limit}&offset=${offset}`;
     return this.makeRequest<PaginatedNotificationsResponse>(endpoint, {
+      method: "GET",
+    });
+  }
+
+  /**
+   * Get active system notifications
+   */
+  async getSystemNotifications(
+    request: GetSystemNotificationsRequest = {}
+  ): Promise<NotificationApiResponse<SystemNotification[]>> {
+    const { limit = 10 } = request;
+    const endpoint = `/notifications/system?limit=${limit}`;
+    return this.makeRequest<SystemNotification[]>(endpoint, {
       method: "GET",
     });
   }

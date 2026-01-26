@@ -44,10 +44,25 @@ export interface ReadAllResponse {
   updated_count: number;
 }
 
+// System Notification Types
+export interface SystemNotification {
+  id: string;
+  title: string;
+  message: string;
+  type: string;
+  metadata?: Record<string, any>;
+  expires_at?: string;
+  created_at?: string;
+}
+
 // Request Types
 export interface GetNotificationsRequest {
   limit?: number;
   offset?: number;
+}
+
+export interface GetSystemNotificationsRequest {
+  limit?: number;
 }
 
 export interface MarkNotificationReadRequest {

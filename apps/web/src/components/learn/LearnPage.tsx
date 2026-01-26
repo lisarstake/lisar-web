@@ -19,7 +19,7 @@ export const LearnPage: React.FC = () => {
 
   // Start tour automatically only for non-onboarded users
   const shouldAutoStart = state.user?.is_onboarded === false;
-  useGuidedTour({
+  const { isCompleted: isTourCompleted, startTour } = useGuidedTour({
     tourId: LEARN_TOUR_ID,
     autoStart: shouldAutoStart,
   });
