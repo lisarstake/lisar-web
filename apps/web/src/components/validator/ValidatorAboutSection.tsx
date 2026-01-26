@@ -81,6 +81,7 @@ export const ValidatorAboutSection: React.FC<ValidatorAboutSectionProps> = ({
         {/* Validator Details */}
         <h4 className="text-white/90 font-medium text-base mb-4 ml-1">
           About validator
+          <span className="text-gray-300 text-sm ml-0.5"> {                      validator?.address?.toLowerCase() === "0x882bac0da055d1826ee637c410c8d4c99be8b485".toLowerCase() ? "(On preview)" : ""}</span>
         </h4>
         <div className="bg-[#1a1a1a] rounded-xl p-4 border border-[#2a2a2a]">
           <div className="space-y-4">
@@ -139,7 +140,13 @@ export const ValidatorAboutSection: React.FC<ValidatorAboutSectionProps> = ({
                   className={`w-7 h-7 ${validator?.active ? "bg-white/10" : "bg-white/10"} rounded-lg flex items-center justify-center`}
                 >
                   <div
-                    className={`w-2 h-2 rounded-full ${validator?.active ? "bg-green-400" : "bg-red-400"} `}
+                    className={`w-2 h-2 rounded-full ${
+                      validator?.address?.toLowerCase() === "0x882bac0da055d1826ee637c410c8d4c99be8b485".toLowerCase()
+                        ? "bg-yellow-400"
+                        : validator?.active
+                        ? "bg-green-400"
+                        : "bg-red-400"
+                    } `}
                   ></div>
                 </div>
                 <div className="flex flex-col">
@@ -149,7 +156,11 @@ export const ValidatorAboutSection: React.FC<ValidatorAboutSectionProps> = ({
                 </div>
               </div>
               <span className={`font-medium text-sm`}>
-                {validator?.active ? "Active" : "Inactive"}
+                {validator?.address?.toLowerCase() === "0x882bac0da055d1826ee637c410c8d4c99be8b485".toLowerCase()
+                  ? "Preview"
+                  : validator?.active
+                  ? "Active"
+                  : "Inactive"}
               </span>
             </div>
           </div>

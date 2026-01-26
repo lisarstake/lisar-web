@@ -47,14 +47,7 @@ export const ValidatorPage: React.FC = () => {
   };
 
   const sortedOrchestrators = useMemo(() => {
-  
-    const blacklistedAddress = "0x882bac0da055d1826ee637c410c8d4c99be8b485";
-    
-    const filtered = orchestrators.filter(
-      (orch) => orch.address?.toLowerCase() !== blacklistedAddress.toLowerCase()
-    );
-
-    const sorted = [...filtered].sort((a, b) => {
+    const sorted = [...orchestrators].sort((a, b) => {
       switch (activeFilter) {
         case "apy":
           return parseFloat(b.apy) - parseFloat(a.apy);
