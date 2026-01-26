@@ -102,7 +102,7 @@ class PriceService {
       throw new Error("LPT price not found in API response");
     }
 
-    // Add markup to the NGN rate to match onramper (temporary this we fix our onramp)
+    // Add markup to the NGN rate to match onramper (temporary till we fix our onramp)
     const ngnRate = (fiatData.rates?.NGN || FALLBACK_PRICES.ngn) + 100;
 
     return {

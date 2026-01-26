@@ -229,19 +229,8 @@ export class AuthService implements IAuthApiService {
         );
 
         if (apiResponse.success && apiResponse.data) {
-          // Store tokens from API response
-          const { session } = apiResponse.data;
-          if (session?.access_token && session?.refresh_token) {
-            localStorage.setItem("auth_token", session.access_token);
-            localStorage.setItem("refresh_token", session.refresh_token);
-
-            if (session.expires_at) {
-              localStorage.setItem(
-                "auth_expiry",
-                session.expires_at.toString()
-              );
-            }
-          }
+          // Remove token storage - let the context handle it based on rememberMe
+          // The context will store tokens in the appropriate storage (localStorage or sessionStorage)
 
           // Clear the hash from URL
           window.history.replaceState(null, "", window.location.pathname);
