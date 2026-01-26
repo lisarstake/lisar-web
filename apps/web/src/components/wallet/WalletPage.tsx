@@ -56,7 +56,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
 
   const { isCompleted: isTourCompleted, startTour } = useGuidedTour({
     tourId: WALLET_PAGE_TOUR_ID,
-    autoStart: false,
+    autoStart: shouldAutoStart,
   });
 
   const rawBalance = useMemo(() => {

@@ -97,7 +97,7 @@ export const AllWalletPage: React.FC = () => {
 
   const {} = useGuidedTour({
     tourId: ALL_WALLET_TOUR_ID,
-    autoStart: false,
+    autoStart: shouldAutoStart,
   });
 
   const highyieldBalance = contextHighyieldBalance || 0;

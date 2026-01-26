@@ -307,13 +307,13 @@ export const StakePage: React.FC = () => {
               Max
             </button>
           </div>
-          {/* <p className="text-gray-400 text-xs mt-2 pl-2">
+          <p className="text-gray-400 text-xs mt-2 pl-2">
             ≈ {currencySymbol}
             {fiatEquivalent.toLocaleString(undefined, {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             })}
-          </p> */}
+          </p>
         </div>
 
         {/* Predefined LPT Amounts */}
