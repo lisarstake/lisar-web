@@ -528,7 +528,7 @@ export const AllWalletPage: React.FC = () => {
               return (
                 <div
                   key={notification.id}
-                  className={`relative bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-2xl p-4 border overflow-hidden ${
+                  className={`relative bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-2xl p-4 overflow-hidden ${
                     notification.metadata?.severity === "warning"
                       ? "border-yellow-500/30"
                       : notification.metadata?.severity === "error" || notification.metadata?.severity === "critical"

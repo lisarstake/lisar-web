@@ -405,7 +405,7 @@ export const PositionsPage: React.FC = () => {
                   </span>
                 </div>
                 <p className="text-xs text-white/50 mt-2">
-                  Withdrawals are processed instantly in minutes, if any delay please contact support.
+                  Withdrawals are processed instantly within minutes
                 </p>
               </div>
             </div>
