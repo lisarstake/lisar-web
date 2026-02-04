@@ -1,8 +1,11 @@
-import React, { useState, useMemo, useEffect, useRef } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { LisarLines } from "@/components/general/lisar-lines";
+import { AddCashDrawer } from "@/components/general/AddCashDrawer";
+import { PortfolioSelectionDrawer } from "@/components/general/PortfolioSelectionDrawer";
+import { WalletPage } from "@/components/wallet/WalletPage";
 import { useOrchestrators } from "@/contexts/OrchestratorContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWallet } from "@/contexts/WalletContext";
@@ -12,18 +15,21 @@ import { useGuidedTour } from "@/hooks/useGuidedTour";
 import { usePrices } from "@/hooks/usePrices";
 import { ALL_WALLET_TOUR_ID } from "@/lib/tourConfig";
 import { priceService } from "@/lib/priceService";
-import { formatEarnings } from "@/lib/formatters";
-import { Bell, CircleQuestionMark, Plus, Eye, EyeOff, X } from "lucide-react";
+import { Bell, CircleQuestionMark, Plus, Eye, EyeOff, X, ChevronRight } from "lucide-react";
 import { notificationService, SystemNotification } from "@/services/notifications";
+
+const ADD_CASH_AMOUNTS = [20000, 50000, 100000, 250000, 500000];
 
 export const AllWalletPage: React.FC = () => {
   const navigate = useNavigate();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [showBalanceDrawer, setShowBalanceDrawer] = useState(false);
-  const [selectedCardType, setSelectedCardType] = useState<string | null>(null);
-  const [currentCardIndex, setCurrentCardIndex] = useState(0);
-  const scrollRef = useRef<HTMLDivElement>(null);
-
+  const [showAddCashDrawer, setShowAddCashDrawer] = useState(false);
+  const [showPortfolioDrawer, setShowPortfolioDrawer] = useState(false);
+  const [selectedAddAmount, setSelectedAddAmount] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState<"home" | "save" | "grow">("home");
+  const [displayCurrency, setDisplayCurrency] = useState<"USD" | "NGN">("NGN");
   const [showBalance, setShowBalance] = useState(() => {
     const saved = localStorage.getItem("wallet_show_balance");
     return saved ? JSON.parse(saved) : false;
@@ -57,7 +63,7 @@ export const AllWalletPage: React.FC = () => {
           setSystemNotifications(response.data);
         }
       } catch (error) {
-       
+
       }
     };
 
@@ -89,69 +95,18 @@ export const AllWalletPage: React.FC = () => {
     useDelegation();
   const { unreadCount } = useNotification();
   const { prices } = usePrices();
-
   // Start tour for non-onboarded users
   const shouldAutoStart = useMemo(() => {
     return state.user?.is_onboarded === false && !state.isLoading;
   }, [state.user?.is_onboarded, state.isLoading]);
 
-  const {} = useGuidedTour({
+  const { } = useGuidedTour({
     tourId: ALL_WALLET_TOUR_ID,
     autoStart: shouldAutoStart,
   });
 
   const highyieldBalance = contextHighyieldBalance || 0;
   const stablesBalance = contextStablesBalance || 0;
-
-  // For staking: include both unstaked and staked LPT
-  const walletBalance = useMemo(() => {
-    const unstakedLpt = highyieldBalance;
-    const stakedLpt = delegatorStakeProfile
-      ? parseFloat(delegatorStakeProfile.currentStake || "0")
-      : 0;
-    return unstakedLpt + stakedLpt;
-  }, [highyieldBalance, delegatorStakeProfile]);
-
-  const stakedBalance = useMemo(() => stablesBalance, [stablesBalance]);
-
-  const ethereumFiatValue = useMemo(() => {
-    const fiatCurrency = (state.user?.fiat_type || "USD").toUpperCase();
-    const lptPriceInUsd = prices.lpt || 0;
-    // Include both unstaked and staked LPT
-    const unstakedLpt = highyieldBalance;
-    const stakedLpt = delegatorStakeProfile
-      ? parseFloat(delegatorStakeProfile.currentStake || "0")
-      : 0;
-    const totalLpt = unstakedLpt + stakedLpt;
-    const usdValue = totalLpt * lptPriceInUsd;
-
-    switch (fiatCurrency) {
-      case "NGN":
-        return usdValue * prices.ngn;
-      case "EUR":
-        return usdValue * prices.eur;
-      case "GBP":
-        return usdValue * prices.gbp;
-      default:
-        return usdValue;
-    }
-  }, [highyieldBalance, prices, state.user?.fiat_type, delegatorStakeProfile]);
-
-  const solanaFiatValue = useMemo(() => {
-    const fiatCurrency = (state.user?.fiat_type || "USD").toUpperCase();
-    const stableBalance = stablesBalance; // already in USD-equivalent units
-
-    switch (fiatCurrency) {
-      case "NGN":
-        return stableBalance * prices.ngn;
-      case "EUR":
-        return stableBalance * prices.eur;
-      case "GBP":
-        return stableBalance * prices.gbp;
-      default:
-        return stableBalance;
-    }
-  }, [stablesBalance, prices, state.user?.fiat_type]);
 
   // Total USD = EVM LPT in USD (unstaked + staked) + all USD stables
   const totalUsdBalance = useMemo(() => {
@@ -167,18 +122,54 @@ export const AllWalletPage: React.FC = () => {
     return lptUsdValue + stablesUsdValue;
   }, [highyieldBalance, stablesBalance, prices, delegatorStakeProfile]);
 
-  // Total NGN equivalent (used under the USD value on the main card)
-  const totalNairaBalance = useMemo(() => {
-    const nairaRate = prices.ngn || 0;
-    return totalUsdBalance * nairaRate;
-  }, [totalUsdBalance, prices]);
+  const fiatCurrency = (state.user?.fiat_type || "USD").toUpperCase();
+  const fiatSymbol = useMemo(
+    () => priceService.getCurrencySymbol(fiatCurrency),
+    [fiatCurrency]
+  );
 
-  const fiatSymbol = useMemo(() => {
-    const fiatCurrency = wallet?.fiatCurrency || state.user?.fiat_type || "USD";
-    return priceService.getCurrencySymbol(fiatCurrency);
-  }, [wallet?.fiatCurrency, state.user?.fiat_type]);
+  const totalBalanceInPreferredCurrency = useMemo(() => {
+    switch (fiatCurrency) {
+      case "NGN":
+        return totalUsdBalance * (prices.ngn || 0);
+      case "EUR":
+        return totalUsdBalance * (prices.eur || 0);
+      case "GBP":
+        return totalUsdBalance * (prices.gbp || 0);
+      case "USD":
+      default:
+        return totalUsdBalance;
+    }
+  }, [totalUsdBalance, prices, fiatCurrency]);
 
-  const nairaSymbol = useMemo(() => priceService.getCurrencySymbol("NGN"), []);
+  const handleAddCashAmountClick = (amount: number) => {
+    setSelectedAddAmount(amount);
+    setShowAddCashDrawer(true);
+  };
+
+  const handleAddCashDestination = (destination: "savings" | "growth") => {
+    const amount = selectedAddAmount;
+    setShowAddCashDrawer(false);
+    setSelectedAddAmount(null);
+    if (destination === "savings") {
+      navigate("/deposit", {
+        state: {
+          walletType: "savings",
+          provider: "perena",
+          tierNumber: 2,
+          tierTitle: "USD Plus",
+          presetFiatAmount: amount ?? undefined,
+        },
+      });
+    } else {
+      navigate("/deposit", {
+        state: {
+          walletType: "staking",
+          presetFiatAmount: amount ?? undefined,
+        },
+      });
+    }
+  };
 
   const handleNotificationClick = () => {
     navigate("/notifications");
@@ -188,17 +179,9 @@ export const AllWalletPage: React.FC = () => {
     navigate("/profile");
   };
 
-  const handleDepositClick = (walletType?: string, cardIndex?: number) => {
+  const handleDepositClick = (walletType?: string) => {
     if (walletType === "main") {
-      if (scrollRef.current && cardIndex !== undefined) {
-        const cardWidth = scrollRef.current.offsetWidth;
-        const nextIndex = Math.min(cardIndex + 1, 2);
-        scrollRef.current.scrollTo({
-          left: cardWidth * nextIndex,
-          behavior: "smooth",
-        });
-        setCurrentCardIndex(nextIndex);
-      }
+      navigate("/deposit", { state: { walletType: undefined } });
       return;
     }
     if (walletType) {
@@ -208,94 +191,64 @@ export const AllWalletPage: React.FC = () => {
     }
   };
 
-  const handleScroll = () => {
-    if (scrollRef.current) {
-      const scrollLeft = scrollRef.current.scrollLeft;
-      const cardWidth = scrollRef.current.offsetWidth;
-      const newIndex = Math.round(scrollLeft / cardWidth);
-      setCurrentCardIndex(newIndex);
-    }
-  };
+  const displayBalance = useMemo(() => {
+    return displayCurrency === "NGN"
+      ? totalUsdBalance * (prices.ngn || 0)
+      : totalUsdBalance;
+  }, [displayCurrency, totalUsdBalance, prices.ngn]);
 
-  const stakingFiatValue = useMemo(() => solanaFiatValue, [solanaFiatValue]);
-  const savingsFiatValue = useMemo(
-    () => ethereumFiatValue,
-    [ethereumFiatValue]
-  );
+  const displayCurrencySymbol = displayCurrency === "NGN" ? "₦" : "$";
 
   const walletCards = useMemo(
     () => [
       {
         id: "main",
         title: "Total Balance",
-        balance: totalUsdBalance, // show total USD value
-        fiatValue: totalNairaBalance, // NGN equivalent
+        balance: displayBalance,
+        currencySymbol: displayCurrencySymbol,
         type: "main",
         gradient: "from-[#0f0f0f] to-[#151515]",
       },
-      {
-        id: "savings",
-        title: "Stables ",
-        balance: stakedBalance,
-        fiatValue: stakingFiatValue,
-        type: "savings",
-        gradient: "from-[#151515] to-[#0f0f0f]",
-      },
-      {
-        id: "staking",
-        title: "High Yield",
-        balance: walletBalance,
-        fiatValue: savingsFiatValue,
-        type: "staking",
-        gradient: "from-[#0f0f0f] to-[#151515]",
-      },
     ],
-    [
-      totalUsdBalance,
-      totalNairaBalance,
-      stakedBalance,
-      stakingFiatValue,
-      walletBalance,
-      savingsFiatValue,
-    ]
+    [displayBalance, displayCurrencySymbol]
   );
 
   return (
     <div className="min-h-screen bg-[#050505] text-white flex flex-col">
-      {/* Header */}
-      <div className="flex items-center justify-between px-6 py-8">
-        <div className="flex items-center space-x-2.5">
-          <button
-            onClick={handleProfileClick}
-            className="w-10 h-10 bg-[#86B3F7] rounded-full flex items-center justify-center hover:bg-[#96C3F7] transition-colors cursor-pointer"
-          >
-            {state.user?.img ? (
-              <img
-                src={state.user.img}
-                alt="Profile"
-                className="w-10 h-10 rounded-full object-cover"
-              />
-            ) : (
-              <span className="text-black font-bold text-sm">
-                {state.user?.full_name?.charAt(0) ||
-                  state.user?.email?.charAt(0) ||
-                  "U"}
+      {/* Fixed Header */}
+      <div className="bg-[#050505] shrink-0">
+        <div className="flex items-center justify-between px-6 py-6">
+          <div className="flex items-center space-x-2.5">
+            <button
+              onClick={handleProfileClick}
+              className="w-10 h-10 bg-[#86B3F7] rounded-full flex items-center justify-center hover:bg-[#96C3F7] transition-colors cursor-pointer"
+            >
+              {state.user?.img ? (
+                <img
+                  src={state.user.img}
+                  alt="Profile"
+                  className="w-10 h-10 rounded-full object-cover"
+                />
+              ) : (
+                <span className="text-black font-bold text-sm">
+                  {state.user?.full_name?.charAt(0) ||
+                    state.user?.email?.charAt(0) ||
+                    "U"}
+                </span>
+              )}
+            </button>
+            <div className="flex flex-col gap-0.5">
+              <span className="text-gray-100 text-xs">Welcome 👋</span>
+              <span className="text-gray-100 text-sm font-medium">
+                {state.user?.full_name?.split(" ")[0] || "User"}!
               </span>
-            )}
-          </button>
-          <div className="flex flex-col gap-0.5">
-            <span className="text-gray-100 text-xs">Welcome 👋</span>
-            <span className="text-gray-100 text-sm font-medium">
-              {state.user?.full_name?.split(" ")[0] || "User"}!
-            </span>
+            </div>
           </div>
-        </div>
-        <div className="flex items-center space-x-2">
           <button
             onClick={handleNotificationClick}
-            className="relative w-10 h-10 bg-[#2a2a2a] rounded-full flex items-center justify-center hover:bg-[#3a3a3a] transition-colors cursor-pointer"
+            className="relative w-10 h-10 rounded-full flex items-center justify-center bg-[#2a2a2a] hover:bg-[#3a3a3a] transition-colors cursor-pointer"
           >
-            <Bell size={16} color="#86B3F7" />
+            <Bell size={20} color="#86B3F7" />
             {unreadCount > 0 && (
               <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-semibold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
                 {unreadCount > 99 ? "99+" : unreadCount}
@@ -303,385 +256,349 @@ export const AllWalletPage: React.FC = () => {
             )}
           </button>
         </div>
+
+        {/* Home, Save, Grow Tabs */}
+        {/* <div className="flex gap-3 px-7 pb-1">
+          <button
+            onClick={() => setActiveTab("home")}
+            className={`py-2 text-lg transition-colors ${activeTab === "home" ? "text-white" : "text-white/50 hover:text-white/70"
+              }`}
+          >
+            Home
+          </button>
+          <button
+            onClick={() => setActiveTab("save")}
+            className={`py-2 text-lg transition-colors ${activeTab === "save" ? "text-white" : "text-white/50 hover:text-white/70"
+              }`}
+          >
+            Save
+          </button>
+          <button
+            onClick={() => setActiveTab("grow")}
+            className={`py-2 text-lg transition-colors ${activeTab === "grow" ? "text-white" : "text-white/50 hover:text-white/70"
+              }`}
+          >
+            Grow
+          </button>
+        </div> */}
       </div>
 
-      {/* Wallet Cards Carousel */}
-      <div className="px-6 pb-6">
-        <div
-          ref={scrollRef}
-          onScroll={handleScroll}
-          className="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-4"
-          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-        >
-          {walletCards.map((card, index) => (
-            <div
-              key={card.id}
-              className="min-w-[calc(100%-1.1rem)] snap-center"
-              style={{ scrollSnapAlign: "center" }}
-            >
-              <div
-                onClick={() => {
-                  // Make clickable for savings and staking cards
-                  if (card.type !== "main") {
-                    handleDepositClick(card.type, index);
-                  }
-                }}
-                className={`bg-linear-to-br ${card.gradient} rounded-2xl p-6 h-[170px] relative overflow-hidden border border-[#2a2a2a] ${
-                  card.type !== "main"
-                    ? "cursor-pointer hover:opacity-95 transition-opacity"
-                    : ""
-                }`}
-                data-tour={
-                  card.id === "main" ? "all-wallet-balance-card" : undefined
-                }
-              >
-                {/* Lisar Lines Decoration */}
-                <LisarLines
-                  position="top-right"
-                  className="opacity-100"
-                  width="185px"
-                  height="185px"
-                />
-
-                {/* Decorative elements */}
-                <div className="absolute top-0 right-0 w-32 h-32 bg-[#C7EF6B]/5 rounded-full blur-3xl"></div>
-                <div className="absolute bottom-0 left-0 w-24 h-24 bg-[#86B3F7]/5 rounded-full blur-2xl"></div>
-
-                {/* Help Icon - Top Right */}
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    setSelectedCardType(card.type);
-                    setShowBalanceDrawer(true);
-                  }}
-                  data-tour="all-wallet-help-icon"
-                  className="absolute top-6 right-6 z-20 w-6 h-6 bg-[#2a2a2a] rounded-full flex items-center justify-center hover:bg-[#3a3a3a] transition-colors cursor-pointer"
-                  style={{ pointerEvents: "auto" }}
-                >
-                  <CircleQuestionMark size={14} color="#6a6a6a" />
-                </button>
-
-                {/* Wallet Title */}
-                <div className="relative z-10">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-white/70 text-sm mb-2">{card.title}</h3>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setShowBalance(!showBalance);
+      {/* Scrollable Content */}
+      <div className="flex-1 overflow-y-auto">
+        {activeTab === "home" ? (
+          <>
+            {/* Total Balance Card */}
+            <div className="px-6 pb-6">
+              <div>
+                {walletCards.map((card) => (
+                  <div key={card.id}>
+                    <div
+                      onClick={() => {
+                        if (card.type !== "main") {
+                          handleDepositClick(card.type);
+                        }
                       }}
-                      className="shrink-0 cursor-pointer hover:opacity-70 transition-opacity mb-2"
+                      className={`bg-linear-to-br ${card.gradient} rounded-2xl py-5 min-h-[100px] relative overflow-hidden border border-[#2a2a2a] ${card.type !== "main"
+                        ? "cursor-pointer hover:opacity-95 transition-opacity"
+                        : ""
+                        }`}
+                      data-tour={
+                        card.id === "main" ? "all-wallet-balance-card" : undefined
+                      }
                     >
-                      {showBalance ? (
-                        <Eye size={16} color="rgba(255, 255, 255, 0.6)" />
-                      ) : (
-                        <EyeOff size={16} color="rgba(255, 255, 255, 0.6)" />
-                      )}
-                    </button>
-                  </div>
+                      {/* Lisar Lines Decoration */}
+                      <LisarLines
+                        position="top-right"
+                        className="opacity-100"
+                        width="185px"
+                        height="185px"
+                      />
 
-                  {/* Balance Display */}
-                  <div>
-                    {walletLoading ||
-                    delegationLoading ||
-                    stablesLoading ||
-                    highyieldLoading ? (
-                      <>
-                        <div className="flex items-baseline gap-2 mb-1">
-                          <span className="text-2xl font-bold text-white">
-                            ••••
-                          </span>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="flex items-baseline gap-2 mb-1">
-                          <span
+                      {/* Decorative elements */}
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-[#C7EF6B]/5 rounded-full blur-3xl"></div>
+                      <div className="absolute bottom-0 left-0 w-24 h-24 bg-[#86B3F7]/5 rounded-full blur-2xl"></div>
+
+                      {/* Wallet Title */}
+                      <div className="relative z-10 flex flex-col items-center text-center">
+                        <div className="flex items-center justify-center gap-1 mb-2">
+                          <h3 className="text-white/70 text-sm">{card.title}</h3>
+                          <button
                             onClick={(e) => {
                               e.stopPropagation();
                               setShowBalance(!showBalance);
                             }}
-                            className="text-2xl font-bold text-white cursor-pointer"
+                            className="shrink-0 cursor-pointer hover:opacity-70 transition-opacity"
                           >
-                            {showBalance
-                              ? formatEarnings(card.balance)
-                              : "••••"}
-                          </span>
-                          {showBalance && (
-                            <span className="text-sm text-white/70 ml-[-5px]">
-                              {card.type === "main"
-                                ? "USD"
-                                : card.type === "savings"
-                                  ? "USDC"
-                                  : "LPT"}
-                            </span>
+                            {showBalance ? (
+                              <Eye size={16} color="rgba(255, 255, 255, 0.6)" />
+                            ) : (
+                              <EyeOff size={16} color="rgba(255, 255, 255, 0.6)" />
+                            )}
+                          </button>
+                        </div>
+
+                        {/* Balance Display */}
+                        <div>
+                          {walletLoading ||
+                            delegationLoading ||
+                            stablesLoading ||
+                            highyieldLoading ? (
+                            <div className="flex items-baseline justify-center gap-2 mb-1">
+                              <span className="text-2xl font-bold text-white">
+                                ••••
+                              </span>
+                            </div>
+                          ) : (
+                            <div className="flex items-baseline justify-center gap-2 mb-1">
+                              <span
+                                className="text-xl font-bold text-white/90 cursor-pointer"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setDisplayCurrency((c) => (c === "USD" ? "NGN" : "USD"));
+                                }}
+                              >
+                                {showBalance
+                                  ? `${card.currencySymbol}${card.balance.toLocaleString(undefined, {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2,
+                                  })}`
+                                  : "••••"}
+                              </span>
+                            </div>
                           )}
                         </div>
-                        {showBalance && (
-                          <p className="text-white/50 text-sm">
-                            {card.id === "main" ? (
-                              <>
-                                {nairaSymbol}
-                                {card.fiatValue.toLocaleString(undefined, {
-                                  minimumFractionDigits: 2,
-                                  maximumFractionDigits: 2,
-                                })}
-                              </>
-                            ) : (
-                              <>
-                                ≈{fiatSymbol}
-                                {card.fiatValue.toLocaleString(undefined, {
-                                  minimumFractionDigits: 2,
-                                  maximumFractionDigits: 2,
-                                })}
-                              </>
-                            )}
-                          </p>
-                        )}
-                      </>
-                    )}
+
+                        {/* View Portfolio */}
+                        <div className="flex items-center justify-center mt-2">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setShowPortfolioDrawer(true);
+                            }}
+                            className="flex items-center text-white/70 hover:text-white/90 transition-colors text-xs bg-white/10 rounded-full px-2.5 py-1.5"
+                          >
+                            View Portfolio
+                            <span>
+                              <ChevronRight size={14} color="#C7EF6B" />
+                            </span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
-
-                {/* Quick Action Buttons */}
-                <div
-                  className={`flex items-center justify-end ${
-                    walletLoading || delegationLoading
-                      ? "mt-8"
-                      : showBalance
-                        ? "mt-2"
-                        : "mt-8"
-                  }`}
-                >
-                  {card.type === "main" ? (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDepositClick(card.type, index);
-                      }}
-                      className="flex items-center gap-1 px-2.5 py-1.5 bg-[#C7EF6B] text-black rounded-full text-[10px] font-semibold hover:bg-[#B8E55A] transition-colors"
-                    >
-                      View wallets
-                    </button>
-                  ) : (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDepositClick(card.type, index);
-                      }}
-                      className="flex items-center gap-1 px-2.5 py-1.5 bg-[#C7EF6B] text-black rounded-full text-[10px] font-semibold hover:bg-[#B8E55A] transition-colors"
-                    >
-                      View balance
-                    </button>
-                  )}
-                </div>
+                ))}
               </div>
-            </div>
-          ))}
-        </div>
 
-        {/* Carousel Indicators */}
-        <div className="flex justify-center gap-2 mt-4">
-          {walletCards.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => {
-                if (scrollRef.current) {
-                  const cardWidth = scrollRef.current.offsetWidth;
-                  scrollRef.current.scrollTo({
-                    left: cardWidth * index,
-                    behavior: "smooth",
-                  });
-                }
-              }}
-              className={`h-1 rounded-full transition-all ${
-                currentCardIndex === index
-                  ? "w-6 bg-[#C7EF6B]"
-                  : "w-3 bg-white/20"
-              }`}
-            ></button>
-          ))}
-        </div>
+              {/* Divider */}
+              <div className="flex items-center justify-center my-4">
+                <div className="h-1 w-8 bg-white/20 rounded-full" />
+              </div>
 
-        {/* System Notification Card - Stacked effect */}
-        {activeSystemNotifications.length > 0 ? (
-          <div className="mt-6 relative">
-            {/* Background cards for stacked effect */}
-            {activeSystemNotifications.length > 2 && (
-              <div
-                className="absolute inset-0 bg-[#151515] rounded-2xl border border-[#2a2a2a]"
-                style={{ transform: "translateY(8px) scale(0.96)", opacity: 0.4 }}
-              />
-            )}
-            {activeSystemNotifications.length > 1 && (
-              <div
-                className="absolute inset-0 bg-[#121212] rounded-2xl border border-[#2a2a2a]"
-                style={{ transform: "translateY(4px) scale(0.98)", opacity: 0.6 }}
-              />
-            )}
+              {/* System Notification Card */}
+              {activeSystemNotifications.length > 0 ? (
+                <div className="relative">
 
-            {/* Top card - the active notification */}
-            {(() => {
-              const notification = activeSystemNotifications[0];
-              return (
-                <div
-                  key={notification.id}
-                  className={`relative bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-2xl p-4 overflow-hidden ${
-                    notification.metadata?.severity === "warning"
-                      ? "border-yellow-500/30"
-                      : notification.metadata?.severity === "error" || notification.metadata?.severity === "critical"
-                        ? "border-red-500/30"
-                        : "border-[#86B3F7]/30"
-                  }`}
-                >
-                  {/* Close Button */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDismissNotification(notification.id);
-                    }}
-                    className="absolute top-3 right-3 w-6 h-6 bg-[#2a2a2a] rounded-full flex items-center justify-center hover:bg-[#3a3a3a] transition-colors z-10"
-                  >
-                    <X size={14} color="#9a9a9a" />
-                  </button>
-
-                  <div className="flex items-start gap-3 pr-6">
+                  {activeSystemNotifications.length > 2 && (
                     <div
-                      className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
-                        notification.metadata?.severity === "warning"
-                          ? "bg-yellow-500/20"
+                      className="absolute inset-0 bg-[#151515] rounded-2xl border border-[#2a2a2a]"
+                      style={{ transform: "translateY(8px) scale(0.96)", opacity: 0.4 }}
+                    />
+                  )}
+                  {activeSystemNotifications.length > 1 && (
+                    <div
+                      className="absolute inset-0 bg-[#121212] rounded-2xl border border-[#2a2a2a]"
+                      style={{ transform: "translateY(4px) scale(0.98)", opacity: 0.6 }}
+                    />
+                  )}
+
+                  {/* Top card - the active notification */}
+                  {(() => {
+                    const notification = activeSystemNotifications[0];
+                    return (
+                      <div
+                        key={notification.id}
+                        className={`relative bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-2xl p-3 overflow-hidden ${notification.metadata?.severity === "warning"
+                          ? "border-yellow-500/30"
                           : notification.metadata?.severity === "error" || notification.metadata?.severity === "critical"
-                            ? "bg-red-500/20"
-                            : "bg-[#86B3F7]/20"
-                      }`}
-                    >
-                      <Bell
-                        size={18}
-                        color={
-                          notification.metadata?.severity === "warning"
-                            ? "#eab308"
-                            : notification.metadata?.severity === "error" || notification.metadata?.severity === "critical"
-                              ? "#ef4444"
-                              : "#86B3F7"
-                        }
+                            ? "border-red-500/30"
+                            : "border-[#86B3F7]/30"
+                          }`}
+                      >
+                        {/* Close Button */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDismissNotification(notification.id);
+                          }}
+                          className="absolute top-3 right-3 w-6 h-6 bg-[#2a2a2a] rounded-full flex items-center justify-center hover:bg-[#3a3a3a] transition-colors z-10"
+                        >
+                          <X size={14} color="#9a9a9a" />
+                        </button>
+
+                        <div className="flex items-start gap-3 pr-6">
+                          <div
+                            className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${notification.metadata?.severity === "warning"
+                              ? "bg-yellow-500/20"
+                              : notification.metadata?.severity === "error" || notification.metadata?.severity === "critical"
+                                ? "bg-red-500/20"
+                                : "bg-[#86B3F7]/20"
+                              }`}
+                          >
+                            <Bell
+                              size={20}
+                              color={
+                                notification.metadata?.severity === "warning"
+                                  ? "#eab308"
+                                  : notification.metadata?.severity === "error" || notification.metadata?.severity === "critical"
+                                    ? "#ef4444"
+                                    : "#86B3F7"
+                              }
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-white text-sm font-medium">
+                              {notification.title}
+                            </h3>
+                            <p className="text-white/60 text-xs leading-relaxed">
+                              {notification.message}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              ) : (
+                /* Early Savers Campaign Card */
+                <div
+                  onClick={() => navigate("/earn")}
+                  className="mt-2 bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-2xl p-3 border border-[#2a2a2a] relative overflow-hidden cursor-pointer hover:opacity-95 transition-opacity"
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="shrink-0">
+                      <img
+                        src="/tt1.png"
+                        alt="Predict"
+                        className="w-14 h-14 object-contain rounded-lg"
                       />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-white text-sm font-semibold mb-1">
-                        {notification.title}
+                    <div className="flex-1">
+                      <h3 className="text-white text-base font-medium">
+                        Early Savers
                       </h3>
-                      <p className="text-white/60 text-xs leading-relaxed">
-                        {notification.message}
+                      <p className="text-white/60 text-sm">
+                        Earn rewards building healthy savings habits! Click to get
+                        started.
                       </p>
                     </div>
                   </div>
                 </div>
-              );
-            })()}
-          </div>
+              )}
+
+              {/* Add Cash Section */}
+              <div className="mt-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-white/70 text-sm font-medium">
+                    Add cash
+                  </h2>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {ADD_CASH_AMOUNTS.map((amount) => (
+                    <button
+                      key={amount}
+                      onClick={() => handleAddCashAmountClick(amount)}
+                      className="py-2.5 px-3 rounded-lg bg-linear-to-br from-[#0f0f0f] to-[#151515] text-white/80 text-sm font-medium transition-colors"
+                    >
+                      {fiatSymbol}{(amount / 1000).toFixed(0)}K
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => handleAddCashAmountClick(0)}
+                    className="py-2.5 px-3 rounded-lg bg-linear-to-br from-[#0f0f0f] to-[#151515] flex items-center justify-center transition-colors"
+                  >
+                    <Plus size={16} className="text-white/60" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Savings Plans Section */}
+            <div className="px-6 pb-20">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-white/70 text-sm font-medium">
+                  Earn on Lisar
+                </h2>
+              </div>
+
+              <div className="space-y-4">
+                {/* Stables Card */}
+                <div
+                  className="bg-[#6da7fd] rounded-2xl p-5 border-2 border-[#86B3F7]/30 hover:border-[#86B3F7]/50 transition-colors relative overflow-hidden"
+                  data-tour="all-wallet-stables-card"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 relative z-10">
+                      <h3 className="text-white text-base font-semibold mb-1">
+                        Savings
+                      </h3>
+                      <p className="text-white/90 text-sm">
+                        Earn steady returns on stablecoin savings. Ideal for emergency funds and short-term goals.
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => navigate("/wallet/savings")}
+                    className="mt-4 px-6 py-2.5 bg-[#438af6] text-white rounded-full text-xs font-semibold hover:bg-[#96C3F7] transition-colors relative z-10"
+                  >
+                    Start Saving
+                  </button>
+
+                  {/* Bottom Right Image */}
+                  <img
+                    src="/highyield-3.svg"
+                    alt="Stables"
+                    className="absolute bottom-[-20px] right-[-20px]  w-30 h-28 object-contain opacity-80"
+                  />
+                </div>
+
+                {/* High Yield Card */}
+                <div
+                  className="bg-transparent rounded-2xl p-5 border-2 border-[#C7EF6B]/30 hover:border-[#C7EF6B]/50 transition-colors relative overflow-hidden"
+                  data-tour="all-wallet-high-yield-card"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 relative z-10">
+                      <h3 className="text-white text-base font-semibold mb-1">
+                        Growth
+                      </h3>
+                      <p className="text-white/60 text-sm">
+                        Earn higher returns by staking. Better for long-term investment goals.
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => navigate("/wallet/staking")}
+                    className="mt-4 px-6 py-2.5 bg-[#a3d039] text-black rounded-full text-xs font-semibold hover:bg-[#B8E55A] transition-colors relative z-10"
+                  >
+                    Start Earning
+                  </button>
+
+                  {/* Bottom Right Image */}
+                  <img
+                    src="/highyield-1.svg"
+                    alt="High Yield"
+                    className="absolute bottom-[-5px] right-[-5px] w-21 h-21 object-contain opacity-80"
+                  />
+                </div>
+
+              </div>
+            </div>
+          </>
         ) : (
-          /* Early Savers Campaign Card - Show when no system notifications */
-          <div
-            onClick={() => navigate("/earn")}
-            className="mt-6 bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-2xl p-4 border border-[#2a2a2a] relative overflow-hidden cursor-pointer hover:opacity-95 transition-opacity"
-          >
-            <div className="flex items-center gap-2">
-              <div className="shrink-0">
-                <img
-                  src="/tt1.png"
-                  alt="Predict"
-                  className="w-16 h-16 object-contain rounded-lg"
-                />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-white text-base font-semibold mb-1">
-                  Early Savers
-                </h3>
-                <p className="text-white/60 text-sm">
-                  Earn rewards building healthy savings habits! Click to get
-                  started.
-                </p>
-              </div>
-            </div>
-          </div>
+          <WalletPage walletType={activeTab === "save" ? "savings" : "staking"} embedded />
         )}
-      </div>
-
-      {/* Savings Plans Section */}
-      <div className="px-6 pb-20">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-white/70 text-sm font-medium">
-            Available Accounts
-          </h2>
-        </div>
-
-        <div className="space-y-4">
-          {/* Stables Card */}
-          <div
-            className="bg-[#6da7fd] rounded-2xl p-5 border-2 border-[#86B3F7]/30 hover:border-[#86B3F7]/50 transition-colors relative overflow-hidden"
-            data-tour="all-wallet-stables-card"
-          >
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex-1 relative z-10">
-                <h3 className="text-white text-base font-semibold mb-2">
-                  Stables
-                </h3>
-                <p className="text-white/90 text-sm leading-relaxed">
-                  Earn stable yields with low risk. Perfect for your emergency
-                  funds and short-term savings.
-                </p>
-              </div>
-            </div>
-
-            <button
-              onClick={() => navigate("/wallet/savings")}
-              className="mt-4 px-6 py-2.5 bg-[#438af6] text-white rounded-full text-xs font-semibold hover:bg-[#96C3F7] transition-colors relative z-10"
-            >
-              Get USD
-            </button>
-
-            {/* Bottom Right Image */}
-            <img
-              src="/highyield-3.svg"
-              alt="Stables"
-              className="absolute bottom-[-20px] right-[-20px]  w-30 h-28 object-contain opacity-80"
-            />
-          </div>
-
-          {/* High Yield Card */}
-          <div
-            className="bg-transparent rounded-2xl p-5 border-2 border-[#C7EF6B]/30 hover:border-[#C7EF6B]/50 transition-colors relative overflow-hidden"
-            data-tour="all-wallet-high-yield-card"
-          >
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex-1 relative z-10">
-                <h3 className="text-white text-base font-semibold mb-2">
-                  High Yield
-                </h3>
-                <p className="text-white/60 text-sm leading-relaxed">
-                  Maximize your returns with higher APY. Long-term growth for
-                  your investment goals.
-                </p>
-              </div>
-            </div>
-
-            <button
-              onClick={() => navigate("/wallet/staking")}
-              className="mt-4 px-6 py-2.5 bg-[#a3d039] text-black rounded-full text-xs font-semibold hover:bg-[#B8E55A] transition-colors relative z-10"
-            >
-              Explore
-            </button>
-
-            {/* Bottom Right Image */}
-            <img
-              src="/highyield-1.svg"
-              alt="High Yield"
-              className="absolute bottom-[-5px] right-[-5px] w-21 h-21 object-contain opacity-80"
-            />
-          </div>
-        </div>
       </div>
 
       {/* Bottom Navigation */}
@@ -690,44 +607,32 @@ export const AllWalletPage: React.FC = () => {
       {/* Balance Information Drawer */}
       <HelpDrawer
         isOpen={showBalanceDrawer}
+        onClose={() => setShowBalanceDrawer(false)}
+        title="Total Balance"
+        content={[
+          "Your total balance combines all your wallet balances.",
+          "This gives you a complete overview of your entire portfolio value.",
+          "You can tap on the balance to show/hide.",
+        ]}
+      />
+
+      <AddCashDrawer
+        isOpen={showAddCashDrawer}
         onClose={() => {
-          setShowBalanceDrawer(false);
-          setSelectedCardType(null);
+          setShowAddCashDrawer(false);
+          setSelectedAddAmount(null);
         }}
-        title={
-          selectedCardType === "main"
-            ? "Total Balance"
-            : selectedCardType === "savings"
-              ? "Stables Wallet"
-              : selectedCardType === "staking"
-                ? "High Yield Wallet"
-                : "Balance Information"
-        }
-        content={
-          selectedCardType === "main"
-            ? [
-                "Your total balance combines all your wallet balances.",
-                "Swipe right to see other wallets and their balance",
-                "This gives you a complete overview of your entire portfolio value.",
-              ]
-            : selectedCardType === "savings"
-              ? [
-                  "Stables wallet holds your USDC savings with a stable 14% APY.",
-                  "Your balance shows the total USDC you have in your wallet.",
-                  "Interest accrues daily and is paid out automatically.",
-                ]
-              : selectedCardType === "staking"
-                ? [
-                    "High Yield wallet shows your livepeer token balance.",
-                    "Earn up to 62% APY by staking with high-performing validators.",
-                    "Rewards are distributed automatically after the cycle completes.",
-                  ]
-                : [
-                    "Your total balance is a combination of all your wallet balances",
-                    "Swipe right to see other wallets and their balance",
-                    "You can tap on the balance to show/hide",
-                  ]
-        }
+        selectedAmount={selectedAddAmount}
+        onSelectDestination={handleAddCashDestination}
+      /> 
+
+      <PortfolioSelectionDrawer
+        isOpen={showPortfolioDrawer}
+        onClose={() => setShowPortfolioDrawer(false)}
+        onSelect={(portfolio) => {
+          setShowPortfolioDrawer(false);
+          navigate("/portfolio", { state: { walletType: portfolio === "savings" ? "savings" : "staking" } });
+        }}
       />
     </div>
   );

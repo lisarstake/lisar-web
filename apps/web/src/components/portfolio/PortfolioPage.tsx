@@ -4,23 +4,13 @@ import { ChevronLeft, CircleQuestionMark, Eye, EyeOff } from "lucide-react";
 import QRCode from "qrcode";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
-import { LisarLines } from "@/components/general/lisar-lines";
-import { useDelegation } from "@/contexts/DelegationContext";
-import { useAuth } from "@/contexts/AuthContext";
-import { useTransactions } from "@/contexts/TransactionContext";
 import { usePortfolio, type StakeEntry } from "@/contexts/PortfolioContext";
-import { useWallet } from "@/contexts/WalletContext";
-import { usePrices } from "@/hooks/usePrices";
-import { useStablesApy } from "@/hooks/useStablesApy";
+import { useWalletCard } from "@/contexts/WalletCardContext";
+import { useTransactions } from "@/contexts/TransactionContext";
 import { RecentTransactionsCard } from "@/components/wallet/RecentTransactionsCard";
 import { PortfolioSkeleton } from "./PortfolioSkeleton";
-import {
-  formatEarnings,
-  formatLifetime,
-  formatStables,
-} from "@/lib/formatters";
+import { formatEarnings, formatStables } from "@/lib/formatters";
 import { getColorForAddress } from "@/lib/qrcode";
-import { priceService } from "@/lib/priceService";
 
 interface StakeEntryItemProps {
   entry: StakeEntry;
@@ -108,17 +98,19 @@ export const PortfolioPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
-  const [showBalance, setShowBalance] = useState(() => {
-    const saved = localStorage.getItem("portfolio_show_balance");
-    return saved ? JSON.parse(saved) : true;
-  });
 
   const walletType =
     (location.state as { walletType?: string })?.walletType || "staking";
   const isSavings = walletType === "savings";
 
-  const { protocolStatus } = useDelegation();
-  const { state } = useAuth();
+  const {
+    cardData,
+    displayCurrency,
+    setDisplayCurrency,
+    showBalance,
+    setShowBalance,
+    displayFiatSymbol,
+  } = useWalletCard();
   const { transactions, isLoading: transactionsLoading } = useTransactions();
   const {
     setMode,
@@ -126,13 +118,6 @@ export const PortfolioPage: React.FC = () => {
     stakeEntries,
     isLoading: portfolioLoading,
   } = usePortfolio();
-  const { stablesBalance, highyieldBalance } = useWallet();
-  const { prices } = usePrices();
-  const {
-    perena: perenaApy,
-    maple: mapleApy,
-    isLoading: apyLoading,
-  } = useStablesApy();
 
   useEffect(() => {
     setMode(isSavings ? "savings" : "staking");
@@ -146,124 +131,23 @@ export const PortfolioPage: React.FC = () => {
     }
   }, [portfolioLoading, summary, stakeEntries.length, isSavings]);
 
-  useEffect(() => {
-    localStorage.setItem("portfolio_show_balance", JSON.stringify(showBalance));
-  }, [showBalance]);
-
-  // Get recent transactions
   const recentTransactions = useMemo(() => {
     const filtered =
       walletType === "staking"
         ? transactions.filter((tx) => tx.token_symbol?.toUpperCase() === "LPT")
         : walletType === "savings"
           ? transactions.filter(
-              (tx) => tx.token_symbol?.toUpperCase() !== "LPT"
-            )
+            (tx) => tx.token_symbol?.toUpperCase() !== "LPT"
+          )
           : transactions;
 
     return filtered.slice(0, 5);
   }, [transactions, walletType]);
 
-  // Calculate next payout progress using protocol status
-  const nextPayoutProgress = useMemo(() => {
-    if (!protocolStatus) return { progress: 85, timeRemaining: "22 hrs" };
-
-    const { roundLength, blocksIntoRound, blocksRemaining, estimatedHours } =
-      protocolStatus;
-    const progress =
-      roundLength > 0 ? (blocksIntoRound / roundLength) * 100 : 85;
-
-    // Format time remaining - show minutes when less than 1 hour
-    let timeRemaining: string;
-    if (
-      estimatedHours !== undefined &&
-      estimatedHours < 1 &&
-      estimatedHours > 0
-    ) {
-      // Convert hours to minutes (approximately 2 seconds per block on Arbitrum)
-      const minutes = Math.round(estimatedHours * 60);
-      timeRemaining =
-        minutes > 0
-          ? `${minutes} min${minutes !== 1 ? "s" : ""}`
-          : "Less than 1 min";
-    } else {
-      timeRemaining = protocolStatus.estimatedHoursHuman || "22 hrs";
-    }
-
-    return { progress: Math.min(progress, 100), timeRemaining };
-  }, [protocolStatus]);
-
-  const totalStake = summary?.totalStake || 0;
-  const lifetimeRewards = summary?.lifetimeRewards || 0;
-
-  const averageApy = useMemo(() => {
-    if (isSavings) {
-      return perenaApy ? perenaApy * 100 : 14.9;
-    } else {
-      if (stakeEntries.length === 0) {
-        return 68;
-      }
-      // Get the entry with the highest stake
-      const primaryEntry = stakeEntries.reduce(
-        (max, entry) => (entry.yourStake > (max?.yourStake || 0) ? entry : max),
-        stakeEntries[0]
-      );
-      return primaryEntry ? primaryEntry.apy * 100 : 68;
-    }
-  }, [isSavings, perenaApy, stakeEntries]);
-
-  const fiatCurrency = state.user?.fiat_type || "USD";
-  const fiatSymbol = useMemo(() => {
-    return priceService.getCurrencySymbol(fiatCurrency);
-  }, [fiatCurrency]);
-
-  // Calculate total token balance
-  const totalTokenBalance = useMemo(() => {
-    if (isSavings) {
-      return stablesBalance || 0;
-    } else {
-      const unstakedLpt = highyieldBalance || 0;
-      const stakedLpt = totalStake || 0;
-      return unstakedLpt + stakedLpt;
-    }
-  }, [isSavings, highyieldBalance, stablesBalance, totalStake]);
-
-  // Calculate total balance in fiat
-  const totalBalanceFiat = useMemo(() => {
-    if (isSavings) {
-      const stableBalance = totalTokenBalance;
-
-      // Convert to user's fiat currency
-      switch (fiatCurrency.toUpperCase()) {
-        case "NGN":
-          return stableBalance * (prices.ngn || 0);
-        case "EUR":
-          return stableBalance * (prices.eur || 0);
-        case "GBP":
-          return stableBalance * (prices.gbp || 0);
-        case "USD":
-        default:
-          return stableBalance;
-      }
-    } else {
-      // For staking: convert LPT to USD, then to fiat
-      const lptPriceInUsd = prices.lpt || 0;
-      const totalUsdBalance = totalTokenBalance * lptPriceInUsd;
-
-      // Convert to user's fiat currency
-      switch (fiatCurrency.toUpperCase()) {
-        case "NGN":
-          return totalUsdBalance * (prices.ngn || 0);
-        case "EUR":
-          return totalUsdBalance * (prices.eur || 0);
-        case "GBP":
-          return totalUsdBalance * (prices.gbp || 0);
-        case "USD":
-        default:
-          return totalUsdBalance;
-      }
-    }
-  }, [isSavings, totalTokenBalance, prices, fiatCurrency]);
+  const card = useMemo(
+    () => cardData.find((c) => c.type === (isSavings ? "savings" : "staking")),
+    [cardData, isSavings]
+  );
 
   const handleBackClick = () => {
     navigate(-1);
@@ -303,151 +187,162 @@ export const PortfolioPage: React.FC = () => {
             <CircleQuestionMark color="#86B3F7" size={16} />
           </button>
         </div>
-        {/* Main Wallet Card */}
-        <div
-          className={`${isSavings ? "bg-[#6da7fd] border-2 border-[#86B3F7]/30" : "bg-linear-to-br from-[#0f0f0f] to-[#151515] border border-[#2a2a2a]"} rounded-2xl p-5 h-[190px] mb-6 relative overflow-hidden`}
-        >
-          {/* Lisar Lines Decoration */}
-          {!isSavings && (
-            <LisarLines
-              position="top-right"
-              className="opacity-100"
-              width="185px"
-              height="185px"
-            />
-          )}
 
-          {/* Decorative elements */}
-          {isSavings ? (
-            <>
-              <div className="absolute top-0 right-0 w-32 h-32 bg-[#86B3F7]/10 rounded-full blur-3xl"></div>
-              <div className="absolute bottom-0 left-0 w-24 h-24 bg-[#438af6]/10 rounded-full blur-2xl"></div>
-            </>
-          ) : (
-            <>
-              <div className="absolute top-0 right-0 w-32 h-32 bg-[#C7EF6B]/5 rounded-full blur-3xl"></div>
-              <div className="absolute bottom-0 left-0 w-24 h-24 bg-[#86B3F7]/5 rounded-full blur-2xl"></div>
-            </>
-          )}
+        {/* Wallet Card - exact match to WalletPage */}
+        {card && (
+          <div className="mb-6">
+            <div
+              className={`${isSavings
+                ? "bg-[#6da7fd] border-2 border-[#86B3F7]/30 hover:border-[#86B3F7]/50"
+                : "bg-transparent border-2 border-[#C7EF6B]/30 hover:border-[#C7EF6B]/50"
+                } rounded-2xl p-5 relative overflow-hidden transition-colors min-h-[160px]`}
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex-1 relative z-10">
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center gap-1">
+                      <h3
+                        className={`text-sm font-medium ${isSavings
+                          ? "text-white/90"
+                          : "text-white/80"
+                          }`}
+                      >
+                        {card.title}
+                      </h3>
+                      <button
+                        onClick={() => setShowBalance(!showBalance)}
+                        className="shrink-0 cursor-pointer hover:opacity-70 transition-opacity"
+                      >
+                        {showBalance ? (
+                          <Eye
+                            size={18}
+                            color={
+                              isSavings
+                                ? "rgba(255, 255, 255, 0.8)"
+                                : "rgba(199, 239, 107, 0.8)"
+                            }
+                          />
+                        ) : (
+                          <EyeOff
+                            size={18}
+                            color={
+                              isSavings
+                                ? "rgba(255, 255, 255, 0.8)"
+                                : "rgba(199, 239, 107, 0.8)"
+                            }
+                          />
+                        )}
+                      </button>
+                    </div>
+                    <button
+                      onClick={() =>
+                        setDisplayCurrency(
+                          displayCurrency === "USD" ? "NGN" : "USD"
+                        )
+                      }
+                      className={`text-xs font-medium px-2 py-1 rounded-md transition-colors ${isSavings
+                        ? "bg-white/20 text-white hover:bg-white/30"
+                        : "bg-white/10 text-white/90 hover:bg-white/20"
+                        }`}
+                    >
+                      {displayCurrency}
+                    </button>
+                  </div>
 
-          {/* Circular Progress - Top Right */}
-          {/* <div className="absolute top-4 right-4 z-20">
-            <PayoutProgressCircle
-              progress={nextPayoutProgress.progress}
-              timeRemaining={nextPayoutProgress.timeRemaining}
-              isSavings={isSavings}
-            />
-          </div> */}
-
-          {/* Content */}
-          <div className="relative z-10">
-            <div className="flex items-center gap-2 mb-2">
-              <h3 className="text-white/70 text-sm">
-                {" "}
-                {isSavings ? "Stables Wallet" : "High Yield Wallet"}
-              </h3>
-              <button
-                onClick={() => setShowBalance(!showBalance)}
-                className="shrink-0 cursor-pointer hover:opacity-70 transition-opacity"
-              >
-                {showBalance ? (
-                  <Eye
-                    size={16}
-                    color={
-                      isSavings
-                        ? "rgba(255, 255, 255, 0.9)"
-                        : "rgba(255, 255, 255, 0.6)"
-                    }
-                  />
-                ) : (
-                  <EyeOff
-                    size={16}
-                    color={
-                      isSavings
-                        ? "rgba(255, 255, 255, 0.9)"
-                        : "rgba(255, 255, 255, 0.6)"
-                    }
-                  />
-                )}
-              </button>
-            </div>
-
-            {/* Main Balance */}
-            <div className="mb-8">
-              <div className="flex items-baseline gap-2 mb-1">
-                <span className="text-2xl font-bold text-white">
-                  {showBalance
-                    ? isSavings
-                      ? formatStables(totalTokenBalance)
-                      : formatEarnings(totalTokenBalance)
-                    : "••••"}
-                </span>
-                {showBalance && (
-                  <span
-                    className={`text-sm ml-[-5px] ${
-                      isSavings ? "text-white/90" : "text-white/70"
-                    }`}
-                  >
-                    {isSavings ? "USDC" : "LPT"}
-                  </span>
-                )}
+                  <div className="mb-2">
+                    {card.isLoading ? (
+                      <div className="flex items-baseline gap-2 mb-1">
+                        <span className="text-xl font-bold text-white/90">
+                          ••••
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex items-baseline mb-1">
+                        {showBalance && displayCurrency === "NGN" && (
+                          <span
+                            className={`text-xl font-bold ${isSavings
+                              ? "text-white/90"
+                              : "text-white/70"
+                              }`}
+                          >
+                            {displayFiatSymbol}
+                          </span>
+                        )}
+                        <span className="text-xl font-bold text-white/90">
+                          {showBalance
+                            ? displayCurrency === "NGN"
+                              ? card.displayBalanceValue.toLocaleString(
+                                undefined,
+                                {
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2,
+                                }
+                              )
+                              : isSavings
+                                ? formatStables(card.balance)
+                                : formatEarnings(card.balance)
+                            : "••••"}
+                        </span>
+                        {showBalance && displayCurrency !== "NGN" && (
+                          <span
+                            className={`text-sm ml-[3px] ${isSavings
+                              ? "text-white/90"
+                              : "text-white/70"
+                              }`}
+                          >
+                            {isSavings ? "USD" : "LPT"}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
-              <div className="min-h-[20px]">
-                {showBalance && (
-                  <p
-                    className={`text-sm ${
-                      isSavings ? "text-white/90" : "text-white/60"
+
+              <div className="absolute bottom-2 left-2 z-10 flex gap-2">
+                <div
+                  className={`w-fit rounded-xl px-3.5 py-1.5 ${isSavings
+                    ? "bg-white/20"
+                    : "bg-white/10"
                     }`}
-                  >
-                    ≈{fiatSymbol}
-                    {totalBalanceFiat.toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
+                >
+                  <p className="text-white/80 text-[10px] mb-0.5">
+                    Interest earned
                   </p>
-                )}
-              </div>
-            </div>
-
-            {/* Three Values */}
-            <div className="flex items-center justify-between">
-              {/* Token Amount */}
-              <div className="flex items-center flex-col">
-                <p className="text-white/90 font-semibold text-sm">
-                  {showBalance
-                    ? isSavings
-                      ? `${formatStables(totalStake)} `
-                      : `${formatEarnings(totalStake)} `
-                    : "•••• "}
-                  {showBalance ? (isSavings ? "USDC" : "LPT") : ""}
-                </p>
-                <p className="text-white/60 text-xs">
-                  {isSavings ? "Active vest" : "Active vest"}
-                </p>
+                  <p className="text-white text-sm font-semibold">
+                    {displayFiatSymbol}
+                    {(displayCurrency === "NGN"
+                      ? card.projectedInterestNgn
+                      : card.projectedInterestUsd
+                    ).toLocaleString(undefined, {
+                      minimumFractionDigits:
+                        displayCurrency === "NGN" ? 2 : 3,
+                      maximumFractionDigits:
+                        displayCurrency === "NGN" ? 2 : 3,
+                    })}
+                    <span className="text-white/70 text-xs font-normal ml-1">
+                      at ({card.apyPercent}% p.a)
+                    </span>
+                  </p>
+                </div>
               </div>
 
-              {/* APY */}
-              <div className="flex items-center flex-col">
-                <p className="text-white/90 font-semibold text-sm">
-                  {showBalance
-                    ? isSavings && apyLoading && perenaApy === null
-                      ? "..."
-                      : `${averageApy.toFixed(1)}%`
-                    : "••••"}
-                </p>
-                <p className="text-white/60 text-xs">Per annum</p>
-              </div>
-
-              {/* Total Earnings */}
-              <div className="flex items-center flex-col">
-                <p className="text-white/90 font-semibold text-sm">
-                  {showBalance ? formatLifetime(lifetimeRewards) : "••••"}
-                </p>
-                <p className="text-white/60 text-xs">Total earning</p>
-              </div>
+              {isSavings ? (
+                <img
+                  src="/highyield-3.svg"
+                  alt="Stables"
+                  className="absolute bottom-[-20px] right-[-20px] w-30 h-28 object-contain opacity-80"
+                />
+              ) : (
+                <img
+                  src="/highyield-1.svg"
+                  alt="High Yield"
+                  className="absolute bottom-[-5px] right-[-5px] w-21 h-21 object-contain opacity-80"
+                />
+              )}
             </div>
           </div>
-        </div>
+        )}
 
         <div className="grid grid-cols-2 gap-4 mb-6">
           {/* Summary Card */}
@@ -495,29 +390,6 @@ export const PortfolioPage: React.FC = () => {
               Show
             </button>
           </div>
-        </div>
-
-        {/* Recent Transactions Section */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-3 px-2">
-            <h2 className="text-white/80 text-sm font-medium">
-              Recent transactions
-            </h2>
-            {transactions.length > 0 && (
-              <button
-                onClick={handleViewAllTransactions}
-                className="text-[#C7EF6B] text-sm hover:opacity-70 transition-opacity"
-              >
-                See all
-              </button>
-            )}
-          </div>
-
-          <RecentTransactionsCard
-            transactions={recentTransactions}
-            isLoading={transactionsLoading}
-            onTransactionClick={handleTransactionClick}
-          />
         </div>
       </div>
 

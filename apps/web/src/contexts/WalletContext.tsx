@@ -187,26 +187,32 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
 
       try {
         const walletResp = await walletService.getPrimaryWallet("ethereum");
+        if (!walletResp.success || !walletResp.wallet) {
+          setHighyieldBalance(0);
+          return;
+        }
 
-        if (walletResp.success && walletResp.wallet) {
-          setEthereumWalletAddress(walletResp.wallet.wallet_address);
-          setEthereumWalletId(walletResp.wallet.wallet_id);
+        const ethWallet = walletResp.wallet;
+        setEthereumWalletAddress(ethWallet.wallet_address);
+        setEthereumWalletId(ethWallet.wallet_id);
 
-          const balanceResp = await walletService.getBalance(
-            walletResp.wallet.wallet_address,
-            "LPT"
-          );
+        const balanceResp = await walletService.getBalance(
+          ethWallet.wallet_address,
+          "LPT"
+        );
 
-          if (balanceResp.success) {
-            const balance = parseFloat(balanceResp.balance || "0");
-            setHighyieldBalance(balance);
-            if (wallet) {
-              setWallet({ ...wallet, highyieldBalance: balance });
-            }
+        if (balanceResp.success) {
+          const balance = parseFloat(balanceResp.balance || "0");
+          setHighyieldBalance(balance);
+          if (wallet) {
+            setWallet({ ...wallet, highyieldBalance: balance });
           }
+        } else {
+          setHighyieldBalance(0);
         }
       } catch (error) {
-        // Silent fail - balance will remain null
+        // Silent fail - set to 0 so we don't block the UI
+        setHighyieldBalance(0);
       } finally {
         setHighyieldLoading(false);
         highyieldLoadingRef.current = false;

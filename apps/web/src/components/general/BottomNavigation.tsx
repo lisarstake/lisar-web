@@ -1,5 +1,6 @@
 import {
   Calculator,
+  CalculatorIcon,
   CircleDollarSign,
   CoinsIcon,
   House,
@@ -49,7 +50,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
             isActive("/forecast") ? "text-[#C7EF6B]" : "text-gray-400"
           }`}
         >
-          <Landmark size={22} className="mb-1" />
+          <CalculatorIcon size={22} className="mb-1" />
           <span className="text-xs">Yields</span>
           {isActive("/forecast") && (
             <div className="w-6 h-0.5 bg-[#C7EF6B] mt-1 rounded-full"></div>

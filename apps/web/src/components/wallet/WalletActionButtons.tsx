@@ -1,5 +1,5 @@
 import React from "react";
-import { ChartPie, Plus, PiggyBank, Landmark } from "lucide-react";
+import { ChartPie, Plus, PiggyBank, SendHorizonal } from "lucide-react";
 
 interface WalletActionButtonsProps {
   onDepositClick: () => void;
@@ -77,7 +77,7 @@ export const WalletActionButtons: React.FC<WalletActionButtonsProps> = ({
           onClick={onWithdrawClick}
           className={`flex items-center justify-center w-14 h-14 ${buttonBgColor} rounded-xl transition-colors hover:opacity-80`}
         >
-          <Landmark size={22} color={iconColor} />
+          <SendHorizonal size={22} color={iconColor} />
         </button>
         <span className="text-white/80 text-xs mt-2">Withdraw</span>
       </div>
