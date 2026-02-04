@@ -133,6 +133,25 @@ export interface GetPriceApiResponse {
   error?: string;
 }
 
+// Portfolio Types
+export interface PortfolioRequest {
+  wallet: string;
+}
+
+export interface PortfolioData {
+  earnings: number;
+  usdStarBalance: number;
+  currentPrice: number;
+  netValue: number;
+  netValueFormatted: string;
+}
+
+export interface PortfolioResponse {
+  success: boolean;
+  data: PortfolioData;
+  error?: string;
+}
+
 // Configuration
 export interface PerenaConfig {
   baseUrl: string;

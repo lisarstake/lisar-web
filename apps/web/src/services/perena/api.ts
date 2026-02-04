@@ -14,7 +14,9 @@ import {
   MintRequest,
   BurnRequest,
   GetApyResponse,
-  GetPriceApiResponse
+  GetPriceApiResponse,
+  PortfolioRequest,
+  PortfolioResponse,
 } from './types';
 
 export interface IPerenaApiService {
@@ -41,5 +43,8 @@ export interface IPerenaApiService {
 
   // Burn USD* for USDC
   burn(request: BurnRequest): Promise<BurnResponse>;
+
+  // Get portfolio data for a wallet
+  getPortfolio(request: PortfolioRequest): Promise<PortfolioResponse>;
 }
 

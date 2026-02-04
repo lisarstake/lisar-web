@@ -16,6 +16,8 @@ import {
   BurnQuoteRequest,
   MintRequest,
   BurnRequest,
+  PortfolioRequest,
+  PortfolioResponse,
   PERENA_CONFIG,
 } from "./types";
 import { http } from "@/lib/http";
@@ -31,13 +33,11 @@ export class PerenaService implements IPerenaApiService {
 
   // Token management helpers
   private getStoredToken(): string | null {
-    // Check localStorage first (remembered sessions)
     let token = localStorage.getItem("auth_token");
 
-    // Check if token has expired (if rememberMe was used)
     const expiry = localStorage.getItem("auth_expiry");
     if (token && expiry) {
-      const expiryTime = parseInt(expiry) * 1000; // Convert to milliseconds
+      const expiryTime = parseInt(expiry) * 1000;
       if (Date.now() > expiryTime) {
         // Token expired, clear it
         this.removeStoredTokens();
@@ -45,7 +45,6 @@ export class PerenaService implements IPerenaApiService {
       }
     }
 
-    // If not in localStorage, check sessionStorage
     if (!token) {
       token = sessionStorage.getItem("auth_token");
     }
@@ -73,9 +72,10 @@ export class PerenaService implements IPerenaApiService {
         timeout: this.timeout,
       });
 
+      const data = response.data?.data ?? response.data;
       return {
         success: true,
-        data: response.data.data,
+        data,
       };
     } catch (error: any) {
       return {
@@ -85,20 +85,22 @@ export class PerenaService implements IPerenaApiService {
           token: "",
           timestamp: "",
         },
-        error: error.response?.data?.error || error.message || "Failed to fetch price",
+        error:
+          error.response?.data?.error ||
+          error.message ||
+          "Failed to fetch price",
       };
     }
   }
 
-  // Get USDStar price from Perena API (with timestamp parameter)
+  // Get USDStar price (with timestamp parameter)
   async getPriceApi(time?: string): Promise<GetPriceApiResponse> {
     try {
       const headers = {
         "Content-Type": "application/json",
       };
 
-      const currentTime = time || new Date().toISOString();
-      const url = `${this.baseUrl}/perena/price-api?time=${encodeURIComponent(currentTime)}`;
+      const url = time ? `${this.baseUrl}/perena/price-api?time=${encodeURIComponent(time)}` : `${this.baseUrl}/price-api`;
 
       const response = await http.request({
         url,
@@ -107,9 +109,10 @@ export class PerenaService implements IPerenaApiService {
         timeout: this.timeout,
       });
 
+      const data = response.data?.data ?? response.data;
       return {
         success: true,
-        data: response.data.data,
+        data,
       };
     } catch (error: any) {
       return {
@@ -118,20 +121,22 @@ export class PerenaService implements IPerenaApiService {
           price: 0,
           timestamp: "",
         },
-        error: error.response?.data?.error || error.message || "Failed to fetch price",
+        error:
+          error.response?.data?.error ||
+          error.message ||
+          "Failed to fetch price",
       };
     }
   }
 
-  // Get USDStar APY from Perena API
+  // Get USDStar APY
   async getApy(time?: string): Promise<GetApyResponse> {
     try {
       const headers = {
         "Content-Type": "application/json",
       };
 
-      const currentTime = time || new Date().toISOString();
-      const url = `${this.baseUrl}/perena/apy?time=${encodeURIComponent(currentTime)}`;
+      const url = time ? `${this.baseUrl}/perena/apy?time=${encodeURIComponent(time)}` : `${this.baseUrl}/perena/apy`;
 
       const response = await http.request({
         url,
@@ -140,9 +145,10 @@ export class PerenaService implements IPerenaApiService {
         timeout: this.timeout,
       });
 
+      const data = response.data?.data ?? response.data;
       return {
         success: true,
-        data: response.data.data,
+        data,
       };
     } catch (error: any) {
       return {
@@ -152,7 +158,8 @@ export class PerenaService implements IPerenaApiService {
           apy: 0,
           timestamp: "",
         },
-        error: error.response?.data?.error || error.message || "Failed to fetch APY",
+        error:
+          error.response?.data?.error || error.message || "Failed to fetch APY",
       };
     }
   }
@@ -187,7 +194,10 @@ export class PerenaService implements IPerenaApiService {
           exchangeRate: 0,
           fee: 0,
         },
-        error: error.response?.data?.error || error.message || "Failed to get mint quote",
+        error:
+          error.response?.data?.error ||
+          error.message ||
+          "Failed to get mint quote",
       };
     }
   }
@@ -222,7 +232,10 @@ export class PerenaService implements IPerenaApiService {
           exchangeRate: 0,
           fee: 0,
         },
-        error: error.response?.data?.error || error.message || "Failed to get burn quote",
+        error:
+          error.response?.data?.error ||
+          error.message ||
+          "Failed to get burn quote",
       };
     }
   }
@@ -254,7 +267,10 @@ export class PerenaService implements IPerenaApiService {
           cluster: "",
           rpcUrl: "",
         },
-        error: error.response?.data?.error || error.message || "Failed to fetch stats",
+        error:
+          error.response?.data?.error ||
+          error.message ||
+          "Failed to fetch stats",
       };
     }
   }
@@ -304,7 +320,8 @@ export class PerenaService implements IPerenaApiService {
           inputToken: "",
           outputToken: "",
         },
-        error: error.response?.data?.error || error.message || "Failed to mint USD*",
+        error:
+          error.response?.data?.error || error.message || "Failed to mint USD*",
       };
     }
   }
@@ -354,9 +371,53 @@ export class PerenaService implements IPerenaApiService {
           inputToken: "",
           outputToken: "",
         },
-        error: error.response?.data?.error || error.message || "Failed to burn USD*",
+        error:
+          error.response?.data?.error || error.message || "Failed to burn USD*",
+      };
+    }
+  }
+
+  // Get portfolio data for a wallet
+  async getPortfolio(request: PortfolioRequest): Promise<PortfolioResponse> {
+    try {
+      const headers = {
+        "Content-Type": "application/json",
+      };
+
+      const response = await http.request({
+        url: `${this.baseUrl}/perena/portfolio`,
+        method: "POST",
+        headers,
+        data: request,
+        timeout: this.timeout,
+      });
+
+      const data = response.data?.data ?? response.data;
+      return {
+        success: true,
+        data: {
+          earnings: data.sourceData?.earnings ?? 0,
+          usdStarBalance: data.usdStarBalance ?? 0,
+          currentPrice: data.currentPrice ?? 0,
+          netValue: data.netValue ?? 0,
+          netValueFormatted: data.netValueFormatted ?? "$0.00",
+        },
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        data: {
+          earnings: 0,
+          usdStarBalance: 0,
+          currentPrice: 0,
+          netValue: 0,
+          netValueFormatted: "$0.00",
+        },
+        error:
+          error.response?.data?.error ||
+          error.message ||
+          "Failed to fetch portfolio",
       };
     }
   }
 }
-

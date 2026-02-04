@@ -14,7 +14,11 @@ import { walletService, mapleService, perenaService } from "@/services";
 import { getEarliestUnbondingTime } from "@/lib/unbondingTime";
 import { DelegatorTransaction } from "@/services/delegation/types";
 import { Position } from "@/services/maple/types";
-import { calculateSavingsMetrics, SavingsMetrics } from "@/lib/stablesPortfolio";
+import {
+  calculateSavingsMetrics,
+  SavingsMetrics,
+  PerenaPortfolioData,
+} from "@/lib/stablesPortfolio";
 
 export type PortfolioMode = "staking" | "savings";
 
@@ -58,6 +62,7 @@ interface PortfolioContextValue {
   summary: PortfolioSummary | null;
   stakeEntries: StakeEntry[];
   unbonding: UnbondingInfo;
+  perenaPortfolioData: PerenaPortfolioData | null;
   isLoading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
@@ -77,6 +82,8 @@ export const PortfolioProvider: React.FC<PortfolioProviderProps> = ({
   const [mode, setMode] = useState<PortfolioMode>("staking");
   const [savingsEntries, setSavingsEntries] = useState<StakeEntry[]>([]);
   const [savingsMetrics, setSavingsMetrics] = useState<SavingsMetrics | null>(null);
+  const [perenaPortfolioData, setPerenaPortfolioData] =
+    useState<PerenaPortfolioData | null>(null);
   const [maplePositions, setMaplePositions] = useState<Position[]>([]);
   const [savingsLoading, setSavingsLoading] = useState(false);
   const [hasFetchedSavings, setHasFetchedSavings] = useState(false);
@@ -89,7 +96,14 @@ export const PortfolioProvider: React.FC<PortfolioProviderProps> = ({
     delegatorStakeProfile,
     isLoading: delegationLoading,
   } = useDelegation();
-  const { stablesBalance, loadStablesBalance, stablesLoading } = useWallet();
+  const {
+    stablesBalance,
+    loadStablesBalance,
+    stablesLoading,
+    highyieldBalance,
+    loadHighyieldBalance,
+    highyieldLoading,
+  } = useWallet();
   const { transactions } = useTransactions();
 
   const lptStakeEntries: StakeEntry[] = useMemo(() => {
@@ -147,6 +161,12 @@ export const PortfolioProvider: React.FC<PortfolioProviderProps> = ({
   }, [mode, stablesBalance, stablesLoading, loadStablesBalance]);
 
   useEffect(() => {
+    if (mode === "staking" && highyieldBalance === null && !highyieldLoading) {
+      loadHighyieldBalance();
+    }
+  }, [mode, highyieldBalance, highyieldLoading, loadHighyieldBalance]);
+
+  useEffect(() => {
     if (mode !== "savings") {
       return;
     }
@@ -158,6 +178,7 @@ export const PortfolioProvider: React.FC<PortfolioProviderProps> = ({
     const fetchSavingsPositions = async () => {
       setSavingsLoading(true);
       setError(null);
+      setPerenaPortfolioData(null);
       const entries: StakeEntry[] = [];
       let positions: Position[] = [];
       let perenaBalance = 0;
@@ -219,58 +240,75 @@ export const PortfolioProvider: React.FC<PortfolioProviderProps> = ({
           }
         }
 
-        // Fetch Perena balance
+        // Fetch Perena balance and portfolio data
+        let perenaPortfolioData: PerenaPortfolioData | null = null;
         const solWalletResp = await walletService.getPrimaryWallet("solana");
         if (solWalletResp.success && solWalletResp.wallet) {
-          const solBalanceResp = await walletService.getSolanaBalance(
-            solWalletResp.wallet.wallet_address
-          );
+          const solAddress = solWalletResp.wallet.wallet_address;
 
-          if (
-            solBalanceResp.success &&
-            solBalanceResp.balances &&
-            solBalanceResp.balances["usd*"]
-          ) {
-            const usdStar = solBalanceResp.balances["usd*"];
-            perenaBalance = parseFloat(usdStar.balance || "0");
-
-            if (!isNaN(perenaBalance) && perenaBalance > 0) {
-              // Fetch real-time APY for Perena
-              let perenaApy = 0.149;
-              try {
-                const currentTime = new Date().toISOString();
-                const apyResp = await perenaService.getApy(currentTime);
-                if (apyResp.success && apyResp.data) {
-                  perenaApy = apyResp.data.apy / 100;
-                }
-              } catch (err) {
-                // Use default APY if fetch fails
-              }
-
-              entries.push({
-                id: "perena-usd*",
-                name: "Perena",
-                yourStake: perenaBalance,
-                apy: perenaApy,
-                fee: 0,
-                isSavings: true,
-              });
+          // Fetch perena portfolio (earnings, usdStarBalance, etc.)
+          try {
+            const portfolioResp = await perenaService.getPortfolio({
+              wallet: solAddress,
+            });
+            if (portfolioResp.success && portfolioResp.data) {
+              perenaPortfolioData = portfolioResp.data;
+              perenaBalance = portfolioResp.data.usdStarBalance;
+              setPerenaPortfolioData(portfolioResp.data);
             }
+          } catch {
+            // Fall back to balance from wallet if portfolio fetch fails
+          }
+
+          if (perenaBalance === 0) {
+            const solBalanceResp = await walletService.getSolanaBalance(
+              solAddress
+            );
+            if (
+              solBalanceResp.success &&
+              solBalanceResp.balances &&
+              solBalanceResp.balances["usd*"]
+            ) {
+              const usdStar = solBalanceResp.balances["usd*"];
+              perenaBalance = parseFloat(usdStar.balance || "0");
+            }
+          }
+
+          if (!isNaN(perenaBalance) && perenaBalance > 0) {
+            // Fetch real-time APY for Perena
+            let perenaApy = 0.149;
+            try {
+              const currentTime = new Date().toISOString();
+              const apyResp = await perenaService.getApy(currentTime);
+              if (apyResp.success && apyResp.data) {
+                perenaApy = apyResp.data.apy / 100;
+              }
+            } catch (err) {
+              // Use default APY if fetch fails
+            }
+
+            entries.push({
+              id: "perena-usd*",
+              name: "Perena",
+              yourStake: perenaBalance,
+              apy: perenaApy,
+              fee: 0,
+              isSavings: true,
+            });
           }
         }
 
-        // Calculate savings metrics using transactions
-        if (transactions.length > 0) {
-          try {
-            const metrics = await calculateSavingsMetrics(
-              perenaBalance,
-              positions,
-              transactions
-            );
-            setSavingsMetrics(metrics);
-          } catch (err) {
-            // Metrics calculation failed - continue without metrics
-          }
+        // Calculate savings metrics using transactions and perena portfolio data
+        try {
+          const metrics = await calculateSavingsMetrics(
+            perenaBalance,
+            positions,
+            transactions,
+            perenaPortfolioData
+          );
+          setSavingsMetrics(metrics);
+        } catch (err) {
+          // Metrics calculation failed - continue without metrics
         }
       } catch (err) {
         setError("Failed to fetch savings positions");
@@ -445,11 +483,12 @@ export const PortfolioProvider: React.FC<PortfolioProviderProps> = ({
       summary,
       stakeEntries,
       unbonding,
+      perenaPortfolioData,
       isLoading,
       error,
       refetch,
     }),
-    [mode, summary, stakeEntries, unbonding, isLoading, error]
+    [mode, summary, stakeEntries, unbonding, perenaPortfolioData, isLoading, error]
   );
 
   return (

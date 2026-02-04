@@ -28,6 +28,7 @@ export const DepositPage: React.FC = () => {
   const locationState = location.state as {
     lptAmount?: string;
     usdcAmount?: string;
+    presetFiatAmount?: number;
     returnTo?: string;
     walletType?: string;
     provider?: "maple" | "perena";
@@ -36,10 +37,15 @@ export const DepositPage: React.FC = () => {
   } | null;
   const preservedAmount = locationState?.lptAmount || locationState?.usdcAmount;
   const preservedUsdcAmount = locationState?.usdcAmount;
+  const presetFiatAmount = locationState?.presetFiatAmount;
   const returnTo = locationState?.returnTo;
   const walletType = locationState?.walletType;
   const selectedProvider = locationState?.provider;
-  const [fiatAmount, setFiatAmount] = useState("0");
+  const [fiatAmount, setFiatAmount] = useState(() =>
+    presetFiatAmount != null && presetFiatAmount > 0
+      ? presetFiatAmount.toString()
+      : "0"
+  );
   const [lptEquivalent, setLptEquivalent] = useState(0);
   const [tokenEquivalent, setTokenEquivalent] = useState(0);
 
@@ -73,8 +79,12 @@ export const DepositPage: React.FC = () => {
 
   const pageTitle = "Deposit";
 
-  // Initialize fiat amount from preserved token amount
+  // Initialize fiat amount from preserved token amount or preset fiat
   useEffect(() => {
+    if (presetFiatAmount != null && presetFiatAmount > 0) {
+      setFiatAmount(presetFiatAmount.toString());
+      return;
+    }
     const initializeFromToken = async () => {
       if (preservedAmount) {
         const numericAmount = parseFloat(preservedAmount.replace(/,/g, "")) || 0;
@@ -110,7 +120,7 @@ export const DepositPage: React.FC = () => {
       }
     };
     initializeFromToken();
-  }, [preservedAmount, preservedUsdcAmount, walletType, userCurrency]);
+  }, [presetFiatAmount, preservedAmount, preservedUsdcAmount, walletType, userCurrency]);
 
   // Calculate token equivalent of fiat amount
   useEffect(() => {
