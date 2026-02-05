@@ -51,7 +51,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
           }`}
         >
           <CalculatorIcon size={22} className="mb-1" />
-          <span className="text-xs">Yields</span>
+          <span className="text-xs">Interest</span>
           {isActive("/forecast") && (
             <div className="w-6 h-0.5 bg-[#C7EF6B] mt-1 rounded-full"></div>
           )}

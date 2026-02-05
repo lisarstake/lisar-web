@@ -149,7 +149,7 @@ export const OnchainDepositPage: React.FC = () => {
       <div className="px-6 pb-24">
         <button
           onClick={handleCopyClick}
-          className="w-full py-4 rounded-xl font-semibold text-lg bg-[#C7EF6B] text-black hover:bg-[#B8E55A] transition-colors flex items-center justify-center space-x-2"
+          className="w-full py-3 rounded-lg font-semibold text-lg bg-[#C7EF6B] text-black hover:bg-[#B8E55A] transition-colors flex items-center justify-center space-x-2"
           disabled={!fullWalletAddress}
         >
           {copied ? (

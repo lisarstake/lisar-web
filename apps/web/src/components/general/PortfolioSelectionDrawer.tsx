@@ -57,7 +57,7 @@ export const PortfolioSelectionDrawer: React.FC<PortfolioSelectionDrawerProps> =
               className="w-8 h-8"
             />
             <span className="flex-1 text-gray-300 text-base font-medium">
-              Growth 
+              Growth
             </span>
             <ChevronRight size={18} className="text-gray-500" />
           </button>

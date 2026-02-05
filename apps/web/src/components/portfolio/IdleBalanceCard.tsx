@@ -24,12 +24,12 @@ export const IdleBalanceCard: React.FC<IdleBalanceCardProps> = ({
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
           <div>
-            <p className="text-gray-400 text-sm font-medium uppercase tracking-wider mb-0.5">
+            <p className="text-gray-400 text-sm font-medium tracking-wider mb-0.5">
               Idle balance
             </p>
             <p className="text-gray-500 text-xs mb-2 leading-relaxed">
               {hasIdleBalance
-                ? "This balance isn't earning yet. Vest it to start earning rewards."
+                ? "This balance isn't earning yet. Vest it to start earning."
                 : "All your balance is currently earning 🎉"}
             </p>
             <p

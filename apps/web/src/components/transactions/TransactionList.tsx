@@ -49,8 +49,8 @@ export const TransactionList: React.FC<TransactionListProps> = ({
 
   const getAmountColor = (type: TransactionType) => {
     return type === "deposit" || type === "delegation" || type === "mint"
-      ? "text-[#C7EF6B]"
-      : "text-[#FF6B6B]";
+      ? "text-[#C7EF6B]/90"
+      : "text-[#FF6B6B]/90";
   };
 
   const getAmountPrefix = (type: TransactionType) => {

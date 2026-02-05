@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { ChevronDown, CircleQuestionMark } from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
@@ -6,10 +6,12 @@ import { delegationService } from "@/services";
 import { Skeleton } from "@/components/ui/skeleton";
 import { priceService } from "@/lib/priceService";
 import { useAuth } from "@/contexts/AuthContext";
+import { useStablesApy } from "@/hooks/useStablesApy";
+import { useOrchestrators } from "@/contexts/OrchestratorContext";
 import { formatNumber, parseFormattedNumber } from "@/lib/formatters";
 
-type SavingsPlan = {
-  id: string;
+type AccountPlan = {
+  id: "savings" | "growth";
   name: string;
   apy: number;
 };
@@ -18,12 +20,15 @@ type Currency = "USD" | "LPT" | "NGN" | "GBP";
 
 export const ForecastPage: React.FC = () => {
   const { state } = useAuth();
+  const { perena: perenaApy, growth: growthApy, isLoading: apyLoading } = useStablesApy();
+  const { orchestrators } = useOrchestrators();
+
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
   const [showCurrencyDropdown, setShowCurrencyDropdown] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<SavingsPlan>({
-    id: "flexible",
-    name: "Flexible",
-    apy: 25,
+  const [selectedPlan, setSelectedPlan] = useState<AccountPlan>({
+    id: "savings",
+    name: "Savings",
+    apy: 14,
   });
   const [delegationAmount, setDelegationAmount] = useState("0");
   const [selectedCurrency, setSelectedCurrency] = useState<Currency>(
@@ -37,33 +42,28 @@ export const ForecastPage: React.FC = () => {
 
   const currencies: Currency[] = ["USD", "LPT", "NGN", "GBP"];
 
-  const savingsPlans: SavingsPlan[] = [
-    {
-      id: "usd-base",
-      name: "USD-Base",
-      apy: 6.5,
-    },
-    {
-      id: "usd-plus",
-      name: "USD-Plus",
-      apy: 14,
-    },
-    {
-      id: "flexible",
-      name: "Flexible",
-      apy: 25,
-    },
-    {
-      id: "platinum",
-      name: "Platinum",
-      apy: 40,
-    },
-    {
-      id: "diamond",
-      name: "Diamond",
-      apy: 60,
-    },
-  ];
+  // Real APYs: Perena for Savings, LPT/Growth for Growth. Fallback growth from top orchestrator when not vested.
+  const effectiveSavingsApy = (perenaApy ?? 0.14) * 100;
+  const effectiveGrowthApy = useMemo(() => {
+    if (growthApy !== null) return growthApy * 100;
+    if (orchestrators.length > 0) {
+      const top = orchestrators[0];
+      const apyVal = top?.apy;
+      const parsed = typeof apyVal === "string" ? parseFloat(apyVal.replace("%", "")) : typeof apyVal === "number" ? apyVal : 0;
+      return parsed || 68;
+    }
+    return 68;
+  }, [growthApy, orchestrators]);
+
+  const accountPlans: AccountPlan[] = useMemo(
+    () => [
+      { id: "savings" as const, name: "Savings", apy: effectiveSavingsApy },
+      { id: "growth" as const, name: "Growth", apy: effectiveGrowthApy },
+    ],
+    [effectiveSavingsApy, effectiveGrowthApy]
+  );
+
+  const apy = accountPlans.find((p) => p.id === selectedPlan.id)?.apy ?? selectedPlan.apy ?? 0;
 
   const getCurrencySymbol = (currency: Currency): string => {
     if (currency === "LPT") return "LPT";
@@ -89,7 +89,7 @@ export const ForecastPage: React.FC = () => {
     setShowHelpDrawer(true);
   };
 
-  const handlePlanSelect = (plan: SavingsPlan) => {
+  const handlePlanSelect = (plan: AccountPlan) => {
     setSelectedPlan(plan);
   };
 
@@ -100,7 +100,6 @@ export const ForecastPage: React.FC = () => {
   };
 
   const numericAmount = parseFloat(delegationAmount.replace(/,/g, "")) || 0;
-  const apy = selectedPlan?.apy || 0;
   const fallbackDailyYield = (numericAmount * apy) / 100 / 365;
   const fallbackMonthlyYield = fallbackDailyYield * 30;
   const fallbackYearlyYield = (numericAmount * apy) / 100;
@@ -172,7 +171,7 @@ export const ForecastPage: React.FC = () => {
         {/* Header - Scrollable */}
         <div className="flex items-start justify-between py-8">
           <div>
-            <h1 className="text-lg font-medium text-white">Yield Calculator</h1>
+            <h1 className="text-lg font-medium text-white">Interest Calculator</h1>
             <p className="text-xs text-gray-500">
               Calculate your potential earnings
             </p>
@@ -194,12 +193,12 @@ export const ForecastPage: React.FC = () => {
             <select
               value={selectedPlan?.id || ""}
               onChange={(e) => {
-                const selected = savingsPlans.find((p) => p.id === e.target.value);
+                const selected = accountPlans.find((p) => p.id === e.target.value);
                 if (selected) handlePlanSelect(selected);
               }}
-              className="w-full p-4 bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl text-white appearance-none focus:border-[#C7EF6B] focus:outline-none"
+              className="w-full p-4 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg text-white appearance-none focus:border-[#C7EF6B] focus:outline-none"
             >
-              {savingsPlans.map((plan) => (
+              {accountPlans.map((plan) => (
                 <option className="font-medium" key={plan.id} value={plan.id}>
                   {plan.name} - APY: {plan.apy}%
                 </option>
@@ -233,7 +232,7 @@ export const ForecastPage: React.FC = () => {
                 />
               </button>
               {showCurrencyDropdown && (
-                <div className="absolute right-0 mt-2 w-32 bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl shadow-lg z-10 overflow-hidden">
+                <div className="absolute right-0 mt-2 w-32 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg shadow-lg z-10 overflow-hidden">
                   {currencies.map((currency) => (
                     <button
                       key={currency}
@@ -258,14 +257,14 @@ export const ForecastPage: React.FC = () => {
             type="text"
             value={delegationAmount ? formatNumber(delegationAmount) : ""}
             onChange={handleAmountChange}
-            className="w-full p-4 bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl text-white focus:border-[#C7EF6B] focus:outline-none"
+            className="w-full p-4 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg text-white focus:border-[#C7EF6B] focus:outline-none"
             placeholder={`Enter amount in ${selectedCurrency}`}
           />
         </div>
 
         {/* Total Projected Earnings (Yearly) */}
         <div className="mb-8">
-          <div className="bg-[#1a1a1a] rounded-xl p-6 text-center">
+          <div className="bg-[#1a1a1a] rounded-lg p-6 text-center">
             <h2 className="text-gray-400 text-sm font-normal mb-2">
               Projected Annual Earning
             </h2>
@@ -287,9 +286,9 @@ export const ForecastPage: React.FC = () => {
         </div>
 
         {/* Return Breakdown */}
-        <div className="mb-8">
+        <div className="mb-4">
           <h3 className="text-white font-medium mb-4">Projected Returns</h3>
-          <div className="bg-[#1a1a1a] rounded-xl p-4 space-y-3">
+          <div className="bg-[#1a1a1a] rounded-lg p-4 space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-gray-400">Daily</span>
               <span className="text-white/90 font-medium">
@@ -377,7 +376,7 @@ export const ForecastPage: React.FC = () => {
         title="Yield Calculator Guide"
         content={[
           "Calculate your potential earnings by choosing an account and entering your stake amount.",
-          "Stables offers 14% APY for stable, low-risk returns. Flexible offers 25% APY. Platinum offers 40% APY. Diamond offers 60% APY for maximum returns.",
+          "Savings uses Perena APY for stable, low-risk returns. Growth uses LPT staking APY for higher potential returns.",
           "Results are estimates and may vary based on network performance.",
         ]}
       />
