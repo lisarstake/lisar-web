@@ -11,6 +11,7 @@ import { DashboardProvider } from "@/contexts/DashboardContext";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 import { GuidedTourProvider } from "@/contexts/GuidedTourContext";
 import { PortfolioProvider } from "@/contexts/PortfolioContext";
+import { WalletCardProvider } from "@/contexts/WalletCardContext";
 import { CampaignProvider } from "@/contexts/CampaignContext";
 import { GuidedTour } from "@/components/general/GuidedTour";
 
@@ -41,9 +42,11 @@ export default function App() {
     "/learn-detail",
   ];
 
-  const hasBottomNav = pagesWithBottomNav.some((path) =>
-    location.pathname.startsWith(path)
-  );
+  const hasBottomNav =
+    location.pathname !== "/wallet/returns" &&
+    pagesWithBottomNav.some((path) =>
+      location.pathname.startsWith(path)
+    );
 
   return (
     <ErrorBoundary>
@@ -61,6 +64,7 @@ export default function App() {
                           <ErrorBoundary>
                             <DelegationProvider>
                               <ErrorBoundary>
+                                <WalletCardProvider>
                                 <PortfolioProvider>
                                   <ErrorBoundary>
                                     <LeaderboardProvider>
@@ -103,6 +107,7 @@ export default function App() {
                                     </LeaderboardProvider>
                                   </ErrorBoundary>
                                 </PortfolioProvider>
+                                </WalletCardProvider>
                               </ErrorBoundary>
                             </DelegationProvider>
                           </ErrorBoundary>

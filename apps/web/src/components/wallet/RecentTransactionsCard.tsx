@@ -13,7 +13,7 @@ interface RecentTransactionsCardProps {
 export const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
   transactions,
   isLoading,
-  onTransactionClick,
+  onTransactionClick, 
   skeletonCount = 3,
 }) => {
   const getTransactionIcon = (type: TransactionData["transaction_type"]) => {
@@ -123,7 +123,7 @@ export const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
   }
 
   return (
-    <div className="bg-[#1a1a1a] rounded-lg border border-[#2a2a2a] overflow-hidden ">
+    <div className="bg-linear-to-br from-[#0f0f0f] to-[#151515]  rounded-lg border border-[#2a2a2a] overflow-hidden ">
       <div className="divide-y divide-[#2a2a2a]">
         {transactions.map((transaction) => (
           <div

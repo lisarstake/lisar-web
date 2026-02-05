@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   ChevronLeft,
   CircleQuestionMark,
   LoaderCircle,
   Wallet2,
-  Copy,
 } from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
@@ -17,7 +16,7 @@ import { useTransactions } from "@/contexts/TransactionContext";
 import { priceService } from "@/lib/priceService";
 import { useWallet } from "@/contexts/WalletContext";
 import { formatNumber, parseFormattedNumber } from "@/lib/formatters";
-import { walletService } from "@/services/wallet";
+import { walletService } from "@/services";
 import { getFiatType } from "@/lib/onramp";
 import { useStablesApy } from "@/hooks/useStablesApy";
 
@@ -82,9 +81,9 @@ export const WithdrawPage: React.FC = () => {
   const userCurrency = state.user?.fiat_type || "NGN";
   const currencySymbol = priceService.getCurrencySymbol(userCurrency);
 
-  // User's wallet balance:
-  // - For High Yield: LPT balance
-  // - For Stables: combined stables balance from WalletContext (Solana + EVM)
+  // Available balance (full wallet balance - idle for LPT, combined stables for savings):
+  // - For High Yield: LPT idle balance (wallet)
+  // - For Stables: combined stables balance (Solana + EVM)
   const walletBalance =
     isStables ? stablesBalance || 0 : wallet?.balanceLpt || 0;
 
@@ -537,7 +536,7 @@ export const WithdrawPage: React.FC = () => {
         {!isWithdrawalLaunched ? (
           <button
             onClick={handleLaunchWithdrawal}
-            className="w-full py-4 rounded-lg font-semibold text-lg bg-[#C7EF6B] text-black hover:bg-[#B8E55A] transition-colors"
+            className="w-full py-3 rounded-lg font-semibold text-lg bg-[#C7EF6B] text-black hover:bg-[#B8E55A] transition-colors"
           >
             Get Address
           </button>
@@ -552,7 +551,7 @@ export const WithdrawPage: React.FC = () => {
               hasInsufficientFunds ||
               isWithdrawing
             }
-            className={`w-full py-4 rounded-lg font-semibold text-lg transition-colors ${
+            className={`w-full py-3 rounded-lg font-semibold text-lg transition-colors ${
               lptAmount &&
               parseFloat(lptAmount) > 0 &&
               withdrawalAddress &&

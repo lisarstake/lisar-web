@@ -38,6 +38,7 @@ const CampaignPage = lazyRetry(() => import('@/screens/campaign-page'))
 const PortfolioPage = lazyRetry(() => import('@/screens/portfolio-page'))
 const PortfolioSummaryPage = lazyRetry(() => import('@/screens/portfolio-summary-page'))
 const PortfolioPositionsPage = lazyRetry(() => import('@/screens/portfolio-positions-page'))
+const EarningsBreakdownPage = lazyRetry(() => import('@/screens/earnings-breakdown-page'))
 const LeaderboardPage = lazyRetry(() => import('@/screens/leaderboard-page'))
 const DashboardPage = lazyRetry(() => import('@/screens/dashboard-page'))
 const ProfilePage = lazyRetry(() => import('@/screens/profile-page'))
@@ -297,6 +298,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             {withSuspenseAndErrorBoundary(<PortfolioPositionsPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'wallet/returns',
+        element: (
+          <ProtectedRoute>
+            {withSuspenseAndErrorBoundary(<EarningsBreakdownPage />)}
           </ProtectedRoute>
         ),
       },
