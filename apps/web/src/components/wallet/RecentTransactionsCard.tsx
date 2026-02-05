@@ -19,19 +19,19 @@ export const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
   const getTransactionIcon = (type: TransactionData["transaction_type"]) => {
     switch (type) {
       case "deposit":
-        return <ArrowDown size={18} className="text-[#C7EF6B]" />;
+        return <ArrowDown size={18} className="text-[#C7EF6B]/90" />;
       case "withdrawal":
-        return <ArrowUp size={18} className="text-[#FF6B6B]" />;
+        return <ArrowUp size={18} className="text-[#FF6B6B]/90" />;
       case "delegation":
-        return <PiggyBank size={18} className="text-[#C7EF6B]" />;
+        return <PiggyBank size={18} className="text-[#C7EF6B]/90" />;
       case "undelegation":
-        return <SquareMinus size={18} className="text-[#FF6B6B]" />;
+        return <SquareMinus size={18} className="text-[#FF6B6B]/90" />;
       case "mint":
-        return <PiggyBank size={18} className="text-[#C7EF6B]" />;
+        return <PiggyBank size={18} className="text-[#C7EF6B]/90" />;
       case "burn":
-        return <SquareMinus size={18} className="text-[#FF6B6B]" />;
+        return <SquareMinus size={18} className="text-[#FF6B6B]/90" />;
       default:
-        return <PiggyBank size={18} className="text-[#C7EF6B]" />;
+        return <PiggyBank size={18} className="text-[#C7EF6B]/90" />;
     }
   };
 
@@ -58,14 +58,14 @@ export const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
     type: TransactionData["transaction_type"]
   ) => {
     return type === "deposit" || type === "delegation" || type === "mint"
-      ? "bg-[#C7EF6B]/10"
-      : "bg-[#FF6B6B]/10";
+      ? "bg-[#C7EF6B]/8"
+      : "bg-[#FF6B6B]/8";
   };
 
   const getAmountColor = (type: TransactionData["transaction_type"]) => {
     return type === "deposit" || type === "delegation" || type === "mint"
-      ? "text-[#C7EF6B]"
-      : "text-[#FF6B6B]";
+      ? "text-[#C7EF6B]/90"
+      : "text-[#FF6B6B]/90";
   };
 
   const getAmountPrefix = (type: TransactionData["transaction_type"]) => {
