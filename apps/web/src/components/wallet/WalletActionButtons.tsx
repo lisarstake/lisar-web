@@ -37,7 +37,7 @@ export const WalletActionButtons: React.FC<WalletActionButtonsProps> = ({
     : "text-gray-300";
 
   return (
-    <div className="flex items-center justify-around px-6 py-2">
+    <div className="flex items-center justify-around px-6 pb-2">
       <div className="flex flex-col items-center">
         <button
           data-tour="wallet-page-deposit-button"

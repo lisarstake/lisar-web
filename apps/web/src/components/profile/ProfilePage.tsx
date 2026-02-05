@@ -302,7 +302,7 @@ export const ProfilePage: React.FC = () => {
           </div>
 
           {/* Date of Birth */}
-          <div>
+          <div className="min-w-0">
             <label className="block text-gray-100 text-sm font-medium mb-2">
               Date of Birth
             </label>
@@ -310,7 +310,7 @@ export const ProfilePage: React.FC = () => {
               type="date"
               value={formData.dateOfBirth}
               onChange={(e) => handleInputChange("dateOfBirth", e.target.value)}
-              className="w-full px-4 py-3 bg-[#121212] border border-[#121212] rounded-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:border-[#C7EF6B] transition-colors"
+              className="w-full min-w-0 max-w-full px-4 py-3 bg-[#121212] border border-[#121212] rounded-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:border-[#C7EF6B] transition-colors"
             />
           </div>
 

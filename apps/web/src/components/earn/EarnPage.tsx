@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { CircleQuestionMark } from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
+import { useCampaign } from "@/contexts/CampaignContext";
 
 interface EarnCard {
   id: string;
@@ -17,14 +18,23 @@ interface EarnCard {
 export const EarnPage: React.FC = () => {
   const navigate = useNavigate();
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
+  const { campaignStatus } = useCampaign();
+
+  const status = campaignStatus as { current_tier?: number; enrollment?: object } | null;
+  const isCampaignOngoing =
+    !!status &&
+    (typeof status.current_tier === "number" ||
+      (status.enrollment && Object.keys(status.enrollment).length > 0));
+  const campaignStatusLabel = isCampaignOngoing ? "ongoing" : "not started";
+  const campaignButtonText = isCampaignOngoing ? "Check progress" : "Join Campaign";
 
   const earnCards: EarnCard[] = [
     {
       id: "1",
-      title: "Early Savers 🎯⚡",
-      description: "Earn rewards building healthy savings habits!  ",
-      image: "/1.png",
-      buttonText: "Join Campaign",
+      title: `Early Savers (${campaignStatusLabel})`,
+      description: "Join the early savers campaign to earn rewards and perks building healthy saving habits!  ",
+      image: "/campaign.jpg",
+      buttonText: campaignButtonText,
       isComingSoon: false,
     },
     // {
@@ -150,7 +160,7 @@ export const EarnPage: React.FC = () => {
 
                     {/* YouTube Logo */}
                     <a
-                      href="https://youtube.com/@lisarstake"
+                      href="https://youtube.com/@lisarstakee"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="hover:opacity-80 transition-opacity"

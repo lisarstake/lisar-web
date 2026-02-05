@@ -10,6 +10,7 @@ import { useOrchestrators } from "@/contexts/OrchestratorContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWallet } from "@/contexts/WalletContext";
 import { useDelegation } from "@/contexts/DelegationContext";
+import { useCampaign } from "@/contexts/CampaignContext";
 import { useNotification } from "@/contexts/NotificationContext";
 import { useGuidedTour } from "@/hooks/useGuidedTour";
 import { usePrices } from "@/hooks/usePrices";
@@ -93,6 +94,7 @@ export const AllWalletPage: React.FC = () => {
   } = useWallet();
   const { delegatorStakeProfile, isLoading: delegationLoading } =
     useDelegation();
+  const { campaignStatus } = useCampaign();
   const { unreadCount } = useNotification();
   const { prices } = usePrices();
   // Start tour for non-onboarded users
@@ -417,7 +419,7 @@ export const AllWalletPage: React.FC = () => {
                     return (
                       <div
                         key={notification.id}
-                        className={`relative bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-2xl p-3 overflow-hidden ${notification.metadata?.severity === "warning"
+                        className={`relative bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-xl p-3 overflow-hidden ${notification.metadata?.severity === "warning"
                           ? "border-yellow-500/30"
                           : notification.metadata?.severity === "error" || notification.metadata?.severity === "critical"
                             ? "border-red-500/30"
@@ -470,36 +472,51 @@ export const AllWalletPage: React.FC = () => {
                 </div>
               ) : (
                 /* Early Savers Campaign Card */
-                <div
-                  onClick={() => navigate("/earn")}
-                  className="mt-2 bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-2xl p-3 border border-[#2a2a2a] relative overflow-hidden cursor-pointer hover:opacity-95 transition-opacity"
-                >
-                  <div className="flex items-center gap-2">
-                    <div className="shrink-0">
-                      <img
-                        src="/tt1.png"
-                        alt="Predict"
-                        className="w-14 h-14 object-contain rounded-lg"
-                      />
+                (() => {
+                  const status = campaignStatus as { current_tier?: number; enrollment?: object } | null;
+                  const isCampaignOngoing =
+                    !!status &&
+                    (typeof status.current_tier === "number" ||
+                      (status.enrollment && Object.keys(status.enrollment).length > 0));
+                  const campaignStatusLabel = isCampaignOngoing
+                    ? "ongoing"
+                    : "not started";
+                  const borderColor = isCampaignOngoing
+                    ? "border-[#C7EF6B]/60"
+                    : "border-amber-500/80";
+                  return (
+                    <div
+                      onClick={() => navigate("/earn")}
+                      className={`mt-2 bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-xl p-3 border ${borderColor} relative overflow-hidden cursor-pointer hover:opacity-95 transition-opacity`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="shrink-0">
+                          <img
+                            src="/campaign1.jpg"
+                            alt="Early Savers Campaign"
+                            className="w-12 h-14 object-cover rounded-lg"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-white text-[14px] font-medium">
+                            Early Savers ({campaignStatusLabel})
+                          </h3>
+                          <p className="text-white/60 text-[13px]">
+                            Earn rewards and perks building healthy saving habits.
+                            Click to get started now!
+                          </p>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <h3 className="text-white text-base font-medium">
-                        Early Savers
-                      </h3>
-                      <p className="text-white/60 text-sm">
-                        Earn rewards building healthy savings habits! Click to get
-                        started.
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                  );
+                })()
               )}
 
               {/* Add Cash Section */}
               <div className="mt-6">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-white/70 text-sm font-medium">
-                    Add cash
+                    Add Cash <span className="text-white">💸</span>
                   </h2>
                 </div>
                 <div className="grid grid-cols-3 gap-2">
@@ -624,7 +641,7 @@ export const AllWalletPage: React.FC = () => {
         }}
         selectedAmount={selectedAddAmount}
         onSelectDestination={handleAddCashDestination}
-      /> 
+      />
 
       <PortfolioSelectionDrawer
         isOpen={showPortfolioDrawer}
