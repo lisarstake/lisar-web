@@ -65,7 +65,7 @@ export const CampaignHomePage: React.FC = () => {
     switch (tier) {
       case 1:
         return {
-          title: "Early Saver (1/3)",
+          title: "Early Saver (level 1)",
           subtitle: "Welcome Bonus",
           reward: "₦1,500",
           timeline: "7 days",
@@ -90,7 +90,7 @@ export const CampaignHomePage: React.FC = () => {
         };
       case 2:
         return {
-          title: "Consistent Saver (2/3)",
+          title: "Consistent Saver (level 2)",
           subtitle: "Growth Bonus",
           reward: "₦3,000",
           timeline: "30 days",
@@ -116,7 +116,7 @@ export const CampaignHomePage: React.FC = () => {
         };
       case 3:
         return {
-          title: "Champion Saver (3/3)",
+          title: "Champion Saver (level 3)",
           subtitle: "Premium Perks",
           reward: "Merch + Perks",
           timeline: "60 days",
@@ -214,7 +214,7 @@ export const CampaignHomePage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="h-screen bg-[#050505] text-white flex flex-col">
+      <div className="h-screen bg-[#050505] text-white flex flex-col font-raleway">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-8">
           <button
@@ -224,7 +224,7 @@ export const CampaignHomePage: React.FC = () => {
             <ChevronLeft color="#C7EF6B" />
           </button>
 
-          <h1 className="text-lg font-medium text-white">Campaign</h1>
+          <h1 className="text-base font-medium text-white">Early Savers</h1>
 
           <button
             onClick={handleHelpClick}
@@ -237,7 +237,6 @@ export const CampaignHomePage: React.FC = () => {
         {/* Loading Content */}
         <div className="flex-1 overflow-y-auto px-6 pb-20 scrollbar-hide">
           <Skeleton className="h-64 w-full bg-gray-600 mb-6" />
-         
           <Skeleton className="h-48 w-full bg-gray-600" />
         </div>
 
@@ -252,7 +251,7 @@ export const CampaignHomePage: React.FC = () => {
   const tierInfo = getTierInfo(currentTier);
 
   return (
-    <div className="h-screen bg-[#050505] text-white flex flex-col">
+    <div className="h-screen bg-[#050505] text-white flex flex-col font-raleway">
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-8">
         <button
@@ -262,7 +261,7 @@ export const CampaignHomePage: React.FC = () => {
           <ChevronLeft color="#C7EF6B" />
         </button>
 
-        <h1 className="text-lg font-medium text-white">Campaign</h1>
+        <h1 className="text-base font-medium text-white">Early Savers</h1>
 
         <button
           onClick={handleHelpClick}
@@ -276,7 +275,7 @@ export const CampaignHomePage: React.FC = () => {
       <div className="flex-1 overflow-y-auto px-6 pb-20 scrollbar-hide">
         {/* Campaign Title */}
         {/* <div className="mb-4">
-          <h2 className="text-xl font-bold text-white mb-1">
+          <h2 className="text-xs font-bold text-white mb-1">
             Early Savers Campaign 🎯⚡
           </h2>
           <p className="text-xs text-gray-400">
@@ -288,7 +287,7 @@ export const CampaignHomePage: React.FC = () => {
           {/* Campaign Image */}
           <div className="w-full h-48 relative rounded-lg overflow-hidden">
             <img
-              src="/1.png"
+              src="/campaign.jpg"
               alt="Early Savers Campaign"
               className="w-full h-full object-cover object-top"
             />
@@ -299,7 +298,7 @@ export const CampaignHomePage: React.FC = () => {
             <CardContent className="px-4 py-4">
               <div className="flex items-center justify-between gap-2 mb-4">
                 <CardTitle className="flex items-center gap-2 text-white text-base">
-                  <Trophy className="w-4 h-4 text-[#C7EF6B]" />
+               
                   {tierInfo.title}
                 </CardTitle>
                 <Badge
@@ -310,14 +309,14 @@ export const CampaignHomePage: React.FC = () => {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="p-2 bg-[#2a2a2a] rounded-md">
-                  <p className="text-xs text-gray-400 mb-0.5">Reward</p>
-                  <p className="text-sm font-semibold text-white/90">
+                  <p className="text-xs text-gray-400">Reward</p>
+                  <p className="text-xs font-semibold text-white/90">
                     {tierInfo.reward}
                   </p>
                 </div>
                 <div className="p-2 bg-[#2a2a2a] rounded-md">
-                  <p className="text-xs text-gray-400 mb-0.5">Timeline</p>
-                  <p className="text-sm font-semibold text-white/90">
+                  <p className="text-xs text-gray-400">Timeline</p>
+                  <p className="text-xs font-semibold text-white/90">
                     {tierInfo.timeline}
                   </p>
                 </div>
@@ -334,7 +333,7 @@ export const CampaignHomePage: React.FC = () => {
                 className="flex items-center justify-between w-full mb-0"
               >
                 <CardTitle className="text-white text-sm">
-                  Requirements
+                  Unlock Requirements
                 </CardTitle>
                 <ChevronDown
                   className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
@@ -358,7 +357,7 @@ export const CampaignHomePage: React.FC = () => {
                       >
                         <div className="flex-1">
                           <p
-                            className={`text-sm font-medium ${req.completed ? "text-[#C7EF6B]" : "text-white/90"}`}
+                            className={`text-xs font-medium ${req.completed ? "text-[#C7EF6B]" : "text-white/90"}`}
                           >
                             {req.label}
                           </p>
@@ -415,7 +414,7 @@ export const CampaignHomePage: React.FC = () => {
           <Card className="bg-[#1a1a1a] border-gray-800 py-0">
             <CardContent className="px-4 py-3">
               <div className="mb-3">
-                <CardTitle className="flex items-center gap-1 text-white text-sm">
+                <CardTitle className="flex items-center gap-1 text-white text-sm mb-0.5">
                   <Users className="w-4 h-4 text-[#C7EF6B]" />
                    Referral Code
                 </CardTitle>
@@ -427,7 +426,7 @@ export const CampaignHomePage: React.FC = () => {
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 py-2 px-3.5 bg-[#2a2a2a] rounded-md">
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-[#C7EF6B] tracking-wider">
+                      <p className="text-xs font-medium text-[#C7EF6B] tracking-wider">
                         {referralCode}
                       </p>
                     </div>
@@ -450,7 +449,7 @@ export const CampaignHomePage: React.FC = () => {
               ) : (
                 <div className="flex items-center gap-2">
                   <div className="flex-1 py-2 px-3.5 bg-[#2a2a2a] rounded-md">
-                    <p className="text-sm font-medium text-gray-400">
+                    <p className="text-xs font-medium text-gray-400">
                       No referral code yet
                     </p>
                   </div>
@@ -510,7 +509,7 @@ export const CampaignHomePage: React.FC = () => {
 
           {currentTier === 2 && (
             <div className="p-4 bg-linear-to-r from-[#C7EF6B]/20 to-[#86B3F7]/20 border border-[#C7EF6B]/30 rounded-lg mb-6">
-              <h3 className="text-white font-semibold mb-1 text-sm">
+              <h3 className="text-white font-semibold mb-1 text-xs">
                 Choose Your Path 
               </h3>
               <p className="text-xs text-gray-300 mb-3">
@@ -518,7 +517,7 @@ export const CampaignHomePage: React.FC = () => {
               </p>
               <button
                 onClick={() => setShowActivityDrawer(true)}
-                className="w-full py-2.5 bg-[#C7EF6B] hover:bg-[#B8E55A] text-black font-medium rounded-lg transition-colors text-sm"
+                className="w-full py-2.5 bg-[#C7EF6B] hover:bg-[#B8E55A] text-black font-medium rounded-lg transition-colors text-xs"
               >
                 Choose Your Activities
               </button>
@@ -527,7 +526,7 @@ export const CampaignHomePage: React.FC = () => {
 
           {currentTier === 3 && (
             <div className="p-4 bg-gradient-to-r from-[#C7EF6B]/20 to-[#86B3F7]/20 border border-[#C7EF6B]/30 rounded-lg mb-6">
-              <h3 className="text-white font-semibold mb-1 text-sm">
+              <h3 className="text-white font-semibold mb-1 text-xs">
                 Champion Level Challenge
               </h3>
               <p className="text-xs text-gray-300 mb-3">
@@ -544,7 +543,7 @@ export const CampaignHomePage: React.FC = () => {
                     },
                   })
                 }
-                className="w-full py-2.5 bg-[#C7EF6B] hover:bg-[#B8E55A] text-black font-medium rounded-lg transition-colors text-sm"
+                className="w-full py-2.5 bg-[#C7EF6B] hover:bg-[#B8E55A] text-black font-medium rounded-lg transition-colors text-xs"
               >
                 Make a Deposit
               </button>

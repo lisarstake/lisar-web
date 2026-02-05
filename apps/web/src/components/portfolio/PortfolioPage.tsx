@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { ChevronLeft, CircleQuestionMark, Eye, EyeOff } from "lucide-react";
+import { ChevronLeft, CircleQuestionMark, Eye, EyeOff, RefreshCw } from "lucide-react";
 import QRCode from "qrcode";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
@@ -98,6 +98,7 @@ export const PortfolioPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
+  const [isCurrencyRotating, setIsCurrencyRotating] = useState(false);
 
   const walletType =
     (location.state as { walletType?: string })?.walletType || "staking";
@@ -165,6 +166,12 @@ export const PortfolioPage: React.FC = () => {
     setShowHelpDrawer(true);
   };
 
+  const handleCurrencyToggle = () => {
+    setDisplayCurrency(displayCurrency === "USD" ? "NGN" : "USD");
+    setIsCurrencyRotating(true);
+    setTimeout(() => setIsCurrencyRotating(false), 600);
+  };
+
   if (isLoading) {
     return <PortfolioSkeleton />;
   }
@@ -188,7 +195,7 @@ export const PortfolioPage: React.FC = () => {
           </button>
         </div>
 
-        {/* Wallet Card - exact match to WalletPage */}
+        {/* Wallet Card */}
         {card && (
           <div className="mb-6">
             <div
@@ -235,17 +242,17 @@ export const PortfolioPage: React.FC = () => {
                       </button>
                     </div>
                     <button
-                      onClick={() =>
-                        setDisplayCurrency(
-                          displayCurrency === "USD" ? "NGN" : "USD"
-                        )
-                      }
-                      className={`text-xs font-medium px-2 py-1 rounded-md transition-colors ${isSavings
+                      onClick={handleCurrencyToggle}
+                      className={`text-xs font-medium px-2 py-1 rounded-md flex items-center gap-1 transition-colors ${isSavings
                         ? "bg-white/20 text-white hover:bg-white/30"
                         : "bg-white/10 text-white/90 hover:bg-white/20"
                         }`}
                     >
-                      {displayCurrency}
+                      {displayCurrency}{" "}
+                      <RefreshCw
+                        className={isCurrencyRotating ? "animate-[spin_0.6s_ease-in-out_1]" : ""}
+                        size={12}
+                      />
                     </button>
                   </div>
 

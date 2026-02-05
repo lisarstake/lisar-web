@@ -13,7 +13,7 @@ import { useGuidedTour } from "@/hooks/useGuidedTour";
 import { WALLET_PAGE_TOUR_ID } from "@/lib/tourConfig";
 import { formatEarnings, formatStables } from "@/lib/formatters";
 import { TransactionData } from "@/services/transactions/types";
-import { CircleQuestionMark, ChevronLeft, Eye, EyeOff } from "lucide-react";
+import { CircleQuestionMark, ChevronLeft, Eye, EyeOff, RefreshCw } from "lucide-react";
 
 interface WalletPageProps {
   walletType?: string;
@@ -23,6 +23,7 @@ interface WalletPageProps {
 export const WalletPage: React.FC<WalletPageProps> = ({ walletType, embedded }) => {
   const navigate = useNavigate();
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
+  const [isCurrencyRotating, setIsCurrencyRotating] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -90,6 +91,13 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType, embedded }) 
 
   const handleHelpClick = () => {
     setShowHelpDrawer(true);
+  };
+
+  const handleCurrencyToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setDisplayCurrency(displayCurrency === "USD" ? "NGN" : "USD");
+    setIsCurrencyRotating(true);
+    setTimeout(() => setIsCurrencyRotating(false), 600);
   };
 
   const handleDepositClick = () => {
@@ -294,18 +302,17 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType, embedded }) 
                             </button>
                           </div>
                           <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setDisplayCurrency(
-                                displayCurrency === "USD" ? "NGN" : "USD"
-                              );
-                            }}
-                            className={`text-xs font-medium px-2 py-1 rounded-md transition-colors ${isSavings
+                            onClick={handleCurrencyToggle}
+                            className={`text-xs font-medium px-2 py-1 rounded-md flex items-center gap-1 transition-colors ${isSavings
                               ? "bg-white/20 text-white hover:bg-white/30"
                               : "bg-white/10 text-white/90 hover:bg-white/20"
                               }`}
                           >
-                            {displayCurrency}
+                            {displayCurrency}{" "}
+                            <RefreshCw
+                              className={isCurrencyRotating ? "animate-[spin_0.6s_ease-in-out_1]" : ""}
+                              size={12}
+                            />
                           </button>
                         </div>
 

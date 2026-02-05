@@ -154,7 +154,7 @@ export const SummaryPage: React.FC = () => {
           <>
             {/* Active Vest - Stables */}
             <div className="bg-[#6da7fd] rounded-2xl p-5 mb-4 border border-[#86B3F7]/30">
-              <p className="text-white/90 text-sm font-medium uppercase tracking-wider mb-1">
+              <p className="text-white/90 text-sm font-medium tracking-wider mb-1">
                 Active vest
               </p>
               <p className="text-white/70 text-xs mb-2">
@@ -176,8 +176,8 @@ export const SummaryPage: React.FC = () => {
             {/* Stats Grid - Stables */}
             <div className="grid grid-cols-1 gap-4 mb-6">
               <div className="bg-[#0f0f0f] rounded-2xl p-5 border border-[#2a2a2a]">
-                <p className="text-gray-400 text-sm font-medium uppercase tracking-wider mb-2">
-                  Rewards earned
+                <p className="text-gray-400 text-sm font-medium tracking-wider mb-2">
+                  Interest earned
                 </p>
                 <p className="text-[#86B3F7] text-xl font-semibold">
                   {lifetimeRewards.toFixed(4)}{" "}
@@ -189,7 +189,7 @@ export const SummaryPage: React.FC = () => {
             {/* Info Card - Stables */}
             <div className="bg-[#0f0f0f] rounded-lg p-3 border border-[#2a2a2a]">
               <p className="text-gray-400 text-xs leading-relaxed">
-                Your stables earn daily interest at up to{" "}
+                Your savings earn daily interest at up to{" "}
                 <span className="text-white/90 font-medium">
                   {apyLoading && perenaApy === null
                     ? "..."
@@ -206,7 +206,7 @@ export const SummaryPage: React.FC = () => {
           <>
             {/* Active Vest - Growth */}
             <div className="bg-linear-to-br from-[#0f0f0f] to-[#1a1a1a] rounded-2xl p-6 mb-4 border border-[#C7EF6B]/30">
-              <p className="text-white/80 text-sm font-medium uppercase tracking-wider mb-1">
+              <p className="text-white/80 text-sm font-medium tracking-wider mb-1">
                 Active vest
               </p>
               <p className="text-white/70 text-xs mb-2">
@@ -228,8 +228,8 @@ export const SummaryPage: React.FC = () => {
             {/* Stats Grid - High Yield */}
             <div className="grid grid-cols-1 gap-4 mb-6">
               <div className="bg-[#0f0f0f] rounded-2xl p-5 border border-[#2a2a2a]">
-                <p className="text-gray-400 text-sm font-medium uppercase tracking-wider mb-2">
-                  Rewards earned
+                <p className="text-gray-400 text-sm font-medium tracking-wider mb-2">
+                  Interest earned
                 </p>
                 <p className="text-[#C7EF6B] text-xl font-semibold">
                   {formatLifetime(lifetimeRewards)}{" "}
