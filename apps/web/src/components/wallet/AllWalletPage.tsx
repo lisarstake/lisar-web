@@ -480,7 +480,7 @@ export const AllWalletPage: React.FC = () => {
                       (status.enrollment && Object.keys(status.enrollment).length > 0));
                   const campaignStatusLabel = isCampaignOngoing
                     ? "ongoing"
-                    : "not started";
+                    : "not enrolled";
                   const borderColor = isCampaignOngoing
                     ? "border-[#C7EF6B]/60"
                     : "border-amber-500/80";
@@ -503,7 +503,7 @@ export const AllWalletPage: React.FC = () => {
                           </h3>
                           <p className="text-white/60 text-[13px]">
                             Earn rewards and perks building healthy saving habits.
-                            Click to get started now!
+                            {campaignStatusLabel === "not enrolled" && " Click to get started now!"}
                           </p>
                         </div>
                       </div>

@@ -25,7 +25,7 @@ export const EarnPage: React.FC = () => {
     !!status &&
     (typeof status.current_tier === "number" ||
       (status.enrollment && Object.keys(status.enrollment).length > 0));
-  const campaignStatusLabel = isCampaignOngoing ? "ongoing" : "not started";
+  const campaignStatusLabel = isCampaignOngoing ? "ongoing" : "not enrolled";
   const campaignButtonText = isCampaignOngoing ? "Check progress" : "Join Campaign";
 
   const earnCards: EarnCard[] = [
