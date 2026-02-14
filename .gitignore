@@ -12,5 +12,6 @@ dist
 .env.production.local
 node_modules
 
-# Mobile app (not committed for now)
+
 mobile/
+rampl/

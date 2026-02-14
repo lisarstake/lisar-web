@@ -386,7 +386,7 @@ export const DepositPage: React.FC = () => {
         </div>
 
         {/* Provider Indicator for Stables */}
-        {isStables && selectedProvider && locationState?.tierTitle && (
+        {/* {isStables && selectedProvider && locationState?.tierTitle && (
           <div className="py-4">
             <div className="bg-[#1a1a1a] rounded-lg p-4 border border-[#2a2a2a]">
               <div className="flex items-center gap-3">
@@ -408,7 +408,7 @@ export const DepositPage: React.FC = () => {
               </div>
             </div>
           </div>
-        )}
+        )} */}
 
         {/* Payment Method Selection */}
         <div className="py-4">
