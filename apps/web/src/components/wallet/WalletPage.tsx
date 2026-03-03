@@ -4,9 +4,10 @@ import { WalletActionButtons } from "./WalletActionButtons";
 import { RecentTransactionsCard } from "./RecentTransactionsCard";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
+import { EarningsBreakdownDrawer } from "../general/EarningsBreakdownDrawer";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWallet } from "@/contexts/WalletContext";
-import { useWalletCard } from "@/contexts/WalletCardContext";
+import { useWalletCard, WalletCardData } from "@/contexts/WalletCardContext";
 import { useNotification } from "@/contexts/NotificationContext";
 import { useTransactions } from "@/contexts/TransactionContext";
 import { useGuidedTour } from "@/hooks/useGuidedTour";
@@ -24,6 +25,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType, embedded }) 
   const navigate = useNavigate();
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
   const [isCurrencyRotating, setIsCurrencyRotating] = useState(false);
+  const [selectedEarningsCard, setSelectedEarningsCard] = useState<WalletCardData | null>(null);
 
   useEffect(() => {
     return () => {
@@ -367,14 +369,15 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType, embedded }) 
                     </div>
 
                     <div className="absolute bottom-2 left-2 z-10 flex gap-2">
-                      <div
-                        className={`w-fit rounded-xl px-3.5 py-1.5 ${isSavings
+                      <button
+                        onClick={() => setSelectedEarningsCard(card)}
+                        className={`w-fit rounded-xl px-3.5 py-1.5 text-left transition-colors hover:opacity-80 ${isSavings
                           ? "bg-white/20"
                           : "bg-white/10"
                           }`}
                       >
                         <p className="text-white/80 text-[10px] mb-0.5">
-                          Interest earned
+                          Interest earned this week
                         </p>
                         <p className="text-white text-sm font-semibold">
                           {displayFiatSymbol}
@@ -388,7 +391,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType, embedded }) 
                             at ({card.apyPercent}% p.a)
                           </span>
                         </p>
-                      </div>
+                      </button>
                     </div>
 
                     {isSavings ? (
@@ -416,8 +419,8 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType, embedded }) 
               <div
                 key={i}
                 className={`h-1.5 rounded-full transition-all ${i === carouselIndex
-                    ? "w-6 bg-[#86B3F7]"
-                    : "w-1.5 bg-white/30"
+                  ? "w-6 bg-[#86B3F7]"
+                  : "w-1.5 bg-white/30"
                   }`}
               />
             ))}
@@ -485,6 +488,17 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType, embedded }) 
               "Withdrawals are subject to a 7-day unbonding period before funds become available.",
             ]
         }
+      />
+
+      {/* Earnings Breakdown Drawer */}
+      <EarningsBreakdownDrawer
+        isOpen={selectedEarningsCard !== null}
+        onClose={() => setSelectedEarningsCard(null)}
+        balance={selectedEarningsCard?.displayBalanceValue || 0}
+        apyPercent={selectedEarningsCard?.apyPercent || 0}
+        displayCurrency={displayCurrency}
+        displayFiatSymbol={displayFiatSymbol}
+        cardType={selectedEarningsCard?.type}
       />
     </div>
   );

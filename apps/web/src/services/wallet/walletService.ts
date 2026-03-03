@@ -72,7 +72,7 @@ export class WalletService implements IWalletApiService {
   // Helper method for making HTTP requests
   private async makeRequest<T>(
     endpoint: string,
-    config: any = {}
+    config: any = {},
   ): Promise<WalletApiResponse<T>> {
     try {
       // Add authorization header if token exists
@@ -126,7 +126,7 @@ export class WalletService implements IWalletApiService {
   async getBalance(
     walletAddress: string,
     token: "ETH" | "LPT" | "USDC" | "USDT",
-    chainId?: 1 | 42161
+    chainId?: 1 | 42161,
   ): Promise<BalanceResponse> {
     const token_auth = this.getStoredToken();
     if (!token_auth) {
@@ -193,9 +193,9 @@ export class WalletService implements IWalletApiService {
     }
   }
 
-  // Get Solana wallet balance (always fetches all token balances)
+  // Get Solana wallet balance
   async getSolanaBalance(
-    walletAddress: string
+    walletAddress: string,
   ): Promise<SolanaBalanceResponse> {
     const token_auth = this.getStoredToken();
     if (!token_auth) {
@@ -365,7 +365,7 @@ export class WalletService implements IWalletApiService {
         Authorization: `Bearer ${token}`,
       };
 
-      let url = `${this.baseUrl}/v1/wallet`;
+      let url = `${this.baseUrl}/wallet`;
       if (chainType) {
         url += `?chain_type=${chainType}`;
       }
@@ -393,49 +393,40 @@ export class WalletService implements IWalletApiService {
     }
   }
 
-  // Get primary wallet for a specific chain
   async getPrimaryWallet(
-    chainType: ChainType
+    chainType: ChainType,
   ): Promise<GetPrimaryWalletResponse> {
-    const token = this.getStoredToken();
-    if (!token) {
-      return {
-        success: false,
-        error: "Authentication required",
-      };
+    const result = await this.getWallets(chainType);
+    if (!result.success || !result.wallets?.length) {
+      return { success: false, error: result.error };
     }
-
-    try {
-      const headers = {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      };
-
-      const response = await http.request({
-        url: `${this.baseUrl}/wallet/primary/${chainType}`,
-        method: "GET",
-        headers,
-        timeout: this.timeout,
-      });
-
-      return {
-        success: true,
-        wallet: response.data.wallet,
-      };
-    } catch (error: any) {
-      return {
-        success: false,
-        error:
-          error.response?.data?.error ||
-          error.message ||
-          "Failed to fetch primary wallet",
-      };
+    const wallets = result.wallets;
+    if (chainType === "solana") {
+      const index0 = wallets.find((w) => Number(w.wallet_index) === 0);
+      if (index0) return { success: true, wallet: index0 };
+      const withIndex = wallets.filter(
+        (w) => w.wallet_index != null && !Number.isNaN(Number(w.wallet_index)),
+      );
+      if (withIndex.length === 0) {
+        return { success: false, error: "No Solana wallet with wallet_index" };
+      }
+      const byIndex = [...withIndex].sort(
+        (a, b) => Number(a.wallet_index) - Number(b.wallet_index),
+      );
+      return { success: true, wallet: byIndex[0] };
     }
+    const primary = wallets.find((w) => w.is_primary);
+    if (primary) return { success: true, wallet: primary };
+    const first = [...wallets].sort(
+      (a, b) =>
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+    )[0];
+    return { success: true, wallet: first };
   }
 
   // Create a new Solana wallet for authenticated user
   async createSolanaWallet(
-    request: CreateSolanaWalletRequest
+    request: CreateSolanaWalletRequest,
   ): Promise<CreateSolanaWalletResponse> {
     const token = this.getStoredToken();
     if (!token) {
@@ -518,7 +509,7 @@ export class WalletService implements IWalletApiService {
     chainId: 1 | 42161,
     token: "LPT" | "USDC" | "USDT",
     request: ApproveTokenRequest,
-    spender: string
+    spender: string,
   ): Promise<ApproveTokenResponse> {
     const token_auth = this.getStoredToken();
     if (!token_auth) {
@@ -566,7 +557,7 @@ export class WalletService implements IWalletApiService {
   async sendToken(
     chainId: 1 | 42161,
     token: "ETH" | "LPT" | "USDC" | "USDT",
-    request: SendTokenRequest
+    request: SendTokenRequest,
   ): Promise<SendTokenResponse> {
     const token_auth = this.getStoredToken();
     if (!token_auth) {
@@ -613,7 +604,7 @@ export class WalletService implements IWalletApiService {
   // Get spenders for a token on a chain
   async getSpenders(
     chainId: 1 | 42161,
-    token: "ETH" | "LPT" | "USDC" | "USDT" | "all"
+    token: "ETH" | "LPT" | "USDC" | "USDT" | "all",
   ): Promise<GetSpendersResponse> {
     const token_auth = this.getStoredToken();
     if (!token_auth) {

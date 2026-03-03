@@ -17,7 +17,6 @@ import { usePrices } from "@/hooks/usePrices";
 import { ALL_WALLET_TOUR_ID } from "@/lib/tourConfig";
 import { priceService } from "@/lib/priceService";
 import { Bell, CircleQuestionMark, Plus, Eye, EyeOff, X, ChevronRight } from "lucide-react";
-import { notificationService, SystemNotification } from "@/services/notifications";
 
 const ADD_CASH_AMOUNTS = [20000, 50000, 100000, 250000, 500000];
 
@@ -36,51 +35,14 @@ export const AllWalletPage: React.FC = () => {
     return saved ? JSON.parse(saved) : false;
   });
 
-  // System notifications state
-  const [systemNotifications, setSystemNotifications] = useState<SystemNotification[]>([]);
-  const [dismissedNotificationIds, setDismissedNotificationIds] = useState<Set<string>>(() => {
-    const saved = localStorage.getItem("dismissed_system_notifications");
-    return saved ? new Set(JSON.parse(saved)) : new Set();
-  });
+  const {
+    activeSystemNotifications,
+    dismissSystemNotification: handleDismissNotification,
+  } = useNotification();
 
   useEffect(() => {
     localStorage.setItem("wallet_show_balance", JSON.stringify(showBalance));
   }, [showBalance]);
-
-  // Persist dismissed notifications
-  useEffect(() => {
-    localStorage.setItem(
-      "dismissed_system_notifications",
-      JSON.stringify([...dismissedNotificationIds])
-    );
-  }, [dismissedNotificationIds]);
-
-  // Fetch system notifications
-  useEffect(() => {
-    const fetchSystemNotifications = async () => {
-      try {
-        const response = await notificationService.getSystemNotifications({ limit: 10 });
-        if (response.success && response.data) {
-          setSystemNotifications(response.data);
-        }
-      } catch (error) {
-
-      }
-    };
-
-    fetchSystemNotifications();
-  }, []);
-
-  // Filter out dismissed notifications
-  const activeSystemNotifications = useMemo(() => {
-    return systemNotifications.filter(
-      (notification) => !dismissedNotificationIds.has(notification.id)
-    );
-  }, [systemNotifications, dismissedNotificationIds]);
-
-  const handleDismissNotification = (notificationId: string) => {
-    setDismissedNotificationIds((prev) => new Set([...prev, notificationId]));
-  };
 
   const { orchestrators } = useOrchestrators();
   const { state } = useAuth();
@@ -110,17 +72,16 @@ export const AllWalletPage: React.FC = () => {
   const highyieldBalance = contextHighyieldBalance || 0;
   const stablesBalance = contextStablesBalance || 0;
 
-  // Total USD = EVM LPT in USD (unstaked + staked) + all USD stables
+
   const totalUsdBalance = useMemo(() => {
     const lptPriceInUsd = prices.lpt || 0;
-    // Include both unstaked and staked LPT
     const unstakedLpt = highyieldBalance;
     const stakedLpt = delegatorStakeProfile
       ? parseFloat(delegatorStakeProfile.currentStake || "0")
       : 0;
     const totalLpt = unstakedLpt + stakedLpt;
     const lptUsdValue = totalLpt * lptPriceInUsd;
-    const stablesUsdValue = stablesBalance; // already USD-equivalent units
+    const stablesUsdValue = stablesBalance;
     return lptUsdValue + stablesUsdValue;
   }, [highyieldBalance, stablesBalance, prices, delegatorStakeProfile]);
 
@@ -129,20 +90,6 @@ export const AllWalletPage: React.FC = () => {
     () => priceService.getCurrencySymbol(fiatCurrency),
     [fiatCurrency]
   );
-
-  const totalBalanceInPreferredCurrency = useMemo(() => {
-    switch (fiatCurrency) {
-      case "NGN":
-        return totalUsdBalance * (prices.ngn || 0);
-      case "EUR":
-        return totalUsdBalance * (prices.eur || 0);
-      case "GBP":
-        return totalUsdBalance * (prices.gbp || 0);
-      case "USD":
-      default:
-        return totalUsdBalance;
-    }
-  }, [totalUsdBalance, prices, fiatCurrency]);
 
   const handleAddCashAmountClick = (amount: number) => {
     setSelectedAddAmount(amount);

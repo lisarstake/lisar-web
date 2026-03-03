@@ -56,13 +56,13 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
   const [stablesBalance, setStablesBalance] = useState<number | null>(null);
   const [highyieldBalance, setHighyieldBalance] = useState<number | null>(null);
   const [solanaUsdcBalance, setSolanaUsdcBalance] = useState<number | null>(
-    null
+    null,
   );
   const [ethereumUsdcBalance, setEthereumUsdcBalance] = useState<number | null>(
-    null
+    null,
   );
   const [solanaWalletAddress, setSolanaWalletAddress] = useState<string | null>(
-    null
+    null,
   );
   const [ethereumWalletAddress, setEthereumWalletAddress] = useState<
     string | null
@@ -90,22 +90,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
 
       try {
         const [solWalletResult, ethWalletResult] = await Promise.allSettled([
-          // Solana wallet fetch
-          walletService
-            .getPrimaryWallet("solana")
-            .then(async (solWalletResp) => {
-              if (!solWalletResp.success || !solWalletResp.wallet) {
-                const createResp = await walletService.createSolanaWallet({
-                  make_primary: true,
-                });
-                if (createResp.success && createResp.wallet) {
-                  return { success: true, wallet: createResp.wallet };
-                }
-                return { success: false, wallet: null };
-              }
-              return solWalletResp;
-            }),
-          // Ethereum wallet fetch
+          walletService.getPrimaryWallet("solana"),
           walletService.getPrimaryWallet("ethereum"),
         ]);
 
@@ -123,7 +108,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
           setSolanaWalletId(solWallet.wallet_id);
 
           const balanceResp = await walletService.getSolanaBalance(
-            solWallet.wallet_address
+            solWallet.wallet_address,
           );
           if (balanceResp.success && balanceResp.balances) {
             const { usdc, usdt, ["usd*"]: usdStar } = balanceResp.balances;
@@ -167,13 +152,12 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
           setWallet({ ...wallet, stablesBalance: totalStableBalance });
         }
       } catch (error) {
-        // Silent fail - balance will remain null
       } finally {
         setStablesLoading(false);
         stablesLoadingRef.current = false;
       }
     },
-    [stablesBalance, state.user, wallet]
+    [stablesBalance, state.user, wallet],
   );
 
   const loadHighyieldBalance = useCallback(
@@ -198,7 +182,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
 
         const balanceResp = await walletService.getBalance(
           ethWallet.wallet_address,
-          "LPT"
+          "LPT",
         );
 
         if (balanceResp.success) {
@@ -211,23 +195,20 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
           setHighyieldBalance(0);
         }
       } catch (error) {
-        // Silent fail - set to 0 so we don't block the UI
         setHighyieldBalance(0);
       } finally {
         setHighyieldLoading(false);
         highyieldLoadingRef.current = false;
       }
     },
-    [highyieldBalance, state.user, wallet]
+    [highyieldBalance, state.user, wallet],
   );
 
-  // Load APYs with shorter timeout
   const loadApys = useCallback(async () => {
     if ((mapleApy !== null && perenaApy !== null) || apyLoading) return;
 
     setApyLoading(true);
 
-    // 🚀 Reduced timeout to 10 seconds
     apyTimeoutRef.current = setTimeout(() => {
       setMapleApy((prev) => prev ?? 0.065);
       setPerenaApy((prev) => prev ?? 0.14);
@@ -273,7 +254,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
 
       const balanceResp = await walletService.getBalance(
         state.user.wallet_address,
-        "LPT"
+        "LPT",
       );
 
       if (!balanceResp.success) {
@@ -343,7 +324,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
       loadApys,
       refetch: load,
     }),
-    []
+    [],
   );
 
   const value = useMemo<WalletContextValue>(
@@ -387,7 +368,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
       perenaApy,
       apyLoading,
       stableFunctions,
-    ]
+    ],
   );
 
   return (

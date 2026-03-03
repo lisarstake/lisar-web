@@ -18,6 +18,7 @@ import {
   BurnRequest,
   PortfolioRequest,
   PortfolioResponse,
+  WeeklyYieldResponse,
   PERENA_CONFIG,
 } from "./types";
 import { http } from "@/lib/http";
@@ -100,7 +101,9 @@ export class PerenaService implements IPerenaApiService {
         "Content-Type": "application/json",
       };
 
-      const url = time ? `${this.baseUrl}/perena/price-api?time=${encodeURIComponent(time)}` : `${this.baseUrl}/price-api`;
+      const url = time
+        ? `${this.baseUrl}/perena/price-api?time=${encodeURIComponent(time)}`
+        : `${this.baseUrl}/price-api`;
 
       const response = await http.request({
         url,
@@ -136,7 +139,9 @@ export class PerenaService implements IPerenaApiService {
         "Content-Type": "application/json",
       };
 
-      const url = time ? `${this.baseUrl}/perena/apy?time=${encodeURIComponent(time)}` : `${this.baseUrl}/perena/apy`;
+      const url = time
+        ? `${this.baseUrl}/perena/apy?time=${encodeURIComponent(time)}`
+        : `${this.baseUrl}/perena/apy`;
 
       const response = await http.request({
         url,
@@ -417,6 +422,44 @@ export class PerenaService implements IPerenaApiService {
           error.response?.data?.error ||
           error.message ||
           "Failed to fetch portfolio",
+      };
+    }
+  }
+
+  // Get weekly yield for a wallet
+  async getWeeklyYield(walletAddress: string): Promise<WeeklyYieldResponse> {
+    try {
+      const headers = {
+        "Content-Type": "application/json",
+      };
+
+      const response = await http.request({
+        url: `${this.baseUrl}/perena/yield/weekly/${walletAddress}`,
+        method: "GET",
+        headers,
+        timeout: this.timeout,
+      });
+
+      const data = response.data?.data ?? response.data;
+      return {
+        success: true,
+        data: {
+          yieldAmount:
+            typeof data === "number"
+              ? data
+              : (data?.yieldAmount ?? data?.weeklyUsdYield ?? data?.yield ?? 0),
+        },
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        data: {
+          yieldAmount: 0,
+        },
+        error:
+          error.response?.data?.error ||
+          error.message ||
+          "Failed to fetch weekly yield",
       };
     }
   }

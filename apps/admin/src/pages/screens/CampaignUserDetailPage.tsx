@@ -7,12 +7,20 @@ import {
   TrendingUp,
   CheckCircle2,
   Circle,
+  History,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CampaignUser } from "@/services/campaigns/types";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { CampaignUser, TopupHistory } from "@/services/campaigns/types";
 import { campaignService } from "@/services/campaigns";
 
 export const CampaignUserDetailPage: React.FC = () => {
@@ -21,6 +29,10 @@ export const CampaignUserDetailPage: React.FC = () => {
   const [user, setUser] = useState<CampaignUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [topupDialogOpen, setTopupDialogOpen] = useState(false);
+  const [topupHistory, setTopupHistory] = useState<TopupHistory[] | null>(null);
+  const [topupLoading, setTopupLoading] = useState(false);
+  const [topupError, setTopupError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!userId) {
@@ -72,6 +84,32 @@ export const CampaignUserDetailPage: React.FC = () => {
       minimumFractionDigits: 0,
       maximumFractionDigits: 2,
     }).format(amount);
+  };
+
+  const fetchTopupHistory = async () => {
+    if (!userId) return;
+    setTopupLoading(true);
+    setTopupError(null);
+    try {
+      const response = await campaignService.getUserTopups(userId);
+      if (response.success && response.data) {
+        setTopupHistory(response.data);
+      } else {
+        setTopupError(response.error || "Failed to load topup history");
+      }
+    } catch (err) {
+      setTopupError(err instanceof Error ? err.message : "An error occurred");
+    } finally {
+      setTopupLoading(false);
+    }
+  };
+
+  const handleTopupDialogOpenChange = (open: boolean) => {
+    setTopupDialogOpen(open);
+    if (!open) {
+      setTopupHistory(null);
+      setTopupError(null);
+    }
   };
 
   const getStatusInfo = (status: string) => {
@@ -276,7 +314,17 @@ export const CampaignUserDetailPage: React.FC = () => {
                   </h1>
                   <Badge className={statusInfo.color}>{statusInfo.label}</Badge>
                 </div>
-               
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setTopupDialogOpen(true);
+                    fetchTopupHistory();
+                  }}
+                >
+                  <History className="w-4 h-4 mr-2" />
+                  View topup history
+                </Button>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-8">
@@ -309,6 +357,95 @@ export const CampaignUserDetailPage: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Topup History Dialog */}
+      <Dialog open={topupDialogOpen} onOpenChange={handleTopupDialogOpenChange}>
+        <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <History className="w-5 h-5" />
+              Topup history
+            </DialogTitle>
+          </DialogHeader>
+          <div className="overflow-y-auto flex-1 min-h-0 -mx-2 px-2">
+            {topupLoading && (
+              <div className="flex flex-col gap-3 py-8">
+                <Skeleton className="h-20 w-full" />
+                <Skeleton className="h-20 w-full" />
+                <Skeleton className="h-20 w-full" />
+              </div>
+            )}
+            {!topupLoading && topupError && (
+              <p className="text-sm text-red-600 py-4">{topupError}</p>
+            )}
+            {!topupLoading && !topupError && topupHistory && (
+              <>
+                {topupHistory.length === 0 ? (
+                  <p className="text-sm text-gray-500 py-4">
+                    No topup history found.
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {topupHistory.map((t) => (
+                      <div
+                        key={t.id}
+                        className="rounded-lg border p-4 text-sm space-y-2"
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <span className="font-medium">
+                            {t.amount} {t.transaction_type}
+                          </span>
+                          <Badge
+                            className={
+                              t.status === "success"
+                                ? "bg-green-100 text-green-800"
+                                : t.status === "failed"
+                                  ? "bg-red-100 text-red-800"
+                                  : "bg-gray-100 text-gray-800"
+                            }
+                          >
+                            {t.status}
+                          </Badge>
+                        </div>
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-gray-600">
+                          <span>Network</span>
+                          <span className="capitalize">{t.network}</span>
+                          <span>Date</span>
+                          <span>{formatDate(t.created_at)}</span>
+                          <span>Wallet</span>
+                          <span className="font-mono text-xs truncate" title={t.wallet_address}>
+                            {t.wallet_address}
+                          </span>
+                          {t.transaction_hash && (
+                            <>
+                              <span>Tx hash</span>
+                              <span
+                                className="font-mono text-xs truncate"
+                                title={t.transaction_hash}
+                              >
+                                {t.transaction_hash.slice(0, 8)}…
+                                {t.transaction_hash.slice(-8)}
+                              </span>
+                            </>
+                          )}
+                          {t.error_reason && (
+                            <>
+                              <span>Error</span>
+                              <span className="text-red-600">
+                                {t.error_reason}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Tier Information Card */}
       <Card>

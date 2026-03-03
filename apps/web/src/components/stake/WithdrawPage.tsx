@@ -1,15 +1,23 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
-  ChevronLeft,
-  CircleQuestionMark,
   LoaderCircle,
   Wallet2,
+  ChevronLeft,
+  ChevronRight,
+  CircleQuestionMark,
+  ScanQrCode,
+  CreditCard,
 } from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { ErrorDrawer } from "@/components/ui/ErrorDrawer";
 import { SuccessDrawer } from "@/components/ui/SuccessDrawer";
+import {
+  RampDrawer,
+  RampTransactionDetails,
+} from "@/components/general/RampDrawer";
+import { AccountNotLinkedDrawer } from "@/components/general/AccountNotLinkedDrawer";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDelegation } from "@/contexts/DelegationContext";
 import { useTransactions } from "@/contexts/TransactionContext";
@@ -17,7 +25,6 @@ import { priceService } from "@/lib/priceService";
 import { useWallet } from "@/contexts/WalletContext";
 import { formatNumber, parseFormattedNumber } from "@/lib/formatters";
 import { walletService } from "@/services";
-import { getFiatType } from "@/lib/onramp";
 import { useStablesApy } from "@/hooks/useStablesApy";
 
 export const WithdrawPage: React.FC = () => {
@@ -25,126 +32,181 @@ export const WithdrawPage: React.FC = () => {
   const location = useLocation();
 
   const locationState = location.state as {
-    lptAmount?: string;
+    amount?: string;
     walletType?: string;
     provider?: "maple" | "perena";
     tierNumber?: number;
     tierTitle?: string;
   } | null;
 
-  const [lptAmount, setLptAmount] = useState(() => {
-    return locationState?.lptAmount || "0";
+  const [amount, setAmount] = useState(() => {
+    return locationState?.amount || "";
   });
 
   const [withdrawalAddress, setWithdrawalAddress] = useState("");
-  const [isWithdrawalLaunched, setIsWithdrawalLaunched] = useState(false);
-  
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<
+    string | null
+  >(null);
+
   const walletType = locationState?.walletType;
   const selectedProvider = locationState?.provider;
   const isStables = walletType === "savings";
+
   const coinCode = isStables
     ? selectedProvider === "maple"
       ? "usdc"
       : selectedProvider === "perena"
-      ? "usdc"
-      : "usdc"
+        ? "usdc"
+        : "usdc"
     : "lpt";
+
   const network = isStables
     ? selectedProvider === "maple"
       ? "ethereum"
       : selectedProvider === "perena"
-      ? "spl"
-      : "spl"
+        ? "solana"
+        : "solana"
     : "arbitrum";
+
   const tokenName = isStables ? "USDC" : "LPT";
 
   useEffect(() => {
-    if (locationState?.lptAmount) {
-      setLptAmount(locationState.lptAmount);
+    if (locationState?.amount) {
+      setAmount(locationState.amount);
     }
   }, [locationState]);
 
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
+  const [showFiatDrawer, setShowFiatDrawer] = useState(false);
+  const [showBankLinkedDrawer, setShowBankLinkedDrawer] = useState(false);
   const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [showErrorDrawer, setShowErrorDrawer] = useState(false);
   const [showSuccessDrawer, setShowSuccessDrawer] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [fiatEquivalent, setFiatEquivalent] = useState(0);
+  const [step, setStep] = useState(1);
+
   const { state } = useAuth();
-  const { wallet, stablesBalance, refetch: refetchWallet, ethereumWalletAddress, solanaWalletAddress, ethereumWalletId, solanaWalletId } = useWallet();
+  const {
+    wallet,
+    stablesBalance,
+    refetch: refetchWallet,
+    ethereumWalletAddress,
+    solanaWalletAddress,
+    ethereumWalletId,
+    solanaWalletId,
+  } = useWallet();
   const { refetch: refetchDelegation } = useDelegation();
   const { refetch: refetchTransactions } = useTransactions();
-  const { maple: mapleApy, perena: perenaApy, isLoading: apyLoading } = useStablesApy();
+  const {
+    maple: mapleApy,
+    perena: perenaApy,
+    isLoading: apyLoading,
+  } = useStablesApy();
 
-  // Get user's preferred currency
   const userCurrency = state.user?.fiat_type || "NGN";
   const currencySymbol = priceService.getCurrencySymbol(userCurrency);
 
-  // Available balance (full wallet balance - idle for LPT, combined stables for savings):
-  // - For High Yield: LPT idle balance (wallet)
-  // - For Stables: combined stables balance (Solana + EVM)
-  const walletBalance =
-    isStables ? stablesBalance || 0 : wallet?.balanceLpt || 0;
+  const walletBalance = isStables
+    ? stablesBalance || 0
+    : wallet?.balanceLpt || 0;
 
   const pageTitle = "Withdraw";
 
-  const handleBackClick = () => {
-    navigate(-1);
-  };
-
   const handleAmountSelect = (amount: string) => {
     const numericAmount = parseFormattedNumber(amount);
-    setLptAmount(numericAmount);
+    setAmount(numericAmount);
+  };
+
+  const handlePaymentMethodSelect = (method: string) => {
+    setSelectedPaymentMethod(method);
   };
 
   useEffect(() => {
     const calculateFiat = async () => {
-      const numericAmount = parseFloat(lptAmount.replace(/,/g, "")) || 0;
+      const numericAmount = parseFloat(amount.replace(/,/g, "")) || 0;
       if (numericAmount > 0) {
-        const fiatValue = await priceService.convertLptToFiat(
-          numericAmount,
-          userCurrency
-        );
-        setFiatEquivalent(fiatValue);
+        if (isStables) {
+          const fiatValue = await priceService.convertUsdToFiat(
+            numericAmount,
+            userCurrency,
+          );
+          setFiatEquivalent(fiatValue);
+        } else {
+          const fiatValue = await priceService.convertLptToFiat(
+            numericAmount,
+            userCurrency,
+          );
+          setFiatEquivalent(fiatValue);
+        }
       } else {
         setFiatEquivalent(0);
       }
     };
     calculateFiat();
-  }, [lptAmount, userCurrency]);
+  }, [amount, userCurrency, isStables]);
 
-  const handleMaxClick = () => {
-    setLptAmount(walletBalance.toString());
-  };
-
-  const handleProceed = async () => {
-    if (isStables && !selectedProvider) {
-      setErrorMessage("Provider not selected. Please go back and select a tier.");
-      setShowErrorDrawer(true);
+  const handleProceed = () => {
+    if (selectedPaymentMethod === "fiat") {
+      if (userCurrency === "NGN") {
+        const linked = state.user?.linked_account;
+        const hasLinkedAccount = !!(
+          linked?.account_number && linked?.bank_code
+        );
+        if (!hasLinkedAccount) {
+          setShowBankLinkedDrawer(true);
+          return;
+        }
+      }
+      setShowFiatDrawer(true);
       return;
     }
 
-    const numericAmount = parseFloat(lptAmount.replace(/,/g, "")) || 0;
-
-    if (!withdrawalAddress || withdrawalAddress.trim() === "") {
-      setErrorMessage("Please enter a withdrawal address.");
-      setShowErrorDrawer(true);
+    if (selectedPaymentMethod === "onchain") {
+      setStep(2);
       return;
     }
-
-    handleWithdraw();
   };
 
-  const handleWithdraw = async () => {
-    if (!lptAmount || parseFloat(lptAmount.replace(/,/g, "")) <= 0) {
+  const handleFiatConfirm = () => {
+    setShowFiatDrawer(false);
+  };
+
+  const handleHelpClick = () => {
+    setShowHelpDrawer(true);
+  };
+
+  const handlePasteAddress = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      setWithdrawalAddress(text.trim());
+    } catch (err) {
+      // Paste failed - silent fail
+    }
+  };
+
+  const numericAmount = parseFloat(amount.replace(/,/g, "")) || 0;
+  const hasInsufficientFunds =
+    numericAmount > 0 && numericAmount > walletBalance;
+
+  const handleBackClick = () => {
+    if (step === 2) {
+      setStep(1);
+    } else {
+      navigate(-1);
+    }
+  };
+
+  const handleConfirmTransfer = async () => {
+    if (!amount || parseFloat(amount.replace(/,/g, "")) <= 0) {
       setErrorMessage("Please enter a valid amount to Withdraw.");
       setShowErrorDrawer(true);
       return;
     }
 
     if (!withdrawalAddress || withdrawalAddress.trim() === "") {
-      setErrorMessage("Please enter a fiat receiving address.");
+      setErrorMessage("Please enter a receiving address.");
       setShowErrorDrawer(true);
       return;
     }
@@ -155,39 +217,32 @@ export const WithdrawPage: React.FC = () => {
       return;
     }
 
-    if (isStables && !selectedProvider) {
-      setErrorMessage("Please select a provider (USD Base or USD Plus).");
-      setShowErrorDrawer(true);
-      return;
-    }
-
     setIsWithdrawing(true);
     try {
-      const numericAmount = lptAmount.replace(/,/g, "");
+      const numericAmountStr = amount.replace(/,/g, "");
 
       if (isStables && selectedProvider) {
         if (selectedProvider === "maple") {
           if (!ethereumWalletAddress || !ethereumWalletId) {
-            setErrorMessage("Ethereum wallet not found. Please create a wallet first.");
+            setErrorMessage(
+              "Ethereum wallet not found. Please create a wallet first.",
+            );
             setShowErrorDrawer(true);
             setIsWithdrawing(false);
             return;
           }
 
-          const sendResponse = await walletService.sendToken(
-            1,
-            "USDC",
-            {
-              walletId: ethereumWalletId,
-              walletAddress: ethereumWalletAddress,
-              to: withdrawalAddress,
-              amount: numericAmount,
-            }
-          );
+          const sendResponse = await walletService.sendToken(1, "USDC", {
+            walletId: ethereumWalletId,
+            walletAddress: ethereumWalletAddress,
+            to: withdrawalAddress,
+            amount: numericAmountStr,
+          });
 
           if (!sendResponse.success) {
             setErrorMessage(
-              sendResponse.error || "Failed to withdraw USDC. Please try again."
+              sendResponse.error ||
+                "Failed to withdraw USDC. Please try again.",
             );
             setShowErrorDrawer(true);
             setIsWithdrawing(false);
@@ -195,7 +250,9 @@ export const WithdrawPage: React.FC = () => {
           }
         } else if (selectedProvider === "perena") {
           if (!solanaWalletAddress || !solanaWalletId) {
-            setErrorMessage("Solana wallet not found. Please create a wallet first.");
+            setErrorMessage(
+              "Solana wallet not found. Please create a wallet first.",
+            );
             setShowErrorDrawer(true);
             setIsWithdrawing(false);
             return;
@@ -206,12 +263,13 @@ export const WithdrawPage: React.FC = () => {
             fromAddress: solanaWalletAddress,
             toAddress: withdrawalAddress,
             token: "USDC",
-            amount: parseFloat(numericAmount),
+            amount: parseFloat(numericAmountStr),
           });
 
           if (!sendResponse.success) {
             setErrorMessage(
-              sendResponse.error || "Failed to withdraw USDC. Please try again."
+              sendResponse.error ||
+                "Failed to withdraw USDC. Please try again.",
             );
             setShowErrorDrawer(true);
             setIsWithdrawing(false);
@@ -223,7 +281,7 @@ export const WithdrawPage: React.FC = () => {
           walletId: state.user.wallet_id,
           walletAddress: state.user.wallet_address,
           spender: state.user.wallet_address,
-          amount: numericAmount,
+          amount: numericAmountStr,
         });
 
         if (!approveResponse.success) {
@@ -232,7 +290,7 @@ export const WithdrawPage: React.FC = () => {
           const serverApprovalMsg =
             approveResponse.message || approveResponse.error || "";
           setErrorMessage(
-            serverApprovalMsg ? `${friendlyApprovalMsg}` : friendlyApprovalMsg
+            serverApprovalMsg ? `${friendlyApprovalMsg}` : friendlyApprovalMsg,
           );
           setShowErrorDrawer(true);
           setIsWithdrawing(false);
@@ -243,14 +301,17 @@ export const WithdrawPage: React.FC = () => {
           walletId: state.user.wallet_id,
           walletAddress: state.user.wallet_address,
           to: withdrawalAddress,
-          amount: numericAmount,
+          amount: numericAmountStr,
         });
 
         if (!sendResponse.success) {
           const friendlySendMsg =
             "We couldn't complete the withdrawal. Please double-check the details and try again.";
-          const serverSendMsg = sendResponse.message || sendResponse.error || "";
-          setErrorMessage(serverSendMsg ? `${friendlySendMsg}` : friendlySendMsg);
+          const serverSendMsg =
+            sendResponse.message || sendResponse.error || "";
+          setErrorMessage(
+            serverSendMsg ? `${friendlySendMsg}` : friendlySendMsg,
+          );
           setShowErrorDrawer(true);
           setIsWithdrawing(false);
           return;
@@ -264,10 +325,11 @@ export const WithdrawPage: React.FC = () => {
       ]);
 
       setWithdrawalAddress("");
-      setLptAmount("0");
+      setAmount("");
+      setStep(1);
 
       setSuccessMessage(
-        `Withdrawal processed successfully. Return to the previous screen and click "I have sent" to complete the withdrawal.`
+        `Withdrawal processed successfully. Return to the previous screen and check your wallet.`,
       );
       setShowSuccessDrawer(true);
     } catch (error) {
@@ -282,54 +344,10 @@ export const WithdrawPage: React.FC = () => {
     }
   };
 
-  const handleHelpClick = () => {
-    setShowHelpDrawer(true);
-  };
-
-  const handleLaunchWithdrawal = () => {
-    const appId = import.meta.env.VITE_ONRAMP_APP_ID || "1674103";
-    const fiatType = getFiatType(userCurrency);
-
-    const params = new URLSearchParams({
-      appId: appId.toString(),
-      coinCode: coinCode,
-      network: network,
-      coinAmount: "0",
-      fiatType: "6",
-      // fiatType: fiatType.toString(),
-    });
-
-    const offrampUrl = `https://onramp.money/main/sell/?${params.toString()}`;
-    window.open(offrampUrl, "_blank");
-    setIsWithdrawalLaunched(true);
-  };
-
-  const handlePasteAddress = async () => {
-    try {
-      const text = await navigator.clipboard.readText();
-      setWithdrawalAddress(text.trim());
-    } catch (err) {
-      // Paste failed - silent fail
-    }
-  };
-  const handlePasteAmount = async () => {
-    try {
-      const text = await navigator.clipboard.readText();
-      setLptAmount(text.trim());
-    } catch (err) {
-      // Paste failed - silent fail
-    }
-  };
-
-  // Check if user has insufficient funds
-  const numericAmount = parseFloat(lptAmount.replace(/,/g, "")) || 0;
-  const hasInsufficientFunds =
-    numericAmount > 0 && numericAmount > walletBalance;
-
   return (
     <div className="h-screen bg-[#050505] text-white flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-8">
+      <div className="flex items-center justify-between px-6 pt-8 pb-4">
         <button
           onClick={handleBackClick}
           className="w-8 h-8 flex items-center justify-center"
@@ -349,215 +367,240 @@ export const WithdrawPage: React.FC = () => {
 
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto px-6 pb-28 scrollbar-hide">
-        {/* Provider Indicator for Stables */}
-        {isStables && selectedProvider && locationState?.tierTitle && (
-          <div className="py-4">
-            <div className="bg-[#1a1a1a] rounded-lg p-4 border border-[#2a2a2a]">
-              <div className="flex items-center gap-3">
-                <img
-                  src={selectedProvider === "maple" ? "/maple.svg" : "/perena2.png"}
-                  alt={selectedProvider}
-                  className="w-8 h-8 object-contain"
+        {step === 1 ? (
+          <>
+            {/* Amount Input Field */}
+            <div className="py-6">
+              <span className="text-white/80 text-base font-medium ml-1">
+                Amount
+              </span>
+              <div className="bg-[#1a1a1a] rounded-lg p-3 mt-1">
+                <input
+                  type="text"
+                  value={amount ? formatNumber(amount) : ""}
+                  onChange={(e) => {
+                    const rawValue = parseFormattedNumber(e.target.value);
+                    let numericValue = rawValue.replace(/[^0-9.]/g, "");
+                    const parts = numericValue.split(".");
+                    if (parts.length > 2) {
+                      numericValue = parts[0] + "." + parts.slice(1).join("");
+                    }
+                    setAmount(numericValue);
+                  }}
+                  placeholder={tokenName}
+                  className="w-full bg-transparent text-white text-lg font-medium focus:outline-none"
                 />
-                <div>
-                  <p className="text-white/90 text-sm font-medium">
-                    {locationState.tierTitle}
-                  </p>
-                  <p className="text-gray-400 text-xs">
-                    {selectedProvider === "maple"
-                      ? `USD Base - Up to ${apyLoading && mapleApy === null ? "..." : mapleApy ? (mapleApy * 100).toFixed(1) : "6.5"}% APY`
-                      : `USD Plus - Up to ${apyLoading && perenaApy === null ? "..." : perenaApy ? (perenaApy * 100).toFixed(1) : "14"}% APY`}
-                  </p>
-                </div>
+              </div>
+              <p className="text-gray-400 text-xs mt-2 pl-2">
+                ≈ {currencySymbol}{" "}
+                {fiatEquivalent.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </p>
+              {hasInsufficientFunds && (
+                <p className="text-red-300 text-xs mt-2 pl-2">
+                  Insufficient funds (Max: {walletBalance.toLocaleString()}{" "}
+                  {tokenName})
+                </p>
+              )}
+            </div>
+
+            {/* Predefined Token Amounts (Percentages) */}
+            <div className="pb-4">
+              <div className="flex space-x-3">
+                {[10, 25, 50, 75].map((percentage) => {
+                  const calculatedAmount = (
+                    walletBalance *
+                    (percentage / 100)
+                  ).toString();
+                  const isActive =
+                    amount &&
+                    Math.abs(
+                      parseFloat(amount) - parseFloat(calculatedAmount),
+                    ) < 0.0001;
+
+                  return (
+                    <button
+                      key={percentage}
+                      onClick={() => handleAmountSelect(calculatedAmount)}
+                      className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-colors ${
+                        isActive
+                          ? "bg-[#C7EF6B] text-black"
+                          : "bg-[#1a1a1a] text-white/80 hover:bg-[#2a2a2a]"
+                      }`}
+                    >
+                      {percentage}%
+                    </button>
+                  );
+                })}
               </div>
             </div>
-          </div>
-        )}
 
-        {/* Withdrawal Address Input */}
-        <div className="pt-1">
-          <h3 className="text-base font-medium text-white/90 mb-2">
-            Withdrawal Address
-          </h3>
-          <div className="bg-[#1a1a1a] rounded-lg p-3 border border-[#2a2a2a] relative">
-            <input
-              type="text"
-              value={withdrawalAddress}
-              onChange={(e) => setWithdrawalAddress(e.target.value)}
-              placeholder="0x738....3652"
-              disabled={!isWithdrawalLaunched}
-              className={`w-full bg-transparent text-base font-normal focus:outline-none placeholder-gray-500 pr-12 ${
-                !isWithdrawalLaunched
-                  ? "text-white/50 cursor-not-allowed"
-                  : "text-white"
-              }`}
-            />
-            <button
-              type="button"
-              onClick={handlePasteAddress}
-              disabled={!isWithdrawalLaunched}
-              className={`absolute right-4 top-1/2 -translate-y-1/2 text-xs font-medium transition-colors ${
-                !isWithdrawalLaunched
-                  ? "text-gray-500 cursor-not-allowed"
-                  : "text-[#C7EF6B] hover:text-[#B8E55A]"
-              }`}
-            >
-              Paste
-            </button>
-          </div>
-        </div>
+            {/* Payment Method Selection */}
+            <div className="py-4">
+              <h3 className="text-base font-medium text-white/90 mb-2">
+                Preferred method
+              </h3>
 
-        {/* Network Input
-        <div className="pt-4">
-          <h3 className="text-base font-medium text-white/90 mb-2">Network</h3>
-          <div className="bg-[#1a1a1a] rounded-lg p-3 border border-[#2a2a2a]">
-            <input
-              type="text"
-              value={network}
-              disabled
-              className="w-full bg-transparent text-white text-base font-normal focus:outline-none opacity-60 cursor-not-allowed"
-            />
-          </div>
-        </div> */}
-
-        {/* Amount Input Field */}
-        <div className="py-2">
-          <h3 className="text-base font-medium text-white/90 mb-2">Amount</h3>
-          <div className="bg-[#1a1a1a] rounded-lg p-3 flex items-center gap-3">
-            <input
-              type="text"
-              value={lptAmount ? formatNumber(lptAmount) : ""}
-              onChange={(e) => {
-                const rawValue = parseFormattedNumber(e.target.value);
-                let numericValue = rawValue.replace(/[^0-9.]/g, "");
-                const parts = numericValue.split(".");
-                if (parts.length > 2) {
-                  numericValue = parts[0] + "." + parts.slice(1).join("");
-                }
-                setLptAmount(numericValue);
-              }}
-              placeholder={tokenName}
-              disabled={!isWithdrawalLaunched}
-              className={`flex-1 bg-transparent text-base font-medium focus:outline-none ${
-                !isWithdrawalLaunched
-                  ? "text-white/50 cursor-not-allowed"
-                  : "text-white"
-              }`}
-            />
-            <button
-              onClick={handlePasteAmount}
-              disabled={!isWithdrawalLaunched}
-              className={`text-xs font-medium transition-colors ${
-                !isWithdrawalLaunched
-                  ? "text-gray-500 cursor-not-allowed"
-                  : "text-[#C7EF6B] hover:text-[#B8E55A]"
-              }`}
-            >
-              Paste
-            </button>
-          </div>
-          <p className="text-gray-400 text-xs mt-2 pl-2">
-            ≈ {currencySymbol}
-            {fiatEquivalent.toLocaleString(undefined, {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
-          </p>
-        </div>
-
-        {/* Predefined LPT Amounts */}
-        {/* <div className="py-4">
-          <div className="flex space-x-3">
-            {["10", "50", "100"].map((amount) => {
-              const isActive =
-                lptAmount === amount ||
-                parseFloat(lptAmount || "0") === parseFloat(amount);
-              return (
+              <div className="space-y-3">
                 <button
-                  key={amount}
-                  onClick={() => handleAmountSelect(amount)}
-                  disabled={!isWithdrawalLaunched}
-                  className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-colors ${
-                    !isWithdrawalLaunched
-                      ? "bg-[#1a1a1a] text-white/30 cursor-not-allowed"
-                      : isActive
-                        ? "bg-[#C7EF6B] text-black"
-                        : "bg-[#1a1a1a] text-white/80 hover:bg-[#2a2a2a]"
+                  onClick={() => handlePaymentMethodSelect("fiat")}
+                  className={`w-full flex items-center justify-between p-4 rounded-lg transition-colors ${
+                    selectedPaymentMethod === "fiat"
+                      ? "bg-[#C7EF6B]/10 border border-[#C7EF6B]"
+                      : "bg-[#1a1a1a] border border-[#2a2a2a] hover:bg-[#2a2a2a]"
                   }`}
                 >
-                  {formatNumber(amount)} <span className="text-xs">LPT</span>
+                  <div className="flex items-center space-x-3">
+                    <CreditCard
+                      size={20}
+                      color={
+                        selectedPaymentMethod === "fiat" ? "#C7EF6B" : "#86B3F7"
+                      }
+                    />
+                    <span className="text-white font-normal">
+                      Withdraw {userCurrency}
+                    </span>
+                  </div>
+                  <ChevronRight
+                    size={20}
+                    color={
+                      selectedPaymentMethod === "fiat" ? "#C7EF6B" : "#636363"
+                    }
+                  />
                 </button>
-              );
-            })}
-          </div>
-        </div> */}
 
-        {/* Wallet Balance Info */}
-        <div className="py-4">
-          <h3 className="text-base font-medium text-white/90 mb-2">
-            Available balance
-          </h3>
-          <div className="bg-[#1a1a1a] rounded-lg p-4 border border-[#2a2a2a]">
-            <div className="flex items-center space-x-3">
-              <Wallet2 size={20} color="#86B3F7" />
-              <div className="flex-1">
-                <div>
-                  <span className="text-gray-400 text-sm">
-                    {walletBalance.toLocaleString()} {tokenName}
+                <button
+                  onClick={() => handlePaymentMethodSelect("onchain")}
+                  className={`w-full flex items-center justify-between p-4 rounded-lg transition-colors ${
+                    selectedPaymentMethod === "onchain"
+                      ? "bg-[#C7EF6B]/10 border border-[#C7EF6B]"
+                      : "bg-[#1a1a1a] border border-[#2a2a2a] hover:bg-[#2a2a2a]"
+                  }`}
+                >
+                  <div className="flex items-center space-x-3">
+                    <ScanQrCode
+                      size={20}
+                      color={
+                        selectedPaymentMethod === "onchain"
+                          ? "#C7EF6B"
+                          : "#86B3F7"
+                      }
+                    />
+                    <span className="text-white font-normal">
+                      Transfer to wallet
+                    </span>
+                  </div>
+                  <ChevronRight
+                    size={20}
+                    color={
+                      selectedPaymentMethod === "onchain"
+                        ? "#C7EF6B"
+                        : "#636363"
+                    }
+                  />
+                </button>
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            {/* Address Input - Step 2 */}
+            <div className="pt-6">
+              <h3 className="text-base font-medium text-white/90 mb-2">
+                Recipient Address
+              </h3>
+              <div className="bg-[#1a1a1a] rounded-lg p-3 border border-[#2a2a2a] relative">
+                <input
+                  type="text"
+                  value={withdrawalAddress}
+                  onChange={(e) => setWithdrawalAddress(e.target.value)}
+                  placeholder="Enter wallet address"
+                  className="w-full bg-transparent text-base font-normal text-white focus:outline-none placeholder-gray-500 pr-12"
+                />
+                <button
+                  type="button"
+                  onClick={handlePasteAddress}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-medium text-[#C7EF6B] hover:text-[#B8E55A] transition-colors"
+                >
+                  Paste
+                </button>
+              </div>
+            </div>
+
+            {/* Network - Step 2 */}
+            <div className="pt-4">
+              <h3 className="text-base font-medium text-white/90 mb-2">
+                Network
+              </h3>
+              <div className="bg-[#1a1a1a] rounded-lg p-3 border border-[#2a2a2a] relative">
+                <input
+                  type="text"
+                  value={network}
+                  readOnly
+                  className="w-full bg-transparent text-base font-normal text-white focus:outline-none placeholder-gray-500 pr-12"
+                />
+              </div>
+            </div>
+
+            {/* Transfer Summary - Step 2 */}
+            <div className="py-6">
+              <h3 className="text-base font-medium text-white/90 mb-2">
+                Transfer Summary
+              </h3>
+              <div className="bg-[#1a1a1a] rounded-lg p-4 border border-[#2a2a2a]">
+                <div className="flex justify-between items-center mb-3">
+                  <span className="text-gray-400 text-sm">Amount to send</span>
+                  <span className="text-white text-sm font-medium">
+                    {formatNumber(amount)} {tokenName}
                   </span>
+                </div>
+                <div className="flex justify-between items-center pt-3 border-t border-[#2a2a2a]">
+                  <span className="text-gray-400 text-sm">
+                    Available balance
+                  </span>
+                  <div className="flex items-center space-x-2">
+                    <Wallet2 size={16} color="#86B3F7" />
+                    <span className="text-white text-sm font-medium">
+                      {walletBalance.toLocaleString()} {tokenName}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-          {hasInsufficientFunds && (
-            <p className="text-red-300 text-xs mt-2 pl-2">
-              Insufficient funds, ensure you have enough {tokenName} in your wallet
-            </p>
-          )}
-          {/* Guide */}
-          <div className="mt-3 p-3 bg-[#1a1a1a] rounded-lg border border-[#2a2a2a]">
-            <div className="text-gray-400 text-xs leading-relaxed space-y-2">
-              <p className="font-medium mb-2">To Withdraw:</p>
-              <div className="space-y-1.5">
-                <p>1. Click "Get Address" to initiate withdrawal</p>
-                <p>2. Complete the details and copy the address provided</p>
-                <p>
-                  3. Paste the address, exact amount and send to complete the
-                  withdrawal
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+          </>
+        )}
       </div>
 
-      {/* Action Buttons - Fixed at bottom */}
-      <div className="px-6 py-4 bg-[#050505] pb-24 space-y-3">
-        {!isWithdrawalLaunched ? (
-          <button
-            onClick={handleLaunchWithdrawal}
-            className="w-full py-3 rounded-lg font-semibold text-lg bg-[#C7EF6B] text-black hover:bg-[#B8E55A] transition-colors"
-          >
-            Get Address
-          </button>
-        ) : (
+      {/* Proceed Button */}
+      <div className="px-6 py-3 bg-[#050505] pb-36">
+        {step === 1 ? (
           <button
             onClick={handleProceed}
             disabled={
-              !lptAmount ||
-              parseFloat(lptAmount) <= 0 ||
-              !withdrawalAddress ||
-              withdrawalAddress.trim() === "" ||
-              hasInsufficientFunds ||
-              isWithdrawing
+              !selectedPaymentMethod ||
+              !amount ||
+              parseFloat(amount) <= 0 ||
+              hasInsufficientFunds
             }
             className={`w-full py-3 rounded-lg font-semibold text-lg transition-colors ${
-              lptAmount &&
-              parseFloat(lptAmount) > 0 &&
-              withdrawalAddress &&
-              withdrawalAddress.trim() !== "" &&
-              !hasInsufficientFunds &&
-              !isWithdrawing
+              selectedPaymentMethod &&
+              amount &&
+              parseFloat(amount) > 0 &&
+              !hasInsufficientFunds
+                ? "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
+                : "bg-[#636363] text-white cursor-not-allowed"
+            }`}
+          >
+            Continue
+          </button>
+        ) : (
+          <button
+            onClick={handleConfirmTransfer}
+            disabled={!withdrawalAddress.trim() || isWithdrawing}
+            className={`w-full py-3 rounded-lg font-semibold text-lg transition-colors ${
+              withdrawalAddress.trim() && !isWithdrawing
                 ? "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
                 : "bg-[#636363] text-white cursor-not-allowed"
             }`}
@@ -565,10 +608,10 @@ export const WithdrawPage: React.FC = () => {
             {isWithdrawing ? (
               <span className="flex items-center justify-center gap-2">
                 <LoaderCircle className="animate-spin h-5 w-5 text-white" />
-                Processing..
+                Processing...
               </span>
             ) : (
-              "Withdraw"
+              "Confirm Transfer"
             )}
           </button>
         )}
@@ -580,8 +623,9 @@ export const WithdrawPage: React.FC = () => {
         onClose={() => setShowHelpDrawer(false)}
         title="Withdraw Guide"
         content={[
-          "Withdraw from your wallet balance to other exchanges or wallets.",
-          "Enter the amount and the address and confirm the withdrawal.",
+          "Withdraw from your wallet balance to other exchanges or local currency.",
+          "Choose 'Withdraw NGN' to transfer to your bank via our fiat partner.",
+          "Choose 'Transfer to wallet' to send tokens onchain to another wallet.",
         ]}
       />
 
@@ -604,6 +648,43 @@ export const WithdrawPage: React.FC = () => {
         }}
         title="Withdraw Successful!"
         message={successMessage}
+      />
+
+      {/* Fiat Transaction Drawer */}
+      <RampDrawer
+        isOpen={showFiatDrawer}
+        onClose={() => setShowFiatDrawer(false)}
+        onConfirm={handleFiatConfirm}
+        details={{
+          type: "sell",
+          tokenAmount: parseFloat(amount.replace(/,/g, "")) || 0,
+          tokenName: tokenName,
+          fiatAmount: fiatEquivalent || 0,
+          fiatSymbol: currencySymbol,
+          fiatCurrency: userCurrency,
+          exchangeRate: 0,
+          fee: 0,
+          cryptoAddress: null,
+          processingTime: "2-3mins",
+          paymentMethodText: `${userCurrency} bank transfer`,
+          bankCode: state.user?.linked_account?.bank_code ?? undefined,
+          bankName: state.user?.linked_account?.bank_name ?? undefined,
+          bankAccountNumber:
+            state.user?.linked_account?.account_number ?? undefined,
+          bankAccountName: state.user?.full_name || "",
+          customerEmail: state.user?.email || "",
+          customerName: state.user?.full_name || "",
+        }}
+      />
+
+      {/* Account Not Linked Drawer */}
+      <AccountNotLinkedDrawer
+        isOpen={showBankLinkedDrawer}
+        onClose={() => setShowBankLinkedDrawer(false)}
+        onLinkAccount={() => {
+          setShowBankLinkedDrawer(false);
+          navigate("/profile");
+        }}
       />
 
       {/* Bottom Navigation */}

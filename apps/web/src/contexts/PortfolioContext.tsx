@@ -187,7 +187,8 @@ export const PortfolioProvider: React.FC<PortfolioProviderProps> = ({
         const maplePoolId = import.meta.env.VITE_MAPLE_USDC_POOL_ID;
 
         // Fetch Maple positions
-        const ethWalletResp = await walletService.getPrimaryWallet("ethereum");
+        const ethWalletResp =
+          await walletService.getPrimaryWallet("ethereum");
         
         if (ethWalletResp.success && ethWalletResp.wallet) {
           const ethAddress = ethWalletResp.wallet.wallet_address;
@@ -242,7 +243,8 @@ export const PortfolioProvider: React.FC<PortfolioProviderProps> = ({
 
         // Fetch Perena balance and portfolio data
         let perenaPortfolioData: PerenaPortfolioData | null = null;
-        const solWalletResp = await walletService.getPrimaryWallet("solana");
+        const solWalletResp =
+          await walletService.getPrimaryWallet("solana");
         if (solWalletResp.success && solWalletResp.wallet) {
           const solAddress = solWalletResp.wallet.wallet_address;
 

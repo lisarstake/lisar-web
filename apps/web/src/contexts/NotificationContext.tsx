@@ -5,15 +5,27 @@ import React, {
   useEffect,
   useMemo,
   useCallback,
+  useRef,
   ReactNode,
 } from "react";
 import {
   Notification,
-  PaginatedNotificationsResponse,
+  SystemNotification,
   UnreadCountResponse,
 } from "@/services/notifications/types";
 import { notificationService } from "@/services";
 import { useAuth } from "./AuthContext";
+
+const DISMISSED_SYSTEM_IDS_KEY = "dismissed_system_notifications";
+
+function loadDismissedSystemIds(): Set<string> {
+  try {
+    const saved = typeof localStorage !== "undefined" ? localStorage.getItem(DISMISSED_SYSTEM_IDS_KEY) : null;
+    return saved ? new Set(JSON.parse(saved)) : new Set();
+  } catch {
+    return new Set();
+  }
+}
 
 interface NotificationContextType {
   notifications: Notification[];
@@ -28,6 +40,12 @@ interface NotificationContextType {
   deleteNotification: (id: string) => Promise<void>;
   clearAllNotifications: () => Promise<void>;
   refetch: () => Promise<void>;
+  // System notifications (cached, not refetched on every navigation)
+  systemNotifications: SystemNotification[];
+  dismissedSystemNotificationIds: Set<string>;
+  activeSystemNotifications: SystemNotification[];
+  fetchSystemNotifications: () => Promise<void>;
+  dismissSystemNotification: (id: string) => void;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(
@@ -46,7 +64,41 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   const [total, setTotal] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [systemNotifications, setSystemNotifications] = useState<SystemNotification[]>([]);
+  const [dismissedSystemNotificationIds, setDismissedSystemNotificationIds] = useState<Set<string>>(loadDismissedSystemIds);
+  const systemNotificationsFetchedRef = useRef(false);
   const { state } = useAuth();
+
+  // Persist dismissed system notification ids
+  useEffect(() => {
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem(DISMISSED_SYSTEM_IDS_KEY, JSON.stringify([...dismissedSystemNotificationIds]));
+    }
+  }, [dismissedSystemNotificationIds]);
+
+  const activeSystemNotifications = useMemo(
+    () => systemNotifications.filter((n) => !dismissedSystemNotificationIds.has(n.id)),
+    [systemNotifications, dismissedSystemNotificationIds]
+  );
+
+  const fetchSystemNotifications = useCallback(async () => {
+    if (!state.isAuthenticated) {
+      setSystemNotifications([]);
+      return;
+    }
+    try {
+      const response = await notificationService.getSystemNotifications({ limit: 10 });
+      if (response.success && response.data) {
+        setSystemNotifications(response.data);
+      }
+    } catch {
+      // Silent fail for system notifications
+    }
+  }, [state.isAuthenticated]);
+
+  const dismissSystemNotification = useCallback((id: string) => {
+    setDismissedSystemNotificationIds((prev) => new Set([...prev, id]));
+  }, []);
 
   const fetchNotifications = useCallback(
     async (limit: number = 50, offset: number = 0) => {
@@ -204,6 +256,17 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     }
   }, [state.isAuthenticated, state.isLoading, fetchNotifications, fetchUnreadCount]);
 
+  // Fetch system notifications once when authenticated (cached in context, not refetched on navigation)
+  useEffect(() => {
+    if (state.isAuthenticated && !state.isLoading && !systemNotificationsFetchedRef.current) {
+      systemNotificationsFetchedRef.current = true;
+      fetchSystemNotifications();
+    } else if (!state.isAuthenticated) {
+      systemNotificationsFetchedRef.current = false;
+      setSystemNotifications([]);
+    }
+  }, [state.isAuthenticated, state.isLoading, fetchSystemNotifications]);
+
   const value = useMemo<NotificationContextType>(
     () => ({
       notifications,
@@ -218,6 +281,11 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
       deleteNotification,
       clearAllNotifications,
       refetch,
+      systemNotifications,
+      dismissedSystemNotificationIds,
+      activeSystemNotifications,
+      fetchSystemNotifications,
+      dismissSystemNotification,
     }),
     [
       notifications,
@@ -232,6 +300,11 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
       deleteNotification,
       clearAllNotifications,
       refetch,
+      systemNotifications,
+      dismissedSystemNotificationIds,
+      activeSystemNotifications,
+      fetchSystemNotifications,
+      dismissSystemNotification,
     ]
   );
 

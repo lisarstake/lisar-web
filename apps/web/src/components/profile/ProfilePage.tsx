@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   ChevronLeft,
@@ -8,18 +8,34 @@ import {
   CircleArrowOutUpRight,
   Copy,
   Check,
+  LoaderCircle,
 } from "lucide-react";
 import { SuccessDrawer } from "../ui/SuccessDrawer";
 import { ErrorDrawer } from "../ui/ErrorDrawer";
 import { ExportWalletDrawer } from "../general/ExportWalletDrawer";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 import { useAuth } from "@/contexts/AuthContext";
 import { authService } from "@/services/auth";
 import { LoadingSpinner } from "../general/LoadingSpinner";
+import { rampService } from "@/services/ramp";
+import type { BankInfo } from "@/services/ramp";
 
 export const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { state, logout, updateProfile, refreshUser } = useAuth();
+  const [showLinkedAccount, setShowLinkedAccount] = useState(false);
+  const [banks, setBanks] = useState<BankInfo[]>([]);
+  const [banksError, setBanksError] = useState("");
+  const [bankCode, setBankCode] = useState("");
+  const [isLookingUpAccount, setIsLookingUpAccount] = useState(false);
+  const [accountLookupError, setAccountLookupError] = useState("");
 
   const [formData, setFormData] = useState({
     // username: "",
@@ -31,7 +47,15 @@ export const ProfilePage: React.FC = () => {
     country: "",
     state: "",
     is_totp_enabled: false,
+    bankName: "",
+    bankAccountNumber: "",
   });
+
+  const [linkedAccount, setLinkedAccount] = useState<{
+    account_number: string;
+    bank_code: string;
+    bank_name: string;
+  } | null>(null);
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -44,6 +68,57 @@ export const ProfilePage: React.FC = () => {
   const [isHoveringCopy, setIsHoveringCopy] = useState(false);
 
   useEffect(() => {
+    rampService.getBanks().then((res) => {
+      if (res.success && res.data) {
+        setBanks(
+          res.data.sort((a, b) => a.name.trim().localeCompare(b.name.trim())),
+        );
+      } else {
+        setBanksError(res.error?.message ?? "Failed to fetch banks");
+      }
+    });
+  }, []);
+
+  const handleBankSelect = (code: string) => {
+    setBankCode(code);
+    const bank = banks.find((b) => b.code === code);
+    handleInputChange("bankName", bank?.name.trim() ?? "");
+    setAccountLookupError("");
+  };
+
+  const handleAccountNumberChange = useCallback(
+    async (value: string) => {
+      handleInputChange("bankAccountNumber", value);
+      setAccountLookupError("");
+      if (value.length === 10 && bankCode) {
+        setIsLookingUpAccount(true);
+        try {
+          const res = await rampService.lookupAccount({
+            accountNumber: value,
+            bankCode,
+          });
+          if (res.success && res.data) {
+            const fetchedName = res.data.accountName;
+            // Only update full name if it differs from the current stored name
+            if (fetchedName && fetchedName !== formData.fullName) {
+              handleInputChange("fullName", fetchedName);
+            }
+          } else {
+            setAccountLookupError(res.error?.message ?? "Account not found.");
+          }
+        } catch {
+          setAccountLookupError(
+            "Could not verify account. Please check the details.",
+          );
+        } finally {
+          setIsLookingUpAccount(false);
+        }
+      }
+    },
+    [bankCode, formData.fullName],
+  );
+
+  useEffect(() => {
     const loadUserData = async () => {
       try {
         if (state.isLoading) {
@@ -51,6 +126,7 @@ export const ProfilePage: React.FC = () => {
         }
 
         if (state.user) {
+          const linked = state.user.linked_account;
           setFormData({
             // username: state.user.username || "",
             fullName: state.user.full_name || "",
@@ -61,14 +137,16 @@ export const ProfilePage: React.FC = () => {
             country: state.user.country || "",
             state: state.user.state || "",
             is_totp_enabled: state.user.is_totp_enabled || false,
+            bankName: linked?.bank_name || "",
+            bankAccountNumber: linked?.account_number || "",
           });
+          setBankCode(linked?.bank_code || "");
+          setLinkedAccount(linked || null);
           setIsLoading(false);
         } else if (state.isAuthenticated) {
-          // If authenticated but no user data, refresh
           await refreshUser();
           setIsLoading(false);
         } else {
-          // Not authenticated, redirect to login
           navigate("/login");
         }
       } catch (error) {
@@ -110,6 +188,14 @@ export const ProfilePage: React.FC = () => {
         country: formData.country,
         state: formData.state,
         fiat_type: formData.preferredCurrency,
+        linked_account:
+          formData.bankAccountNumber && bankCode
+            ? {
+                account_number: formData.bankAccountNumber,
+                bank_code: bankCode,
+                bank_name: formData.bankName,
+              }
+            : null,
       });
 
       if (response.success) {
@@ -117,7 +203,7 @@ export const ProfilePage: React.FC = () => {
         await refreshUser();
       } else {
         setErrorMessage(
-          response.message || "Failed to update profile. Please try again."
+          response.message || "Failed to update profile. Please try again.",
         );
         setShowErrorDrawer(true);
       }
@@ -166,9 +252,7 @@ export const ProfilePage: React.FC = () => {
         setTimeout(() => {
           setAddressCopied(false);
         }, 2000);
-      } catch (err) {
-        // Copy failed - silent fail
-      }
+      } catch (err) {}
       document.body.removeChild(textArea);
     }
   };
@@ -245,7 +329,7 @@ export const ProfilePage: React.FC = () => {
                   // Fallback to initials if image fails to load
                   e.currentTarget.style.display = "none";
                   e.currentTarget.nextElementSibling?.classList.remove(
-                    "hidden"
+                    "hidden",
                   );
                 }}
               />
@@ -275,19 +359,6 @@ export const ProfilePage: React.FC = () => {
 
         {/* Form Fields */}
         <div className="space-y-6">
-          {/* Username */}
-          {/* <div>
-            <label className="block text-gray-100 text-sm font-medium mb-2">
-              Username
-            </label>
-            <input
-              type="text"
-              value={formData.username}
-              onChange={(e) => handleInputChange("username", e.target.value)}
-              className="w-full px-4 py-3 bg-[#121212] border border-[#121212] rounded-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:border-[#C7EF6B] transition-colors"
-            />
-          </div> */}
-
           {/* Full Name */}
           <div>
             <label className="block text-gray-100 text-sm font-medium mb-2">
@@ -343,7 +414,7 @@ export const ProfilePage: React.FC = () => {
           </div>
 
           {/* Deposit Address */}
-          <div>
+          {/* <div>
             <label className="block text-gray-100 text-sm font-medium mb-2">
               Deposit Address
             </label>
@@ -372,7 +443,7 @@ export const ProfilePage: React.FC = () => {
                 )}
               </button>
             </div>
-          </div>
+          </div> */}
 
           {/* Preferred Currency */}
           <div>
@@ -405,18 +476,86 @@ export const ProfilePage: React.FC = () => {
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"
               />
             </div>
+          </div>
 
-            {/* 2 FA Status  */}
-            {!formData.is_totp_enabled && (
-              <div
-                onClick={() => navigate("/setup-otp")}
-                className="text-[#C7EF6B] text-[13px] font-normal my-3 cursor-pointer hover:underline"
-              >
-                2 factor authentication is not setup. Click to setup 2FA to make
-                your account more secure.
+          {/* Linked Bank Account - Collapsible */}
+          <div>
+            <div className="flex items-center justify-between">
+              <label className="block text-gray-100 text-sm font-medium mb-2">
+                Linked Account
+              </label>
+              <ChevronDown
+                size={16}
+                onClick={() => setShowLinkedAccount(!showLinkedAccount)}
+                className={`text-gray-400 transition-transform duration-200 ${showLinkedAccount ? "rotate-180" : "rotate-0"} mr-2 cursor-pointer`}
+              />
+            </div>
+
+            {showLinkedAccount && (
+              <div className="space-y-3 ">
+                {/* Bank Select */}
+                <div>
+                  <Select value={bankCode} onValueChange={handleBankSelect}>
+                    <SelectTrigger className="w-full bg-[#121212] border-[#1e1e1e] text-gray-100 py-6 text-base">
+                      <SelectValue
+                        placeholder={banks.length === 0 ? "Select bank" : ""}
+                      />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#121212] border-[#1e1e1e] text-gray-100 max-h-[300px]">
+                      {banks.map((b) => (
+                        <SelectItem
+                          key={b.code}
+                          value={b.code}
+                          className="text-gray-100 focus:bg-[#1e1e1e] focus:text-gray-100"
+                        >
+                          {b.name.trim()}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Account Number */}
+                <div>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={formData.bankAccountNumber}
+                      onChange={(e) =>
+                        handleAccountNumberChange(e.target.value)
+                      }
+                      placeholder="Account number"
+                      maxLength={10}
+                      inputMode="numeric"
+                      className="w-full px-4 py-3 bg-[#121212] border border-[#1e1e1e] rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:border-[#C7EF6B] transition-colors pr-10"
+                    />
+                    {isLookingUpAccount && (
+                      <LoaderCircle
+                        size={16}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-[#C7EF6B]"
+                      />
+                    )}
+                  </div>
+                  {accountLookupError && (
+                    <p className="text-red-400 text-xs mt-1.5">
+                      {accountLookupError}
+                    </p>
+                  )}
+                </div>
               </div>
             )}
           </div>
+
+          {/* 2 FA Status  */}
+          {!formData.is_totp_enabled && (
+            <div
+              onClick={() => navigate("/setup-otp")}
+              className="text-[#C7EF6B] text-[13px] font-normal my-3 cursor-pointer hover:underline"
+            >
+              2 factor authentication is not setup. Click to setup 2FA to make
+              your account more secure.
+            </div>
+          )}
         </div>
 
         {/* Save Changes Button */}
@@ -432,27 +571,8 @@ export const ProfilePage: React.FC = () => {
           >
             {isSaving ? (
               <span className="flex items-center justify-center gap-2">
-                <svg
-                  className="animate-spin h-5 w-5 text-white"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
-                </svg>
-                Saving...
+                <LoaderCircle className="animate-spin h-5 w-5 text-white" />
+                Saving..
               </span>
             ) : (
               "Save Changes"

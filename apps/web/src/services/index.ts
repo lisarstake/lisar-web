@@ -70,3 +70,5 @@ export * from "./maple";
 export * from "./kyc";
 // Export campaign services
 export * from "./campaign";
+// Export ramp services
+export * from "./ramp";

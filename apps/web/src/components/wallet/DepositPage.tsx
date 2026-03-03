@@ -13,6 +13,10 @@ import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { ErrorDrawer } from "@/components/ui/ErrorDrawer";
 import { SuccessDrawer } from "@/components/ui/SuccessDrawer";
+import {
+  RampDrawer,
+  RampTransactionDetails,
+} from "@/components/general/RampDrawer";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWallet } from "@/contexts/WalletContext";
 import { priceService } from "@/lib/priceService";
@@ -44,7 +48,7 @@ export const DepositPage: React.FC = () => {
   const [fiatAmount, setFiatAmount] = useState(() =>
     presetFiatAmount != null && presetFiatAmount > 0
       ? presetFiatAmount.toString()
-      : "0"
+      : "0",
   );
   const [lptEquivalent, setLptEquivalent] = useState(0);
   const [tokenEquivalent, setTokenEquivalent] = useState(0);
@@ -56,13 +60,14 @@ export const DepositPage: React.FC = () => {
     ? selectedProvider === "maple"
       ? "erc20"
       : selectedProvider === "perena"
-      ? "spl"
-      : "spl"
+        ? "spl"
+        : "spl"
     : "arbitrum";
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<
     string | null
   >(null);
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
+  const [showFiatDrawer, setShowFiatDrawer] = useState(false);
   const [isStaking, setIsStaking] = useState(false);
   const [showErrorDrawer, setShowErrorDrawer] = useState(false);
   const [showSuccessDrawer, setShowSuccessDrawer] = useState(false);
@@ -70,8 +75,16 @@ export const DepositPage: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const onrampInstanceRef = useRef<OnrampWebSDK | null>(null);
   const { state } = useAuth();
-  const { refetch: refetchWallet, ethereumWalletAddress, solanaWalletAddress } = useWallet();
-  const { maple: mapleApy, perena: perenaApy, isLoading: apyLoading } = useStablesApy();
+  const {
+    refetch: refetchWallet,
+    ethereumWalletAddress,
+    solanaWalletAddress,
+  } = useWallet();
+  const {
+    maple: mapleApy,
+    perena: perenaApy,
+    isLoading: apyLoading,
+  } = useStablesApy();
 
   // Get user's preferred currency
   const userCurrency = state.user?.fiat_type || "NGN";
@@ -87,7 +100,8 @@ export const DepositPage: React.FC = () => {
     }
     const initializeFromToken = async () => {
       if (preservedAmount) {
-        const numericAmount = parseFloat(preservedAmount.replace(/,/g, "")) || 0;
+        const numericAmount =
+          parseFloat(preservedAmount.replace(/,/g, "")) || 0;
         if (numericAmount > 0) {
           if (preservedUsdcAmount || walletType === "savings") {
             // For USDC, convert directly (1 USDC = 1 USD, then to user's currency)
@@ -110,17 +124,23 @@ export const DepositPage: React.FC = () => {
             setFiatAmount(fiatValue.toFixed(2));
           } else {
             // For LPT, convert using LPT price
-          const fiatValue = await priceService.convertLptToFiat(
+            const fiatValue = await priceService.convertLptToFiat(
               numericAmount,
-            userCurrency
-          );
-          setFiatAmount(fiatValue.toFixed(2));
+              userCurrency,
+            );
+            setFiatAmount(fiatValue.toFixed(2));
           }
         }
       }
     };
     initializeFromToken();
-  }, [presetFiatAmount, preservedAmount, preservedUsdcAmount, walletType, userCurrency]);
+  }, [
+    presetFiatAmount,
+    preservedAmount,
+    preservedUsdcAmount,
+    walletType,
+    userCurrency,
+  ]);
 
   // Calculate token equivalent of fiat amount
   useEffect(() => {
@@ -130,16 +150,16 @@ export const DepositPage: React.FC = () => {
         if (isStables) {
           const usdValue = await priceService.convertFiatToUsd(
             numericAmount,
-            userCurrency
+            userCurrency,
           );
           setTokenEquivalent(usdValue);
           setLptEquivalent(0);
         } else {
-        const lptValue = await priceService.convertFiatToLpt(
-          numericAmount,
-          userCurrency
-        );
-        setLptEquivalent(lptValue);
+          const lptValue = await priceService.convertFiatToLpt(
+            numericAmount,
+            userCurrency,
+          );
+          setLptEquivalent(lptValue);
           setTokenEquivalent(0);
         }
       } else {
@@ -177,15 +197,20 @@ export const DepositPage: React.FC = () => {
 
   const handleProceed = async () => {
     if (selectedPaymentMethod === "onchain") {
-      navigate("/deposit-address", { 
-        state: { 
+      navigate("/deposit-address", {
+        state: {
           walletType,
           provider: selectedProvider,
-        } 
+        },
       });
     } else if (selectedPaymentMethod === "fiat") {
-      await handleFundWallet();
+      setShowFiatDrawer(true);
     }
+  };
+
+  const handleFiatConfirm = async () => {
+    setShowFiatDrawer(false);
+    await handleFundWallet();
   };
 
   const handleFundWallet = async () => {
@@ -196,7 +221,9 @@ export const DepositPage: React.FC = () => {
     }
 
     if (isStables && !selectedProvider) {
-      setErrorMessage("Provider not selected. Please go back and select a tier.");
+      setErrorMessage(
+        "Provider not selected. Please go back and select a tier.",
+      );
       setShowErrorDrawer(true);
       return;
     }
@@ -208,7 +235,7 @@ export const DepositPage: React.FC = () => {
         if (selectedProvider === "maple") {
           if (!ethereumWalletAddress) {
             setErrorMessage(
-              "No ethereum wallet available. Please create a wallet first."
+              "No ethereum wallet available. Please create a wallet first.",
             );
             setShowErrorDrawer(true);
             return;
@@ -216,19 +243,19 @@ export const DepositPage: React.FC = () => {
           walletAddress = ethereumWalletAddress;
         } else {
           if (!solanaWalletAddress) {
-          setErrorMessage(
-              "No solana wallet available. Please create a wallet first."
-          );
-          setShowErrorDrawer(true);
-          return;
-        }
+            setErrorMessage(
+              "No solana wallet available. Please create a wallet first.",
+            );
+            setShowErrorDrawer(true);
+            return;
+          }
           walletAddress = solanaWalletAddress;
         }
       }
 
       if (!walletAddress) {
         setErrorMessage(
-          "No wallet available. Please ensure you have a wallet connected."
+          "No wallet available. Please ensure you have a wallet connected.",
         );
         setShowErrorDrawer(true);
         return;
@@ -329,7 +356,9 @@ export const DepositPage: React.FC = () => {
       <div className="flex-1 overflow-y-auto px-6 pb-28 scrollbar-hide">
         {/* Amount Input Field */}
         <div className="py-6">
-          <span className="text-white/80 text-base font-medium ml-1">Deposit amount</span>
+          <span className="text-white/80 text-base font-medium ml-1">
+            Deposit amount
+          </span>
           <div className="bg-[#1a1a1a] rounded-lg p-3 mt-1">
             <input
               type="text"
@@ -352,9 +381,9 @@ export const DepositPage: React.FC = () => {
             {(isStables ? tokenEquivalent : lptEquivalent).toLocaleString(
               undefined,
               {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-              }
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              },
             )}{" "}
             {tokenName}
           </p>
@@ -433,7 +462,7 @@ export const DepositPage: React.FC = () => {
                   }
                 />
                 <span className="text-white font-normal">
-                 Deposit {userCurrency}
+                  Deposit {userCurrency}
                 </span>
               </div>
               <ChevronRight
@@ -457,7 +486,9 @@ export const DepositPage: React.FC = () => {
                     selectedPaymentMethod === "onchain" ? "#C7EF6B" : "#86B3F7"
                   }
                 />
-                <span className="text-white font-normal">Transfer From Wallet</span>
+                <span className="text-white font-normal">
+                  Transfer From Wallet
+                </span>
               </div>
               <ChevronRight
                 size={20}
@@ -526,6 +557,31 @@ export const DepositPage: React.FC = () => {
         onClose={() => setShowSuccessDrawer(false)}
         title="Payment Successful!"
         message={successMessage}
+      />
+
+      {/* Fiat Transaction Drawer */}
+      <RampDrawer
+        isOpen={showFiatDrawer}
+        onClose={() => setShowFiatDrawer(false)}
+        onConfirm={handleFiatConfirm}
+        details={{
+          type: "buy",
+          tokenAmount: isStables ? tokenEquivalent : lptEquivalent,
+          tokenName: tokenName,
+          fiatAmount: parseFloat(fiatAmount.replace(/,/g, "")) || 0,
+          fiatSymbol: currencySymbol,
+          fiatCurrency: userCurrency,
+          exchangeRate: 0,
+          fee: 0,
+          processingTime: "2-3mins",
+          paymentMethodText: `${userCurrency} wallet`,
+          cryptoAddress: isStables
+            ? solanaWalletAddress
+            : ethereumWalletAddress,
+
+          customerEmail: state.user?.email || "",
+          customerName: state.user?.full_name || "",
+        }}
       />
 
       {/* Bottom Navigation */}
