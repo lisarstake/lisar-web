@@ -1,5 +1,5 @@
 import React from "react";
-import { ArrowDown, ArrowUp, SquareMinus, PiggyBank, Info } from "lucide-react";
+import { Info } from "lucide-react";
 import { TransactionData } from "@/services/transactions/types";
 import { EmptyState } from "@/components/general/EmptyState";
 
@@ -16,23 +16,22 @@ export const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
   onTransactionClick, 
   skeletonCount = 3,
 }) => {
-  const getTransactionIcon = (type: TransactionData["transaction_type"]) => {
-    switch (type) {
-      case "deposit":
-        return <ArrowDown size={18} className="text-[#C7EF6B]/90" />;
-      case "withdrawal":
-        return <ArrowUp size={18} className="text-[#FF6B6B]/90" />;
-      case "delegation":
-        return <PiggyBank size={18} className="text-[#C7EF6B]/90" />;
-      case "undelegation":
-        return <SquareMinus size={18} className="text-[#FF6B6B]/90" />;
-      case "mint":
-        return <PiggyBank size={18} className="text-[#C7EF6B]/90" />;
-      case "burn":
-        return <SquareMinus size={18} className="text-[#FF6B6B]/90" />;
-      default:
-        return <PiggyBank size={18} className="text-[#C7EF6B]/90" />;
+  const getTransactionImage = (transaction: TransactionData) => {
+    const symbol = transaction.token_symbol?.toUpperCase();
+
+    if (transaction.transaction_type === "deposit") {
+      return "/ng_flag.png";
     }
+
+    if (symbol === "USDC") {
+      return "/usdc.svg";
+    }
+
+    if (symbol === "LPT") {
+      return "/livepeer.webp";
+    }
+
+    return "/ng_flag.png";
   };
 
   const getTransactionTitle = (type: TransactionData["transaction_type"]) => {
@@ -54,18 +53,8 @@ export const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
     }
   };
 
-  const getIconBackgroundColor = (
-    type: TransactionData["transaction_type"]
-  ) => {
-    return type === "deposit" || type === "delegation" || type === "mint"
-      ? "bg-[#C7EF6B]/8"
-      : "bg-[#FF6B6B]/8";
-  };
-
   const getAmountColor = (type: TransactionData["transaction_type"]) => {
-    return type === "deposit" || type === "delegation" || type === "mint"
-      ? "text-[#C7EF6B]/90"
-      : "text-[#FF6B6B]/90";
+    return "text-white/75";
   };
 
   const getAmountPrefix = (type: TransactionData["transaction_type"]) => {
@@ -85,7 +74,7 @@ export const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
 
   if (isLoading) {
     return (
-      <div className="bg-[#1a1a1a] rounded-lg border border-[#2a2a2a] overflow-hidden">
+      <div className="bg-[#13170a] rounded-lg overflow-hidden">
         <div className="divide-y divide-[#2a2a2a]">
           {Array.from({ length: skeletonCount }).map((_, index) => (
             <div
@@ -123,7 +112,7 @@ export const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
   }
 
   return (
-    <div className="bg-linear-to-br from-[#0f0f0f] to-[#151515]  rounded-lg border border-[#2a2a2a] overflow-hidden ">
+    <div className="bg-[#13170a] rounded-lg overflow-hidden">
       <div className="divide-y divide-[#2a2a2a]">
         {transactions.map((transaction) => (
           <div
@@ -133,11 +122,13 @@ export const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
           >
             <div className="flex items-center space-x-3 flex-1 min-w-0">
               <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${getIconBackgroundColor(
-                  transaction.transaction_type
-                )}`}
+                className="w-10 h-10 flex items-center justify-center shrink-0"
               >
-                {getTransactionIcon(transaction.transaction_type)}
+                <img
+                  src={getTransactionImage(transaction)}
+                  alt={transaction.token_symbol || "transaction asset"}
+                  className="w-8 h-8 object-contain"
+                />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-white text-sm font-medium truncate">
@@ -150,7 +141,7 @@ export const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
             </div>
             <div className="text-right ml-3 shrink-0">
               <p
-                className={`font-semibold text-sm ${getAmountColor(
+                className={`font-semibold text-[13px] ${getAmountColor(
                   transaction.transaction_type
                 )}`}
               >

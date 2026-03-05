@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { WalletActionButtons } from "./WalletActionButtons";
-import { RecentTransactionsCard } from "./RecentTransactionsCard";
+import { RecentTransactionsCard } from "../transactions/RecentTransactionsCard";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { EarningsBreakdownDrawer } from "../general/EarningsBreakdownDrawer";
@@ -14,7 +14,18 @@ import { useGuidedTour } from "@/hooks/useGuidedTour";
 import { WALLET_PAGE_TOUR_ID } from "@/lib/tourConfig";
 import { formatEarnings, formatStables } from "@/lib/formatters";
 import { TransactionData } from "@/services/transactions/types";
-import { CircleQuestionMark, ChevronLeft, Eye, EyeOff, RefreshCw } from "lucide-react";
+import {
+  ArrowDown,
+  Banknote,
+  CircleQuestionMark,
+  ArrowLeft,
+  Eye,
+  EyeOff,
+  Landmark,
+  RefreshCw,
+  SquareKanban,
+  ArrowRight,
+} from "lucide-react";
 
 interface WalletPageProps {
   walletType?: string;
@@ -118,7 +129,11 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType, embedded }) 
   };
 
   const handlePortfolioClick = () => {
-    navigate("/portfolio", { state: { walletType } });
+    const card =
+      cardData.find((item) => item.type === walletType) ??
+      cardData.find((item) => item.type === "savings") ??
+      null;
+    setSelectedEarningsCard(card);
   };
 
   const handleWithdrawClick = () => {
@@ -211,15 +226,162 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType, embedded }) 
     return filtered.slice(0, 5);
   }, [transactions, walletType]);
 
+  const isSavingsWallet = walletType === "savings";
+  const isStakingWallet = walletType === "staking";
+  const activeWalletCard = useMemo(() => {
+    if (walletType === "staking") {
+      return cardData.find((item) => item.type === "staking") ?? null;
+    }
+    return cardData.find((item) => item.type === "savings") ?? null;
+  }, [cardData, walletType]);
+
+  const handleSavingsDeposit = () => {
+    handleDepositClick();
+  };
+
+  const handleSavingsWithdraw = () => {
+    handleWithdrawClick();
+  };
+
+  const handleSavingsDetails = () => {
+    handlePortfolioClick();
+  };
+
+  const renderLoadingStars = (sizeClass: string) => (
+    <div className={`flex items-baseline justify-center gap-1 ${sizeClass}`}>
+      {Array.from({ length: 4 }).map((_, index) => (
+        <span
+          key={`wallet-star-${index}`}
+          className="inline-block text-white animate-[wallet-star-float_900ms_ease-in-out_infinite]"
+          style={{ animationDelay: `${index * 120}ms` }}
+        >
+          ★
+        </span>
+      ))}
+    </div>
+  );
+
+  if ((isSavingsWallet || isStakingWallet) && !embedded) {
+    return (
+      <div className="h-screen bg-[#050505] text-white flex flex-col">
+        <div className="flex items-center justify-between px-6 pt-8 pb-0">
+          <button
+            onClick={handleBackClick}
+            className="h-10 w-10 rounded-full bg-[#13170a] flex items-center justify-center"
+          >
+            <ArrowLeft className="text-white" size={22} />
+          </button>
+
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-6 pb-24 scrollbar-hide">
+          <div className="mt-8 text-center">
+            <p className="text-sm text-[#89938f]">
+              {isStakingWallet ? "LPT balance" : "NGN balance"}
+            </p>
+            {activeWalletCard?.isLoading ? (
+              <div className="mt-2">{renderLoadingStars("text-xl font-bold")}</div>
+            ) : (
+              <button
+                onClick={() => setShowBalance(!showBalance)}
+                className="mt-2 text-lg font-semibold"
+              >
+                {showBalance
+                  ? isStakingWallet
+                    ? `${formatEarnings(activeWalletCard?.balance ?? 0)} LPT`
+                    : `${displayFiatSymbol}${(activeWalletCard?.displayBalanceValue ?? 0).toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}`
+                  : "★★★★"}
+              </button>
+            )}
+          </div>
+
+          <div className="mt-8 flex items-center justify-center gap-6">
+            <button
+              onClick={handleSavingsDeposit}
+              className="flex flex-col items-center gap-1.5"
+            >
+              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#13170a]">
+                <ArrowDown size={24} className="text-[#e8ece9]" />
+              </span>
+              <span className="text-xs font-medium">Deposit</span>
+            </button>
+
+            <button
+              onClick={handleSavingsWithdraw}
+              className="flex flex-col items-center gap-1.5"
+            >
+              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#13170a]">
+                <ArrowRight size={24} className="text-[#e8ece9]" />
+              </span>
+              <span className="text-xs font-medium">Withdraw</span>
+            </button>
+
+            <button
+              onClick={handleSavingsDetails}
+              className="flex flex-col items-center gap-1.5"
+            >
+              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#13170a]">
+                <SquareKanban size={24} className="text-[#e8ece9]" />
+              </span>
+              <span className="text-xs font-medium">Overview</span>
+            </button>
+          </div>
+
+          <div className="mt-8 ">
+            <h2 className="text-sm text-white/80 mb-3">Recent transactions</h2>
+            <RecentTransactionsCard
+              transactions={recentTransactions}
+              isLoading={transactionsLoading}
+              onTransactionClick={handleTransactionClick}
+              skeletonCount={4}
+            />
+          </div>
+        </div>
+
+        <BottomNavigation currentPath="/wallet" />
+
+        <HelpDrawer
+          isOpen={showHelpDrawer}
+          onClose={() => setShowHelpDrawer(false)}
+          title={isStakingWallet ? "About Staking" : "About Savings"}
+          content={
+            isStakingWallet
+              ? [
+                "Staking helps you grow your LPT with variable yield.",
+                "Returns depend on market and network conditions.",
+              ]
+              : [
+                "Stables offers lower yields with instant withdrawal capabilities.",
+                "Perfect for emergency funds and short-term savings with stable returns.",
+              ]
+          }
+        />
+
+        <EarningsBreakdownDrawer
+          isOpen={selectedEarningsCard !== null}
+          onClose={() => setSelectedEarningsCard(null)}
+          balance={selectedEarningsCard?.displayBalanceValue || 0}
+          apyPercent={selectedEarningsCard?.apyPercent || 0}
+          displayCurrency={displayCurrency}
+          displayFiatSymbol={displayFiatSymbol}
+          cardType={selectedEarningsCard?.type}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className={embedded ? "flex flex-col" : "h-screen bg-[#050505] text-white flex flex-col"}>
       {!embedded && (
         <div className="flex items-center justify-between px-6 py-8">
           <button
             onClick={handleBackClick}
-            className="w-8 h-8 flex items-center justify-center"
+            className="h-10 w-10 rounded-full bg-[#13170a] flex items-center justify-center"
           >
-            <ChevronLeft color="#C7EF6B" />
+            <ArrowLeft className="text-white" size={22} />
           </button>
           <h1 className="text-lg font-medium text-white">Wallet</h1>
           <div className="flex items-center gap-3">
@@ -305,7 +467,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType, embedded }) 
                           </div>
                           <button
                             onClick={handleCurrencyToggle}
-                            className={`text-xs font-medium px-2 py-1 rounded-md flex items-center gap-1 transition-colors ${isSavings
+                            className={`text-sm font-medium px-2 py-1 rounded-md flex items-center gap-1 transition-colors ${isSavings
                               ? "bg-white/20 text-white hover:bg-white/30"
                               : "bg-white/10 text-white/90 hover:bg-white/20"
                               }`}
@@ -320,16 +482,12 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType, embedded }) 
 
                         <div className="mb-2">
                           {card.isLoading ? (
-                            <div className="flex items-baseline gap-2 mb-1">
-                              <span className="text-xl font-bold text-white/90">
-                                ••••
-                              </span>
-                            </div>
+                            <div className="mb-1">{renderLoadingStars("text-lg font-bold")}</div>
                           ) : (
                             <div className="flex items-baseline mb-1">
                               {showBalance && displayCurrency === "NGN" && (
                                 <span
-                                  className={`text-xl font-bold ${isSavings
+                                  className={`text-lg font-bold ${isSavings
                                     ? "text-white/90"
                                     : "text-white/70"
                                     }`}
@@ -337,7 +495,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType, embedded }) 
                                   {displayFiatSymbol}
                                 </span>
                               )}
-                              <span className="text-xl font-bold text-white/90">
+                              <span className="text-lg font-bold text-white/90">
                                 {showBalance
                                   ? displayCurrency === "NGN"
                                     ? card.displayBalanceValue.toLocaleString(
@@ -350,7 +508,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType, embedded }) 
                                     : isSavings
                                       ? formatStables(card.balance)
                                       : formatEarnings(card.balance)
-                                  : "••••"}
+                                  : "★★★★"}
                               </span>
                               {showBalance && displayCurrency !== "NGN" && (
                                 <span
@@ -376,7 +534,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType, embedded }) 
                           : "bg-white/10"
                           }`}
                       >
-                        <p className="text-white/80 text-[10px] mb-0.5">
+                        <p className="text-white/80 text-sm mb-0.5">
                           Interest earned this week
                         </p>
                         <p className="text-white text-sm font-semibold">
@@ -387,7 +545,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType, embedded }) 
                             maximumFractionDigits:
                               displayCurrency === "NGN" ? 2 : 3,
                           })}
-                          <span className="text-white/70 text-xs font-normal ml-1">
+                          <span className="text-white/70 text-sm font-normal ml-1">
                             at ({card.apyPercent}% p.a)
                           </span>
                         </p>
@@ -453,7 +611,6 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType, embedded }) 
           )}
         </div>
 
-        {/* Transactions Card */}
         <RecentTransactionsCard
           transactions={recentTransactions}
           isLoading={transactionsLoading}

@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import {
   LoaderCircle,
   Wallet2,
-  ChevronLeft,
+  ArrowLeft,
   ChevronRight,
   CircleQuestionMark,
   ScanQrCode,
@@ -242,7 +242,7 @@ export const WithdrawPage: React.FC = () => {
           if (!sendResponse.success) {
             setErrorMessage(
               sendResponse.error ||
-                "Failed to withdraw USDC. Please try again.",
+              "Failed to withdraw USDC. Please try again.",
             );
             setShowErrorDrawer(true);
             setIsWithdrawing(false);
@@ -269,7 +269,7 @@ export const WithdrawPage: React.FC = () => {
           if (!sendResponse.success) {
             setErrorMessage(
               sendResponse.error ||
-                "Failed to withdraw USDC. Please try again.",
+              "Failed to withdraw USDC. Please try again.",
             );
             setShowErrorDrawer(true);
             setIsWithdrawing(false);
@@ -350,9 +350,9 @@ export const WithdrawPage: React.FC = () => {
       <div className="flex items-center justify-between px-6 pt-8 pb-4">
         <button
           onClick={handleBackClick}
-          className="w-8 h-8 flex items-center justify-center"
+          className="h-10 w-10 rounded-full bg-[#13170a] flex items-center justify-center"
         >
-          <ChevronLeft color="#C7EF6B" />
+          <ArrowLeft className="text-white" size={22} />
         </button>
 
         <h1 className="text-lg font-medium text-white">{pageTitle}</h1>
@@ -374,7 +374,7 @@ export const WithdrawPage: React.FC = () => {
               <span className="text-white/80 text-base font-medium ml-1">
                 Amount
               </span>
-              <div className="bg-[#1a1a1a] rounded-lg p-3 mt-1">
+              <div className="bg-[#13170a] rounded-lg p-3 mt-1">
                 <input
                   type="text"
                   value={amount ? formatNumber(amount) : ""}
@@ -424,11 +424,10 @@ export const WithdrawPage: React.FC = () => {
                     <button
                       key={percentage}
                       onClick={() => handleAmountSelect(calculatedAmount)}
-                      className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-colors ${
-                        isActive
-                          ? "bg-[#C7EF6B] text-black"
-                          : "bg-[#1a1a1a] text-white/80 hover:bg-[#2a2a2a]"
-                      }`}
+                      className={`flex-1 py-3 px-4 rounded-full text-sm font-medium transition-colors ${isActive
+                        ? "bg-[#C7EF6B] text-black"
+                        : "bg-[#13170a] text-white/80 hover:bg-[#2a2a2a]"
+                        }`}
                     >
                       {percentage}%
                     </button>
@@ -446,11 +445,10 @@ export const WithdrawPage: React.FC = () => {
               <div className="space-y-3">
                 <button
                   onClick={() => handlePaymentMethodSelect("fiat")}
-                  className={`w-full flex items-center justify-between p-4 rounded-lg transition-colors ${
-                    selectedPaymentMethod === "fiat"
-                      ? "bg-[#C7EF6B]/10 border border-[#C7EF6B]"
-                      : "bg-[#1a1a1a] border border-[#2a2a2a] hover:bg-[#2a2a2a]"
-                  }`}
+                  className={`w-full flex items-center justify-between p-4 rounded-full transition-colors ${selectedPaymentMethod === "fiat"
+                    ? "bg-[#C7EF6B]/10 border border-[#C7EF6B]"
+                    : "bg-[#13170a] border border-[#2a2a2a] hover:bg-[#2a2a2a]"
+                    }`}
                 >
                   <div className="flex items-center space-x-3">
                     <CreditCard
@@ -473,11 +471,10 @@ export const WithdrawPage: React.FC = () => {
 
                 <button
                   onClick={() => handlePaymentMethodSelect("onchain")}
-                  className={`w-full flex items-center justify-between p-4 rounded-lg transition-colors ${
-                    selectedPaymentMethod === "onchain"
-                      ? "bg-[#C7EF6B]/10 border border-[#C7EF6B]"
-                      : "bg-[#1a1a1a] border border-[#2a2a2a] hover:bg-[#2a2a2a]"
-                  }`}
+                  className={`w-full flex items-center justify-between p-4 rounded-full transition-colors ${selectedPaymentMethod === "onchain"
+                    ? "bg-[#C7EF6B]/10 border border-[#C7EF6B]"
+                    : "bg-[#13170a] border border-[#2a2a2a] hover:bg-[#2a2a2a]"
+                    }`}
                 >
                   <div className="flex items-center space-x-3">
                     <ScanQrCode
@@ -511,7 +508,7 @@ export const WithdrawPage: React.FC = () => {
               <h3 className="text-base font-medium text-white/90 mb-2">
                 Recipient Address
               </h3>
-              <div className="bg-[#1a1a1a] rounded-lg p-3 border border-[#2a2a2a] relative">
+              <div className="bg-[#13170a] rounded-lg p-3 border border-[#2a2a2a] relative">
                 <input
                   type="text"
                   value={withdrawalAddress}
@@ -534,7 +531,7 @@ export const WithdrawPage: React.FC = () => {
               <h3 className="text-base font-medium text-white/90 mb-2">
                 Network
               </h3>
-              <div className="bg-[#1a1a1a] rounded-lg p-3 border border-[#2a2a2a] relative">
+              <div className="bg-[#13170a] rounded-lg p-3 border border-[#2a2a2a] relative">
                 <input
                   type="text"
                   value={network}
@@ -549,7 +546,7 @@ export const WithdrawPage: React.FC = () => {
               <h3 className="text-base font-medium text-white/90 mb-2">
                 Transfer Summary
               </h3>
-              <div className="bg-[#1a1a1a] rounded-lg p-4 border border-[#2a2a2a]">
+              <div className="bg-[#13170a] rounded-lg p-4 border border-[#2a2a2a]">
                 <div className="flex justify-between items-center mb-3">
                   <span className="text-gray-400 text-sm">Amount to send</span>
                   <span className="text-white text-sm font-medium">
@@ -584,14 +581,13 @@ export const WithdrawPage: React.FC = () => {
               parseFloat(amount) <= 0 ||
               hasInsufficientFunds
             }
-            className={`w-full py-3 rounded-lg font-semibold text-lg transition-colors ${
-              selectedPaymentMethod &&
+            className={`w-full py-3 rounded-full font-semibold text-lg transition-colors ${selectedPaymentMethod &&
               amount &&
               parseFloat(amount) > 0 &&
               !hasInsufficientFunds
-                ? "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
-                : "bg-[#636363] text-white cursor-not-allowed"
-            }`}
+              ? "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
+              : "bg-[#636363] text-white cursor-not-allowed"
+              }`}
           >
             Continue
           </button>
@@ -599,11 +595,10 @@ export const WithdrawPage: React.FC = () => {
           <button
             onClick={handleConfirmTransfer}
             disabled={!withdrawalAddress.trim() || isWithdrawing}
-            className={`w-full py-3 rounded-lg font-semibold text-lg transition-colors ${
-              withdrawalAddress.trim() && !isWithdrawing
-                ? "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
-                : "bg-[#636363] text-white cursor-not-allowed"
-            }`}
+            className={`w-full py-3 rounded-full font-semibold text-lg transition-colors ${withdrawalAddress.trim() && !isWithdrawing
+              ? "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
+              : "bg-[#636363] text-white cursor-not-allowed"
+              }`}
           >
             {isWithdrawing ? (
               <span className="flex items-center justify-center gap-2">

@@ -1,71 +1,118 @@
-import { Suspense, type ReactNode } from 'react'
-import { createBrowserRouter } from 'react-router-dom'
-import App from '@/App'
-import { ErrorBoundary } from '@/components/general/ErrorBoundary'
-import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
-import { LoadingSpinner } from '@/components/general/LoadingSpinner'
-import { lazyRetry } from '@/lib/lazyRetry'
+import { Suspense, type ReactNode } from "react";
+import { createBrowserRouter } from "react-router-dom";
+import App from "@/App";
+import { ErrorBoundary } from "@/components/general/ErrorBoundary";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { LoadingSpinner } from "@/components/general/LoadingSpinner";
+import { lazyRetry } from "@/lib/lazyRetry";
 
-const HomePage = lazyRetry(() => import('@/screens/home-page'))
-const SignupPage = lazyRetry(() => import('@/screens/signup-page'))
-const LoginPage = lazyRetry(() => import('@/screens/login-page'))
-const ForgotPasswordPage = lazyRetry(() => import('@/screens/forgot-password-page'))
-const ResetPasswordPage = lazyRetry(() => import('@/screens/reset-password-page'))
-const OTPPage = lazyRetry(() => import('@/screens/otp-page'))
-const TOTPSetupPage = lazyRetry(() => import('@/screens/totp-setup-page'))
-const WalletPage = lazyRetry(() => import('@/screens/wallet-page'))
-const ValidatorPage = lazyRetry(() => import('@/screens/validator-page'))
-const ValidatorDetailsPage = lazyRetry(() => import('@/screens/validator-details-page'))
-const StakePage = lazyRetry(() => import('@/screens/stake-page'))
-const SavePage = lazyRetry(() => import('@/screens/save-page'))
-const RedeemPage = lazyRetry(() => import('@/screens/redeem-page'))
-const TiersPage = lazyRetry(() => import('@/screens/tiers-page'))
-const StableTiersPage = lazyRetry(() => import('@/screens/stable-tiers-page'))
-const WithdrawPage = lazyRetry(() => import('@/screens/withdraw-page'))
-const DepositPage = lazyRetry(() => import('@/screens/deposit-page'))
-const OnchainDepositPage = lazyRetry(() => import('@/screens/onchain-deposit-page'))
-const WithdrawNetworkPage = lazyRetry(() => import('@/screens/withdraw-network-page'))
-const ConfirmWithdrawalPage = lazyRetry(() => import('@/screens/confirm-withdrawal-page'))
-const UnstakeAmountPage = lazyRetry(() => import('@/screens/unstake-amount-page'))
-const ConfirmUnstakePage = lazyRetry(() => import('@/screens/confirm-unstake-page'))
-const HistoryPage = lazyRetry(() => import('@/screens/history-page'))
-const TransactionDetailPage = lazyRetry(() => import('@/screens/transaction-detail-page'))
-const LearnPage = lazyRetry(() => import('@/screens/learn-page'))
-const LearnDetailPage = lazyRetry(() => import('@/screens/learn-detail-page'))
-const ForecastPage = lazyRetry(() => import('@/screens/forecast-page'))
-const EarnPage = lazyRetry(() => import('@/screens/earn-page'))
-const CampaignPage = lazyRetry(() => import('@/screens/campaign-page'))
-const PortfolioPage = lazyRetry(() => import('@/screens/portfolio-page'))
-const PortfolioSummaryPage = lazyRetry(() => import('@/screens/portfolio-summary-page'))
-const PortfolioPositionsPage = lazyRetry(() => import('@/screens/portfolio-positions-page'))
-const EarningsBreakdownPage = lazyRetry(() => import('@/screens/earnings-breakdown-page'))
-const LeaderboardPage = lazyRetry(() => import('@/screens/leaderboard-page'))
-const DashboardPage = lazyRetry(() => import('@/screens/dashboard-page'))
-const ProfilePage = lazyRetry(() => import('@/screens/profile-page'))
-const NotificationsPage = lazyRetry(() => import('@/screens/notifications-page'))
-const BlogPage = lazyRetry(() => import('@/screens/blog-page'))
-const BlogDetailPage = lazyRetry(() => import('@/screens/blog-detail-page'))
-const NotFoundPage = lazyRetry(() => import('@/screens/NotFoundPage'))
+const HomePage = lazyRetry(() => import("@/screens/home-page"));
+const SignupPage = lazyRetry(() => import("@/screens/signup-page"));
+const LoginPage = lazyRetry(() => import("@/screens/login-page"));
+const ForgotPasswordPage = lazyRetry(
+  () => import("@/screens/forgot-password-page"),
+);
+const ResetPasswordPage = lazyRetry(
+  () => import("@/screens/reset-password-page"),
+);
+const OTPPage = lazyRetry(() => import("@/screens/otp-page"));
+const TOTPSetupPage = lazyRetry(() => import("@/screens/totp-setup-page"));
+const WalletPage = lazyRetry(() => import("@/screens/wallet-page"));
+const SavingsIntroPage = lazyRetry(() => import("@/screens/savings-intro-page"));
+const SavingsCreatePlanPage = lazyRetry(
+  () => import("@/screens/savings-create-plan-page"),
+);
+const SavingsCreateFlexiblePage = lazyRetry(
+  () => import("@/screens/savings-create-flexible-page"),
+);
+const ValidatorPage = lazyRetry(() => import("@/screens/validator-page"));
+const ValidatorDetailsPage = lazyRetry(
+  () => import("@/screens/validator-details-page"),
+);
+const StakePage = lazyRetry(() => import("@/screens/stake-page"));
+const SavePage = lazyRetry(() => import("@/screens/save-page"));
+const RedeemPage = lazyRetry(() => import("@/screens/redeem-page"));
+const TiersPage = lazyRetry(() => import("@/screens/tiers-page"));
+const StableTiersPage = lazyRetry(() => import("@/screens/stable-tiers-page"));
+const WithdrawPage = lazyRetry(() => import("@/screens/withdraw-page"));
+const DepositPage = lazyRetry(() => import("@/screens/deposit-page"));
+const OnchainDepositPage = lazyRetry(
+  () => import("@/screens/onchain-deposit-page"),
+);
+const WithdrawNetworkPage = lazyRetry(
+  () => import("@/screens/withdraw-network-page"),
+);
+const ConfirmWithdrawalPage = lazyRetry(
+  () => import("@/screens/confirm-withdrawal-page"),
+);
+const UnstakeAmountPage = lazyRetry(
+  () => import("@/screens/unstake-amount-page"),
+);
+const ConfirmUnstakePage = lazyRetry(
+  () => import("@/screens/confirm-unstake-page"),
+);
+const HistoryPage = lazyRetry(() => import("@/screens/history-page"));
+const TransactionDetailPage = lazyRetry(
+  () => import("@/screens/transaction-detail-page"),
+);
+const LearnPage = lazyRetry(() => import("@/screens/learn-page"));
+const LearnDetailPage = lazyRetry(() => import("@/screens/learn-detail-page"));
+const ForecastPage = lazyRetry(() => import("@/screens/forecast-page"));
+const EarnPage = lazyRetry(() => import("@/screens/earn-page"));
+const CampaignPage = lazyRetry(() => import("@/screens/campaign-page"));
+const PortfolioPage = lazyRetry(() => import("@/screens/portfolio-page"));
+const PortfolioSummaryPage = lazyRetry(
+  () => import("@/screens/portfolio-summary-page"),
+);
+const PortfolioPositionsPage = lazyRetry(
+  () => import("@/screens/portfolio-positions-page"),
+);
+const EarningsBreakdownPage = lazyRetry(
+  () => import("@/screens/earnings-breakdown-page"),
+);
+const LeaderboardPage = lazyRetry(() => import("@/screens/leaderboard-page"));
+const DashboardPage = lazyRetry(() => import("@/screens/dashboard-page"));
+const ProfilePage = lazyRetry(() => import("@/screens/profile-page"));
+const NotificationsPage = lazyRetry(
+  () => import("@/screens/notifications-page"),
+);
+const AccountsPage = lazyRetry(() => import("@/screens/accounts-page"));
+const AccountSettingsPage = lazyRetry(
+  () => import("@/screens/account-settings-page"),
+);
+const PreferencesSettingsPage = lazyRetry(
+  () => import("@/screens/preferences-settings-page"),
+);
+const SecuritySettingsPage = lazyRetry(
+  () => import("@/screens/security-settings-page"),
+);
+const RecipientSettingsPage = lazyRetry(
+  () => import("@/screens/recipient-settings-page"),
+);
+const InviteFriendsPage = lazyRetry(
+  () => import("@/screens/invite-friends-page"),
+);
+const BlogPage = lazyRetry(() => import("@/screens/blog-page"));
+const BlogDetailPage = lazyRetry(() => import("@/screens/blog-detail-page"));
+const NotFoundPage = lazyRetry(() => import("@/screens/NotFoundPage"));
 
 const withSuspense = (element: ReactNode) => (
   <Suspense fallback={<LoadingSpinner />}>{element}</Suspense>
-)
+);
 
 const withErrorBoundary = (element: ReactNode) => (
-  <ErrorBoundary>
-    {element}
-  </ErrorBoundary>
-)
+  <ErrorBoundary>{element}</ErrorBoundary>
+);
 
 const withSuspenseAndErrorBoundary = (element: ReactNode) => (
   <ErrorBoundary>
     <Suspense fallback={<LoadingSpinner />}>{element}</Suspense>
   </ErrorBoundary>
-)
+);
 
 export const router = createBrowserRouter([
   {
-    path: '/',
+    path: "/",
     element: (
       <ErrorBoundary>
         <App />
@@ -74,19 +121,37 @@ export const router = createBrowserRouter([
     children: [
       // Public routes
       { index: true, element: withSuspenseAndErrorBoundary(<HomePage />) },
-      { path: 'login', element: withSuspenseAndErrorBoundary(<LoginPage />) },
-      { path: 'signup', element: withSuspenseAndErrorBoundary(<SignupPage />) },
-      { path: 'verify-otp', element: withSuspenseAndErrorBoundary(<OTPPage />) },
-      { path: 'setup-otp', element: withSuspenseAndErrorBoundary(<TOTPSetupPage />) },
-      { path: 'dashboard', element: withSuspenseAndErrorBoundary(<DashboardPage />) },
-      { path: 'forgot-password', element: withSuspenseAndErrorBoundary(<ForgotPasswordPage />) },
-      { path: 'reset-password', element: withSuspenseAndErrorBoundary(<ResetPasswordPage />) },
-      { path: 'blog', element: withSuspenseAndErrorBoundary(<BlogPage />) },
-      { path: 'blog/:slug', element: withSuspenseAndErrorBoundary(<BlogDetailPage />) },
-      
+      { path: "login", element: withSuspenseAndErrorBoundary(<LoginPage />) },
+      { path: "signup", element: withSuspenseAndErrorBoundary(<SignupPage />) },
+      {
+        path: "verify-otp",
+        element: withSuspenseAndErrorBoundary(<OTPPage />),
+      },
+      {
+        path: "setup-otp",
+        element: withSuspenseAndErrorBoundary(<TOTPSetupPage />),
+      },
+      {
+        path: "dashboard",
+        element: withSuspenseAndErrorBoundary(<DashboardPage />),
+      },
+      {
+        path: "forgot-password",
+        element: withSuspenseAndErrorBoundary(<ForgotPasswordPage />),
+      },
+      {
+        path: "reset-password",
+        element: withSuspenseAndErrorBoundary(<ResetPasswordPage />),
+      },
+      { path: "blog", element: withSuspenseAndErrorBoundary(<BlogPage />) },
+      {
+        path: "blog/:slug",
+        element: withSuspenseAndErrorBoundary(<BlogDetailPage />),
+      },
+
       // Protected routes
       {
-        path: 'wallet',
+        path: "wallet",
         element: (
           <ProtectedRoute>
             {withSuspenseAndErrorBoundary(<WalletPage />)}
@@ -94,7 +159,31 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'wallet/:walletType',
+        path: "wallet/savings/intro",
+        element: (
+          <ProtectedRoute>
+            {withSuspenseAndErrorBoundary(<SavingsIntroPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "wallet/savings/create-plan",
+        element: (
+          <ProtectedRoute>
+            {withSuspenseAndErrorBoundary(<SavingsCreatePlanPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "wallet/savings/create-flexible",
+        element: (
+          <ProtectedRoute>
+            {withSuspenseAndErrorBoundary(<SavingsCreateFlexiblePage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "wallet/:walletType",
         element: (
           <ProtectedRoute>
             {withSuspenseAndErrorBoundary(<WalletPage />)}
@@ -102,7 +191,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'validator',
+        path: "validator",
         element: (
           <ProtectedRoute>
             {withSuspenseAndErrorBoundary(<ValidatorPage />)}
@@ -110,7 +199,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'validator-details/:validatorId',
+        path: "validator-details/:validatorId",
         element: (
           <ProtectedRoute>
             {withSuspenseAndErrorBoundary(<ValidatorDetailsPage />)}
@@ -118,7 +207,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'stake/:validatorId',
+        path: "stake/:validatorId",
         element: (
           <ProtectedRoute>
             {withSuspenseAndErrorBoundary(<StakePage />)}
@@ -126,7 +215,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'save',
+        path: "save",
         element: (
           <ProtectedRoute>
             {withSuspenseAndErrorBoundary(<SavePage />)}
@@ -134,7 +223,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'redeem',
+        path: "redeem",
         element: (
           <ProtectedRoute>
             {withSuspenseAndErrorBoundary(<RedeemPage />)}
@@ -142,7 +231,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'savings-tiers',
+        path: "savings-tiers",
         element: (
           <ProtectedRoute>
             {withSuspenseAndErrorBoundary(<TiersPage />)}
@@ -150,7 +239,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'stable-tiers',
+        path: "stable-tiers",
         element: (
           <ProtectedRoute>
             {withSuspenseAndErrorBoundary(<StableTiersPage />)}
@@ -158,7 +247,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'withdraw',
+        path: "withdraw",
         element: (
           <ProtectedRoute>
             {withSuspenseAndErrorBoundary(<WithdrawPage />)}
@@ -166,7 +255,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'deposit',
+        path: "deposit",
         element: (
           <ProtectedRoute>
             {withSuspenseAndErrorBoundary(<DepositPage />)}
@@ -174,7 +263,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'deposit/:validatorId',
+        path: "deposit/:validatorId",
         element: (
           <ProtectedRoute>
             {withSuspenseAndErrorBoundary(<DepositPage />)}
@@ -182,7 +271,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'deposit-address',
+        path: "deposit-address",
         element: (
           <ProtectedRoute>
             {withSuspenseAndErrorBoundary(<OnchainDepositPage />)}
@@ -190,7 +279,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'withdraw-network/:validatorId',
+        path: "withdraw-network/:validatorId",
         element: (
           <ProtectedRoute>
             {withSuspenseAndErrorBoundary(<WithdrawNetworkPage />)}
@@ -198,7 +287,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'confirm-withdrawal/:validatorId',
+        path: "confirm-withdrawal/:validatorId",
         element: (
           <ProtectedRoute>
             {withSuspenseAndErrorBoundary(<ConfirmWithdrawalPage />)}
@@ -206,7 +295,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'unstake-amount/:validatorId',
+        path: "unstake-amount/:validatorId",
         element: (
           <ProtectedRoute>
             {withSuspenseAndErrorBoundary(<UnstakeAmountPage />)}
@@ -214,7 +303,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'confirm-unstake/:validatorId',
+        path: "confirm-unstake/:validatorId",
         element: (
           <ProtectedRoute>
             {withSuspenseAndErrorBoundary(<ConfirmUnstakePage />)}
@@ -222,7 +311,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'history',
+        path: "history",
         element: (
           <ProtectedRoute>
             {withSuspenseAndErrorBoundary(<HistoryPage />)}
@@ -230,7 +319,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'transaction-detail/:transactionId',
+        path: "transaction-detail/:transactionId",
         element: (
           <ProtectedRoute>
             {withSuspenseAndErrorBoundary(<TransactionDetailPage />)}
@@ -238,7 +327,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'learn',
+        path: "learn",
         element: (
           <ProtectedRoute>
             {withSuspenseAndErrorBoundary(<LearnPage />)}
@@ -246,7 +335,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'learn/:slug',
+        path: "learn/:slug",
         element: (
           <ProtectedRoute>
             {withSuspenseAndErrorBoundary(<LearnDetailPage />)}
@@ -254,7 +343,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'forecast',
+        path: "forecast",
         element: (
           <ProtectedRoute>
             {withSuspenseAndErrorBoundary(<ForecastPage />)}
@@ -262,7 +351,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'earn',
+        path: "earn",
         element: (
           <ProtectedRoute>
             {withSuspenseAndErrorBoundary(<EarnPage />)}
@@ -270,7 +359,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'campaign',
+        path: "campaign",
         element: (
           <ProtectedRoute>
             {withSuspenseAndErrorBoundary(<CampaignPage />)}
@@ -278,7 +367,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'portfolio',
+        path: "portfolio",
         element: (
           <ProtectedRoute>
             {withSuspenseAndErrorBoundary(<PortfolioPage />)}
@@ -286,7 +375,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'portfolio/summary',
+        path: "portfolio/summary",
         element: (
           <ProtectedRoute>
             {withSuspenseAndErrorBoundary(<PortfolioSummaryPage />)}
@@ -294,7 +383,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'portfolio/positions',
+        path: "portfolio/positions",
         element: (
           <ProtectedRoute>
             {withSuspenseAndErrorBoundary(<PortfolioPositionsPage />)}
@@ -302,7 +391,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'wallet/returns',
+        path: "wallet/returns",
         element: (
           <ProtectedRoute>
             {withSuspenseAndErrorBoundary(<EarningsBreakdownPage />)}
@@ -310,7 +399,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'leaderboard',
+        path: "leaderboard",
         element: (
           <ProtectedRoute>
             {withSuspenseAndErrorBoundary(<LeaderboardPage />)}
@@ -318,7 +407,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'profile',
+        path: "profile",
         element: (
           <ProtectedRoute>
             {withSuspenseAndErrorBoundary(<ProfilePage />)}
@@ -326,16 +415,70 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'notifications',
+        path: "notifications",
         element: (
           <ProtectedRoute>
             {withSuspenseAndErrorBoundary(<NotificationsPage />)}
           </ProtectedRoute>
         ),
       },
-      { path: '*', element: withSuspenseAndErrorBoundary(<NotFoundPage />) },
+      {
+        path: "accounts",
+        element: (
+          <ProtectedRoute>
+            {withSuspenseAndErrorBoundary(<AccountsPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "settings/account",
+        element: (
+          <ProtectedRoute>
+            {withSuspenseAndErrorBoundary(<AccountSettingsPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "settings/recipients",
+        element: (
+          <ProtectedRoute>
+            {withSuspenseAndErrorBoundary(<RecipientSettingsPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "settings/preferences",
+        element: (
+          <ProtectedRoute>
+            {withSuspenseAndErrorBoundary(<PreferencesSettingsPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "settings/security",
+        element: (
+          <ProtectedRoute>
+            {withSuspenseAndErrorBoundary(<SecuritySettingsPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "settings/invite-friends",
+        element: (
+          <ProtectedRoute>
+            {withSuspenseAndErrorBoundary(<InviteFriendsPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "invite-friends",
+        element: (
+          <ProtectedRoute>
+            {withSuspenseAndErrorBoundary(<InviteFriendsPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      { path: "*", element: withSuspenseAndErrorBoundary(<NotFoundPage />) },
     ],
   },
-])
-
-
+]);

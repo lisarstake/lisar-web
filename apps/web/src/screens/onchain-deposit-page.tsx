@@ -1,5 +1,5 @@
 import React from 'react';
-import { OnchainDepositPage } from '@/components/wallet/OnchainDepositPage';
+import { OnchainDepositPage } from '@/components/stake/OnchainDepositPage';
 
 export default function OnchainDepositPageScreen() {
   return <OnchainDepositPage />;

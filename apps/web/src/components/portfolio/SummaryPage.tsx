@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
-  ChevronLeft,
+  ArrowLeft,
   Clock,
   CheckCircle,
   CircleQuestionMark,
@@ -34,7 +34,7 @@ export const SummaryPage: React.FC = () => {
     setMode(isSavings ? "savings" : "staking");
   }, [isSavings, setMode]);
 
-  
+
   const lifetimeRewards = useMemo(() => {
     return summary?.lifetimeRewards || 0;
   }, [summary]);
@@ -136,9 +136,9 @@ export const SummaryPage: React.FC = () => {
         <div className="flex items-center justify-between py-8 mb-2">
           <button
             onClick={handleBackClick}
-            className="w-8 h-8 flex items-center justify-center"
+            className="h-10 w-10 rounded-full bg-[#13170a] flex items-center justify-center"
           >
-            <ChevronLeft color={isSavings ? "#86B3F7" : "#C7EF6B"} />
+            <ArrowLeft className="text-white" size={22} />
           </button>
           <h1 className="text-lg font-medium text-white">Summary</h1>
           <button

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { ChevronLeft, Info, CircleQuestionMark } from "lucide-react";
+import { ArrowLeft, Info, CircleQuestionMark } from "lucide-react";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { EmptyState } from "@/components/general/EmptyState";
@@ -229,7 +229,7 @@ export const PositionsPage: React.FC = () => {
           } else {
             setErrorMessage(
               redeemResp.error ||
-                "Failed to request withdrawal. Please try again."
+              "Failed to request withdrawal. Please try again."
             );
             setShowErrorDrawer(true);
           }
@@ -295,9 +295,9 @@ export const PositionsPage: React.FC = () => {
         <div className="flex items-center justify-between py-8 mb-2">
           <button
             onClick={handleBackClick}
-            className="w-8 h-8 flex items-center justify-center"
+            className="h-10 w-10 rounded-full bg-[#13170a] flex items-center justify-center"
           >
-            <ChevronLeft color="#C7EF6B" />
+            <ArrowLeft className="text-white" size={22} />
           </button>
           <h1 className="text-lg font-medium text-white">My Vest</h1>
           <button
@@ -414,11 +414,10 @@ export const PositionsPage: React.FC = () => {
               <button
                 onClick={handleWithdrawClick}
                 disabled={isProcessing}
-                className={`w-full py-3 rounded-xl font-semibold text-lg transition-colors ${
-                  isProcessing
-                    ? "bg-[#636363] text-white cursor-not-allowed opacity-70"
-                    : "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
-                }`}
+                className={`w-full py-3 rounded-xl font-semibold text-lg transition-colors ${isProcessing
+                  ? "bg-[#636363] text-white cursor-not-allowed opacity-70"
+                  : "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
+                  }`}
               >
                 {isProcessing ? (
                   <span className="flex items-center justify-center gap-2">

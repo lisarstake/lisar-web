@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import {
-  ChevronLeft,
+  ArrowLeft,
   CircleQuestionMark,
   ChevronRight,
   CreditCard,
@@ -177,7 +177,7 @@ export const DepositPage: React.FC = () => {
         try {
           onrampInstanceRef.current.close();
           refetchWallet();
-        } catch {}
+        } catch { }
       }
     };
   }, [refetchWallet]);
@@ -289,25 +289,7 @@ export const DepositPage: React.FC = () => {
         isRestricted: true,
       });
 
-      // onramp.on("TX_EVENTS", async (e) => {
-      //   switch (e.type) {
-      //     case "ONRAMP_WIDGET_TX_COMPLETED":
-      //       setSuccessMessage(
-      //         "Payment completed successfully! Your LPT tokens will be sent to your wallet shortly."
-      //       );
-      //       setShowSuccessDrawer(true);
-      //       break;
 
-      //     case "ONRAMP_WIDGET_TX_SENDING_FAILED":
-      //     case "ONRAMP_WIDGET_TX_PURCHASING_FAILED":
-      //     case "ONRAMP_WIDGET_TX_FINDING_FAILED":
-      //       setErrorMessage(
-      //         "Payment failed. Please try again or contact support if the issue persists."
-      //       );
-      //       setShowErrorDrawer(true);
-      //       break;
-      //   }
-      // });
 
       onramp.on("WIDGET_EVENTS", async (event) => {
         if (
@@ -337,9 +319,9 @@ export const DepositPage: React.FC = () => {
       <div className="flex items-center justify-between px-6 pt-8 pb-4">
         <button
           onClick={handleBackClick}
-          className="w-8 h-8 flex items-center justify-center"
+          className="h-10 w-10 rounded-full bg-[#13170a] flex items-center justify-center"
         >
-          <ChevronLeft color="#C7EF6B" />
+          <ArrowLeft className="text-white" size={22} />
         </button>
 
         <h1 className="text-lg font-medium text-white">{pageTitle}</h1>
@@ -359,7 +341,7 @@ export const DepositPage: React.FC = () => {
           <span className="text-white/80 text-base font-medium ml-1">
             Deposit amount
           </span>
-          <div className="bg-[#1a1a1a] rounded-lg p-3 mt-1">
+          <div className="bg-[#13170a] rounded-lg p-3 mt-1">
             <input
               type="text"
               value={fiatAmount ? formatNumber(fiatAmount) : ""}
@@ -400,11 +382,10 @@ export const DepositPage: React.FC = () => {
                 <button
                   key={amount}
                   onClick={() => handleAmountSelect(amount)}
-                  className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-colors ${
-                    isActive
-                      ? "bg-[#C7EF6B] text-black"
-                      : "bg-[#1a1a1a] text-white/80 hover:bg-[#2a2a2a]"
-                  }`}
+                  className={`flex-1 py-3 px-4 rounded-full text-sm font-medium transition-colors ${isActive
+                    ? "bg-[#C7EF6B] text-black"
+                    : "bg-[#13170a] text-white/80 hover:bg-[#2a2a2a]"
+                    }`}
                 >
                   {currencySymbol}
                   {formatNumber(amount)}
@@ -417,7 +398,7 @@ export const DepositPage: React.FC = () => {
         {/* Provider Indicator for Stables */}
         {/* {isStables && selectedProvider && locationState?.tierTitle && (
           <div className="py-4">
-            <div className="bg-[#1a1a1a] rounded-lg p-4 border border-[#2a2a2a]">
+            <div className="bg-[#13170a] rounded-lg p-4 border border-[#2a2a2a]">
               <div className="flex items-center gap-3">
                 <img
                   src={selectedProvider === "maple" ? "/maple.svg" : "/perena2.png"}
@@ -448,11 +429,10 @@ export const DepositPage: React.FC = () => {
           <div className="space-y-3">
             <button
               onClick={() => handlePaymentMethodSelect("fiat")}
-              className={`w-full flex items-center justify-between p-4 rounded-lg transition-colors ${
-                selectedPaymentMethod === "fiat"
-                  ? "bg-[#C7EF6B]/10 border border-[#C7EF6B]"
-                  : "bg-[#1a1a1a] border border-[#2a2a2a] hover:bg-[#2a2a2a]"
-              }`}
+              className={`w-full flex items-center justify-between p-4 rounded-full transition-colors ${selectedPaymentMethod === "fiat"
+                ? "bg-[#C7EF6B]/10 border border-[#C7EF6B]"
+                : "bg-[#13170a] border border-[#2a2a2a] hover:bg-[#2a2a2a]"
+                }`}
             >
               <div className="flex items-center space-x-3">
                 <CreditCard
@@ -473,11 +453,10 @@ export const DepositPage: React.FC = () => {
 
             <button
               onClick={() => handlePaymentMethodSelect("onchain")}
-              className={`w-full flex items-center justify-between p-4 rounded-lg transition-colors ${
-                selectedPaymentMethod === "onchain"
-                  ? "bg-[#C7EF6B]/10 border border-[#C7EF6B]"
-                  : "bg-[#1a1a1a] border border-[#2a2a2a] hover:bg-[#2a2a2a]"
-              }`}
+              className={`w-full flex items-center justify-between p-4 rounded-full transition-colors ${selectedPaymentMethod === "onchain"
+                ? "bg-[#C7EF6B]/10 border border-[#C7EF6B]"
+                : "bg-[#13170a] border border-[#2a2a2a] hover:bg-[#2a2a2a]"
+                }`}
             >
               <div className="flex items-center space-x-3">
                 <ScanQrCode
@@ -511,14 +490,13 @@ export const DepositPage: React.FC = () => {
             parseFloat(fiatAmount) <= 0 ||
             isStaking
           }
-          className={`w-full py-3 rounded-lg font-semibold text-lg transition-colors ${
-            selectedPaymentMethod &&
+          className={`w-full py-3 rounded-full font-semibold text-lg transition-colors ${selectedPaymentMethod &&
             fiatAmount &&
             parseFloat(fiatAmount) > 0 &&
             !isStaking
-              ? "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
-              : "bg-[#636363] text-white cursor-not-allowed"
-          }`}
+            ? "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
+            : "bg-[#636363] text-white cursor-not-allowed"
+            }`}
         >
           {isStaking ? (
             <span className="flex items-center justify-center gap-2">

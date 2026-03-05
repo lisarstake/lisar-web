@@ -5,6 +5,7 @@ import {
   CoinsIcon,
   House,
   Landmark,
+  ScrollText,
   TvMinimalPlay,
 } from "lucide-react";
 import React from "react";
@@ -24,7 +25,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
   };
 
   return (
-    <div className="fixed md:absolute bottom-0 left-0 right-0 bg-[#1a1a1a] border-t border-[#2a2a2a] px-4 py-2 z-50">
+    <div className="fixed md:absolute bottom-0 left-0 right-0 bg-[#050505] border-t border-[#2a2a2a] px-4 py-2 z-50">
       <div className="flex items-center justify-around">
         {/* Home */}
         <Link
@@ -42,8 +43,24 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
           )}
         </Link>
 
-        {/* Forecast */}
+        {/* Transactions */}
         <Link
+          to="/history"
+          data-tour="nav-forecast"
+          className={`flex flex-col items-center py-2 px-3 ${
+            isActive("/history") ? "text-[#C7EF6B]" : "text-gray-400"
+          }`}
+        >
+          <ScrollText size={22} className="mb-1" />
+          <span className="text-xs">Transactions</span>
+          {isActive("/history") && (
+            <div className="w-6 h-0.5 bg-[#C7EF6B] mt-1 rounded-full"></div>
+          )}
+        </Link>
+
+
+        {/* Forecast */}
+        {/* <Link
           to="/forecast"
           data-tour="nav-forecast"
           className={`flex flex-col items-center py-2 px-3 ${
@@ -55,10 +72,10 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
           {isActive("/forecast") && (
             <div className="w-6 h-0.5 bg-[#C7EF6B] mt-1 rounded-full"></div>
           )}
-        </Link>
+        </Link> */}
 
         {/* Learn */}
-        <Link
+        {/* <Link
           to="/learn"
           data-tour="nav-learn"
           className={`flex flex-col items-center py-2 px-3 ${
@@ -70,7 +87,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
           {isActive("/learn") && (
             <div className="w-6 h-0.5 bg-[#C7EF6B] mt-1 rounded-full"></div>
           )}
-        </Link>
+        </Link> */}
 
         {/* Earn */}
         <Link

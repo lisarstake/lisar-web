@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
-  ChevronLeft,
   CircleQuestionMark,
 } from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
@@ -15,10 +14,6 @@ export const HistoryPage: React.FC = () => {
   const location = useLocation();
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
   const { transactions, isLoading, error, refetch } = useTransactions();
-
-  const handleBackClick = () => {
-    navigate(-1);
-  };
 
   const walletTypeFromState =
     (location.state as { walletType?: string } | null)?.walletType;
@@ -50,23 +45,20 @@ export const HistoryPage: React.FC = () => {
   return (
     <div className="h-screen bg-[#050505] text-white flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-8">
-        <button
-          onClick={handleBackClick}
-          className="w-8 h-8 flex items-center justify-center"
-        >
-          <ChevronLeft color="#C7EF6B" />
-        </button>
-
-        <h1 className="text-lg font-medium text-white">History</h1>
-
-        <button
-          onClick={handleHelpClick}
-          className="w-8 h-8 bg-[#2a2a2a] rounded-full flex items-center justify-center"
-        >
-          <CircleQuestionMark color="#86B3F7" size={16} />
-        </button>
-      </div>
+       <div className="flex items-start justify-between px-6 py-6">
+          <div>
+            <h1 className="text-lg font-medium text-white">Transactions</h1>
+            <p className="text-xs text-gray-500">
+             View all your recent transactions
+            </p>
+          </div>
+          <button
+            onClick={handleHelpClick}
+            className="w-8 h-8 bg-[#2a2a2a] rounded-full flex items-center justify-center"
+          >
+            <CircleQuestionMark color="#86B3F7" size={16} />
+          </button>
+        </div>
 
       {/* Transaction List */}
       {filteredTransactions.length === 0 && !isLoading && !error ? (
@@ -81,7 +73,7 @@ export const HistoryPage: React.FC = () => {
           />
         </div>
       ) : (
-        <div className="flex-1 overflow-y-auto px-6 pb-20 scrollbar-hide">
+        <div className="flex-1 overflow-y-auto overscroll-contain px-6 pb-20 scrollbar-hide">
           <TransactionList
             transactions={filteredTransactions}
             isLoading={isLoading}

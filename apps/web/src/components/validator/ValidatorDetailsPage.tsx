@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { ChevronLeft, CircleQuestionMark } from "lucide-react";
+import { ArrowLeft, CircleQuestionMark } from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { ActionDrawer } from "@/components/general/ActionDrawer";
 import { ShareDrawer } from "@/components/general/ShareDrawer";
@@ -74,21 +74,21 @@ export const ValidatorDetailsPage: React.FC = () => {
   // Filter transactions for this specific validator
   const validatorTransactions = delegatorTransactions
     ? {
-        pending: delegatorTransactions.pendingStakeTransactions.filter(
-          (tx) => tx.delegate.id === validatorId
-        ),
-        completed: delegatorTransactions.completedStakeTransactions.filter(
-          (tx) => tx.delegate.id === validatorId
-        ),
-        currentRound: parseInt(delegatorTransactions.currentRound),
-      }
+      pending: delegatorTransactions.pendingStakeTransactions.filter(
+        (tx) => tx.delegate.id === validatorId
+      ),
+      completed: delegatorTransactions.completedStakeTransactions.filter(
+        (tx) => tx.delegate.id === validatorId
+      ),
+      currentRound: parseInt(delegatorTransactions.currentRound),
+    }
     : { pending: [], completed: [], currentRound: 0 };
 
   // Check if user has a stake with validator
   const hasStakeWithValidator = Boolean(
     userDelegation &&
-      userDelegation.delegate?.id === validatorId &&
-      parseFloat(userDelegation.bondedAmount) > 0
+    userDelegation.delegate?.id === validatorId &&
+    parseFloat(userDelegation.bondedAmount) > 0
   );
 
   // check if user has just staked
@@ -131,7 +131,7 @@ export const ValidatorDetailsPage: React.FC = () => {
     if (!hasPendingUnbonding) {
       return null;
     }
-    
+
     return getEarliestUnbondingTime(pendingUnbondingTransactions);
   }, [pendingUnbondingTransactions, hasPendingUnbonding]);
 
@@ -334,19 +334,19 @@ export const ValidatorDetailsPage: React.FC = () => {
       <div className="flex items-center justify-between px-6 py-8">
         <button
           onClick={handleBackClick}
-          className="w-8 h-8 flex items-center justify-center"
+          className="h-10 w-10 rounded-full bg-[#13170a] flex items-center justify-center"
         >
-          <ChevronLeft color="#C7EF6B" />
+          <ArrowLeft className="text-white" size={22} />
         </button>
 
         <h1 className="text-lg font-medium text-white">
           {currentValidator?.ensIdentity?.name || currentValidator?.ensName
             ? (currentValidator?.ensIdentity?.name || currentValidator?.ensName)
-                .length > 16
+              .length > 16
               ? (
-                  currentValidator?.ensIdentity?.name ||
-                  currentValidator?.ensName
-                ).slice(0, 16) + ".."
+                currentValidator?.ensIdentity?.name ||
+                currentValidator?.ensName
+              ).slice(0, 16) + ".."
               : currentValidator?.ensIdentity?.name || currentValidator?.ensName
             : "Unknown V.."}
         </h1>
@@ -365,8 +365,8 @@ export const ValidatorDetailsPage: React.FC = () => {
         <h2 className="text-2xl font-bold text-white">
           {currentValidator
             ? Math.round(
-                parseFloat(currentValidator.totalStake)
-              ).toLocaleString()
+              parseFloat(currentValidator.totalStake)
+            ).toLocaleString()
             : "0"}{" "}
           LPT
         </h2>

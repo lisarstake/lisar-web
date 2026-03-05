@@ -43,7 +43,12 @@ export default function App() {
     "/learn-detail",
   ];
 
+  const pagesWithoutBottomNavSpacing = ["/wallet/savings/intro"];
+
   const hasBottomNav =
+    !pagesWithoutBottomNavSpacing.some((path) =>
+      location.pathname.startsWith(path),
+    ) &&
     location.pathname !== "/wallet/returns" &&
     pagesWithBottomNav.some((path) =>
       location.pathname.startsWith(path)
@@ -76,7 +81,13 @@ export default function App() {
                                             <NotificationProvider>
                                     <div className="min-h-screen bg-white relative">
                                       {useDesktopView ? (
-                                        <main className="app-main">
+                                        <main
+                                          className={
+                                            location.pathname === "/"
+                                              ? "min-h-screen overflow-y-auto"
+                                              : "app-main"
+                                          }
+                                        >
                                           <Outlet />
                                         </main>
                                       ) : (
@@ -84,7 +95,7 @@ export default function App() {
                                           <div className="hidden md:flex md:items-center md:justify-center md:h-screen md:bg-[#0a0a0a]">
                                             <div id="mobile-preview-container" className="relative w-full max-w-[390px] h-full max-h-[99vh] shadow-2xl overflow-hidden">
                                               <main
-                                                className={`app-main h-full overflow-y-auto ${hasBottomNav ? "with-bottom-nav" : ""}`}
+                                                className={`app-main h-full ${hasBottomNav ? "with-bottom-nav" : ""}`}
                                               >
                                                 <Outlet />
                                               </main>

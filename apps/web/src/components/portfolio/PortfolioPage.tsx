@@ -1,13 +1,13 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { ChevronLeft, CircleQuestionMark, Eye, EyeOff, RefreshCw } from "lucide-react";
+import { ArrowLeft, CircleQuestionMark, Eye, EyeOff, RefreshCw } from "lucide-react";
 import QRCode from "qrcode";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { usePortfolio, type StakeEntry } from "@/contexts/PortfolioContext";
 import { useWalletCard } from "@/contexts/WalletCardContext";
 import { useTransactions } from "@/contexts/TransactionContext";
-import { RecentTransactionsCard } from "@/components/wallet/RecentTransactionsCard";
+import { RecentTransactionsCard } from "@/components/transactions/RecentTransactionsCard";
 import { PortfolioSkeleton } from "./PortfolioSkeleton";
 import { formatEarnings, formatStables } from "@/lib/formatters";
 import { getColorForAddress } from "@/lib/qrcode";
@@ -182,9 +182,9 @@ export const PortfolioPage: React.FC = () => {
         <div className="flex items-center justify-between py-8 mb-2">
           <button
             onClick={handleBackClick}
-            className="w-8 h-8 flex items-center justify-center"
+            className="h-10 w-10 rounded-full bg-[#13170a] flex items-center justify-center"
           >
-            <ChevronLeft color="#C7EF6B" />
+            <ArrowLeft className="text-white" size={22} />
           </button>
           <h1 className="text-lg font-medium text-white">Portfolio</h1>
           <button

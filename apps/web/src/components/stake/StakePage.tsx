@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import {
-  ChevronLeft,
+  ArrowLeft,
   CircleQuestionMark,
   LoaderCircle,
   Wallet2,
@@ -178,7 +178,7 @@ export const StakePage: React.FC = () => {
         if (response.success) {
           // Track successful stake
           trackStake('deposit', parseFloat(lptAmount.replace(/,/g, "")), 'LPT', currentValidator.address);
-          
+
           setSuccessMessage(
             "Staking successful! Your tokens have been staked."
           );
@@ -217,8 +217,8 @@ export const StakePage: React.FC = () => {
     } else if (lastResponse) {
       setErrorMessage(
         lastResponse.error ||
-          lastResponse.message ||
-          "Staking failed. Please check your balance and try again."
+        lastResponse.message ||
+        "Staking failed. Please check your balance and try again."
       );
     } else {
       setErrorMessage("Staking failed. Please try again.");
@@ -242,9 +242,9 @@ export const StakePage: React.FC = () => {
       <div className="flex items-center justify-between px-6 py-8">
         <button
           onClick={handleBackClick}
-          className="w-8 h-8 flex items-center justify-center"
+          className="h-10 w-10 rounded-full bg-[#13170a] flex items-center justify-center"
         >
-          <ChevronLeft color="#C7EF6B" />
+          <ArrowLeft className="text-white" size={22} />
         </button>
 
         <h1 className="text-lg font-medium text-white">Stake</h1>
@@ -274,7 +274,7 @@ export const StakePage: React.FC = () => {
                     {tierInfo.title}
                   </p>
                   <p className="text-gray-400 text-xs">
-                  {tierInfo.title} - Up to {tierInfo.apy}% APY
+                    {tierInfo.title} - Up to {tierInfo.apy}% APY
                   </p>
                 </div>
               </div>
@@ -327,11 +327,10 @@ export const StakePage: React.FC = () => {
                 <button
                   key={amount}
                   onClick={() => handleAmountSelect(amount)}
-                  className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-colors ${
-                    isActive
-                      ? "bg-[#C7EF6B] text-black"
-                      : "bg-[#1a1a1a] text-white/80 hover:bg-[#2a2a2a]"
-                  }`}
+                  className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-colors ${isActive
+                    ? "bg-[#C7EF6B] text-black"
+                    : "bg-[#1a1a1a] text-white/80 hover:bg-[#2a2a2a]"
+                    }`}
                 >
                   {formatNumber(amount)} LPT
                 </button>
@@ -368,11 +367,10 @@ export const StakePage: React.FC = () => {
         <button
           onClick={handleProceed}
           disabled={!lptAmount || parseFloat(lptAmount) <= 0 || isStaking}
-          className={`w-full py-3 rounded-lg font-semibold text-lg transition-colors ${
-            lptAmount && parseFloat(lptAmount) > 0 && !isStaking
-              ? "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
-              : "bg-[#636363] text-white cursor-not-allowed"
-          }`}
+          className={`w-full py-3 rounded-lg font-semibold text-lg transition-colors ${lptAmount && parseFloat(lptAmount) > 0 && !isStaking
+            ? "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
+            : "bg-[#636363] text-white cursor-not-allowed"
+            }`}
         >
           {isStaking ? (
             <span className="flex items-center justify-center gap-2">

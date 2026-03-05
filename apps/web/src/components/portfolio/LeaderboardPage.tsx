@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronDown } from "lucide-react";
+import { ArrowLeft, ChevronDown } from "lucide-react";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { useLeaderboard } from "@/contexts/LeaderboardContext";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -31,9 +31,9 @@ export const LeaderboardPage: React.FC = () => {
       <div className="flex items-center justify-between px-6 py-8">
         <button
           onClick={handleBackClick}
-          className="w-8 h-8 flex items-center justify-center"
+          className="h-10 w-10 rounded-full bg-[#13170a] flex items-center justify-center"
         >
-          <ChevronLeft color="#C7EF6B" />
+          <ArrowLeft className="text-white" size={22} />
         </button>
 
         <h1 className="text-lg font-medium text-white">Top Earners</h1>
@@ -110,8 +110,8 @@ export const LeaderboardPage: React.FC = () => {
 
               const addressHash = entry.address
                 ? entry.address
-                    .split("")
-                    .reduce((acc, char) => acc + char.charCodeAt(0), 0)
+                  .split("")
+                  .reduce((acc, char) => acc + char.charCodeAt(0), 0)
                 : entry.rank;
               const punkIndex = (addressHash % 6) + 1;
               const punkImage = `/punk${punkIndex}.jpeg`;

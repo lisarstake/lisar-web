@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ChevronLeft, CircleQuestionMark } from "lucide-react";
+import { ArrowLeft, CircleQuestionMark } from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { useOrchestrators } from "@/contexts/OrchestratorContext";
@@ -84,9 +84,9 @@ export const UnstakeAmountPage: React.FC = () => {
       <div className="flex items-center justify-between px-6 py-8">
         <button
           onClick={handleBackClick}
-          className="w-8 h-8 flex items-center justify-center"
+          className="h-10 w-10 rounded-full bg-[#13170a] flex items-center justify-center"
         >
-          <ChevronLeft color="#C7EF6B" />
+          <ArrowLeft className="text-white" size={22} />
         </button>
 
         <h1 className="text-lg font-medium text-white">Unstake</h1>
@@ -144,11 +144,10 @@ export const UnstakeAmountPage: React.FC = () => {
                 <button
                   key={amount}
                   onClick={() => handleAmountSelect(amount)}
-                  className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-colors ${
-                    isActive
-                      ? "bg-[#C7EF6B] text-black"
-                      : "bg-[#1a1a1a] text-white/80 hover:bg-[#2a2a2a]"
-                  }`}
+                  className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-colors ${isActive
+                    ? "bg-[#C7EF6B] text-black"
+                    : "bg-[#1a1a1a] text-white/80 hover:bg-[#2a2a2a]"
+                    }`}
                 >
                   {formatNumber(amount)} LPT
                 </button>
@@ -184,15 +183,14 @@ export const UnstakeAmountPage: React.FC = () => {
             parseFloat(lptAmount) > currentStake ||
             parseFloat(lptAmount) <= 0
           }
-          className={`w-full py-4 rounded-lg font-semibold text-lg transition-colors ${
-            lptAmount &&
+          className={`w-full py-4 rounded-lg font-semibold text-lg transition-colors ${lptAmount &&
             parseFloat(lptAmount) <= currentStake &&
             parseFloat(lptAmount) > 0
-              ? "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
-              : "bg-[#636363] text-white cursor-not-allowed"
-          }`}
+            ? "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
+            : "bg-[#636363] text-white cursor-not-allowed"
+            }`}
         >
-           Proceed to Unstake
+          Proceed to Unstake
         </button>
       </div>
 

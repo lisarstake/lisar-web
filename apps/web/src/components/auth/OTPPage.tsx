@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, LoaderCircle, X } from "lucide-react";
+import { ArrowLeft, LoaderCircle, X } from "lucide-react";
 import { ErrorDrawer } from "@/components/ui/ErrorDrawer";
 import { SuccessDrawer } from "@/components/ui/SuccessDrawer";
 import { totpService } from "@/services/totp";
@@ -140,9 +140,9 @@ export const OTPPage: React.FC<OTPPageProps> = ({
       <div className="flex items-center justify-between px-6 py-8">
         <button
           onClick={handleBackClick}
-          className="w-8 h-8 flex items-center justify-center"
+          className="h-10 w-10 rounded-full bg-[#13170a] flex items-center justify-center"
         >
-          <ChevronLeft color="#C7EF6B" size={24} />
+          <ArrowLeft className="text-white" size={22} />
         </button>
       </div>
 
@@ -168,11 +168,10 @@ export const OTPPage: React.FC<OTPPageProps> = ({
                 onChange={handleInputChange}
                 placeholder=""
                 disabled={isVerifying}
-                className={`w-full px-4 py-3 pr-20 rounded-lg text-white text-lg bg-[#1a1a1a] border transition-colors ${
-                  error
-                    ? "border-red-500 focus:border-red-500"
-                    : "border-[#2a2a2a] focus:border-[#C7EF6B]"
-                } focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed`}
+                className={`w-full px-4 py-3 pr-20 rounded-lg text-white text-lg bg-[#1a1a1a] border transition-colors ${error
+                  ? "border-red-500 focus:border-red-500"
+                  : "border-[#2a2a2a] focus:border-[#C7EF6B]"
+                  } focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed`}
               />
               <button
                 onClick={handlePaste}
@@ -188,11 +187,10 @@ export const OTPPage: React.FC<OTPPageProps> = ({
           <button
             onClick={() => handleSubmit()}
             disabled={code.length !== 6 || isVerifying}
-            className={`w-full py-3 rounded-xl font-semibold text-lg transition-colors ${
-              code.length === 6 && !isVerifying
-                ? "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
-                : "bg-[#636363] text-white cursor-not-allowed"
-            }`}
+            className={`w-full py-3 rounded-xl font-semibold text-lg transition-colors ${code.length === 6 && !isVerifying
+              ? "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
+              : "bg-[#636363] text-white cursor-not-allowed"
+              }`}
           >
             {isVerifying ? (
               <span className="flex items-center justify-center gap-2">

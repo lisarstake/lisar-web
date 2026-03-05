@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ChevronLeft, CircleQuestionMark, LockKeyhole } from "lucide-react";
+import { ArrowLeft, CircleQuestionMark, LockKeyhole } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
@@ -112,9 +112,9 @@ export const StableTiersPage: React.FC = () => {
       <div className="flex items-center justify-between px-6 py-8">
         <button
           onClick={handleBackClick}
-          className="w-8 h-8 flex items-center justify-center"
+          className="h-10 w-10 rounded-full bg-[#13170a] flex items-center justify-center"
         >
-          <ChevronLeft color="#86B3F7" />
+          <ArrowLeft className="text-white" size={22} />
         </button>
 
         <h1 className="text-lg font-medium text-white">
@@ -149,27 +149,24 @@ export const StableTiersPage: React.FC = () => {
                   <p className={`text-sm leading-relaxed ${tier.isLocked ? "text-white/40" : "text-white/60"}`}>
                     {tier.id === 1
                       ? tier.isLocked
-                        ? `Earn stable yields with flexible access to your savings. Up to ${
-                            apyLoading && mapleApy === null
-                              ? ".."
-                              : mapleApy
-                                ? `${(mapleApy * 100).toFixed(1)}%`
-                                : "6.5%"
-                          } per annum.`
-                        : `Earn stable yields with flexible access to your savings. Up to ${
-                            apyLoading && mapleApy === null
-                              ? ".."
-                              : mapleApy
-                                ? `${(mapleApy * 100).toFixed(1)}%`
-                                : "6.5%"
-                          } per annum.`
-                      : `Higher stable yields with flexible access to your savings. Up to ${
-                          apyLoading && perenaApy === null
-                            ? ".."
-                            : perenaApy
-                              ? `${(perenaApy * 100).toFixed(1)}%`
-                              : "14%"
-                        } per annum.`}
+                        ? `Earn stable yields with flexible access to your savings. Up to ${apyLoading && mapleApy === null
+                          ? ".."
+                          : mapleApy
+                            ? `${(mapleApy * 100).toFixed(1)}%`
+                            : "6.5%"
+                        } per annum.`
+                        : `Earn stable yields with flexible access to your savings. Up to ${apyLoading && mapleApy === null
+                          ? ".."
+                          : mapleApy
+                            ? `${(mapleApy * 100).toFixed(1)}%`
+                            : "6.5%"
+                        } per annum.`
+                      : `Higher stable yields with flexible access to your savings. Up to ${apyLoading && perenaApy === null
+                        ? ".."
+                        : perenaApy
+                          ? `${(perenaApy * 100).toFixed(1)}%`
+                          : "14%"
+                      } per annum.`}
                   </p>
                 </div>
               </div>
@@ -177,9 +174,8 @@ export const StableTiersPage: React.FC = () => {
               <button
                 onClick={() => handleExplore(tier.id, tier.title)}
                 disabled={stablesLoading || tier.isLocked}
-                className={`mt-4 px-5 py-2 ${tier.buttonBg} ${tier.buttonText} rounded-full text-sm font-semibold transition-colors relative z-10 flex items-center gap-2 ${
-                  stablesLoading || tier.isLocked ? "opacity-50 cursor-not-allowed" : ""
-                }`}
+                className={`mt-4 px-5 py-2 ${tier.buttonBg} ${tier.buttonText} rounded-full text-sm font-semibold transition-colors relative z-10 flex items-center gap-2 ${stablesLoading || tier.isLocked ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
               >
                 {tier.isLocked && <LockKeyhole size={14} />}
                 <span>
@@ -216,44 +212,40 @@ export const StableTiersPage: React.FC = () => {
         content={
           action === "deposit"
             ? [
-                "Select a tier to deposit your USDC funds. Each tier offers different APY rates and features.",
-                `USD Base offers up to ${
-                  apyLoading && mapleApy === null
-                    ? ".."
-                    : mapleApy
-                      ? `${(mapleApy * 100).toFixed(1)}%`
-                      : "6.5%"
-                } APY on Ethereum network with flexible withdrawals.`,
-                `USD Plus offers up to ${
-                  apyLoading && perenaApy === null
-                    ? ".."
-                    : perenaApy
-                      ? `${(perenaApy * 100).toFixed(1)}%`
-                      : "14%"
-                } APY on Solana network with instant access to your funds.`,
-              ]
+              "Select a tier to deposit your USDC funds. Each tier offers different APY rates and features.",
+              `USD Base offers up to ${apyLoading && mapleApy === null
+                ? ".."
+                : mapleApy
+                  ? `${(mapleApy * 100).toFixed(1)}%`
+                  : "6.5%"
+              } APY on Ethereum network with flexible withdrawals.`,
+              `USD Plus offers up to ${apyLoading && perenaApy === null
+                ? ".."
+                : perenaApy
+                  ? `${(perenaApy * 100).toFixed(1)}%`
+                  : "14%"
+              } APY on Solana network with instant access to your funds.`,
+            ]
             : action === "withdraw"
               ? [
-                  "Select the tier you want to withdraw from.",
-                  "You can only withdraw from the same tier you deposited to.",
-                ]
+                "Select the tier you want to withdraw from.",
+                "You can only withdraw from the same tier you deposited to.",
+              ]
               : [
-                  "Stable Yield Tiers offer different APY rates for your USDC investments.",
-                  `USD Base - Up to ${
-                    apyLoading && mapleApy === null
-                      ? ".."
-                      : mapleApy
-                        ? `${(mapleApy * 100).toFixed(1)}%`
-                        : "6.5%"
-                  } APY: Invest on Ethereum network with flexible withdrawal options.`,
-                  `USD Plus - Up to ${
-                    apyLoading && perenaApy === null
-                      ? ".."
-                      : perenaApy
-                        ? `${(perenaApy * 100).toFixed(1)}%`
-                        : "14%"
-                  } APY: Invest on Solana network with instant access to funds.`,
-                ]
+                "Stable Yield Tiers offer different APY rates for your USDC investments.",
+                `USD Base - Up to ${apyLoading && mapleApy === null
+                  ? ".."
+                  : mapleApy
+                    ? `${(mapleApy * 100).toFixed(1)}%`
+                    : "6.5%"
+                } APY: Invest on Ethereum network with flexible withdrawal options.`,
+                `USD Plus - Up to ${apyLoading && perenaApy === null
+                  ? ".."
+                  : perenaApy
+                    ? `${(perenaApy * 100).toFixed(1)}%`
+                    : "14%"
+                } APY: Invest on Solana network with instant access to funds.`,
+              ]
         }
       />
     </div>

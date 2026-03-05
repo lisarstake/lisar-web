@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  ChevronLeft,
+  ArrowLeft,
   CircleQuestionMark,
   CheckCircle2,
   Circle,
@@ -219,9 +219,9 @@ export const CampaignHomePage: React.FC = () => {
         <div className="flex items-center justify-between px-6 py-8">
           <button
             onClick={handleBackClick}
-            className="w-8 h-8 flex items-center justify-center"
+            className="h-10 w-10 rounded-full bg-[#13170a] flex items-center justify-center"
           >
-            <ChevronLeft color="#C7EF6B" />
+            <ArrowLeft className="text-white" size={22} />
           </button>
 
           <h1 className="text-base font-medium text-white">Early Savers</h1>
@@ -246,7 +246,7 @@ export const CampaignHomePage: React.FC = () => {
     );
   }
 
- 
+
   const currentTier: number = (campaignStatus as any)?.current_tier || 1;
   const tierInfo = getTierInfo(currentTier);
 
@@ -256,9 +256,9 @@ export const CampaignHomePage: React.FC = () => {
       <div className="flex items-center justify-between px-6 py-8">
         <button
           onClick={handleBackClick}
-          className="w-8 h-8 flex items-center justify-center"
+          className="h-10 w-10 rounded-full bg-[#13170a] flex items-center justify-center"
         >
-          <ChevronLeft color="#C7EF6B" />
+          <ArrowLeft className="text-white" size={22} />
         </button>
 
         <h1 className="text-base font-medium text-white">Early Savers</h1>
@@ -298,7 +298,7 @@ export const CampaignHomePage: React.FC = () => {
             <CardContent className="px-4 py-4">
               <div className="flex items-center justify-between gap-2 mb-4">
                 <CardTitle className="flex items-center gap-2 text-white text-base">
-               
+
                   {tierInfo.title}
                 </CardTitle>
                 <Badge
@@ -336,9 +336,8 @@ export const CampaignHomePage: React.FC = () => {
                   Unlock Requirements
                 </CardTitle>
                 <ChevronDown
-                  className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
-                    requirementsExpanded ? "rotate-180" : ""
-                  }`}
+                  className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${requirementsExpanded ? "rotate-180" : ""
+                    }`}
                 />
               </button>
 
@@ -349,11 +348,10 @@ export const CampaignHomePage: React.FC = () => {
                     {tierInfo.requirements.map((req, index) => (
                       <div
                         key={index}
-                        className={`flex items-start gap-2 p-2 rounded-lg transition-colors mt-3 ${
-                          req.completed
-                            ? "bg-[#C7EF6B]/10 hover:bg-[#C7EF6B]/20 border border-[#C7EF6B]/30"
-                            : "bg-[#2a2a2a] hover:bg-[#333333]"
-                        }`}
+                        className={`flex items-start gap-2 p-2 rounded-lg transition-colors mt-3 ${req.completed
+                          ? "bg-[#C7EF6B]/10 hover:bg-[#C7EF6B]/20 border border-[#C7EF6B]/30"
+                          : "bg-[#2a2a2a] hover:bg-[#333333]"
+                          }`}
                       >
                         <div className="flex-1">
                           <p
@@ -416,7 +414,7 @@ export const CampaignHomePage: React.FC = () => {
               <div className="mb-3">
                 <CardTitle className="flex items-center gap-1 text-white text-sm mb-0.5">
                   <Users className="w-4 h-4 text-[#C7EF6B]" />
-                   Referral Code
+                  Referral Code
                 </CardTitle>
                 <p className="text-xs text-gray-400">
                   Share your code and earn rewards when friends join
@@ -473,7 +471,7 @@ export const CampaignHomePage: React.FC = () => {
                       "Generate"
                     )}
                   </Button>
-                  
+
                 </div>
               )}
             </CardContent>
@@ -510,7 +508,7 @@ export const CampaignHomePage: React.FC = () => {
           {currentTier === 2 && (
             <div className="p-4 bg-linear-to-r from-[#C7EF6B]/20 to-[#86B3F7]/20 border border-[#C7EF6B]/30 rounded-lg mb-6">
               <h3 className="text-white font-semibold mb-1 text-xs">
-                Choose Your Path 
+                Choose Your Path
               </h3>
               <p className="text-xs text-gray-300 mb-3">
                 Select 2 out of 3 activities to complete in order to earn the Growth Bonus.

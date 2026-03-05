@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { ChevronLeft, CircleQuestionMark, LoaderCircle } from "lucide-react";
+import { ArrowLeft, CircleQuestionMark, LoaderCircle } from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { SuccessDrawer } from "@/components/ui/SuccessDrawer";
@@ -59,7 +59,7 @@ export const ConfirmUnstakePage: React.FC = () => {
 
   const handleBackClick = () => {
     navigate(-1);
-  }; 
+  };
 
   const handleProceed = () => {
     setShowOTPDrawer(true);
@@ -125,9 +125,9 @@ export const ConfirmUnstakePage: React.FC = () => {
       <div className="flex items-center justify-between px-6 py-8">
         <button
           onClick={handleBackClick}
-          className="w-8 h-8 flex items-center justify-center"
+          className="h-10 w-10 rounded-full bg-[#13170a] flex items-center justify-center"
         >
-          <ChevronLeft color="#C7EF6B" />
+          <ArrowLeft className="text-white" size={22} />
         </button>
 
         <h1 className="text-lg font-medium text-white">Confirm Unstake</h1>
@@ -192,15 +192,14 @@ export const ConfirmUnstakePage: React.FC = () => {
         <button
           onClick={handleProceed}
           disabled={isProcessing}
-          className={`w-full py-4 rounded-xl font-semibold text-lg transition-colors ${
-            isProcessing
-              ? "bg-[#636363] text-white cursor-not-allowed"
-              : "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
-          }`}
+          className={`w-full py-4 rounded-xl font-semibold text-lg transition-colors ${isProcessing
+            ? "bg-[#636363] text-white cursor-not-allowed"
+            : "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
+            }`}
         >
           {isProcessing ? (
             <span className="flex items-center justify-center gap-2">
-               <LoaderCircle className="animate-spin h-5 w-5 text-white" />
+              <LoaderCircle className="animate-spin h-5 w-5 text-white" />
               Processing...
             </span>
           ) : (

@@ -72,11 +72,10 @@ export const EarnPage: React.FC = () => {
   };
 
   return (
-    <div className="h-screen bg-[#050505] text-white flex flex-col">
-      {/* Content - Scrollable */}
-      <div className="flex-1 overflow-y-auto px-6 pb-20 scrollbar-hide">
-        {/* Header - Scrollable */}
-        <div className="flex items-start justify-between py-8">
+    <div className="h-screen overflow-hidden bg-[#050505] text-white flex flex-col">
+      {/* Header */}
+      <div className="shrink-0 px-6 py-6 bg-[#050505]">
+        <div className="flex items-start justify-between">
           <div>
             <h1 className="text-lg font-medium text-white">Earn on Lisar</h1>
             <p className="text-xs text-gray-500">
@@ -90,13 +89,16 @@ export const EarnPage: React.FC = () => {
             <CircleQuestionMark color="#86B3F7" size={16} />
           </button>
         </div>
+      </div>
 
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto overscroll-contain px-6 pb-20 scrollbar-hide">
         {/* Earn Cards */}
         <div className="space-y-6">
           {earnCards.map((card) => (
             <div
               key={card.id}
-              className={`bg-[#1a1a1a] rounded-xl overflow-hidden ${card.isSocialCard
+              className={`bg-[#13170a] rounded-xl overflow-hidden ${card.isSocialCard
                   ? "cursor-pointer hover:bg-[#2a2a2a] transition-colors"
                   : ""
                 }`}
@@ -181,7 +183,7 @@ export const EarnPage: React.FC = () => {
                 {!card.isSocialCard && (
                   <button
                     onClick={() => handleCardClick(card)}
-                    className={`mt-3 py-1.5 px-4 rounded-lg font-medium text-sm transition-colors ${card.isComingSoon
+                    className={`mt-3 py-1.5 px-4 rounded-full font-medium text-sm transition-colors ${card.isComingSoon
                         ? "bg-blue-500 text-white cursor-not-allowed opacity-75"
                         : "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
                       }`}

@@ -1,13 +1,9 @@
 import React from "react";
 import { TransactionData, TransactionType } from "@/services/transactions/types";
 import {
-  ArrowUp,
-  ArrowDown,
-  SquareMinus,
   Info,
   AlertCircle,
   RefreshCw,
-  PiggyBank,
 } from "lucide-react";
 import { EmptyState } from "@/components/general/EmptyState";
 
@@ -28,23 +24,22 @@ export const TransactionList: React.FC<TransactionListProps> = ({
   onTransactionClick,
   skeletonCount = 5,
 }) => {
-  const getTransactionIcon = (type: TransactionType) => {
-    switch (type) {
-      case "deposit":
-        return <ArrowDown size={20} color="#C7EF6B" />;
-      case "withdrawal":
-        return <ArrowUp size={20} color="#FF6B6B" />;
-      case "delegation":
-        return <PiggyBank size={20} color="#C7EF6B" />;
-      case "undelegation":
-        return <SquareMinus size={20} color="#FF6B6B" />;
-      case "mint":
-        return <PiggyBank size={20} color="#C7EF6B" />;
-      case "burn":
-        return <SquareMinus size={20} color="#FF6B6B" />;
-      default:
-        return <PiggyBank size={20} color="#C7EF6B" />;
+  const getTransactionImage = (transaction: TransactionData) => {
+    const symbol = transaction.token_symbol?.toUpperCase();
+
+    if (transaction.transaction_type === "deposit") {
+      return "/ng_flag.png";
     }
+
+    if (symbol === "USDC") {
+      return "/usdc.svg";
+    }
+
+    if (symbol === "LPT") {
+      return "/livepeer.webp";
+    }
+
+    return "/ng_flag.png";
   };
 
   const getAmountColor = (type: TransactionType) => {
@@ -184,14 +179,18 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                   <div
                     key={transaction.id}
                     onClick={() => onTransactionClick(transaction)}
-                    className="flex items-center justify-between p-4 bg-[#1a1a1a] rounded-xl border border-[#2a2a2a] hover:border-[#C7EF6B]/30 transition-colors cursor-pointer"
+                    className="flex items-center justify-between p-4 bg-[#13170a] rounded-xl transition-colors cursor-pointer"
                   >
                     <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-[#2a2a2a] rounded-full flex items-center justify-center">
-                        {getTransactionIcon(transaction.transaction_type)}
+                      <div className="w-10 h-10 flex items-center justify-center">
+                        <img
+                          src={getTransactionImage(transaction)}
+                          alt={transaction.token_symbol || "transaction asset"}
+                          className="w-8 h-8 object-contain"
+                        />
                       </div>
                       <div>
-                        <p className="text-white font-medium">
+                        <p className="text-white font-medium text-sm">
                           {getTransactionTitle(transaction.transaction_type)}
                         </p>
                         <p className="text-white/40 text-xs">
@@ -201,7 +200,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                     </div>
                     <div className="text-right">
                       <p
-                        className={`font-semibold ${getAmountColor(transaction.transaction_type)}`}
+                        className={`font-semibold text-[13px] text-white/90 ${getAmountColor}`}
                       >
                         {getAmountPrefix(transaction.transaction_type)}
                         {parseFloat(transaction.amount).toFixed(2)}{" "}

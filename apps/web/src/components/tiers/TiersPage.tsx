@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ChevronLeft, Key, LockKeyhole, CircleQuestionMark } from "lucide-react";
+import { ArrowLeft, Key, LockKeyhole, CircleQuestionMark } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
@@ -35,9 +35,9 @@ export const TiersPage: React.FC = () => {
       <div className="flex items-center justify-between px-6 py-8">
         <button
           onClick={handleBackClick}
-          className="w-8 h-8 flex items-center justify-center"
+          className="h-10 w-10 rounded-full bg-[#13170a] flex items-center justify-center"
         >
-          <ChevronLeft color="#C7EF6B" />
+          <ArrowLeft className="text-white" size={22} />
         </button>
 
         <h1 className="text-lg font-medium text-white">Yield Tiers</h1>
@@ -64,9 +64,8 @@ export const TiersPage: React.FC = () => {
                     {tier.title}
                   </h3>
                   <p
-                    className={`text-sm leading-relaxed ${
-                      tier.isLocked ? "text-white/60" : "text-white/90"
-                    }`}
+                    className={`text-sm leading-relaxed ${tier.isLocked ? "text-white/60" : "text-white/90"
+                      }`}
                   >
                     {tier.description}
                   </p>
@@ -76,9 +75,8 @@ export const TiersPage: React.FC = () => {
               <button
                 onClick={() => handleExplore(tier.id, tier.title)}
                 disabled={tier.isLocked}
-                className={`mt-4 px-6 py-2.5 ${tier.buttonBg} ${tier.buttonText} rounded-full text-xs font-semibold transition-colors relative z-10 flex items-center gap-2 ${
-                  tier.isLocked ? "cursor-not-allowed" : ""
-                }`}
+                className={`mt-4 px-6 py-2.5 ${tier.buttonBg} ${tier.buttonText} rounded-full text-xs font-semibold transition-colors relative z-10 flex items-center gap-2 ${tier.isLocked ? "cursor-not-allowed" : ""
+                  }`}
               >
                 {tier.isLocked && <LockKeyhole size={14} />}
                 <span>{tier.isLocked ? "Locked" : "Vest"}</span>

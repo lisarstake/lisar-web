@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
-  ChevronLeft,
+  ArrowLeft,
   CircleQuestionMark,
   ChevronRight,
   Clock,
@@ -36,14 +36,14 @@ export const WithdrawNetworkPage: React.FC = () => {
   // Get completed (withdrawable) and pending transactions for this validator
   const withdrawableTransactions = delegatorTransactions
     ? delegatorTransactions.completedStakeTransactions.filter(
-        (tx) => tx.delegate.id === validatorId
-      )
+      (tx) => tx.delegate.id === validatorId
+    )
     : [];
 
   const pendingTransactions = delegatorTransactions
     ? delegatorTransactions.pendingStakeTransactions.filter(
-        (tx) => tx.delegate.id === validatorId
-      )
+      (tx) => tx.delegate.id === validatorId
+    )
     : [];
 
   const totalWithdrawableAmount = withdrawableTransactions.reduce(
@@ -139,9 +139,9 @@ export const WithdrawNetworkPage: React.FC = () => {
       <div className="flex items-center justify-between px-6 py-8">
         <button
           onClick={handleBackClick}
-          className="w-8 h-8 flex items-center justify-center"
+          className="h-10 w-10 rounded-full bg-[#13170a] flex items-center justify-center"
         >
-          <ChevronLeft color="#C7EF6B" />
+          <ArrowLeft className="text-white" size={22} />
         </button>
 
         <h1 className="text-lg font-medium text-white">Withdraw</h1>
@@ -191,17 +191,15 @@ export const WithdrawNetworkPage: React.FC = () => {
                 !network.isComingSoon && handleNetworkSelect(network.id)
               }
               disabled={network.isComingSoon}
-              className={`w-full flex items-center justify-between rounded-xl transition-colors ${
-                network.isComingSoon
-                  ? "py-3 px-4 bg-[#1a1a1a] border border-[#2a2a2a] opacity-50 cursor-not-allowed"
-                  : "p-4"
-              } ${
-                !network.isComingSoon && selectedNetwork === network.id
+              className={`w-full flex items-center justify-between rounded-xl transition-colors ${network.isComingSoon
+                ? "py-3 px-4 bg-[#1a1a1a] border border-[#2a2a2a] opacity-50 cursor-not-allowed"
+                : "p-4"
+                } ${!network.isComingSoon && selectedNetwork === network.id
                   ? "bg-[#C7EF6B]/10 border border-[#C7EF6B]"
                   : !network.isComingSoon
                     ? "bg-[#1a1a1a] border border-[#2a2a2a] hover:bg-[#2a2a2a]"
                     : ""
-              }`}
+                }`}
             >
               <div className="flex items-center space-x-3">
                 <img
@@ -243,11 +241,10 @@ export const WithdrawNetworkPage: React.FC = () => {
         <button
           onClick={handleProceed}
           disabled={!selectedNetwork || totalWithdrawableAmount <= 0}
-          className={`w-full py-4 rounded-xl font-semibold text-lg transition-colors ${
-            selectedNetwork && totalWithdrawableAmount > 0
-              ? "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
-              : "bg-[#636363] text-white cursor-not-allowed"
-          }`}
+          className={`w-full py-4 rounded-xl font-semibold text-lg transition-colors ${selectedNetwork && totalWithdrawableAmount > 0
+            ? "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
+            : "bg-[#636363] text-white cursor-not-allowed"
+            }`}
         >
           {totalWithdrawableAmount <= 0
             ? "No funds available"

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
-  ChevronLeft,
+  ArrowLeft,
   CircleQuestionMark,
   LoaderCircle,
   Wallet2,
@@ -328,9 +328,9 @@ export const SavePage: React.FC = () => {
       <div className="flex items-center justify-between px-6 py-8">
         <button
           onClick={handleBackClick}
-          className="w-8 h-8 flex items-center justify-center"
+          className="h-10 w-10 rounded-full bg-[#13170a] flex items-center justify-center"
         >
-          <ChevronLeft color="#86B3F7" />
+          <ArrowLeft className="text-white" size={22} />
         </button>
 
         <h1 className="text-lg font-medium text-white">Vest</h1>
@@ -415,11 +415,10 @@ export const SavePage: React.FC = () => {
                 <button
                   key={amount}
                   onClick={() => handleAmountSelect(amount)}
-                  className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-colors ${
-                    isActive
-                      ? "bg-[#86B3F7] text-black"
-                      : "bg-[#1a1a1a] text-white/80 hover:bg-[#2a2a2a]"
-                  }`}
+                  className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-colors ${isActive
+                    ? "bg-[#86B3F7] text-black"
+                    : "bg-[#1a1a1a] text-white/80 hover:bg-[#2a2a2a]"
+                    }`}
                 >
                   {formatNumber(amount)} USD
                 </button>
@@ -456,11 +455,10 @@ export const SavePage: React.FC = () => {
         <button
           onClick={handleProceed}
           disabled={!usdcAmount || parseFloat(usdcAmount) <= 0 || isSaving}
-          className={`w-full py-3 rounded-lg font-semibold text-lg transition-colors ${
-            usdcAmount && parseFloat(usdcAmount) > 0 && !isSaving
-              ? "bg-[#86B3F7] text-black hover:bg-[#6da7fd]"
-              : "bg-[#636363] text-white cursor-not-allowed"
-          }`}
+          className={`w-full py-3 rounded-lg font-semibold text-lg transition-colors ${usdcAmount && parseFloat(usdcAmount) > 0 && !isSaving
+            ? "bg-[#86B3F7] text-black hover:bg-[#6da7fd]"
+            : "bg-[#636363] text-white cursor-not-allowed"
+            }`}
         >
           {isSaving ? (
             <span className="flex items-center justify-center gap-2">

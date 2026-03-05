@@ -44,10 +44,8 @@ export const EarningsBreakdownDrawer: React.FC<EarningsBreakdownDrawerProps> = (
         });
     };
 
-    // Brand colors based on wallet/card type
-    const theme = cardType === "staking"
-        ? { main: "#C7EF6B" }
-        : { main: "#86B3F7" };
+    // Unified wallet breakdown theme
+    const theme = { main: "#C7EF6B" };
 
     // SVG parameters
     const r = 36;
@@ -55,7 +53,7 @@ export const EarningsBreakdownDrawer: React.FC<EarningsBreakdownDrawerProps> = (
 
     return (
         <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DrawerContent className="bg-[#121212] border-t border-white/5">
+            <DrawerContent className="bg-[#050505] border-t border-white/5">
                 <DrawerHeader className="pb-0">
                     <DrawerTitle className="text-center text-lg font-medium text-white/90">
                         Earnings Breakdown
@@ -65,9 +63,9 @@ export const EarningsBreakdownDrawer: React.FC<EarningsBreakdownDrawerProps> = (
                 <div className="flex flex-col items-center pt-2">
                     {/* Donut Chart Section */}
                     <div className="relative w-[220px] h-[220px]">
-                        <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90 origin-center drop-shadow-2xl overflow-visible">
+                        <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90 origin-center overflow-visible">
                             {/* Background track */}
-                            <circle cx="50" cy="50" r={r} fill="none" stroke="#222222" strokeWidth="14" />
+                            <circle cx="50" cy="50" r={r} fill="none" stroke="#1b221f" strokeWidth="14" />
 
                             {/* Monthly segment (100% opacity) */}
                             <circle cx="50" cy="50" r={r} fill="none" stroke={theme.main} strokeWidth="14" strokeDasharray={`${c * 0.45} ${c}`} strokeLinecap="round" className="opacity-100" />
@@ -110,13 +108,13 @@ export const EarningsBreakdownDrawer: React.FC<EarningsBreakdownDrawerProps> = (
                     </div>
 
                     {/* Bottom Breakdown Ranges */}
-                    <div className="grid grid-cols-3 gap-6 mt-4 w-full px-8 max-w-[400px]">
+                    <div className="grid grid-cols-3 gap-6 mt-4 w-full px-8 max-w-[400px] rounded-lg bg-[#13170a] py-4">
                         <div className="flex flex-col">
                             <span className="text-gray-400 text-xs font-medium mb-1">Daily</span>
                             <span className="text-white text-[15px] font-semibold mb-2 truncate">
                                 {displayFiatSymbol}{formatValue(daily)}
                             </span>
-                            <div className="h-1.5 w-full bg-[#2a2a2a] rounded-full overflow-hidden">
+                            <div className="h-1.5 w-full bg-[#1b221f] rounded-full overflow-hidden">
                                 <div className="h-full opacity-30 rounded-full" style={{ backgroundColor: theme.main, width: '15%' }} />
                             </div>
                         </div>
@@ -126,7 +124,7 @@ export const EarningsBreakdownDrawer: React.FC<EarningsBreakdownDrawerProps> = (
                             <span className="text-white text-[15px] font-semibold mb-2 truncate">
                                 {displayFiatSymbol}{formatValue(weekly)}
                             </span>
-                            <div className="h-1.5 w-full bg-[#2a2a2a] rounded-full overflow-hidden">
+                            <div className="h-1.5 w-full bg-[#1b221f] rounded-full overflow-hidden">
                                 <div className="h-full opacity-60 rounded-full" style={{ backgroundColor: theme.main, width: '45%' }} />
                             </div>
                         </div>
@@ -136,7 +134,7 @@ export const EarningsBreakdownDrawer: React.FC<EarningsBreakdownDrawerProps> = (
                             <span className="text-white text-[15px] font-semibold mb-2 truncate">
                                 {displayFiatSymbol}{formatValue(monthly)}
                             </span>
-                            <div className="h-1.5 w-full bg-[#2a2a2a] rounded-full overflow-hidden">
+                            <div className="h-1.5 w-full bg-[#1b221f] rounded-full overflow-hidden">
                                 <div className="h-full opacity-100 rounded-full" style={{ backgroundColor: theme.main, width: '100%' }} />
                             </div>
                         </div>
