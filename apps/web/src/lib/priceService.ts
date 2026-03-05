@@ -71,9 +71,15 @@ class PriceService {
       })
       .catch((error) => {
         this.pendingFetch = null;
-        
         if (!this.cache) {
           this.cache = FALLBACK_PRICES;
+        }
+        // On 429 (rate limit), treat cache as fresh so we don't retry for CACHE_DURATION
+        const is429 =
+          (error instanceof Error && error.message?.includes("429")) ||
+          (typeof (error as any)?.response?.status === "number" && (error as any).response.status === 429);
+        if (is429) {
+          this.lastFetch = now;
         }
         return this.cache;
       });
@@ -90,7 +96,9 @@ class PriceService {
     ]);
 
     if (!cryptoResponse.ok || !fiatResponse.ok) {
-      throw new Error(`Failed to fetch price data: Crypto=${cryptoResponse.status}, Fiat=${fiatResponse.status}`);
+      const msg = `Failed to fetch price data: Crypto=${cryptoResponse.status}, Fiat=${fiatResponse.status}`;
+      if (cryptoResponse.status === 429) throw new Error("429");
+      throw new Error(msg);
     }
 
     const [cryptoData, fiatData] = await Promise.all([

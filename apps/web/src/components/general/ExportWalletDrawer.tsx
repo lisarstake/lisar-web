@@ -360,7 +360,7 @@ export const ExportWalletDrawer: React.FC<ExportWalletDrawerProps> = ({
             <button
               type="button"
               onClick={() => setExportStep("confirm")}
-              className="w-full py-4 rounded-xl font-semibold text-lg bg-[#C7EF6B] text-black hover:bg-[#B8E55A] transition-colors"
+              className="w-full py-3 rounded-xl font-semibold text-lg bg-[#C7EF6B] text-black hover:bg-[#B8E55A] transition-colors"
             >
               Export Wallet
             </button>
@@ -371,7 +371,7 @@ export const ExportWalletDrawer: React.FC<ExportWalletDrawerProps> = ({
               type="button"
               disabled={isVerifying || isExporting}
               onClick={handlePasswordConfirm}
-              className={`w-full py-4 rounded-xl font-semibold text-lg transition-colors ${
+              className={`w-full py-3 rounded-xl font-semibold text-lg transition-colors ${
                 isVerifying || isExporting
                   ? "bg-[#636363] text-white cursor-not-allowed"
                   : "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
@@ -398,7 +398,7 @@ export const ExportWalletDrawer: React.FC<ExportWalletDrawerProps> = ({
               type="button"
               disabled={otpCode.length !== 6 || isVerifyingOTP || isExporting}
               onClick={handleOTPVerify}
-              className={`w-full py-4 rounded-xl font-semibold text-lg transition-colors ${
+              className={`w-full py-3 rounded-xl font-semibold text-lg transition-colors ${
                 otpCode.length === 6 && !isVerifyingOTP && !isExporting
                   ? "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
                   : "bg-[#636363] text-white cursor-not-allowed"
@@ -424,7 +424,7 @@ export const ExportWalletDrawer: React.FC<ExportWalletDrawerProps> = ({
             <button
               type="button"
               onClick={handleClose}
-              className="w-full py-4 rounded-xl font-semibold text-lg bg-[#C7EF6B] text-black hover:bg-[#B8E55A] transition-colors"
+              className="w-full py-3 rounded-xl font-semibold text-lg bg-[#C7EF6B] text-black hover:bg-[#B8E55A] transition-colors"
             >
               Done
             </button>

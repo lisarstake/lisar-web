@@ -2,6 +2,7 @@ import { Outlet, useLocation } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { ErrorBoundary } from "@/components/general/ErrorBoundary";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { PricesProvider } from "@/contexts/PricesContext";
 import { OrchestratorProvider } from "@/contexts/OrchestratorContext";
 import { WalletProvider } from "@/contexts/WalletContext";
 import { TransactionProvider } from "@/contexts/TransactionContext";
@@ -51,6 +52,7 @@ export default function App() {
   return (
     <ErrorBoundary>
       <AuthProvider>
+        <PricesProvider>
         <GuidedTourProvider>
           <Toaster position="top-right" />
           <ErrorBoundary>
@@ -120,6 +122,7 @@ export default function App() {
             </DashboardProvider>
           </ErrorBoundary>
         </GuidedTourProvider>
+        </PricesProvider>
       </AuthProvider>
     </ErrorBoundary>
   );

@@ -246,7 +246,7 @@ export const CampaignHomePage: React.FC = () => {
     );
   }
 
-  // Extract tier from campaign status or default to 1
+ 
   const currentTier: number = (campaignStatus as any)?.current_tier || 1;
   const tierInfo = getTierInfo(currentTier);
 

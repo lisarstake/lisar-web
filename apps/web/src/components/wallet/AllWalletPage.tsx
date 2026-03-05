@@ -503,7 +503,7 @@ export const AllWalletPage: React.FC = () => {
                           </h3>
                           <p className="text-white/60 text-[13px]">
                             Earn rewards and perks building healthy saving habits.
-                            Click to get started now!
+                            {campaignStatusLabel === "not started" && " Click to get started now!"}
                           </p>
                         </div>
                       </div>
