@@ -1,8 +1,10 @@
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ChevronLeft,
   Info,
+  CheckCheck,
+  Trash2,
   CircleQuestionMark,
 } from "lucide-react";
 import { EmptyState } from "@/components/general/EmptyState";
@@ -30,7 +32,6 @@ export const NotificationsPage: React.FC = () => {
     notificationTitle: "",
   });
   const [clearAllConfirm, setClearAllConfirm] = useState(false);
-  const swipeStartRef = useRef<{ x: number; id: string } | null>(null);
 
   const {
     notifications,
@@ -105,7 +106,7 @@ export const NotificationsPage: React.FC = () => {
 
   const handleClearAllClick = () => {
     setClearAllConfirm(true);
-  }; 
+  };
 
   const handleClearAllConfirm = async () => {
     try {
@@ -197,57 +198,33 @@ export const NotificationsPage: React.FC = () => {
                   {notifications.map((notification) => (
                     <div
                       key={notification.id}
-                      className={`flex items-start space-x-3 p-3 rounded-xl border transition-colors touch-none select-none ${
+                      className={`flex items-start space-x-3 p-3 rounded-xl border transition-colors ${
                         notification.is_read
                           ? "bg-[#1a1a1a] border-[#2a2a2a]"
                           : "bg-[#1a1a1a] border-[#C7EF6B]/30"
                       }`}
-                      onTouchStart={(e) => {
-                        swipeStartRef.current = {
-                          x: e.touches[0].clientX,
-                          id: notification.id,
-                        };
-                      }}
-                      onTouchEnd={(e) => {
-                        if (!swipeStartRef.current || swipeStartRef.current.id !== notification.id) return;
-                        const deltaX = e.changedTouches[0].clientX - swipeStartRef.current.x;
-                        if (deltaX > 60) {
-                          handleDeleteClick(notification.id, notification.title);
-                        }
-                        swipeStartRef.current = null;
-                      }}
-                      onPointerDown={(e) => {
-                        if (e.pointerType === "mouse") return;
-                        swipeStartRef.current = {
-                          x: e.clientX,
-                          id: notification.id,
-                        };
-                      }}
-                      onPointerUp={(e) => {
-                        if (e.pointerType === "mouse" || !swipeStartRef.current || swipeStartRef.current.id !== notification.id) return;
-                        const deltaX = e.clientX - swipeStartRef.current.x;
-                        if (deltaX > 60) {
-                          handleDeleteClick(notification.id, notification.title);
-                        }
-                        swipeStartRef.current = null;
-                      }}
                     >
                       <div className="w-10 h-10 bg-[#2a2a2a] rounded-full flex items-center justify-center shrink-0">
                         {getNotificationIcon(notification.type)}
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <h3
-                          className={`font-medium text-sm mb-1 ${
-                            notification.is_read
-                              ? "text-white/70"
-                              : "text-white"
-                          }`}
-                        >
-                          {notification.title}
-                        </h3>
+                        <div className="flex items-start justify-between gap-2 mb-1">
+                          <h3
+                            className={`font-medium ${
+                              notification.is_read
+                                ? "text-white/70"
+                                : "text-white"
+                            }`}
+                          >
+                            {notification.title}
+                          </h3>
+                          {!notification.is_read && (
+                            <div className="w-2.5 h-2.5 bg-red-400 rounded-full shrink-0 mt-1.5"></div>
+                          )}
+                        </div>
                         <p
-                          className={`text-[13px] ${
+                          className={`text-sm mb-2 ${
                             notification.is_read
                               ? "text-gray-500"
                               : "text-gray-400"
@@ -255,9 +232,20 @@ export const NotificationsPage: React.FC = () => {
                         >
                           {notification.message}
                         </p>
-                        <span className="text-xs text-gray-500">
-                          {formatTimeAgo(notification.created_at)}
-                        </span>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-gray-500">
+                            {formatTimeAgo(notification.created_at)}
+                          </span>
+                          <div className="flex items-center space-x-3">
+                         
+                            <button
+                              onClick={() => handleDeleteClick(notification.id, notification.title)}
+                              className="text-xs text-gray-500 hover:text-red-400 transition-colors flex items-center space-x-1"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   ))}
