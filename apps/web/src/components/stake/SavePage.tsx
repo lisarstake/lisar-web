@@ -385,7 +385,7 @@ export const SavePage: React.FC = () => {
                 }
                 setUsdcAmount(numericValue);
               }}
-              placeholder="USDC"
+              placeholder="USD"
               className="flex-1 bg-transparent text-white text-lg font-medium focus:outline-none"
             />
             <button
@@ -421,7 +421,7 @@ export const SavePage: React.FC = () => {
                       : "bg-[#1a1a1a] text-white/80 hover:bg-[#2a2a2a]"
                   }`}
                 >
-                  {formatNumber(amount)} USDC
+                  {formatNumber(amount)} USD
                 </button>
               );
             })}

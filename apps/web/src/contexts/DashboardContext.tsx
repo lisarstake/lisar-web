@@ -47,7 +47,7 @@ export const DashboardProvider: React.FC<DashboardProviderProps> = ({
       // Fetch summary and transactions in parallel
       const [summaryResponse, transactionsResponse] = await Promise.all([
         dashboardService.getDashboardSummary(),
-        dashboardService.getDashboardTransactions(15), // Default limit to 15
+        dashboardService.getDashboardTransactions(15),
       ]);
 
       if (summaryResponse.success && summaryResponse.data) {
