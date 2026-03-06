@@ -45,11 +45,13 @@ const CRYPTO_TOKENS: CryptoToken[] = [
 interface ReceiveCryptoDrawerProps {
   isOpen: boolean;
   onClose: () => void;
+  showDisclaimer?: boolean;
 }
 
 export const ReceiveCryptoDrawer: React.FC<ReceiveCryptoDrawerProps> = ({
   isOpen,
   onClose,
+  showDisclaimer = true,
 }) => {
   const [selectedToken, setSelectedToken] = useState<CryptoToken | null>(null);
   const [copied, setCopied] = useState(false);
@@ -147,7 +149,7 @@ export const ReceiveCryptoDrawer: React.FC<ReceiveCryptoDrawerProps> = ({
           </div>
 
           <DrawerTitle className="absolute left-1/2 -translate-x-1/2 font-medium text-lg text-white">
-            {selectedToken ? `Receive ${selectedToken.symbol}` : "Select Token"}
+            {selectedToken ? `${selectedToken.symbol}` : "Select Token"}
           </DrawerTitle>
         </DrawerHeader>
 
@@ -208,6 +210,16 @@ export const ReceiveCryptoDrawer: React.FC<ReceiveCryptoDrawerProps> = ({
                   )}
                 </button>
               </div>
+
+              {showDisclaimer && (
+                <div className="rounded-lg bg-[#13170a] px-3 py-2">
+                  <p className="text-xs text-white/70 text-center leading-relaxed">
+                    Only send the exact token on the selected network. Sending
+                    unsupported assets or wrong networks may result in permanent
+                    loss of funds.
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </div>

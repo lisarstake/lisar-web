@@ -77,6 +77,9 @@ const NotificationsPage = lazyRetry(
   () => import("@/screens/notifications-page"),
 );
 const AccountsPage = lazyRetry(() => import("@/screens/accounts-page"));
+const WalletTransferFormPage = lazyRetry(
+  () => import("@/screens/wallet-transfer-form-page"),
+);
 const AccountSettingsPage = lazyRetry(
   () => import("@/screens/account-settings-page"),
 );
@@ -179,6 +182,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             {withSuspenseAndErrorBoundary(<SavingsCreateFlexiblePage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "wallet/:mode/:asset",
+        element: (
+          <ProtectedRoute>
+            {withSuspenseAndErrorBoundary(<WalletTransferFormPage />)}
           </ProtectedRoute>
         ),
       },

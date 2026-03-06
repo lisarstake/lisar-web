@@ -3,9 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { LisarLines } from "@/components/general/lisar-lines";
-import { AddCashDrawer } from "@/components/general/AddCashDrawer";
 import { PortfolioSelectionDrawer } from "@/components/general/PortfolioSelectionDrawer";
 import { AllBalancesDrawer } from "@/components/general/AllBalancesDrawer";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import { WalletPage } from "@/components/wallet/WalletPage";
 import { useOrchestrators } from "@/contexts/OrchestratorContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -29,22 +34,18 @@ import {
   Wallet,
   LayoutGrid,
   ChartNoAxesCombined,
+  Clock,
 } from "lucide-react";
 
 const ADD_CASH_AMOUNTS = [20000, 50000, 100000, 250000, 500000];
 
 export const AllWalletPage: React.FC = () => {
   const navigate = useNavigate();
-
-  const [searchQuery, setSearchQuery] = useState("");
-  const [showBalanceDrawer, setShowBalanceDrawer] = useState(false);
   const [showAllBalancesDrawer, setShowAllBalancesDrawer] = useState(false);
-  const [showAddCashDrawer, setShowAddCashDrawer] = useState(false);
   const [showPortfolioDrawer, setShowPortfolioDrawer] = useState(false);
-  const [selectedAddAmount, setSelectedAddAmount] = useState<number | null>(
-    null,
-  );
-  const [activeTab, setActiveTab] = useState<"home" | "save" | "grow">("home");
+  const [transferDrawer, setTransferDrawer] = useState<
+    "deposit" | "withdraw" | null
+  >(null);
   const [displayCurrency, setDisplayCurrency] = useState<"USD" | "NGN">("NGN");
   const [showBalance, setShowBalance] = useState(() => {
     const saved = localStorage.getItem("wallet_show_balance");
@@ -106,35 +107,6 @@ export const AllWalletPage: React.FC = () => {
     [fiatCurrency],
   );
 
-  const handleAddCashAmountClick = (amount: number) => {
-    setSelectedAddAmount(amount);
-    setShowAddCashDrawer(true);
-  };
-
-  const handleAddCashDestination = (destination: "savings" | "growth") => {
-    const amount = selectedAddAmount;
-    setShowAddCashDrawer(false);
-    setSelectedAddAmount(null);
-    if (destination === "savings") {
-      navigate("/deposit", {
-        state: {
-          walletType: "savings",
-          provider: "perena",
-          tierNumber: 2,
-          tierTitle: "USD Plus",
-          presetFiatAmount: amount ?? undefined,
-        },
-      });
-    } else {
-      navigate("/deposit", {
-        state: {
-          walletType: "staking",
-          presetFiatAmount: amount ?? undefined,
-        },
-      });
-    }
-  };
-
   const handleNotificationClick = () => {
     navigate("/notifications");
   };
@@ -189,6 +161,15 @@ export const AllWalletPage: React.FC = () => {
       ))}
     </div>
   );
+
+  const closeTransferDrawer = () => setTransferDrawer(null);
+
+  const handleTransferOptionSelect = (asset: "naira" | "crypto") => {
+    if (!transferDrawer) return;
+    const mode = transferDrawer;
+    closeTransferDrawer();
+    navigate(`/wallet/${mode}/${asset}`);
+  };
 
   return (
     <div className="h-screen overflow-hidden bg-[#050505] text-white flex flex-col">
@@ -305,7 +286,7 @@ export const AllWalletPage: React.FC = () => {
                     {/* Action Buttons */}
                     <div className="flex items-center justify-center gap-6 mt-6">
                       <button
-                        onClick={() => navigate("/deposit")}
+                        onClick={() => setTransferDrawer("deposit")}
                         className="flex flex-col items-center gap-1.5"
                       >
                         <div className="w-12 h-12 rounded-full bg-[#13170a] flex items-center justify-center">
@@ -316,7 +297,7 @@ export const AllWalletPage: React.FC = () => {
                         </span>
                       </button>
                       <button
-                        onClick={() => navigate("/withdraw")}
+                        onClick={() => setTransferDrawer("withdraw")}
                         className="flex flex-col items-center gap-1.5"
                       >
                         <div className="w-12 h-12 rounded-full bg-[#13170a] flex items-center justify-center">
@@ -557,7 +538,7 @@ export const AllWalletPage: React.FC = () => {
                 {ADD_CASH_AMOUNTS.map((amount) => (
                   <button
                     key={amount}
-                    onClick={() => handleAddCashAmountClick(amount)}
+                    onClick={() => navigate("/wallet/deposit/naira")}
                     className="py-2.5 px-3 rounded-lg bg-white/10 text-white text-sm font-medium transition-colors"
                   >
                     {fiatSymbol}
@@ -565,7 +546,7 @@ export const AllWalletPage: React.FC = () => {
                   </button>
                 ))}
                 <button
-                  onClick={() => handleAddCashAmountClick(0)}
+                  onClick={() => navigate("/wallet/deposit/naira")}
                   className="py-2.5 px-3 rounded-lg bg-white/10 flex items-center justify-center transition-colors"
                 >
                   <Plus size={16} className="text-white" />
@@ -578,16 +559,6 @@ export const AllWalletPage: React.FC = () => {
 
       {/* Bottom Navigation */}
       <BottomNavigation currentPath="/wallet" />
-
-      <AddCashDrawer
-        isOpen={showAddCashDrawer}
-        onClose={() => {
-          setShowAddCashDrawer(false);
-          setSelectedAddAmount(null);
-        }}
-        selectedAmount={selectedAddAmount}
-        onSelectDestination={handleAddCashDestination}
-      />
 
       <PortfolioSelectionDrawer
         isOpen={showPortfolioDrawer}
@@ -612,6 +583,75 @@ export const AllWalletPage: React.FC = () => {
         usdtBalance={solUsdtBalance}
         showBalance={showBalance}
       />
+
+      <Drawer open={!!transferDrawer} onOpenChange={closeTransferDrawer}>
+        <DrawerContent className="bg-[#050505] border-t border-[#1b1b1b]">
+          <DrawerHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <DrawerTitle className="text-white text-base font-medium">
+                {transferDrawer === "deposit" ? "Add Cash From" : "Cash Out To"}
+              </DrawerTitle>
+              
+            </div>
+          </DrawerHeader>
+          <div className="pb-2 space-y-3">
+            <button
+              onClick={() => handleTransferOptionSelect("naira")}
+              className="w-full rounded-xl bg-[#13170a] px-4 py-4 text-left"
+            >
+              <div className="flex items-center gap-3">
+                <img src="/ng_flag.png" alt="Naira" className="w-10 h-10" />
+                <div>
+                  <p className="text-white text-base font-medium">
+                    {transferDrawer === "deposit"
+                      ? "Naira Deposit"
+                      : "Bank/Mobile Money"}
+                  </p>
+                  <p className="text-sm text-white/60">
+                    {transferDrawer === "deposit"
+                      ? "Deposit Naira into your Lisar account"
+                      : "Withdraw Naira to your bank account"}
+                  </p>
+                </div>
+              </div>
+            </button>
+
+            <div className="w-full rounded-xl bg-[#13170a] px-4 py-4 opacity-70">
+              <div className="flex items-center gap-3">
+                <img src="/us_flag.png" alt="Dollar" className="w-10 h-10" />
+                <div className="flex-1">
+                  <p className="text-white text-base font-medium">Dollar</p>
+                  <p className="text-sm text-white/60 flex items-center">
+                    USD transfer option is coming soon <Clock size={14} className="ml-1"/>
+                  </p>
+                </div>
+              
+              </div>
+            </div>
+
+            <button
+              onClick={() => handleTransferOptionSelect("crypto")}
+              className="w-full rounded-xl bg-[#13170a] px-4 py-4 text-left"
+            >
+              <div className="flex items-center gap-3">
+                <img src="/usdc.svg" alt="Crypto" className="w-10 h-10" />
+                <div>
+                  <p className="text-white text-base font-medium">
+                    {transferDrawer === "deposit"
+                      ? "Crypto Wallet"
+                      : "Send Crypto"}
+                  </p>
+                  <p className="text-sm text-white/60">
+                    {transferDrawer === "deposit"
+                      ? "Deposit crypto from an external wallet"
+                      : "Send crypto to an external wallet address"}
+                  </p>
+                </div>
+              </div>
+            </button>
+          </div>
+        </DrawerContent>
+      </Drawer>
     </div>
   );
 };

@@ -30,7 +30,8 @@ const AccountCard: React.FC<AccountCardProps> = ({
 
   const handleCopy = async () => {
     if (accountNumber) {
-      await navigator.clipboard.writeText(accountNumber);
+      const numberOnly = accountNumber.replace(/[^0-9]/g, "");
+      await navigator.clipboard.writeText(numberOnly);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
@@ -109,8 +110,8 @@ export const AccountsPage: React.FC = () => {
           flag="/ng_flag.png"
           title="Naira Account"
           description="Receive NGN from any bank or mobile money to instantly top up your Lisar NGN balance"
-          accountNumber="7040920728"
-          bankName="Moniepoint"
+          accountNumber="Nomba MFB - 7040920728"
+          bankName="Opay"
           hasAccount={hasNairaAccount}
           onRequestAccount={handleRequestAccount}
         />
@@ -130,7 +131,7 @@ export const AccountsPage: React.FC = () => {
           description="Receive crypto tokens from any external wallet to top up your Lisar wallet"
           hasAccount={true}
           onRequestAccount={() => setShowReceiveCryptoDrawer(true)}
-          buttonText="Receive Crypto"
+          buttonText="Show Address"
         />
       </div>
 

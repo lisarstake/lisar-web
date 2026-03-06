@@ -324,14 +324,15 @@ export const DepositPage: React.FC = () => {
           <ArrowLeft className="text-white" size={22} />
         </button>
 
-        <h1 className="text-lg font-medium text-white">{pageTitle}</h1>
+        <h1 className="absolute left-1/2 -translate-x-1/2 text-lg font-medium text-white ">{pageTitle}</h1>
 
-        <button
+        {/* <button
           onClick={handleHelpClick}
           className="w-8 h-8 bg-[#2a2a2a] rounded-full flex items-center justify-center"
         >
           <CircleQuestionMark color="#86B3F7" size={16} />
-        </button>
+        </button> */}
+        <div></div>
       </div>
 
       {/* Scrollable Content */}
@@ -429,7 +430,7 @@ export const DepositPage: React.FC = () => {
           <div className="space-y-3">
             <button
               onClick={() => handlePaymentMethodSelect("fiat")}
-              className={`w-full flex items-center justify-between p-4 rounded-full transition-colors ${selectedPaymentMethod === "fiat"
+              className={`w-full flex items-center justify-between p-4 rounded-xl transition-colors ${selectedPaymentMethod === "fiat"
                 ? "bg-[#C7EF6B]/10 border border-[#C7EF6B]"
                 : "bg-[#13170a] border border-[#2a2a2a] hover:bg-[#2a2a2a]"
                 }`}
@@ -453,7 +454,7 @@ export const DepositPage: React.FC = () => {
 
             <button
               onClick={() => handlePaymentMethodSelect("onchain")}
-              className={`w-full flex items-center justify-between p-4 rounded-full transition-colors ${selectedPaymentMethod === "onchain"
+              className={`w-full flex items-center justify-between p-4 rounded-xl transition-colors ${selectedPaymentMethod === "onchain"
                 ? "bg-[#C7EF6B]/10 border border-[#C7EF6B]"
                 : "bg-[#13170a] border border-[#2a2a2a] hover:bg-[#2a2a2a]"
                 }`}
