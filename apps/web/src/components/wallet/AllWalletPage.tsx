@@ -5,6 +5,7 @@ import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { LisarLines } from "@/components/general/lisar-lines";
 import { AddCashDrawer } from "@/components/general/AddCashDrawer";
 import { PortfolioSelectionDrawer } from "@/components/general/PortfolioSelectionDrawer";
+import { AllBalancesDrawer } from "@/components/general/AllBalancesDrawer";
 import { WalletPage } from "@/components/wallet/WalletPage";
 import { useOrchestrators } from "@/contexts/OrchestratorContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -37,6 +38,7 @@ export const AllWalletPage: React.FC = () => {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [showBalanceDrawer, setShowBalanceDrawer] = useState(false);
+  const [showAllBalancesDrawer, setShowAllBalancesDrawer] = useState(false);
   const [showAddCashDrawer, setShowAddCashDrawer] = useState(false);
   const [showPortfolioDrawer, setShowPortfolioDrawer] = useState(false);
   const [selectedAddAmount, setSelectedAddAmount] = useState<number | null>(
@@ -65,6 +67,8 @@ export const AllWalletPage: React.FC = () => {
     isLoading: walletLoading,
     stablesBalance: contextStablesBalance,
     highyieldBalance: contextHighyieldBalance,
+    solanaUsdcBalance,
+    solanaUsdtBalance,
     stablesLoading,
     highyieldLoading,
   } = useWallet();
@@ -78,25 +82,23 @@ export const AllWalletPage: React.FC = () => {
     return state.user?.is_onboarded === false && !state.isLoading;
   }, [state.user?.is_onboarded, state.isLoading]);
 
-  const { } = useGuidedTour({
+  const {} = useGuidedTour({
     tourId: ALL_WALLET_TOUR_ID,
     autoStart: shouldAutoStart,
   });
 
   const highyieldBalance = contextHighyieldBalance || 0;
   const stablesBalance = contextStablesBalance || 0;
+  const solUsdcBalance = solanaUsdcBalance || 0;
+  const solUsdtBalance = solanaUsdtBalance || 0;
 
-  const totalUsdBalance = useMemo(() => {
+  const totalIdleUsdBalance = useMemo(() => {
     const lptPriceInUsd = prices.lpt || 0;
     const unstakedLpt = highyieldBalance;
-    const stakedLpt = delegatorStakeProfile
-      ? parseFloat(delegatorStakeProfile.currentStake || "0")
-      : 0;
-    const totalLpt = unstakedLpt + stakedLpt;
-    const lptUsdValue = totalLpt * lptPriceInUsd;
-    const stablesUsdValue = stablesBalance;
-    return lptUsdValue + stablesUsdValue;
-  }, [highyieldBalance, stablesBalance, prices, delegatorStakeProfile]);
+    const lptUsdValue = unstakedLpt * lptPriceInUsd;
+    const idleUsdValue = solUsdcBalance + solUsdtBalance;
+    return lptUsdValue + idleUsdValue;
+  }, [highyieldBalance, solUsdcBalance, solUsdtBalance, prices]);
 
   const fiatCurrency = (state.user?.fiat_type || "USD").toUpperCase();
   const fiatSymbol = useMemo(
@@ -155,9 +157,9 @@ export const AllWalletPage: React.FC = () => {
 
   const displayBalance = useMemo(() => {
     return displayCurrency === "NGN"
-      ? totalUsdBalance * (prices.ngn || 0)
-      : totalUsdBalance;
-  }, [displayCurrency, totalUsdBalance, prices.ngn]);
+      ? totalIdleUsdBalance * (prices.ngn || 0)
+      : totalIdleUsdBalance;
+  }, [displayCurrency, totalIdleUsdBalance, prices.ngn]);
 
   const displayCurrencySymbol = displayCurrency === "NGN" ? "₦" : "$";
 
@@ -172,6 +174,20 @@ export const AllWalletPage: React.FC = () => {
       },
     ],
     [displayBalance, displayCurrencySymbol],
+  );
+
+  const renderLoadingStars = (sizeClass: string) => (
+    <div className={`flex items-baseline justify-center gap-1 ${sizeClass}`}>
+      {Array.from({ length: 4 }).map((_, index) => (
+        <span
+          key={`wallet-star-${index}`}
+          className="inline-block text-white animate-[wallet-star-float_900ms_ease-in-out_infinite]"
+          style={{ animationDelay: `${index * 120}ms` }}
+        >
+          ★
+        </span>
+      ))}
+    </div>
   );
 
   return (
@@ -231,7 +247,6 @@ export const AllWalletPage: React.FC = () => {
         </div>
       </div>
 
-
       <div className="flex-1 overflow-y-auto overscroll-contain">
         <>
           {/* Total Balance Card */}
@@ -245,10 +260,11 @@ export const AllWalletPage: React.FC = () => {
                         handleDepositClick(card.type);
                       }
                     }}
-                    className={`rounded-2xl py-5 min-h-[100px] relative overflow-hidden ${card.type !== "main"
-                      ? "cursor-pointer hover:opacity-95 transition-opacity"
-                      : ""
-                      }`}
+                    className={`rounded-2xl py-5 min-h-[100px] relative overflow-hidden ${
+                      card.type !== "main"
+                        ? "cursor-pointer hover:opacity-95 transition-opacity"
+                        : ""
+                    }`}
                     data-tour={
                       card.id === "main" ? "all-wallet-balance-card" : undefined
                     }
@@ -262,28 +278,26 @@ export const AllWalletPage: React.FC = () => {
                       {/* Balance Display */}
                       <div>
                         {walletLoading ||
-                          delegationLoading ||
-                          stablesLoading ||
-                          highyieldLoading ? (
+                        delegationLoading ||
+                        stablesLoading ||
+                        highyieldLoading ? (
                           <div className="flex items-baseline justify-center gap-2 mb-1">
-                            <span className="text-xl font-bold text-white">
-                              ★★★★
-                            </span>
+                            {renderLoadingStars("text-xl font-semibold")}
                           </div>
                         ) : (
-                        <div className="flex items-baseline justify-center gap-2 mb-1">
-                          <span className="text-2xl font-bold text-white/90">
-                            {showBalance
-                              ? `${card.currencySymbol}${card.balance.toLocaleString(
-                                undefined,
-                                {
-                                  minimumFractionDigits: 2,
-                                  maximumFractionDigits: 2,
-                                },
-                              )}`
-                              : "★★★★"}
-                          </span>
-                        </div>
+                          <div className="flex items-baseline justify-center gap-2 mb-1">
+                            <span className="text-2xl font-bold text-white/90">
+                              {showBalance
+                                ? `${card.currencySymbol}${card.balance.toLocaleString(
+                                    undefined,
+                                    {
+                                      minimumFractionDigits: 2,
+                                      maximumFractionDigits: 2,
+                                    },
+                                  )}`
+                                : "★★★★"}
+                            </span>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -362,13 +376,14 @@ export const AllWalletPage: React.FC = () => {
                   return (
                     <div
                       key={notification.id}
-                      className={`relative bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-xl p-3 overflow-hidden ${notification.metadata?.severity === "warning"
-                        ? "border-yellow-500/30"
-                        : notification.metadata?.severity === "error" ||
-                          notification.metadata?.severity === "critical"
-                          ? "border-red-500/30"
-                          : "border-[#86B3F7]/30"
-                        }`}
+                      className={`relative bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-xl p-3 overflow-hidden ${
+                        notification.metadata?.severity === "warning"
+                          ? "border-yellow-500/30"
+                          : notification.metadata?.severity === "error" ||
+                              notification.metadata?.severity === "critical"
+                            ? "border-red-500/30"
+                            : "border-[#86B3F7]/30"
+                      }`}
                     >
                       {/* Close Button */}
                       <button
@@ -376,20 +391,14 @@ export const AllWalletPage: React.FC = () => {
                           e.stopPropagation();
                           handleDismissNotification(notification.id);
                         }}
-                        className="absolute top-3 right-3 w-6 h-6 bg-[#13170a] rounded-full flex items-center justify-center hover:bg-[#3a3a3a] transition-colors z-10"
+                        className="absolute top-3 right-3 w-6 h-6 bg-white/10 rounded-full flex items-center justify-center transition-colors z-10"
                       >
-                        <X size={14} color="#9a9a9a" />
+                        <X size={14} color="#fff" />
                       </button>
 
                       <div className="flex items-start gap-3 pr-6">
                         <div
-                          className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${notification.metadata?.severity === "warning"
-                            ? "bg-yellow-500/20"
-                            : notification.metadata?.severity === "error" ||
-                              notification.metadata?.severity === "critical"
-                              ? "bg-red-500/20"
-                              : "bg-[#86B3F7]/20"
-                            }`}
+                          className={`shrink-0 w-10 h-10 bg-[#13170a] rounded-full flex items-center justify-center `}
                         >
                           <Bell
                             size={20}
@@ -397,8 +406,8 @@ export const AllWalletPage: React.FC = () => {
                               notification.metadata?.severity === "warning"
                                 ? "#eab308"
                                 : notification.metadata?.severity === "error" ||
-                                  notification.metadata?.severity ===
-                                  "critical"
+                                    notification.metadata?.severity ===
+                                      "critical"
                                   ? "#ef4444"
                                   : "#86B3F7"
                             }
@@ -429,12 +438,6 @@ export const AllWalletPage: React.FC = () => {
                   (typeof status.current_tier === "number" ||
                     (status.enrollment &&
                       Object.keys(status.enrollment).length > 0));
-                const campaignStatusLabel = isCampaignOngoing
-                  ? "ongoing"
-                  : "not started";
-                const borderColor = isCampaignOngoing
-                  ? "border-[#C7EF6B]/60"
-                  : "border-amber-500/80";
                 return (
                   <div
                     onClick={() => navigate("/earn")}
@@ -471,9 +474,15 @@ export const AllWalletPage: React.FC = () => {
                 <h2 className="text-white/70 text-xs font-medium">
                   My balance
                 </h2>
+                <button
+                  onClick={() => setShowAllBalancesDrawer(true)}
+                  className="text-[#C7EF6B] text-xs font-medium hover:opacity-80"
+                >
+                  Show all
+                </button>
               </div>
-              <div className="space-y-6">
-                <div className="flex items-start justify-between">
+              <div className="space-y-5">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <img src="/ng_flag.png" alt="NGN" className="w-10 h-10" />
                     <div>
@@ -483,11 +492,11 @@ export const AllWalletPage: React.FC = () => {
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <p className="text-white text-xs font-medium">O NGN</p>
+                  <div className="flex items-center">
+                    <p className="text-white text-xs font-medium">{showBalance ? "0 NGN" : "*****"}</p>
                   </div>
                 </div>
-                <div className="flex items-start justify-between">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <img src="/us_flag.png" alt="USD" className="w-10 h-10" />
                     <div>
@@ -499,11 +508,11 @@ export const AllWalletPage: React.FC = () => {
                       </p>
                     </div>
                   </div>
-                  <div className="flex-col items-start justify-start gap-2">
-                    <p className="text-white text-xs font-medium">O USD</p>
-                    <p className="text-white/50 text-[10px] font-medium">
-                      O NGN
-                    </p>
+                  <div className="flex-col items-start justify-start">
+                    <p className="text-white text-xs font-medium">★ USD</p>
+                    {/* <p className="text-white/50 text-[10px] f★nt-medium">
+                    ★ NGN
+                    </p> */}
                   </div>
                 </div>
               </div>
@@ -570,18 +579,6 @@ export const AllWalletPage: React.FC = () => {
       {/* Bottom Navigation */}
       <BottomNavigation currentPath="/wallet" />
 
-      {/* Balance Information Drawer */}
-      <HelpDrawer
-        isOpen={showBalanceDrawer}
-        onClose={() => setShowBalanceDrawer(false)}
-        title="Total Balance"
-        content={[
-          "Your total balance combines all your wallet balances.",
-          "This gives you a complete overview of your entire portfolio value.",
-          "You can tap on the balance to show/hide.",
-        ]}
-      />
-
       <AddCashDrawer
         isOpen={showAddCashDrawer}
         onClose={() => {
@@ -603,6 +600,17 @@ export const AllWalletPage: React.FC = () => {
             },
           });
         }}
+      />
+
+      <AllBalancesDrawer
+        isOpen={showAllBalancesDrawer}
+        onClose={() => setShowAllBalancesDrawer(false)}
+        ngnBalance={0}
+        usdBalance={0}
+        lptBalance={highyieldBalance}
+        usdcBalance={solUsdcBalance}
+        usdtBalance={solUsdtBalance}
+        showBalance={showBalance}
       />
     </div>
   );

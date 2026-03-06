@@ -40,16 +40,21 @@ const WalletCardContext = createContext<WalletCardContextValue | undefined>(
 export const WalletCardProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  const [displayCurrency, setDisplayCurrency] = useState<"USD" | "NGN">(() => {
-    const saved = localStorage.getItem("wallet_display_currency");
-    return (saved === "NGN" || saved === "USD" ? saved : "NGN") as
-      | "USD"
-      | "NGN";
-  });
+  const [displayCurrency, setDisplayCurrency] = useState<"USD" | "NGN">("USD");
   const [showBalance, setShowBalance] = useState(() => {
     const saved = localStorage.getItem("wallet_show_balance");
     return saved ? JSON.parse(saved) : false;
   });
+
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "wallet_show_balance" && e.newValue) {
+        setShowBalance(JSON.parse(e.newValue));
+      }
+    };
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
 
   const {
     stablesBalance,
@@ -67,7 +72,8 @@ export const WalletCardProvider: React.FC<{ children: ReactNode }> = ({
     isLoading: apyLoading,
   } = useStablesApy();
   const { data: perenaPortfolio } = usePerenaPortfolio(solanaWalletAddress);
-  const { data: perenaWeeklyYield, isLoading: weeklyYieldLoading } = usePerenaWeeklyYield(solanaWalletAddress);
+  const { data: perenaWeeklyYield, isLoading: weeklyYieldLoading } =
+    usePerenaWeeklyYield(solanaWalletAddress);
 
   useEffect(() => {
     localStorage.setItem("wallet_display_currency", displayCurrency);

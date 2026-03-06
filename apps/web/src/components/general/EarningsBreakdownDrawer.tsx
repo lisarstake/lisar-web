@@ -56,13 +56,13 @@ export const EarningsBreakdownDrawer: React.FC<EarningsBreakdownDrawerProps> = (
             <DrawerContent className="bg-[#050505] border-t border-white/5">
                 <DrawerHeader className="pb-0">
                     <DrawerTitle className="text-center text-lg font-medium text-white/90">
-                        Earnings Breakdown
+                        Earnings
                     </DrawerTitle>
                 </DrawerHeader>
 
-                <div className="flex flex-col items-center pt-2">
+                <div className="flex flex-col items-center pt-4">
                     {/* Donut Chart Section */}
-                    <div className="relative w-[220px] h-[220px]">
+                    <div className="relative w-[200px] h-[200px]">
                         <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90 origin-center overflow-visible">
                             {/* Background track */}
                             <circle cx="50" cy="50" r={r} fill="none" stroke="#1b221f" strokeWidth="14" />

@@ -1,9 +1,28 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Banknote, ArrowLeft, Star, Zap } from "lucide-react";
+import { useWallet } from "@/contexts/WalletContext";
+import { useDelegation } from "@/contexts/DelegationContext";
 
 export const SavingsIntroPage: React.FC = () => {
   const navigate = useNavigate();
+  const { stablesBalance } = useWallet();
+  const { delegatorStakeProfile } = useDelegation();
+
+  const handleExploreClick = () => {
+    const hasSavings = stablesBalance && stablesBalance > 0;
+    const hasStaking =
+      delegatorStakeProfile &&
+      parseFloat(delegatorStakeProfile.currentStake || "0") > 0;
+
+    if (hasSavings) {
+      navigate("/wallet/savings");
+    } else if (hasStaking) {
+      navigate("/wallet/staking");
+    } else {
+      navigate("/wallet/savings/create-plan");
+    }
+  };
 
   return (
     <div className="h-screen bg-[#050505] text-white flex flex-col">
@@ -26,7 +45,7 @@ export const SavingsIntroPage: React.FC = () => {
         />
 
         <h2 className="mt-6 text-xl font-semibold leading-relaxed">
-          Earn up to 49% per annum on Lisar earn
+          Earn up to 49% per annum on Lisar Earn
         </h2>
 
         <div className="mt-6 space-y-5">
@@ -47,16 +66,17 @@ export const SavingsIntroPage: React.FC = () => {
         </div>
 
         <p className="mt-10 text-sm leading-relaxed text-[#8a938e]">
-          Unlimited free withdrawals only on all plans, withdraw anytime, anyday instantly
+          Unlimited free withdrawals only on all plans, withdraw anytime, anyday
+          instantly
         </p>
       </div>
 
       <div className="px-6 pb-8 pt-3 bg-[#050505] shrink-0">
         <button
-          onClick={() => navigate("/wallet/savings/create-plan")}
+          onClick={handleExploreClick}
           className="h-14 w-full rounded-full bg-[#C7EF6B] text-base font-semibold text-black"
         >
-          Explore earn
+          Explore Earn
         </button>
       </div>
     </div>

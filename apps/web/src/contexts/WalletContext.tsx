@@ -29,6 +29,7 @@ type WalletContextValue = {
   stablesBalance: number | null;
   highyieldBalance: number | null;
   solanaUsdcBalance: number | null;
+  solanaUsdtBalance: number | null;
   ethereumUsdcBalance: number | null;
   solanaWalletAddress: string | null;
   ethereumWalletAddress: string | null;
@@ -56,6 +57,9 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
   const [stablesBalance, setStablesBalance] = useState<number | null>(null);
   const [highyieldBalance, setHighyieldBalance] = useState<number | null>(null);
   const [solanaUsdcBalance, setSolanaUsdcBalance] = useState<number | null>(
+    null,
+  );
+  const [solanaUsdtBalance, setSolanaUsdtBalance] = useState<number | null>(
     null,
   );
   const [ethereumUsdcBalance, setEthereumUsdcBalance] = useState<number | null>(
@@ -115,8 +119,9 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
             const solUsdc = usdc ? parseFloat(usdc.balance || "0") : 0;
             const solUsdt = usdt ? parseFloat(usdt.balance || "0") : 0;
             const solUsdStar = usdStar ? parseFloat(usdStar.balance || "0") : 0;
-            solStableBalance = solUsdc + solUsdt + solUsdStar;
+            solStableBalance = solUsdStar;
             setSolanaUsdcBalance(solUsdc);
+            setSolanaUsdtBalance(solUsdt);
           }
         }
 
@@ -336,6 +341,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
       stablesBalance,
       highyieldBalance,
       solanaUsdcBalance,
+      solanaUsdtBalance,
       ethereumUsdcBalance,
       solanaWalletAddress,
       ethereumWalletAddress,
@@ -357,6 +363,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
       stablesBalance,
       highyieldBalance,
       solanaUsdcBalance,
+      solanaUsdtBalance,
       ethereumUsdcBalance,
       solanaWalletAddress,
       ethereumWalletAddress,

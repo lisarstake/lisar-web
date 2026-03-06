@@ -54,7 +54,7 @@ export const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
   };
 
   const getAmountColor = (type: TransactionData["transaction_type"]) => {
-    return "text-white/75";
+    return "text-white/90";
   };
 
   const getAmountPrefix = (type: TransactionData["transaction_type"]) => {

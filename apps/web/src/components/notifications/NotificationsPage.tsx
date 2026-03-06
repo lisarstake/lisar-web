@@ -9,7 +9,7 @@ type NotificationTab = "all" | "announcements" | "alerts" | "earnings";
 const tabs: { id: NotificationTab; label: string }[] = [
   { id: "all", label: "All" },
   { id: "announcements", label: "Announcements" },
-  { id: "alerts", label: "Alerts" },
+  { id: "alerts", label: "Security Alerts" },
   { id: "earnings", label: "Earnings" },
 ];
 
@@ -92,11 +92,8 @@ export const NotificationsPage: React.FC = () => {
         >
           <ArrowLeft className="text-white" size={22} />
         </button>
+        <h1 className="text-lg font-medium text-white">Notifications</h1>
         <div className="h-12 w-12" />
-      </div>
-
-      <div className="px-6 pt-4 pb-3">
-        <h1 className="text-large font-semibold text-white">Notifications</h1>
       </div>
 
       <div className="px-6">
@@ -108,8 +105,8 @@ export const NotificationsPage: React.FC = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`shrink-0 rounded-full px-5 py-2.5 text-base transition-colors ${isActive
-                  ? "bg-[#1b221f] text-white font-semibold"
+                className={`shrink-0 rounded-full px-4 py-1.5 text-sm transition-colors ${isActive
+                  ? "bg-[#13170a] text-white font-semibold"
                   : "text-white/90"
                   }`}
               >
@@ -120,7 +117,7 @@ export const NotificationsPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-6 pb-8 pt-6 scrollbar-hide">
+      <div className="flex-1 overflow-y-auto px-6 pb-8 scrollbar-hide">
         {isLoading ? (
           <div className="space-y-3">
             {Array.from({ length: 3 }).map((_, index) => (
@@ -134,7 +131,7 @@ export const NotificationsPage: React.FC = () => {
           <>
             {todayNotifications.length > 0 && (
               <section>
-                <h2 className="text-base font-semibold text-[#9aa39f]">Today</h2>
+                <h2 className="text-base font-medium text-white/50">Today</h2>
                 <div className="mt-3 space-y-3">
                   {todayNotifications.map((notification) => (
                     <button
@@ -146,23 +143,23 @@ export const NotificationsPage: React.FC = () => {
                           });
                         }
                       }}
-                      className="w-full rounded-[26px] bg-[#13170a] px-5 py-4 text-left"
+                      className="w-full rounded-xl bg-[#13170a] px-5 py-4 text-left"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="h-14 w-14 shrink-0 rounded-full bg-[#3b463b] flex items-center justify-center">
+                        <div className="h-12 w-12 shrink-0 rounded-full bg-[#3b463b] flex items-center justify-center">
                           {getNotificationIcon(notification.type)}
                         </div>
 
                         <div className="min-w-0 flex-1">
-                          <p className="text-base font-semibold text-white truncate">
+                          <p className="text-sm font-semibold text-white truncate">
                             {notification.title}
                           </p>
-                          <p className="text-sm text-[#8f9893] mt-0.5">
+                          <p className="text-xs text-[#8f9893] mt-0.5">
                             {formatNotificationDate(notification.created_at)}
                           </p>
                         </div>
 
-                        <ChevronRight size={28} className="text-[#8f9893]" />
+                        <ChevronRight size={20} className="text-[#8f9893]" />
                       </div>
                     </button>
                   ))}
@@ -171,8 +168,8 @@ export const NotificationsPage: React.FC = () => {
             )}
 
             {olderNotifications.length > 0 && (
-              <section className="mt-6">
-                <h2 className="text-base font-semibold text-[#9aa39f]">Earlier</h2>
+              <section className="mt-4">
+                <h2 className="text-base font-medium text-white/50">Earlier</h2>
                 <div className="mt-3 space-y-3">
                   {olderNotifications.map((notification) => (
                     <button
@@ -184,23 +181,23 @@ export const NotificationsPage: React.FC = () => {
                           });
                         }
                       }}
-                      className="w-full rounded-[26px] bg-[#13170a] px-5 py-4 text-left"
+                      className="w-full rounded-xl bg-[#13170a] px-5 py-4 text-left"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="h-14 w-14 shrink-0 rounded-full bg-[#3b463b] flex items-center justify-center">
+                        <div className="h-12 w-12 shrink-0 rounded-full bg-[#3b463b] flex items-center justify-center">
                           {getNotificationIcon(notification.type)}
                         </div>
 
                         <div className="min-w-0 flex-1">
-                          <p className="text-base font-semibold text-white truncate">
+                          <p className="text-sm font-semibold text-white truncate">
                             {notification.title}
                           </p>
-                          <p className="text-sm text-[#8f9893] mt-0.5">
+                          <p className="text-xs text-[#8f9893] mt-0.5">
                             {formatNotificationDate(notification.created_at)}
                           </p>
                         </div>
 
-                        <ChevronRight size={28} className="text-[#8f9893]" />
+                        <ChevronRight size={20} className="text-[#8f9893]" />
                       </div>
                     </button>
                   ))}

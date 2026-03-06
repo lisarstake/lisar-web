@@ -51,7 +51,7 @@ const AccountCard: React.FC<AccountCardProps> = ({
         >
           <span>{accountNumber}</span>
           {copied ? (
-            <Check size={16} className="text-green-400" />
+            <Check size={16} className="text-[#C7EF6B]" />
           ) : (
             <Copy size={16} className="text-white/60" />
           )}

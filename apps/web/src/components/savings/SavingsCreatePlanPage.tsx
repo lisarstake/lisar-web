@@ -62,7 +62,7 @@ export const SavingsCreatePlanPage: React.FC = () => {
         <h2 className="mt-6 text-base font-semibold">USD Savings</h2>
         <div className="mt-3 rounded-xl bg-[#13170a] px-4">
           <PlanRow
-            title="Flexible Savings"
+            title="Flexible "
             subtitle="Earn daily, withdraw anytime"
             apy="Up to 10%"
             imageSrc="/usdc.svg"
@@ -70,10 +70,10 @@ export const SavingsCreatePlanPage: React.FC = () => {
           />
         </div>
 
-        <h2 className="mt-6 text-base font-semibold">Crypto Savings</h2>
+        <h2 className="mt-6 text-base font-semibold">Crypto Staking</h2>
         <div className="mt-3 rounded-xl bg-[#13170a] px-4">
           <PlanRow
-            title="Flexible Savings"
+            title="Flexible "
             subtitle="Earn daily, withdraw anytime"
             apy="Up to 49%"
             imageSrc="/livepeer.webp"

@@ -198,7 +198,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                     </div>
                     <div className="text-right">
                       <p
-                        className={`font-semibold text-[13px] text-white/90 ${getAmountColor}`}
+                        className={`font-semibold text-[13px] text-white/90`}
                       >
                         {getAmountPrefix(transaction.transaction_type)}
                         {parseFloat(transaction.amount).toFixed(2)}{" "}
