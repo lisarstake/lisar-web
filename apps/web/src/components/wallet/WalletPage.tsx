@@ -272,29 +272,39 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType, embedded }) 
             <ArrowLeft className="text-white" size={22} />
           </button>
 
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowBalance(!showBalance)}
+              className="h-10 w-10 rounded-full bg-[#13170a] flex items-center justify-center"
+            >
+              {showBalance ? (
+                <Eye size={18} color="#fff" />
+              ) : (
+                <EyeOff size={18} color="#fff" />
+              )}
+            </button>
+
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto px-6 pb-24 scrollbar-hide">
-          <div className="mt-8 text-center">
-            <p className="text-sm text-[#89938f]">
-              {isStakingWallet ? "LPT balance" : "NGN balance"}
+          <div className="mt-10 text-center ">
+            <p className="text-sm text-white/50">
+              {isStakingWallet ? "Total balance" : "Total balance"}
             </p>
             {activeWalletCard?.isLoading ? (
-              <div className="mt-2">{renderLoadingStars("text-xl font-bold")}</div>
+              <div className="mt-2">{renderLoadingStars("text-lg font-semibold")}</div>
             ) : (
-              <button
-                onClick={() => setShowBalance(!showBalance)}
-                className="mt-2 text-lg font-semibold"
-              >
+              <p className="mt-2 text-2xl font-bold text-white/90">
                 {showBalance
                   ? isStakingWallet
                     ? `${formatEarnings(activeWalletCard?.balance ?? 0)} LPT`
                     : `${displayFiatSymbol}${(activeWalletCard?.displayBalanceValue ?? 0).toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}`
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}`
                   : "★★★★"}
-              </button>
+              </p>
             )}
           </div>
 
@@ -330,6 +340,32 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType, embedded }) 
             </button>
           </div>
 
+          <div className="flex items-center justify-center mt-6 mb-4">
+            <div className="h-1 w-8 bg-white/20 rounded-full" />
+          </div>
+
+          {activeWalletCard && (
+            <div className="mt-4 rounded-2xl bg-[#0f0f0f] border border-white/10 p-4 flex items-center gap-3">
+              <div className="w-16 h-16 rounded-2xl bg-linear-to-br from-[#151515] to-[#0c0c0c] flex items-center justify-center">
+                <img src="/crypto.png" alt="Weekly earnings" className="w-12 h-12 object-contain" />
+              </div>
+              <div>
+                <p className="text-white text-sm font-medium">You earned this week</p>
+                <p className="text-xl font-bold text-white">
+                  {displayCurrency === "NGN"
+                    ? `${displayFiatSymbol}${(activeWalletCard.projectedInterestNgn ?? 0).toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}`
+                    : `${displayFiatSymbol}${(activeWalletCard.projectedInterestUsd ?? 0).toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}`}
+                </p>
+              </div>
+            </div>
+          )}
+
           <div className="mt-8 ">
             <h2 className="text-sm text-white/80 mb-3">Recent transactions</h2>
             <RecentTransactionsCard
@@ -342,23 +378,6 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType, embedded }) 
         </div>
 
         <BottomNavigation currentPath="/wallet" />
-
-        <HelpDrawer
-          isOpen={showHelpDrawer}
-          onClose={() => setShowHelpDrawer(false)}
-          title={isStakingWallet ? "About Staking" : "About Savings"}
-          content={
-            isStakingWallet
-              ? [
-                "Staking helps you grow your LPT with variable yield.",
-                "Returns depend on market and network conditions.",
-              ]
-              : [
-                "Stables offers lower yields with instant withdrawal capabilities.",
-                "Perfect for emergency funds and short-term savings with stable returns.",
-              ]
-          }
-        />
 
         <EarningsBreakdownDrawer
           isOpen={selectedEarningsCard !== null}
@@ -383,8 +402,18 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType, embedded }) 
           >
             <ArrowLeft className="text-white" size={22} />
           </button>
-          <h1 className="text-lg font-medium text-white">Wallet</h1>
+          <h1 className="text-xl font-bold text-white">Wallet</h1>
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowBalance(!showBalance)}
+              className="h-10 w-10 rounded-full bg-[#13170a] flex items-center justify-center"
+            >
+              {showBalance ? (
+                <Eye size={18} color="#fff" />
+              ) : (
+                <EyeOff size={18} color="#fff" />
+              )}
+            </button>
             <button
               onClick={handleHelpClick}
               className="w-8 h-8 bg-[#2a2a2a] rounded-full flex items-center justify-center"
@@ -482,7 +511,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType, embedded }) 
 
                         <div className="mb-2">
                           {card.isLoading ? (
-                            <div className="mb-1">{renderLoadingStars("text-lg font-bold")}</div>
+                            <div className="mb-1">{renderLoadingStars("text-lg font-semibold")}</div>
                           ) : (
                             <div className="flex items-baseline mb-1">
                               {showBalance && displayCurrency === "NGN" && (

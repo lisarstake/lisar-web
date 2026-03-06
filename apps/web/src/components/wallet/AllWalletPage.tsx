@@ -271,27 +271,19 @@ export const AllWalletPage: React.FC = () => {
                             </span>
                           </div>
                         ) : (
-                          <div className="flex items-baseline justify-center gap-2 mb-1">
-                            <span
-                              className="text-xl font-bold text-white/90 cursor-pointer"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setDisplayCurrency((c) =>
-                                  c === "USD" ? "NGN" : "USD",
-                                );
-                              }}
-                            >
-                              {showBalance
-                                ? `${card.currencySymbol}${card.balance.toLocaleString(
-                                  undefined,
-                                  {
-                                    minimumFractionDigits: 2,
-                                    maximumFractionDigits: 2,
-                                  },
-                                )}`
-                                : "★★★★"}
-                            </span>
-                          </div>
+                        <div className="flex items-baseline justify-center gap-2 mb-1">
+                          <span className="text-2xl font-bold text-white/90">
+                            {showBalance
+                              ? `${card.currencySymbol}${card.balance.toLocaleString(
+                                undefined,
+                                {
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2,
+                                },
+                              )}`
+                              : "★★★★"}
+                          </span>
+                        </div>
                         )}
                       </div>
                     </div>

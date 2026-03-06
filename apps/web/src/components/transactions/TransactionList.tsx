@@ -39,7 +39,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
       return "/livepeer.webp";
     }
 
-    return "/ng_flag.png";
+    return "/usdc.svg";
   };
 
   const getAmountColor = (type: TransactionType) => {
@@ -79,12 +79,10 @@ export const TransactionList: React.FC<TransactionListProps> = ({
       const date = new Date(transaction.created_at).toLocaleDateString(
         "en-US",
         {
-          weekday: "long",
-          year: "numeric",
-          month: "long",
-          day: "numeric",
+          day: "2-digit",
+          month: "short",
         }
-      );
+      ).toUpperCase();
 
       if (!groups[date]) {
         groups[date] = [];

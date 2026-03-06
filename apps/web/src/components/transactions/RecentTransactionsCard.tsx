@@ -31,7 +31,7 @@ export const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
       return "/livepeer.webp";
     }
 
-    return "/ng_flag.png";
+    return "/usdc.svg";
   };
 
   const getTransactionTitle = (type: TransactionData["transaction_type"]) => {
