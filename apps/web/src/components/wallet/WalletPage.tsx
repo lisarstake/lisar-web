@@ -274,7 +274,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
 
     const validatorId = userDelegation?.delegate?.id;
 
-    navigate(`/unstake-amount/${validatorId}`, {
+    navigate(`/unstake/${validatorId}`, {
       state: { availableBalance: stakedBalance },
     });
   };
@@ -337,20 +337,21 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
             </div>
             <div className="flex-1">
               <h3 className="text-white text-[14px] font-medium">
-                You've earned{" "}
-                {displayCurrency === "NGN"
-                  ? `${displayFiatSymbol}${(
-                    activeWalletCard.projectedInterestNgn ?? 0
-                  ).toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}`
-                  : `${displayFiatSymbol}${(
-                    activeWalletCard.projectedInterestUsd ?? 0
-                  ).toLocaleString(undefined, {
-                    minimumFractionDigits: 3,
-                    maximumFractionDigits: 3,
-                  })}`}{" "}
+                You've earned{" "} <span className="text-green-400">
+                  {displayCurrency === "NGN"
+                    ? `${displayFiatSymbol}${(
+                      activeWalletCard.projectedInterestNgn ?? 0
+                    ).toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}`
+                    : `${displayFiatSymbol}${(
+                      activeWalletCard.projectedInterestUsd ?? 0
+                    ).toLocaleString(undefined, {
+                      minimumFractionDigits: 3,
+                      maximumFractionDigits: 3,
+                    })}`}{" "}
+                </span>
                 this week!
               </h3>
               <p className="text-white/60 text-[13px]">
@@ -371,32 +372,27 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
               <img
                 src="/livepeer.webp"
                 alt="Stake unlocked"
-                className="w-14 h-14 object-cover rounded-lg"
+                className="w-14 h-14 object-cover rounded-full"
               />
             </div>
             <div className="flex-1">
               <h3 className="text-white text-[14px] font-medium">
-                Stake unlocked
+                stake unlocked
               </h3>
               <p className="text-white/60 text-[13px]">
-                {completedUnbondingData.totalAmount.toFixed(3)} LPT ready to
+                You have {completedUnbondingData.totalAmount.toFixed(2)} LPT ready to
                 withdraw
               </p>
-            </div>
-          </div>
-          <div className="mt-3 text-right">
-            <button
-              onClick={() => {
+              <button onClick={() => {
                 if (completedUnbondingData.validatorId) {
                   navigate(
                     `/validator-details/${completedUnbondingData.validatorId}`,
                   );
                 }
-              }}
-              className="px-4 py-2 bg-[#C7EF6B] text-black rounded-full text-xs font-semibold hover:bg-[#B8E55A] transition-colors"
-            >
-              Withdraw now
-            </button>
+              }} className="mt-3 px-4 py-2 bg-[#C7EF6B] text-black rounded-full text-xs font-semibold hover:bg-[#B8E55A] transition-colors relative z-10">
+                withdraw
+              </button>
+            </div>
           </div>
         </div>
       );
@@ -410,7 +406,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
               <img
                 src="/livepeer.webp"
                 alt="Unbonding in progress"
-                className="w-14 h-14 object-cover rounded-lg"
+                className="w-14 h-14 object-cover rounded-full"
               />
             </div>
             <div className="flex-1">
@@ -419,22 +415,10 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
               </h3>
               <p className="text-white/60 text-[13px]">
                 {pendingUnbondingData.timeRemaining
-                  ? `Estimated completion: ${pendingUnbondingData.timeRemaining}`
-                  : "You have a withdrawal in process"}
+                  ? ` You have a withdrawal in process, ${pendingUnbondingData.timeRemaining}`
+                  : ""}
               </p>
             </div>
-          </div>
-          <div className="mt-3 text-right">
-            <button
-              onClick={() =>
-                navigate("/portfolio/summary", {
-                  state: { walletType: "staking" },
-                })
-              }
-              className="px-4 py-2 bg-[#C7EF6B] text-black rounded-full text-xs font-semibold hover:bg-[#B8E55A] transition-colors"
-            >
-              View details
-            </button>
           </div>
         </div>
       );
@@ -445,7 +429,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
         <div className="flex items-center gap-4">
           <div className="shrink-0">
             <img
-              src="/fund.png"
+              src="/crypto.png"
               alt="Start earning"
               className="w-14 h-14 object-cover rounded-lg"
             />
@@ -453,17 +437,15 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
           <div className="flex-1">
             <h3 className="text-white text-[14px] font-medium">Start earning</h3>
             <p className="text-white/60 text-[13px]">
-              Top up your balance to start earning.
+              Top up your balance to start earning rewards daily!
             </p>
+            <button
+              onClick={handleDepositClick}
+              className="px-4 py-2 bg-[#C7EF6B] text-black rounded-full text-xs font-semibold hover:bg-[#B8E55A] transition-colors"
+            >
+              Top up
+            </button>
           </div>
-        </div>
-        <div className="mt-3 text-right">
-          <button
-            onClick={handleDepositClick}
-            className="px-4 py-2 bg-[#C7EF6B] text-black rounded-full text-xs font-semibold hover:bg-[#B8E55A] transition-colors"
-          >
-            Top up now
-          </button>
         </div>
       </div>
     );
@@ -611,10 +593,10 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
           if (!open) setTopUpDrawerView("options");
         }}
       >
-        <DrawerContent className="bg-[#050505] border-t border-[#1b1b1b]">
+        <DrawerContent className="bg-[#050505] border-[#2a2a2a]">
           <DrawerHeader>
             <DrawerTitle className="text-base font-medium text-white text-left">
-              {topUpDrawerView === "options" ? "Top Up From" : "Wallet Empty"}
+              {topUpDrawerView === "options" ? "Top Up From" : ""}
             </DrawerTitle>
           </DrawerHeader>
 
@@ -649,9 +631,17 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
             </div>
           ) : (
             <div className="space-y-4 py-2">
-              <p className="text-sm text-white/70">
-                Your {emptyFundingAsset} wallet is empty at the moment. Deposit to
-                wallet to be able to top up.
+              <div className="flex justify-center mb-4">
+                <div className="w-24 h-24 bg-[#C7EF6B]/20 rounded-full my-3 flex items-center justify-center relative overflow-hidden">
+                  <img
+                    src="/ramp.png"
+                    alt="Error"
+                    className="w-18 h-18 object-cover"
+                  />
+                </div>
+              </div>
+              <p className="text-sm text-white/80 px-4 text-center">
+                Sorry, your {emptyFundingAsset} balance is empty at the moment! Please top up your wallet to proceed.
               </p>
               <button
                 onClick={() => {
@@ -661,7 +651,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
                 }}
                 className="w-full h-12 rounded-full bg-[#C7EF6B] text-black text-base font-semibold"
               >
-                Deposit to wallet
+                Deposit
               </button>
             </div>
           )}
@@ -672,16 +662,25 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
         open={showWithdrawEmptyDrawer}
         onOpenChange={setShowWithdrawEmptyDrawer}
       >
-        <DrawerContent className="bg-[#050505] border-t border-[#1b1b1b]">
+        <DrawerContent className="bg-[#050505] border border-[#2a2a2a]">
           <DrawerHeader>
             <DrawerTitle className="text-base font-medium text-white text-left">
-              No active balance
+
             </DrawerTitle>
           </DrawerHeader>
           <div className="space-y-4 py-2">
-            <p className="text-sm text-white/70">
-              Your balance is empty at the moment. Top up your balance to start
-              earning.
+            <div className="flex justify-center mb-4">
+              <div className="w-24 h-24 bg-[#C7EF6B]/20 rounded-full my-3 flex items-center justify-center relative overflow-hidden">
+                <img
+                  src="/ramp.png"
+                  alt="Error"
+                  className="w-18 h-18 object-cover"
+                />
+              </div>
+            </div>
+            <p className="text-sm text-white/80 px-4 text-center">
+              Sorry, your wallet balance is empty at the moment! Top up your balance to start
+              earning rewards.
             </p>
             <button
               onClick={() => {
@@ -690,7 +689,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
               }}
               className="w-full h-12 rounded-full bg-[#C7EF6B] text-black text-base font-semibold"
             >
-              Top up balance
+              Top up
             </button>
           </div>
         </DrawerContent>

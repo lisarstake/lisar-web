@@ -12,7 +12,7 @@ import {
   DrawerTitle,
   DrawerFooter,
 } from "@/components/ui/drawer";
-import { ErrorDrawer } from "@/components/ui/ErrorDrawer";
+import { ErrorDrawer } from "@/components/general/ErrorDrawer";
 import { LoadingSpinner } from "@/components/general/LoadingSpinner";
 import { totpService } from "@/services/totp";
 
@@ -60,7 +60,7 @@ export const TOTPSetupDrawer: React.FC<TOTPSetupDrawerProps> = ({
       if (response.success) {
         setQrCode(response.qr);
         setOtpauthUrl(response.otpauth_url);
-        
+
         // Extract and decode the secret from otpauth URL
         const secretMatch = response.otpauth_url.match(/secret=([^&]+)/);
         if (secretMatch && secretMatch[1]) {
@@ -129,7 +129,7 @@ export const TOTPSetupDrawer: React.FC<TOTPSetupDrawerProps> = ({
           <div className=" pb-2 space-y-6">
             {isLoading ? (
               <div className="flex justify-center items-center py-12">
-               <LoadingSpinner message="Setting up authenticator..." fullScreen={false} />
+                <LoadingSpinner message="Setting up authenticator..." fullScreen={false} />
               </div>
             ) : (
               <>

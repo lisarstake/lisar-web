@@ -6,7 +6,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Copy, Check } from "lucide-react";
-import { ErrorDrawer } from "@/components/ui/ErrorDrawer";
+import { ErrorDrawer } from "@/components/general/ErrorDrawer";
 import { LoadingSpinner } from "@/components/general/LoadingSpinner";
 import { totpService } from "@/services/totp";
 

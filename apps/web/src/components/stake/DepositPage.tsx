@@ -11,8 +11,8 @@ import {
 import { OnrampWebSDK } from "@onramp.money/onramp-web-sdk";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
-import { ErrorDrawer } from "@/components/ui/ErrorDrawer";
-import { SuccessDrawer } from "@/components/ui/SuccessDrawer";
+import { ErrorDrawer } from "@/components/general/ErrorDrawer";
+import { SuccessDrawer } from "@/components/general/SuccessDrawer";
 import {
   RampDrawer,
   RampTransactionDetails,

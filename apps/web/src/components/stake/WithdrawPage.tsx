@@ -9,8 +9,8 @@ import {
   CreditCard,
 } from "lucide-react";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
-import { ErrorDrawer } from "@/components/ui/ErrorDrawer";
-import { SuccessDrawer } from "@/components/ui/SuccessDrawer";
+import { ErrorDrawer } from "@/components/general/ErrorDrawer";
+import { SuccessDrawer } from "@/components/general/SuccessDrawer";
 import {
   RampDrawer,
   RampTransactionDetails,

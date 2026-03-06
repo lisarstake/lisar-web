@@ -8,8 +8,8 @@ import {
 } from "lucide-react";
 import { ActionDrawer } from "@/components/general/ActionDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
-import { ErrorDrawer } from "@/components/ui/ErrorDrawer";
-import { SuccessDrawer } from "@/components/ui/SuccessDrawer";
+import { ErrorDrawer } from "@/components/general/ErrorDrawer";
+import { SuccessDrawer } from "@/components/general/SuccessDrawer";
 import { OTPVerificationDrawer } from "@/components/auth/OTPVerificationDrawer";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTransactions } from "@/contexts/TransactionContext";

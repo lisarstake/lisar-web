@@ -9,8 +9,8 @@ import { priceService } from "@/lib/priceService";
 import { formatNumber, parseFormattedNumber } from "@/lib/formatters";
 import { delegationService } from "@/services";
 import { useWallet } from "@/contexts/WalletContext";
-import { ErrorDrawer } from "@/components/ui/ErrorDrawer";
-import { SuccessDrawer } from "@/components/ui/SuccessDrawer";
+import { ErrorDrawer } from "@/components/general/ErrorDrawer";
+import { SuccessDrawer } from "@/components/general/SuccessDrawer";
 
 export const UnstakePage: React.FC = () => {
   const navigate = useNavigate();
@@ -27,11 +27,6 @@ export const UnstakePage: React.FC = () => {
   const { userDelegation } = useDelegation();
   const { state } = useAuth();
   const { refetch: refetchWallet } = useWallet();
-
-  // Find the orchestrator by address (validatorId is the address)
-  const currentValidator = orchestrators.find(
-    (orch) => orch.address === validatorId
-  );
 
   const delegatedStake =
     userDelegation && userDelegation.delegate.id === validatorId
@@ -75,7 +70,7 @@ export const UnstakePage: React.FC = () => {
     const numericAmount = parseFloat(lptAmount.replace(/,/g, "")) || 0;
 
     if (numericAmount <= 0 || numericAmount > currentStake) {
-      setErrorMessage("Enter a valid amount to withdraw.");
+      setErrorMessage("Please enter a valid amount to withdraw.");
       setShowErrorDrawer(true);
       return;
     }
@@ -98,11 +93,11 @@ export const UnstakePage: React.FC = () => {
         await refetchWallet();
         setShowSuccessDrawer(true);
       } else {
-        setErrorMessage("Failed to withdraw. Please try again.");
+        setErrorMessage("Sorry an error occurred and withdrawal didn't complete, please try again.");
         setShowErrorDrawer(true);
       }
     } catch (error) {
-      setErrorMessage("Failed to withdraw. Please try again.");
+      setErrorMessage("Sorry an error occurred and withdrawal didn't complete, please try again.");
       setShowErrorDrawer(true);
     } finally {
       setIsProcessing(false);
@@ -199,7 +194,7 @@ export const UnstakePage: React.FC = () => {
         )}
       </div>
 
-      {/* Proceed Button - Fixed at bottom */}
+      {/* Proceed Button */}
       <div className="px-6 py-4 bg-[#050505] pb-24">
         <button
           onClick={handleProceed}
@@ -227,7 +222,7 @@ export const UnstakePage: React.FC = () => {
       <ErrorDrawer
         isOpen={showErrorDrawer}
         onClose={() => setShowErrorDrawer(false)}
-        title="Something went wrong"
+        title="Sorry, an error occurred"
         message={errorMessage}
       />
 
@@ -237,8 +232,8 @@ export const UnstakePage: React.FC = () => {
           setShowSuccessDrawer(false);
           navigate("/wallet/staking");
         }}
-        title="Withdrawal Successful"
-        message="Your unstake request has been submitted successfully."
+        title="Your money is on the way!"
+        message="Your withdrawal request processed successfully and your money is on it's way."
       />
     </div>
   );

@@ -11,7 +11,7 @@ import {
   DrawerFooter,
   DrawerHeader,
   DrawerTitle,
-} from './drawer';
+} from '../ui/drawer';
 import { AlertCircle } from 'lucide-react';
 
 interface ErrorDrawerProps {
@@ -38,7 +38,7 @@ export const ErrorDrawer: React.FC<ErrorDrawerProps> = ({
       <DrawerContent className="bg-[#050505] border-[#2a2a2a]">
         <DrawerHeader className="text-center">
           <div className="flex justify-center mb-0">
-          <div className="w-20 h-20 bg-[#C7EF6B]/20 rounded-full my-3 flex items-center justify-center relative overflow-hidden">
+            <div className="w-20 h-20 bg-[#C7EF6B]/20 rounded-full my-3 flex items-center justify-center relative overflow-hidden">
               <img
                 src="/error.png"
                 alt="Error"

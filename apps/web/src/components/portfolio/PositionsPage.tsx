@@ -19,7 +19,7 @@ import { OTPVerificationDrawer } from "@/components/auth/OTPVerificationDrawer";
 import { totpService } from "@/services/totp";
 import { Button } from "../ui/button";
 import { mapleService, perenaService, walletService } from "@/services";
-import { ErrorDrawer } from "@/components/ui/ErrorDrawer";
+import { ErrorDrawer } from "@/components/general/ErrorDrawer";
 import { SuccessDrawer } from "@/components/ui/SuccessDrawer";
 import { LoaderCircle } from "lucide-react";
 

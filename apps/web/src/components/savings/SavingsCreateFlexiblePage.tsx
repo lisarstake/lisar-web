@@ -9,8 +9,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useDelegation } from "@/contexts/DelegationContext";
 import { useTransactions } from "@/contexts/TransactionContext";
 import { delegationService, perenaService } from "@/services";
-import { ErrorDrawer } from "@/components/ui/ErrorDrawer";
-import { SuccessDrawer } from "@/components/ui/SuccessDrawer";
+import { ErrorDrawer } from "@/components/general/ErrorDrawer";
+import { SuccessDrawer } from "@/components/general/SuccessDrawer";
 import {
   Select,
   SelectTrigger,

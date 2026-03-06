@@ -12,7 +12,7 @@ import {
   DrawerTitle,
   DrawerFooter,
 } from "@/components/ui/drawer";
-import { ErrorDrawer } from "@/components/ui/ErrorDrawer";
+import { ErrorDrawer } from "@/components/general/ErrorDrawer";
 import { SuccessDrawer } from "@/components/ui/SuccessDrawer";
 import { totpService } from "@/services/totp";
 import { TOTPSetupDrawer } from "./TOTPSetupDrawer";
@@ -120,15 +120,15 @@ export const OTPVerificationDrawer: React.FC<OTPVerificationDrawerProps> = ({
     setError(false);
 
     try {
-     
+
       const response = onVerify
         ? await onVerify(verificationCode)
         : await totpService.verify({ token: verificationCode });
 
       if (response.success) {
         setIsVerifying(false);
-        setHasVerified(true); 
-        setCode(""); 
+        setHasVerified(true);
+        setCode("");
         if (onSuccess) {
           onSuccess();
         }
@@ -196,11 +196,10 @@ export const OTPVerificationDrawer: React.FC<OTPVerificationDrawerProps> = ({
                   onChange={handleInputChange}
                   placeholder=""
                   disabled={isVerifying}
-                  className={`w-full px-4 py-3 pr-20 rounded-lg text-white text-lg bg-[#1a1a1a] border transition-colors ${
-                    error
+                  className={`w-full px-4 py-3 pr-20 rounded-lg text-white text-lg bg-[#1a1a1a] border transition-colors ${error
                       ? "border-red-500 focus:border-red-500"
                       : "border-[#2a2a2a] focus:border-[#C7EF6B]"
-                  } focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed`}
+                    } focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed`}
                 />
                 <button
                   onClick={handlePaste}
@@ -233,11 +232,10 @@ export const OTPVerificationDrawer: React.FC<OTPVerificationDrawerProps> = ({
             <button
               onClick={() => handleSubmit()}
               disabled={code.length !== 6 || isVerifying}
-              className={`w-full py-3 rounded-xl font-semibold text-lg transition-colors ${
-                code.length === 6 && !isVerifying
+              className={`w-full py-3 rounded-xl font-semibold text-lg transition-colors ${code.length === 6 && !isVerifying
                   ? "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
                   : "bg-[#636363] text-white cursor-not-allowed"
-              }`}
+                }`}
             >
               {isVerifying ? (
                 <span className="flex items-center justify-center gap-2">
