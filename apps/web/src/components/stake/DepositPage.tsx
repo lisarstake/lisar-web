@@ -197,12 +197,7 @@ export const DepositPage: React.FC = () => {
 
   const handleProceed = async () => {
     if (selectedPaymentMethod === "onchain") {
-      navigate("/deposit-address", {
-        state: {
-          walletType,
-          provider: selectedProvider,
-        },
-      });
+      navigate("/wallet/deposit/crypto");
     } else if (selectedPaymentMethod === "fiat") {
       setShowFiatDrawer(true);
     }

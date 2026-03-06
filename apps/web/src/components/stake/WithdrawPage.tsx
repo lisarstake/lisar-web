@@ -5,11 +5,9 @@ import {
   Wallet2,
   ArrowLeft,
   ChevronRight,
-  CircleQuestionMark,
   ScanQrCode,
   CreditCard,
 } from "lucide-react";
-import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { ErrorDrawer } from "@/components/ui/ErrorDrawer";
 import { SuccessDrawer } from "@/components/ui/SuccessDrawer";
@@ -76,7 +74,6 @@ export const WithdrawPage: React.FC = () => {
     }
   }, [locationState]);
 
-  const [showHelpDrawer, setShowHelpDrawer] = useState(false);
   const [showFiatDrawer, setShowFiatDrawer] = useState(false);
   const [showBankLinkedDrawer, setShowBankLinkedDrawer] = useState(false);
   const [isWithdrawing, setIsWithdrawing] = useState(false);
@@ -171,10 +168,6 @@ export const WithdrawPage: React.FC = () => {
 
   const handleFiatConfirm = () => {
     setShowFiatDrawer(false);
-  };
-
-  const handleHelpClick = () => {
-    setShowHelpDrawer(true);
   };
 
   const handlePasteAddress = async () => {
@@ -357,12 +350,7 @@ export const WithdrawPage: React.FC = () => {
 
         <h1 className="absolute left-1/2 -translate-x-1/2 text-lg font-medium text-white">{pageTitle}</h1>
 
-        {/* <button
-          onClick={handleHelpClick}
-          className="w-8 h-8 bg-[#2a2a2a] rounded-full flex items-center justify-center"
-        >
-          <CircleQuestionMark color="#86B3F7" size={16} />
-        </button> */}
+        <div className="w-8 h-8" />
       </div>
 
       {/* Scrollable Content */}
@@ -611,18 +599,6 @@ export const WithdrawPage: React.FC = () => {
           </button>
         )}
       </div>
-
-      {/* Help Drawer */}
-      <HelpDrawer
-        isOpen={showHelpDrawer}
-        onClose={() => setShowHelpDrawer(false)}
-        title="Withdraw Guide"
-        content={[
-          "Withdraw from your wallet balance to other exchanges or local currency.",
-          "Choose 'Withdraw NGN' to transfer to your bank via our fiat partner.",
-          "Choose 'Transfer to wallet' to send tokens onchain to another wallet.",
-        ]}
-      />
 
       {/* Error Drawer */}
       <ErrorDrawer

@@ -29,27 +29,13 @@ const ValidatorPage = lazyRetry(() => import("@/screens/validator-page"));
 const ValidatorDetailsPage = lazyRetry(
   () => import("@/screens/validator-details-page"),
 );
-const StakePage = lazyRetry(() => import("@/screens/stake-page"));
-const SavePage = lazyRetry(() => import("@/screens/save-page"));
 const RedeemPage = lazyRetry(() => import("@/screens/redeem-page"));
 const TiersPage = lazyRetry(() => import("@/screens/tiers-page"));
 const StableTiersPage = lazyRetry(() => import("@/screens/stable-tiers-page"));
 const WithdrawPage = lazyRetry(() => import("@/screens/withdraw-page"));
 const DepositPage = lazyRetry(() => import("@/screens/deposit-page"));
-const OnchainDepositPage = lazyRetry(
-  () => import("@/screens/onchain-deposit-page"),
-);
-const WithdrawNetworkPage = lazyRetry(
-  () => import("@/screens/withdraw-network-page"),
-);
-const ConfirmWithdrawalPage = lazyRetry(
-  () => import("@/screens/confirm-withdrawal-page"),
-);
-const UnstakeAmountPage = lazyRetry(
-  () => import("@/screens/unstake-amount-page"),
-);
-const ConfirmUnstakePage = lazyRetry(
-  () => import("@/screens/confirm-unstake-page"),
+const UnstakePage = lazyRetry(
+  () => import("@/screens/unstake-page"),
 );
 const HistoryPage = lazyRetry(() => import("@/screens/history-page"));
 const TransactionDetailPage = lazyRetry(
@@ -218,22 +204,6 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "stake/:validatorId",
-        element: (
-          <ProtectedRoute>
-            {withSuspenseAndErrorBoundary(<StakePage />)}
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "save",
-        element: (
-          <ProtectedRoute>
-            {withSuspenseAndErrorBoundary(<SavePage />)}
-          </ProtectedRoute>
-        ),
-      },
-      {
         path: "redeem",
         element: (
           <ProtectedRoute>
@@ -282,42 +252,10 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "deposit-address",
+        path: "unstake/:validatorId",
         element: (
           <ProtectedRoute>
-            {withSuspenseAndErrorBoundary(<OnchainDepositPage />)}
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "withdraw-network/:validatorId",
-        element: (
-          <ProtectedRoute>
-            {withSuspenseAndErrorBoundary(<WithdrawNetworkPage />)}
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "confirm-withdrawal/:validatorId",
-        element: (
-          <ProtectedRoute>
-            {withSuspenseAndErrorBoundary(<ConfirmWithdrawalPage />)}
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "unstake-amount/:validatorId",
-        element: (
-          <ProtectedRoute>
-            {withSuspenseAndErrorBoundary(<UnstakeAmountPage />)}
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "confirm-unstake/:validatorId",
-        element: (
-          <ProtectedRoute>
-            {withSuspenseAndErrorBoundary(<ConfirmUnstakePage />)}
+            {withSuspenseAndErrorBoundary(<UnstakePage />)}
           </ProtectedRoute>
         ),
       },

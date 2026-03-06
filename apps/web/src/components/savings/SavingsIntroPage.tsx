@@ -43,7 +43,7 @@ export const SavingsIntroPage: React.FC = () => {
         <img
           src="/crypto.png"
           alt="Savings"
-          className="mx-auto h-[220px] w-[220px] object-contain"
+          className="mx-auto h-[200px] w-[200px] object-contain"
         />
 
         <h2 className="mt-6 text-xl font-semibold leading-relaxed">
@@ -68,8 +68,7 @@ export const SavingsIntroPage: React.FC = () => {
         </div>
 
         <p className="mt-5 text-sm leading-relaxed text-[#8a938e]">
-          Unlimited free withdrawals only on all plans, withdraw anytime, anyday
-          instantly
+          Unlimited free withdrawals on all plans, withdraw instantly anytime.
         </p>
       </div>
 

@@ -160,12 +160,9 @@ export const ValidatorDetailsPage: React.FC = () => {
     if (hasStakeWithDifferentValidator) {
       setShowMoveStakeDrawer(true);
     } else {
-      navigate(`/stake/${currentValidator?.address}`, {
-        state: {
-          tierNumber: locationState?.tierNumber,
-          tierTitle: locationState?.tierTitle,
-        },
-      });
+      navigate(
+        `/wallet/savings/create-flexible?mode=staking&source=lpt&orchestrator=${currentValidator?.address || ""}`,
+      );
     }
   };
 
@@ -474,7 +471,7 @@ export const ValidatorDetailsPage: React.FC = () => {
             label: "Proceed to withdraw",
             onClick: () => {
               setShowWithdrawConfirmDrawer(false);
-              navigate(`/withdraw-network/${currentValidator?.address}`);
+              navigate(`/unstake-amount/${currentValidator?.address}`);
             },
           },
           {

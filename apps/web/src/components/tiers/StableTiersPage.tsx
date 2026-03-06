@@ -63,14 +63,7 @@ export const StableTiersPage: React.FC = () => {
           : (solanaUsdcBalance ?? 0);
 
       if (balance > 0) {
-        navigate("/save", {
-          state: {
-            walletType: "savings",
-            tierNumber,
-            tierTitle,
-            provider,
-          },
-        });
+        navigate("/wallet/savings/create-flexible?mode=savings&source=usdc");
       } else {
         // Navigate to deposit if no balance
         navigate("/deposit", {

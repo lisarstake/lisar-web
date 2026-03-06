@@ -25,7 +25,7 @@ export const EmailConfirmationDrawer: React.FC<
 > = ({ isOpen, onClose, email }) => {
   return (
     <Drawer open={isOpen} onOpenChange={onClose}>
-      <DrawerContent className="bg-[#121212] border-[#2a2a2a]">
+      <DrawerContent className="bg-[#050505] border-[#2a2a2a]">
         <DrawerHeader className="text-center">
           <div className="flex justify-center mb-4">
             <div className="w-16 h-16 bg-[#C7EF6B]/10 rounded-full flex items-center justify-center relative">
@@ -44,7 +44,7 @@ export const EmailConfirmationDrawer: React.FC<
         <DrawerFooter className="space-y-3">
           <button
             onClick={onClose}
-            className="w-full py-3 px-6 rounded-lg font-semibold text-lg bg-[#C7EF6B] text-black hover:bg-[#B8E55A] transition-colors"
+            className="w-full h-12 rounded-full bg-[#C7EF6B] text-black text-base font-semibold"
           >
             Got it
           </button>

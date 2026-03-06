@@ -8,13 +8,15 @@ interface RecentTransactionsCardProps {
   isLoading: boolean;
   onTransactionClick: (transaction: TransactionData) => void;
   skeletonCount?: number;
+  walletType?: string;
 }
 
 export const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
   transactions,
   isLoading,
-  onTransactionClick, 
+  onTransactionClick,
   skeletonCount = 3,
+  walletType,
 }) => {
   const getTransactionImage = (transaction: TransactionData) => {
     const symbol = transaction.token_symbol?.toUpperCase();
@@ -34,20 +36,23 @@ export const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
     return "/usdc.svg";
   };
 
-  const getTransactionTitle = (type: TransactionData["transaction_type"]) => {
+  const getTransactionTitle = (
+    type: TransactionData["transaction_type"],
+    walletType?: string,
+  ) => {
     switch (type) {
       case "deposit":
         return "Deposit";
       case "withdrawal":
-        return "Withdraw";
+        return "Send";
       case "delegation":
-        return "Vest";
+        return "Top up";
       case "undelegation":
-        return "Redeem";
+        return "Withdraw";
       case "mint":
-        return "Vest";
+        return walletType === "savings" ? "Top up" : "Vest";
       case "burn":
-        return "Redeem";
+        return walletType === "savings" ? "Withdraw" : "Redeem";
       default:
         return "Transaction";
     }
@@ -58,7 +63,9 @@ export const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
   };
 
   const getAmountPrefix = (type: TransactionData["transaction_type"]) => {
-    return type === "deposit" || type === "delegation" || type === "mint" ? "+" : "-";
+    return type === "deposit" || type === "delegation" || type === "mint"
+      ? "+"
+      : "-";
   };
 
   const formatDate = (dateString: string) => {
@@ -121,9 +128,7 @@ export const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
             className="flex items-center justify-between p-4 hover:bg-[#2a2a2a]/30 transition-colors cursor-pointer"
           >
             <div className="flex items-center space-x-3 flex-1 min-w-0">
-              <div
-                className="w-10 h-10 flex items-center justify-center shrink-0"
-              >
+              <div className="w-10 h-10 flex items-center justify-center shrink-0">
                 <img
                   src={getTransactionImage(transaction)}
                   alt={transaction.token_symbol || "transaction asset"}
@@ -132,7 +137,10 @@ export const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-white text-sm font-medium truncate">
-                  {getTransactionTitle(transaction.transaction_type)}
+                  {getTransactionTitle(
+                    transaction.transaction_type,
+                    walletType,
+                  )}
                 </p>
                 <p className="text-white/40 text-xs">
                   {formatDate(transaction.created_at)}
@@ -142,7 +150,7 @@ export const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
             <div className="text-right ml-3 shrink-0">
               <p
                 className={`font-semibold text-[13px] ${getAmountColor(
-                  transaction.transaction_type
+                  transaction.transaction_type,
                 )}`}
               >
                 {getAmountPrefix(transaction.transaction_type)}

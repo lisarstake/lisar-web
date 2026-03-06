@@ -35,27 +35,30 @@ export const SuccessDrawer: React.FC<SuccessDrawerProps> = ({
 }) => {
   return (
     <Drawer open={isOpen} onOpenChange={onClose}>
-      <DrawerContent className="bg-[#121212] border-[#2a2a2a]">
+      <DrawerContent className="bg-[#050505] border-[#2a2a2a]">
         <DrawerHeader className="text-center">
-          <div className="flex justify-center mb-4">
-            <div className="w-12 h-12 bg-[#C7EF6B]/10 rounded-full flex items-center justify-center">
-              <CheckCircle className="w-6 h-6 text-[#C7EF6B]" />
+          <div className="flex justify-center mb-0">
+            <div className="w-20 h-20 bg-[#C7EF6B]/20 rounded-full my-3 flex items-center justify-center relative overflow-hidden">
+              <img
+                src="/fund.png"
+                alt="Error"
+                className="w-15 h-15 object-cover"
+              />
             </div>
           </div>
-          <DrawerTitle className="text-lg font-bold text-white/90">
+          <DrawerTitle className="text-base font-medium text-white/90">
             {title}
           </DrawerTitle>
-          <DrawerDescription className="text-gray-400 text-sm">
+          <DrawerDescription className="text-gray-400 text-sm px-6">
             {message}
           </DrawerDescription>
-         
-        </DrawerHeader> 
-        
+
+        </DrawerHeader>
+
         <DrawerFooter className="space-y-3">
-         
           <button
             onClick={onClose}
-            className="w-full py-3 px-6 rounded-lg font-semibold text-lg border border-[#C7EF6B] bg-transparent text-[#C7EF6B] hover:bg-[#C7EF6B] hover:text-black transition-colors"
+            className="w-full h-12 rounded-full bg-[#C7EF6B] text-black text-base font-semibold"
           >
             Close
           </button>

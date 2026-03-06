@@ -1,8 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import {
-  CircleQuestionMark,
-} from "lucide-react";
+import { CircleQuestionMark } from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { TransactionList } from "@/components/transactions/TransactionList";
@@ -15,23 +13,26 @@ export const HistoryPage: React.FC = () => {
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
   const { transactions, isLoading, error, refetch } = useTransactions();
 
-  const walletTypeFromState =
-    (location.state as { walletType?: string } | null)?.walletType;
+  const walletTypeFromState = (location.state as { walletType?: string } | null)
+    ?.walletType;
 
   const filteredTransactions = useMemo(() => {
+    const fiatTxTypes = ["deposit", "withdrawal"];
     if (walletTypeFromState === "staking") {
       return transactions.filter(
-        (tx) => tx.token_symbol?.toUpperCase() === "LPT"
+        (tx) => tx.token_symbol?.toUpperCase() === "LPT",
       );
     }
 
     if (walletTypeFromState === "savings") {
       return transactions.filter(
-        (tx) => tx.token_symbol?.toUpperCase() !== "LPT"
+        (tx) => tx.token_symbol?.toUpperCase() !== "LPT",
       );
     }
 
-    return transactions;
+    return transactions.filter((tx) =>
+      fiatTxTypes.includes(tx.transaction_type),
+    );
   }, [transactions, walletTypeFromState]);
 
   const handleTransactionClick = (transaction: TransactionData) => {
@@ -45,20 +46,20 @@ export const HistoryPage: React.FC = () => {
   return (
     <div className="h-screen bg-[#050505] text-white flex flex-col">
       {/* Header */}
-       <div className="flex items-start justify-between px-6 py-6">
-          <div>
-            <h1 className="text-lg font-medium text-white">Transactions</h1>
-            <p className="text-xs text-gray-500">
-             View all your recent transactions
-            </p>
-          </div>
-          <button
-            onClick={handleHelpClick}
-            className="w-8 h-8 bg-[#2a2a2a] rounded-full flex items-center justify-center"
-          >
-            <CircleQuestionMark color="#86B3F7" size={16} />
-          </button>
+      <div className="flex items-start justify-between px-6 py-6">
+        <div>
+          <h1 className="text-lg font-medium text-white">Transactions</h1>
+          <p className="text-xs text-gray-500">
+            View all your recent transactions
+          </p>
         </div>
+        <button
+          onClick={handleHelpClick}
+          className="w-8 h-8 bg-[#2a2a2a] rounded-full flex items-center justify-center"
+        >
+          <CircleQuestionMark color="#86B3F7" size={16} />
+        </button>
+      </div>
 
       {/* Transaction List */}
       {filteredTransactions.length === 0 && !isLoading && !error ? (

@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { LisarLines } from "@/components/general/lisar-lines";
@@ -41,6 +41,7 @@ const ADD_CASH_AMOUNTS = [20000, 50000, 100000, 250000, 500000];
 
 export const AllWalletPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [showAllBalancesDrawer, setShowAllBalancesDrawer] = useState(false);
   const [showPortfolioDrawer, setShowPortfolioDrawer] = useState(false);
   const [transferDrawer, setTransferDrawer] = useState<
@@ -60,6 +61,13 @@ export const AllWalletPage: React.FC = () => {
   useEffect(() => {
     localStorage.setItem("wallet_show_balance", JSON.stringify(showBalance));
   }, [showBalance]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get("open") !== "deposit") return;
+    setTransferDrawer("deposit");
+    navigate("/wallet", { replace: true });
+  }, [location.search, navigate]);
 
   const { orchestrators } = useOrchestrators();
   const { state } = useAuth();
@@ -602,14 +610,14 @@ export const AllWalletPage: React.FC = () => {
               <div className="flex items-center gap-3">
                 <img src="/ng_flag.png" alt="Naira" className="w-10 h-10" />
                 <div>
-                  <p className="text-white text-base font-medium">
+                  <p className="text-white text-sm font-medium">
                     {transferDrawer === "deposit"
                       ? "Naira Deposit"
                       : "Bank/Mobile Money"}
                   </p>
-                  <p className="text-sm text-white/60">
+                  <p className="text-xs text-white/60">
                     {transferDrawer === "deposit"
-                      ? "Deposit Naira into your Lisar account"
+                      ? "Deposit Naira into your Lisar wallet"
                       : "Withdraw Naira to your bank account"}
                   </p>
                 </div>
@@ -620,8 +628,8 @@ export const AllWalletPage: React.FC = () => {
               <div className="flex items-center gap-3">
                 <img src="/us_flag.png" alt="Dollar" className="w-10 h-10" />
                 <div className="flex-1">
-                  <p className="text-white text-base font-medium">Dollar</p>
-                  <p className="text-sm text-white/60 flex items-center">
+                  <p className="text-white text-sm font-medium">Dollar</p>
+                  <p className="text-xs text-white/60 flex items-center">
                     USD transfer option is coming soon <Clock size={14} className="ml-1"/>
                   </p>
                 </div>
@@ -636,12 +644,12 @@ export const AllWalletPage: React.FC = () => {
               <div className="flex items-center gap-3">
                 <img src="/usdc.svg" alt="Crypto" className="w-10 h-10" />
                 <div>
-                  <p className="text-white text-base font-medium">
+                  <p className="text-white text-sm font-medium">
                     {transferDrawer === "deposit"
                       ? "Crypto Wallet"
                       : "Send Crypto"}
                   </p>
-                  <p className="text-sm text-white/60">
+                  <p className="text-xs text-white/60">
                     {transferDrawer === "deposit"
                       ? "Deposit crypto from an external wallet"
                       : "Send crypto to an external wallet address"}
