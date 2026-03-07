@@ -34,9 +34,6 @@ const UnstakePage = lazyRetry(
   () => import("@/screens/unstake-page"),
 );
 const HistoryPage = lazyRetry(() => import("@/screens/history-page"));
-const TransactionDetailPage = lazyRetry(
-  () => import("@/screens/transaction-detail-page"),
-);
 const LearnPage = lazyRetry(() => import("@/screens/learn-page"));
 const LearnDetailPage = lazyRetry(() => import("@/screens/learn-detail-page"));
 const ForecastPage = lazyRetry(() => import("@/screens/forecast-page"));
@@ -220,14 +217,6 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             {withSuspenseAndErrorBoundary(<HistoryPage />)}
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "transaction-detail/:transactionId",
-        element: (
-          <ProtectedRoute>
-            {withSuspenseAndErrorBoundary(<TransactionDetailPage />)}
           </ProtectedRoute>
         ),
       },

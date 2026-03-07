@@ -82,12 +82,12 @@ export const EarnPage: React.FC = () => {
               Discover earning opportunities on Lisar
             </p>
           </div>
-          <button
+          {/* <button
             onClick={handleHelpClick}
             className="w-8 h-8 bg-[#2a2a2a] rounded-full flex items-center justify-center"
           >
             <CircleQuestionMark color="#86B3F7" size={16} />
-          </button>
+          </button> */}
         </div>
       </div>
 

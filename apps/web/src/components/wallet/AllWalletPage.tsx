@@ -100,6 +100,7 @@ export const AllWalletPage: React.FC = () => {
   const stablesBalance = contextStablesBalance || 0;
   const solUsdcBalance = solanaUsdcBalance || 0;
   const solUsdtBalance = solanaUsdtBalance || 0;
+  const stakingPosition = parseFloat(delegatorStakeProfile?.currentStake || "0");
 
   const totalIdleUsdBalance = useMemo(() => {
     const lptPriceInUsd = prices.lpt || 0;
@@ -509,7 +510,19 @@ export const AllWalletPage: React.FC = () => {
 
             {/* Savings Section */}
             <button
-              onClick={() => navigate("/wallet/savings/intro")}
+              onClick={() => {
+                if (stablesBalance > 0) {
+                  navigate("/wallet/savings");
+                  return;
+                }
+
+                if (stakingPosition > 0) {
+                  navigate("/wallet/staking");
+                  return;
+                }
+
+                navigate("/wallet/savings/intro");
+              }}
               className="mt-6 w-full bg-[#13170a] rounded-xl py-3 px-4 text-left"
             >
               <div className="flex items-center justify-between mb-3">

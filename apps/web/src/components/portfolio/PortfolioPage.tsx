@@ -8,9 +8,11 @@ import { usePortfolio, type StakeEntry } from "@/contexts/PortfolioContext";
 import { useWalletCard } from "@/contexts/WalletCardContext";
 import { useTransactions } from "@/contexts/TransactionContext";
 import { RecentTransactionsCard } from "@/components/transactions/RecentTransactionsCard";
+import { TransactionDetailsDrawer } from "@/components/transactions/TransactionDetailsDrawer";
 import { PortfolioSkeleton } from "./PortfolioSkeleton";
 import { formatEarnings, formatStables } from "@/lib/formatters";
 import { getColorForAddress } from "@/lib/qrcode";
+import { TransactionData } from "@/services/transactions/types";
 
 interface StakeEntryItemProps {
   entry: StakeEntry;
@@ -98,6 +100,8 @@ export const PortfolioPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] =
+    useState<TransactionData | null>(null);
   const [isCurrencyRotating, setIsCurrencyRotating] = useState(false);
 
   const walletType =
@@ -158,8 +162,8 @@ export const PortfolioPage: React.FC = () => {
     navigate("/history", { state: { walletType } });
   };
 
-  const handleTransactionClick = (transaction: any) => {
-    navigate(`/transaction-detail/${transaction.id}`);
+  const handleTransactionClick = (transaction: TransactionData) => {
+    setSelectedTransaction(transaction);
   };
 
   const handleHelpClick = () => {
@@ -409,6 +413,12 @@ export const PortfolioPage: React.FC = () => {
           "Total stake shows your combined investment across all validators.",
           "Earnings can be viewed weekly, monthly, or yearly. Next payout shows when you'll receive rewards.",
         ]}
+      />
+
+      <TransactionDetailsDrawer
+        transaction={selectedTransaction}
+        isOpen={selectedTransaction !== null}
+        onClose={() => setSelectedTransaction(null)}
       />
 
       <BottomNavigation currentPath="/portfolio" />

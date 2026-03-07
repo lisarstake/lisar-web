@@ -1,7 +1,15 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, X } from "lucide-react";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerClose,
+} from "@/components/ui/drawer";
 import { useNotification } from "@/contexts/NotificationContext";
+import { Notification } from "@/services/notifications/types";
 import { getNotificationIcon } from "@/lib/notifications";
 
 type NotificationTab = "all" | "announcements" | "alerts" | "earnings";
@@ -61,14 +69,52 @@ const matchesTab = (type: string, tab: NotificationTab) => {
 export const NotificationsPage: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<NotificationTab>("all");
+  const [selectedNotification, setSelectedNotification] =
+    useState<Notification | null>(null);
 
-  const { notifications, isLoading, markAsRead } = useNotification();
+  const { notifications, isLoading, markAsRead, deleteNotification } =
+    useNotification();
+
+  const retentionThreshold = useMemo(
+    () => Date.now() - 90 * 24 * 60 * 60 * 1000,
+    [],
+  );
+
+  const recentNotifications = useMemo(
+    () =>
+      notifications.filter(
+        (notification) =>
+          new Date(notification.created_at).getTime() >= retentionThreshold,
+      ),
+    [notifications, retentionThreshold],
+  );
+
+  const outdatedNotifications = useMemo(
+    () =>
+      notifications.filter(
+        (notification) =>
+          new Date(notification.created_at).getTime() < retentionThreshold,
+      ),
+    [notifications, retentionThreshold],
+  );
+
+  useEffect(() => {
+    if (!outdatedNotifications.length) return;
+
+    Promise.all(
+      outdatedNotifications.map((notification) =>
+        deleteNotification(notification.id),
+      ),
+    ).catch(() => {
+      // keep UI stable even if cleanup fails
+    });
+  }, [deleteNotification, outdatedNotifications]);
 
   const filteredNotifications = useMemo(() => {
-    return notifications.filter((notification) =>
+    return recentNotifications.filter((notification) =>
       matchesTab(notification.type, activeTab),
     );
-  }, [notifications, activeTab]);
+  }, [recentNotifications, activeTab]);
 
   const todayNotifications = useMemo(() => {
     return filteredNotifications.filter((notification) =>
@@ -82,6 +128,18 @@ export const NotificationsPage: React.FC = () => {
     );
   }, [filteredNotifications]);
 
+  const handleNotificationSelect = async (notification: Notification) => {
+    if (!notification.is_read) {
+      try {
+        await markAsRead(notification.id);
+      } catch {
+        // ignore failures
+      }
+    }
+
+    setSelectedNotification(notification);
+  };
+
   return (
     <div className="h-screen bg-[#050505] text-white flex flex-col">
       <div className="flex items-center justify-between px-6 pt-8 pb-4">
@@ -92,7 +150,7 @@ export const NotificationsPage: React.FC = () => {
         >
           <ArrowLeft className="text-white" size={22} />
         </button>
-        <h1 className="text-lg font-medium text-white">Notifications</h1>
+        {/* <h1 className="text-lg font-medium text-white">Notifications</h1> */}
         <div className="h-12 w-12" />
       </div>
 
@@ -130,22 +188,19 @@ export const NotificationsPage: React.FC = () => {
         ) : (
           <>
             {todayNotifications.length > 0 && (
-              <section>
-                <h2 className="text-base font-medium text-white/50">Today</h2>
+              <section className="mt-4">
+                <h2 className="text-sm font-medium text-white/50">Today</h2>
                 <div className="mt-3 space-y-3">
                   {todayNotifications.map((notification) => (
                     <button
                       key={notification.id}
-                      onClick={() => {
-                        if (!notification.is_read) {
-                          markAsRead(notification.id).catch(() => {
-                            // keep UX silent if API call fails
-                          });
-                        }
-                      }}
+                      onClick={() => handleNotificationSelect(notification)}
                       className="w-full rounded-xl bg-[#13170a] px-5 py-4 text-left"
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="relative flex items-center gap-3">
+                        {!notification.is_read && (
+                          <span className="absolute top-5 right-0 h-2.5 w-2.5 rounded-full bg-red-400" />
+                        )}
                         <div className="h-12 w-12 shrink-0 rounded-full bg-[#3b463b] flex items-center justify-center">
                           {getNotificationIcon(notification.type)}
                         </div>
@@ -158,8 +213,6 @@ export const NotificationsPage: React.FC = () => {
                             {formatNotificationDate(notification.created_at)}
                           </p>
                         </div>
-
-                        <ChevronRight size={20} className="text-[#8f9893]" />
                       </div>
                     </button>
                   ))}
@@ -169,21 +222,18 @@ export const NotificationsPage: React.FC = () => {
 
             {olderNotifications.length > 0 && (
               <section className="mt-4">
-                <h2 className="text-base font-medium text-white/50">Earlier</h2>
+                <h2 className="text-sm font-medium text-white/50">Earlier</h2>
                 <div className="mt-3 space-y-3">
                   {olderNotifications.map((notification) => (
                     <button
                       key={notification.id}
-                      onClick={() => {
-                        if (!notification.is_read) {
-                          markAsRead(notification.id).catch(() => {
-                            // keep UX silent if API call fails
-                          });
-                        }
-                      }}
+                      onClick={() => handleNotificationSelect(notification)}
                       className="w-full rounded-xl bg-[#13170a] px-5 py-4 text-left"
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="relative flex items-center gap-3">
+                        {!notification.is_read && (
+                          <span className="absolute top-2 right-3 h-2.5 w-2.5 rounded-full bg-[#ff4b4b]" />
+                        )}
                         <div className="h-12 w-12 shrink-0 rounded-full bg-[#3b463b] flex items-center justify-center">
                           {getNotificationIcon(notification.type)}
                         </div>
@@ -196,8 +246,6 @@ export const NotificationsPage: React.FC = () => {
                             {formatNotificationDate(notification.created_at)}
                           </p>
                         </div>
-
-                        <ChevronRight size={20} className="text-[#8f9893]" />
                       </div>
                     </button>
                   ))}
@@ -213,6 +261,53 @@ export const NotificationsPage: React.FC = () => {
           </>
         )}
       </div>
+      <NotificationDetailsDrawer
+        notification={selectedNotification}
+        isOpen={selectedNotification !== null}
+        onClose={() => setSelectedNotification(null)}
+      />
     </div>
+  );
+};
+
+interface NotificationDetailsDrawerProps {
+  notification: Notification | null;
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+const NotificationDetailsDrawer: React.FC<NotificationDetailsDrawerProps> = ({
+  notification,
+  isOpen,
+  onClose,
+}) => {
+  if (!notification) return null;
+
+  return (
+    <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DrawerContent className="bg-[#050505] border-[#2a2a2a] px-4">
+        <DrawerHeader className="mb-5">
+          <div className="flex items-center justify-between">
+            <DrawerTitle className="text-base font-medium text-white text-left">
+              {notification.title}
+            </DrawerTitle>
+            <DrawerClose className="h-8 w-8 rounded-full bg-[#1a1a1a] flex items-center justify-center">
+              <X className="text-white" size={18} />
+            </DrawerClose>
+          </div>
+        </DrawerHeader>
+
+
+
+        <div className="rounded-lg bg-white/10 py-2 px-2">
+          <p className="text-sm leading-relaxed text-white">
+            {notification.message}
+          </p>
+          <p className="text-xs text-white/60 mt-2.5">
+            {formatNotificationDate(notification.created_at)}
+          </p>
+        </div>
+      </DrawerContent>
+    </Drawer>
   );
 };

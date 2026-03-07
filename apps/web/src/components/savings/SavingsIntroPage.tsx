@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Banknote, ArrowLeft, Star, Zap } from "lucide-react";
 import { useWallet } from "@/contexts/WalletContext";
@@ -8,13 +8,24 @@ export const SavingsIntroPage: React.FC = () => {
   const navigate = useNavigate();
   const { stablesBalance } = useWallet();
   const { delegatorStakeProfile } = useDelegation();
+  const hasSavings = Boolean(stablesBalance && stablesBalance > 0);
+  const hasStaking = Boolean(
+    delegatorStakeProfile &&
+      parseFloat(delegatorStakeProfile.currentStake || "0") > 0,
+  );
+
+  useEffect(() => {
+    if (hasSavings) {
+      navigate("/wallet/savings", { replace: true });
+      return;
+    }
+
+    if (hasStaking) {
+      navigate("/wallet/staking", { replace: true });
+    }
+  }, [hasSavings, hasStaking, navigate]);
 
   const handleExploreClick = () => {
-    const hasSavings = stablesBalance && stablesBalance > 0;
-    const hasStaking =
-      delegatorStakeProfile &&
-      parseFloat(delegatorStakeProfile.currentStake || "0") > 0;
-
     if (hasSavings) {
       navigate("/wallet/savings");
     } else if (hasStaking) {

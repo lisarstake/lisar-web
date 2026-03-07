@@ -1,16 +1,18 @@
 import React, { useMemo, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { CircleQuestionMark } from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { TransactionList } from "@/components/transactions/TransactionList";
+import { TransactionDetailsDrawer } from "@/components/transactions/TransactionDetailsDrawer";
 import { useTransactions } from "@/contexts/TransactionContext";
 import { TransactionData } from "@/services/transactions/types";
 
 export const HistoryPage: React.FC = () => {
-  const navigate = useNavigate();
   const location = useLocation();
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] =
+    useState<TransactionData | null>(null);
   const { transactions, isLoading, error, refetch } = useTransactions();
 
   const walletTypeFromState = (location.state as { walletType?: string } | null)
@@ -36,7 +38,7 @@ export const HistoryPage: React.FC = () => {
   }, [transactions, walletTypeFromState]);
 
   const handleTransactionClick = (transaction: TransactionData) => {
-    navigate(`/transaction-detail/${transaction.id}`);
+    setSelectedTransaction(transaction);
   };
 
   const handleHelpClick = () => {
@@ -53,12 +55,12 @@ export const HistoryPage: React.FC = () => {
             View all your recent transactions
           </p>
         </div>
-        <button
+        {/* <button
           onClick={handleHelpClick}
           className="w-8 h-8 bg-[#2a2a2a] rounded-full flex items-center justify-center"
         >
           <CircleQuestionMark color="#86B3F7" size={16} />
-        </button>
+        </button> */}
       </div>
 
       {/* Transaction List */}
@@ -95,6 +97,12 @@ export const HistoryPage: React.FC = () => {
           "View all your transactions in one place.",
           "Click any transaction to see details like date, amount, and status.",
         ]}
+      />
+
+      <TransactionDetailsDrawer
+        transaction={selectedTransaction}
+        isOpen={selectedTransaction !== null}
+        onClose={() => setSelectedTransaction(null)}
       />
 
       {/* Bottom Navigation */}

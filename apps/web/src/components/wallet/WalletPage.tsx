@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { RecentTransactionsCard } from "../transactions/RecentTransactionsCard";
+import { TransactionDetailsDrawer } from "../transactions/TransactionDetailsDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { EarningsBreakdownDrawer } from "../general/EarningsBreakdownDrawer";
 import { PortfolioSelectionDrawer } from "@/components/general/PortfolioSelectionDrawer";
@@ -53,6 +54,8 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
   );
   const [emptyFundingAsset, setEmptyFundingAsset] = useState("wallet");
   const [showWithdrawEmptyDrawer, setShowWithdrawEmptyDrawer] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] =
+    useState<TransactionData | null>(null);
   const [selectedEarningsCard, setSelectedEarningsCard] =
     useState<WalletCardData | null>(null);
 
@@ -304,7 +307,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
   };
 
   const handleTransactionClick = (transaction: TransactionData) => {
-    navigate(`/transaction-detail/${transaction.id}`);
+    setSelectedTransaction(transaction);
   };
 
   const renderLoadingStars = (sizeClass: string) => (
@@ -555,6 +558,12 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
 
       <BottomNavigation currentPath="/wallet" />
 
+      <TransactionDetailsDrawer
+        transaction={selectedTransaction}
+        isOpen={selectedTransaction !== null}
+        onClose={() => setSelectedTransaction(null)}
+      />
+
       <EarningsBreakdownDrawer
         isOpen={selectedEarningsCard !== null}
         onClose={() => setSelectedEarningsCard(null)}
@@ -697,4 +706,3 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
     </div>
   );
 };
-

@@ -57,13 +57,13 @@ export const TransactionList: React.FC<TransactionListProps> = ({
       case "deposit":
         return "Deposit";
       case "withdrawal":
-        return "Send";
+        return "Withdrawal";
       case "delegation":
         return "Vest";
       case "undelegation":
         return "Redeem";
       case "mint":
-        return "Vest";
+        return "Vest"; 
       case "burn":
         return "Redeem";
       default:
