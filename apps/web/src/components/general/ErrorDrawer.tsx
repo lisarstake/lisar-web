@@ -47,7 +47,7 @@ export const ErrorDrawer: React.FC<ErrorDrawerProps> = ({
             </div>
           </div>
           <DrawerTitle className="text-base font-medium text-white/90">
-            {title}!
+            {title}
           </DrawerTitle>
           <DrawerDescription className="text-gray-400 text-sm">
             {message}
@@ -59,7 +59,7 @@ export const ErrorDrawer: React.FC<ErrorDrawerProps> = ({
 
           <button
             onClick={onClose}
-            className="w-full h-12 rounded-full bg-[#C7EF6B] text-black text-base font-semibold"
+            className="w-full h-12 rounded-full bg-[#C7EF6B] text-black text-base font-medium"
           >
             Close
           </button>

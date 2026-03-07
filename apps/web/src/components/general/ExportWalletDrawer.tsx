@@ -8,12 +8,9 @@ import {
 } from "@/components/ui/drawer";
 import {
   Copy as CopyIcon,
-  Eye,
-  EyeOff,
   Check,
   EyeClosed,
   EyeIcon,
-  Loader,
   LoaderCircle,
 } from "lucide-react";
 import { authService } from "@/services/auth";
@@ -188,7 +185,7 @@ export const ExportWalletDrawer: React.FC<ExportWalletDrawerProps> = ({
 
   return (
     <Drawer open={isOpen} onOpenChange={handleDrawerOpenChange}>
-      <DrawerContent>
+      <DrawerContent className="bg-[#050505] border-[#2a2a2a] max-h-[90vh] overflow-y-auto">
         <DrawerHeader>
           <DrawerTitle className="text-center text-xl font-semibold text-white">
             {exportStep === "intro" && "Export your wallet"}
@@ -200,7 +197,7 @@ export const ExportWalletDrawer: React.FC<ExportWalletDrawerProps> = ({
 
         <div className="pt-4 px-2 space-y-4">
           {exportStep === "intro" && (
-            <p className="text-gray-300 text-base leading-relaxed">
+            <p className="text-gray-300 text-sm leading-relaxed">
               You are always in control of your funds. Please be careful with
               the next action. Your private key grants full access to your
               wallet don't share it with anyone.
@@ -209,7 +206,7 @@ export const ExportWalletDrawer: React.FC<ExportWalletDrawerProps> = ({
 
           {exportStep === "confirm" && (
             <div className="space-y-4">
-              <p className="text-gray-300 text-base leading-relaxed">
+              <p className="text-gray-300 text-sm leading-relaxed">
                 Enter your account password to confirm your identity.
               </p>
               <div>
@@ -219,7 +216,7 @@ export const ExportWalletDrawer: React.FC<ExportWalletDrawerProps> = ({
                     value={exportPassword}
                     onChange={(e) => setExportPassword(e.target.value)}
                     placeholder="Enter your account password"
-                    className="w-full pr-12 px-4 py-3 bg-[#121212] border border-[#2a2a2a] rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:border-[#C7EF6B]"
+                    className="w-full pr-12 px-4 py-3 bg-[#13170a] border border-[#2a2a2a] rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:border-[#C7EF6B]"
                   />
                   <button
                     type="button"
@@ -325,7 +322,7 @@ export const ExportWalletDrawer: React.FC<ExportWalletDrawerProps> = ({
                     type="text"
                     readOnly
                     value={privateKey}
-                    className="flex-1 px-4 py-3 bg-[#121212] border border-[#2a2a2a] rounded-lg text-gray-100"
+                    className="flex-1 px-4 py-3 bg-[#13170a] border border-[#2a2a2a] rounded-lg text-gray-100"
                   />
                   <button
                     type="button"
@@ -360,7 +357,7 @@ export const ExportWalletDrawer: React.FC<ExportWalletDrawerProps> = ({
             <button
               type="button"
               onClick={() => setExportStep("confirm")}
-              className="w-full py-3 rounded-xl font-semibold text-lg bg-[#C7EF6B] text-black hover:bg-[#B8E55A] transition-colors"
+              className="w-full py-3 rounded-full font-medium text-base bg-[#C7EF6B] text-black hover:bg-[#B8E55A] transition-colors"
             >
               Export Wallet
             </button>
@@ -371,7 +368,7 @@ export const ExportWalletDrawer: React.FC<ExportWalletDrawerProps> = ({
               type="button"
               disabled={isVerifying || isExporting}
               onClick={handlePasswordConfirm}
-              className={`w-full py-3 rounded-xl font-semibold text-lg transition-colors ${
+              className={`w-full py-3 rounded-full font-medium text-base transition-colors ${
                 isVerifying || isExporting
                   ? "bg-[#636363] text-white cursor-not-allowed"
                   : "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
@@ -398,7 +395,7 @@ export const ExportWalletDrawer: React.FC<ExportWalletDrawerProps> = ({
               type="button"
               disabled={otpCode.length !== 6 || isVerifyingOTP || isExporting}
               onClick={handleOTPVerify}
-              className={`w-full py-3 rounded-xl font-semibold text-lg transition-colors ${
+              className={`w-full py-3 rounded-full font-medium text-base transition-colors ${
                 otpCode.length === 6 && !isVerifyingOTP && !isExporting
                   ? "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
                   : "bg-[#636363] text-white cursor-not-allowed"
@@ -424,7 +421,7 @@ export const ExportWalletDrawer: React.FC<ExportWalletDrawerProps> = ({
             <button
               type="button"
               onClick={handleClose}
-              className="w-full py-3 rounded-xl font-semibold text-lg bg-[#C7EF6B] text-black hover:bg-[#B8E55A] transition-colors"
+              className="w-full py-3 rounded-full font-medium text-base bg-[#C7EF6B] text-black hover:bg-[#B8E55A] transition-colors"
             >
               Done
             </button>

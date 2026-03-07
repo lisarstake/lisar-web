@@ -190,20 +190,21 @@ export const WalletTransferFormPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#050505] text-white flex flex-col">
-      <div className="flex items-center justify-between px-6 pt-8 pb-4">
-        <button
-          onClick={() => navigate(-1)}
-          className="h-10 w-10 rounded-full bg-[#13170a] flex items-center justify-center"
-        >
-          <ArrowLeft className="text-white" size={22} />
-        </button>
-        <h1 className="text-lg font-medium">{pageTitle}</h1>
-        <div className="w-8" />
-      </div>
+      <div className="flex-1 overflow-y-auto">
+        <div className="flex items-center justify-between px-6 pt-8 pb-4">
+          <button
+            onClick={() => navigate(-1)}
+            className="h-10 w-10 rounded-full bg-[#13170a] flex items-center justify-center"
+          >
+            <ArrowLeft className="text-white" size={22} />
+          </button>
+          <h1 className="text-lg font-medium">{pageTitle}</h1>
+          <div className="w-8" />
+        </div>
 
-      <div className="flex-1 overflow-y-auto px-6 pb-32">
-        {isWithdraw ? (
-          <div className="space-y-5 pt-4">
+        <div className="px-6 pb-32">
+          {isWithdraw ? (
+            <div className="space-y-5 pt-4">
             <div>
               <label className="mb-2 block text-sm text-white/70">
                 Amount {safeAsset === "naira" ? "(NGN)" : ""}
@@ -479,7 +480,8 @@ export const WalletTransferFormPage: React.FC = () => {
               </ul>
             </div>
           </div>
-        )}
+          )}
+        </div>
       </div>
 
       {isWithdraw && (

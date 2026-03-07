@@ -15,10 +15,10 @@ const ForgotPasswordPage = lazyRetry(
 const ResetPasswordPage = lazyRetry(
   () => import("@/screens/reset-password-page"),
 );
-const OTPPage = lazyRetry(() => import("@/screens/otp-page"));
-const TOTPSetupPage = lazyRetry(() => import("@/screens/totp-setup-page"));
 const WalletPage = lazyRetry(() => import("@/screens/wallet-page"));
-const SavingsIntroPage = lazyRetry(() => import("@/screens/savings-intro-page"));
+const SavingsIntroPage = lazyRetry(
+  () => import("@/screens/savings-intro-page"),
+);
 const SavingsCreatePlanPage = lazyRetry(
   () => import("@/screens/savings-create-plan-page"),
 );
@@ -30,9 +30,7 @@ const ValidatorDetailsPage = lazyRetry(
   () => import("@/screens/validator-details-page"),
 );
 const RedeemPage = lazyRetry(() => import("@/screens/redeem-page"));
-const UnstakePage = lazyRetry(
-  () => import("@/screens/unstake-page"),
-);
+const UnstakePage = lazyRetry(() => import("@/screens/unstake-page"));
 const HistoryPage = lazyRetry(() => import("@/screens/history-page"));
 const LearnPage = lazyRetry(() => import("@/screens/learn-page"));
 const LearnDetailPage = lazyRetry(() => import("@/screens/learn-detail-page"));
@@ -61,6 +59,9 @@ const WalletTransferFormPage = lazyRetry(
 );
 const AccountSettingsPage = lazyRetry(
   () => import("@/screens/account-settings-page"),
+);
+const PersonalDetailsPage = lazyRetry(
+  () => import("@/screens/personal-details-page"),
 );
 const PreferencesSettingsPage = lazyRetry(
   () => import("@/screens/preferences-settings-page"),
@@ -105,14 +106,7 @@ export const router = createBrowserRouter([
       { index: true, element: withSuspenseAndErrorBoundary(<HomePage />) },
       { path: "login", element: withSuspenseAndErrorBoundary(<LoginPage />) },
       { path: "signup", element: withSuspenseAndErrorBoundary(<SignupPage />) },
-      {
-        path: "verify-otp",
-        element: withSuspenseAndErrorBoundary(<OTPPage />),
-      },
-      {
-        path: "setup-otp",
-        element: withSuspenseAndErrorBoundary(<TOTPSetupPage />),
-      },
+
       {
         path: "dashboard",
         element: withSuspenseAndErrorBoundary(<DashboardPage />),
@@ -329,6 +323,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             {withSuspenseAndErrorBoundary(<AccountSettingsPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "settings/account/personal-details",
+        element: (
+          <ProtectedRoute>
+            {withSuspenseAndErrorBoundary(<PersonalDetailsPage />)}
           </ProtectedRoute>
         ),
       },

@@ -2,20 +2,32 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ChevronLeft,
-  Users,
-  MessagesSquare,
   ArrowLeft,
+  MessageCircleHeart,
+  LogOut,
+  LoaderCircle,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { authService } from "@/services/auth";
 import { LoadingSpinner } from "../general/LoadingSpinner";
-import { LisarLines } from "../general/lisar-lines";
+import { ErrorDrawer } from "../general/ErrorDrawer";
+import { SettingsSuccessDrawer } from "@/components/general/SettingsSuccessDrawer";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 
 export const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
-  const { state, logout, refreshUser } = useAuth();
+  const { state, logout, refreshUser, updateProfile } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [isClaimingUsername, setIsClaimingUsername] = useState(false);
+  const [showClaimDrawer, setShowClaimDrawer] = useState(false);
+  const [showSuccessDrawer, setShowSuccessDrawer] = useState(false);
+  const [usernameInput, setUsernameInput] = useState("");
   const [showErrorDrawer, setShowErrorDrawer] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -111,13 +123,54 @@ export const ProfilePage: React.FC = () => {
     input.click();
   };
 
+  const handleClaimUsername = async () => {
+    const username = usernameInput.trim().toLowerCase();
+    if (!/^[a-z0-9_]{3,30}$/.test(username)) {
+      setErrorMessage(
+        "Username must be 3-30 characters and contain only letters, numbers, and underscores.",
+      );
+      setShowErrorDrawer(true);
+      return;
+    }
+
+    try {
+      setIsClaimingUsername(true);
+      const response = await updateProfile({ username });
+      if (!response.success) {
+        throw new Error(response.message || "Could not claim username");
+      }
+      await refreshUser();
+      setShowClaimDrawer(false);
+      setUsernameInput("");
+      setShowSuccessDrawer(true);
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "Could not claim username",
+      );
+      setShowErrorDrawer(true);
+    } finally {
+      setIsClaimingUsername(false);
+    }
+  };
+
   if (isLoading) {
     return <LoadingSpinner message="Loading profile..." />;
   }
 
+  const displayName = (() => {
+    if (!formData.fullName) return "User";
+  
+    const parts = formData.fullName.trim().split(" ");
+    if (parts.length <= 2) return formData.fullName;
+  
+    return `${parts[0]} ${parts[parts.length - 1]}`;
+  })();
+
+  const displayUsername = (state.user?.username || "").trim();
+  const hasUsername = displayUsername.length > 0;
+
   return (
     <div className="min-h-screen bg-[#050505] text-gray-100 flex flex-col">
-      {/* Header */}
       <div className="flex items-center justify-between px-6 pt-8 pb-4">
         <button
           onClick={handleBackClick}
@@ -128,9 +181,7 @@ export const ProfilePage: React.FC = () => {
         </button>
       </div>
 
-      {/* Content - Scrollable */}
       <div className="flex-1 overflow-y-auto px-6 pb-6 scrollbar-hide">
-        {/* Profile Picture Section */}
         <div className="flex flex-col items-center mb-8">
           <div
             onClick={handleUploadPhoto}
@@ -150,7 +201,7 @@ export const ProfilePage: React.FC = () => {
               />
             ) : null}
             <div
-              className={`w-full h-full bg-gradient-to-br from-[#C7EF6B] to-[#B8E55A] flex items-center justify-center ${formData.profileImage ? "hidden" : ""}`}
+              className={`w-full h-full bg-linear-to-br from-[#C7EF6B] to-[#B8E55A] flex items-center justify-center ${formData.profileImage ? "hidden" : ""}`}
             >
               <span className="text-black text-4xl font-bold">
                 {formData.fullName
@@ -160,54 +211,48 @@ export const ProfilePage: React.FC = () => {
             </div>
           </div>
 
-          <div className="text-center space-y-1">
+          <div className="text-center space-y-2">
             <p className="text-white text-lg font-medium">
-              {formData.fullName || "User"}
+              {displayName}
             </p>
-            <button className="text-white text-sm bg-[#13170a] px-4 py-1 rounded-full">
-              @{formData.username || "username"}
-            </button>
+            {hasUsername ? (
+              <button className="text-white text-xs bg-[#13170a] px-4 py-1 rounded-full">
+                @{displayUsername}
+              </button>
+            ) : (
+              <button
+                onClick={() => setShowClaimDrawer(true)}
+                className="text-black text-xs bg-white/90 px-4 py-1 rounded-full font-medium"
+              >
+                Claim @tag
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Feature Cards */}
-        <div className="grid grid-cols-2 gap-5 mb-6">
-          {/* Join Tribe */}
-          <a
-            href="https://x.com/lisarstake"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="h-38 rounded-2xl p-4 bg-[#D8F6B1] text-black flex flex-col justify-between"
-          >
-            <Users size={30} />
-
-            <div>
-              <p className="font-semibold text-sm">Join Lisar Tribe</p>
-              <p className="text-xs text-black/70">For exclusive updates</p>
-            </div>
-          </a>
-
-          {/* Need Help */}
+        <div className="grid grid-cols-1 gap-5 mb-6">
           <a
             href="https://t.me/+F0YXOMaiJMxkODVk"
             target="_blank"
             rel="noopener noreferrer"
-            className="h-38 rounded-2xl p-4 bg-[#1b1b1b] text-white flex flex-col justify-between relative overflow-hidden"
+            className="h-38 rounded-2xl p-4 bg-[#305757] flex flex-col justify-between relative overflow-hidden"
           >
-            <LisarLines position="top-right" className="" width="140px" height="140px" />
-
-            <MessagesSquare size={30} />
+            <MessageCircleHeart size={30} />
 
             <div>
-              <p className="font-semibold text-sm">Need help?</p>
-              <p className="text-xs text-gray-400">Chat with us</p>
+              <p className="font-semibold text-sm ">Need help?</p>
+              <p className="text-xs text-gray-300">Chat with us</p>
             </div>
+
+            <img
+              src="/support.png"
+              alt="Support"
+              className="absolute right-0 top-5 h-44 object-contain pointer-events-none"
+            />
           </a>
         </div>
 
-        {/* Settings Section */}
         <div className="space-y-3">
-          {/* Account */}
           <div
             onClick={() => navigate("/settings/account")}
             className="bg-[#13170a] rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-[#171717] transition"
@@ -215,24 +260,22 @@ export const ProfilePage: React.FC = () => {
             <div>
               <p className="text-white font-medium">Account</p>
               <p className="text-gray-400 text-sm">
-                Personal details, invite friends, account limits
+                Personal details, invite friends
               </p>
             </div>
             <ChevronLeft className="rotate-180 " size={18} />
           </div>
 
-          {/* Recipients */}
           <div onClick={() => navigate("/settings/recipients")} className="bg-[#13170a] rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-[#171717] transition">
             <div >
-              <p className="text-white font-medium">Recipients</p>
+              <p className="text-white font-medium">Linked Account</p>
               <p className="text-gray-400 text-sm">
-                Bank accounts, Mobile money
+                linked bank account for withdrawal
               </p>
             </div>
             <ChevronLeft className="rotate-180 " size={18} />
           </div>
 
-          {/* Security */}
           <div
             onClick={() => navigate("/settings/security")}
             className="bg-[#13170a] rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-[#171717] transition"
@@ -240,13 +283,12 @@ export const ProfilePage: React.FC = () => {
             <div>
               <p className="text-white font-medium">Security</p>
               <p className="text-gray-400 text-sm">
-                2FA, app lock, passcode, biometrics
+                2 factor authentication, password reset
               </p>
             </div>
             <ChevronLeft className="rotate-180 " size={18} />
           </div>
 
-          {/* Preferences */}
           <div
             onClick={() => navigate("/settings/preferences")}
             className="bg-[#13170a] rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-[#171717] transition"
@@ -254,24 +296,81 @@ export const ProfilePage: React.FC = () => {
             <div>
               <p className="text-white font-medium">Preferences</p>
               <p className="text-gray-400 text-sm">
-                Notifications, display currency & app themes
+                Notifications, display currency
               </p>
             </div>
             <ChevronLeft className="rotate-180" size={18} />
           </div>
         </div>
 
-        {/* Sign Out Button */}
         <div className="mt-6">
           <button
             onClick={handleSignOut}
-            className="w-full text-red-400 flex items-center justify-center space-x-2 hover:text-red-400 transition-colors py-2 border-t pt-4 border-[#13170a]"
+            className="w-full text-red-400 text-sm flex items-center justify-center space-x-2 hover:text-red-400 transition-colors py-2 pt-4 border-[#13170a]"
           >
-            <Users size={16} />
+            <LogOut size={16} />
             <span>Sign Out</span>
           </button>
         </div>
       </div>
+
+      <ErrorDrawer
+        isOpen={showErrorDrawer}
+        onClose={() => setShowErrorDrawer(false)}
+        message={"Sorry something went wrong and couldn't claim tag, please try again"}
+      />
+
+      <SettingsSuccessDrawer
+        isOpen={showSuccessDrawer}
+        onClose={() => setShowSuccessDrawer(false)}
+        title="Unique tag claimed"
+        message="Your tag is active. Other users can now send you money via your tag!"
+      />
+
+      <Drawer open={showClaimDrawer} onOpenChange={setShowClaimDrawer}>
+        <DrawerContent className="bg-[#050505] border-[#2a2a2a]">
+          <DrawerHeader>
+            <DrawerTitle className="text-left text-base font-medium text-white">
+              Claim your Lisar tag
+            </DrawerTitle>
+          </DrawerHeader>
+          <div className="space-y-4 pb-4 mt-1">
+            <p className="text-sm text-white/70">
+              Your tag is unique. Other Lisar users can send you money directly using your tag.
+            </p>
+            <div>
+              <div className="flex items-center rounded-lg bg-[#13170a] px-4 py-3">
+                <span className="text-white/60 text-base">@</span>
+                <input
+                  value={usernameInput}
+                  onChange={(e) =>
+                    setUsernameInput(
+                      e.target.value.replace(/[^a-zA-Z0-9_]/g, "").toLowerCase(),
+                    )
+                  }
+                  placeholder="yourtag"
+                  className="ml-2 w-full bg-transparent text-base text-white outline-none"
+                />
+              </div>
+
+            </div>
+            <button
+              onClick={handleClaimUsername}
+              disabled={isClaimingUsername}
+              className="py-3 w-full rounded-full bg-[#C7EF6B] text-base font-medium text-black disabled:opacity-60 mt-2"
+            >
+              {isClaimingUsername ? (
+                <span className="inline-flex items-center gap-2">
+                  <LoaderCircle size={15} className="animate-spin" />
+                  Claiming..
+                </span>
+              ) : (
+                "Claim tag"
+              )}
+            </button>
+          </div>
+        </DrawerContent>
+      </Drawer>
     </div>
   );
 };

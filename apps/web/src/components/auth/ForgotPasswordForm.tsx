@@ -158,7 +158,7 @@ export const ForgotPasswordForm: React.FC = () => {
           </button>
         </form>
 
-        {/* Drawer for Email Sent and Success States */}
+     
         <Drawer
           open={currentState === "email-sent" || currentState === "success"}
           onOpenChange={(open) => !open && handleDrawerClose()}

@@ -2,16 +2,42 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Copy } from "lucide-react";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
+import { useCampaign } from "@/contexts/CampaignContext";
 
 export const InviteFriendsPage: React.FC = () => {
   const navigate = useNavigate();
-  const referralCode = "lisar50";
+  const {
+    referralCode,
+    copySuccess,
+    handleCopyReferralCode,
+    handleGenerateReferralCode,
+    isGenerating,
+  } = useCampaign();
 
   const handleCopyCode = async () => {
+    if (!referralCode) return;
+    await handleCopyReferralCode();
+  };
+
+  const handleShare = async () => {
+    if (!referralCode) {
+      await handleGenerateReferralCode();
+      return;
+    }
+
+    const shareMessage = `Join Lisar with my referral code: ${referralCode}`;
+
     try {
-      await navigator.clipboard.writeText(referralCode);
+      if (navigator.share) {
+        await navigator.share({
+          title: "Join Lisar",
+          text: shareMessage,
+        });
+        return;
+      }
+      await navigator.clipboard.writeText(shareMessage);
     } catch {
-      // Keep UX silent if clipboard is blocked
+      // keep UX silent
     }
   };
 
@@ -26,45 +52,53 @@ export const InviteFriendsPage: React.FC = () => {
           <ArrowLeft className="text-white" size={22} />
         </button>
 
-        <h1 className="text-large font-semibold text-white">Invite friends</h1>
+        <h1 className="text-large font-medium text-white">Invite friends</h1>
 
         <div className="h-12 w-12" />
       </div>
 
-      <div className="flex-1 overflow-y-auto px-6 pb-48 scrollbar-hide">
-        <img
-          src="/h4.png"
-          alt="Invite reward"
-          className="mx-auto mt-3 h-[320px] w-[320px] object-contain"
-        />
+      <div className="flex-1 px-6 pb-48 flex flex-col items-center justify-center text-center">
+  <img
+    src="/fund.png"
+    alt="Invite reward"
+    className="h-[150px] w-[150px] object-contain"
+  />
 
-        <h2 className="mt-4 text-center text-large font-semibold text-white">
-          Invite Friends, Earn Coins
-        </h2>
-        <p className="mt-3 text-center text-base leading-relaxed text-[#c4cdc9]">
-          You and your friend will receive rewards after their first transaction,
-          and you earn commission from eligible activity.
-        </p>
+  <h2 className="mt-6 text-large font-semibold text-white">
+    Invite Friends, Earn Coins
+  </h2>
 
-        <div className="mt-8 rounded-[22px] border border-white/10 bg-[#15161f] px-6 py-8">
-          <p className="text-center text-base text-[#c4cdc9]">Referral code</p>
+  <p className="mt-3 text-sm leading-relaxed text-[#c4cdc9] max-w-xs">
+    Spread the love ❤️ about Lisar and earn coins as rewards! Join the early savers campiagn to begin
+  </p>
 
-          <div className="mt-4 flex items-center justify-center gap-4">
-            <p className="text-large font-medium text-white">{referralCode}</p>
-            <button
-              onClick={handleCopyCode}
-              className="h-11 w-11 rounded-lg border border-[#a9eb5b] text-[#a9eb5b] flex items-center justify-center"
-              aria-label="Copy referral code"
-            >
-              <Copy size={22} />
-            </button>
-          </div>
-        </div>
-      </div>
+  <div className="mt-8 rounded-lg border border-white/10 p-3 w-full max-w-sm">
+    <p className="text-base text-[#c4cdc9]">Referral code</p>
 
-      <div className="fixed left-0 right-0 bottom-20 px-6 z-20 bg-transparent">
-        <button className="h-14 w-full rounded-full bg-[#a9eb5b] text-base font-semibold text-black">
-          Share referral link
+    <div className="mt-1 flex items-center justify-center">
+      <p className="text-base font-medium text-white">
+        {referralCode || "No code yet"}
+      </p>
+
+      <button
+        onClick={handleCopyCode}
+        disabled={!referralCode}
+        className="h-8 w-8 text-[#C7EF6B] flex items-center justify-center disabled:opacity-40"
+        aria-label="Copy referral code"
+      >
+        {copySuccess ? "✓" : <Copy size={18} />}
+      </button>
+    </div>
+  </div>
+</div>
+
+      <div className="fixed left-0 right-0 bottom-30 px-6 z-20 bg-transparent">
+        <button
+          onClick={handleShare}
+          disabled={isGenerating}
+          className="py-3 w-full rounded-full bg-[#C7EF6B] text-base font-medium text-black disabled:opacity-60"
+        >
+          {isGenerating ? "Generating..." : "Share referral link"}
         </button>
       </div>
 

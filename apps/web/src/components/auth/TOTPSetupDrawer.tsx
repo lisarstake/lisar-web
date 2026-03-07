@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { Copy, Check, X } from "lucide-react";
+import { Copy, Check } from "lucide-react";
 import {
   Drawer,
   DrawerContent,
@@ -13,7 +13,6 @@ import {
   DrawerFooter,
 } from "@/components/ui/drawer";
 import { ErrorDrawer } from "@/components/general/ErrorDrawer";
-import { LoadingSpinner } from "@/components/general/LoadingSpinner";
 import { totpService } from "@/services/totp";
 
 interface TOTPSetupDrawerProps {
@@ -26,8 +25,6 @@ interface TOTPSetupDrawerProps {
 export const TOTPSetupDrawer: React.FC<TOTPSetupDrawerProps> = ({
   isOpen,
   onClose,
-  onComplete,
-  preserveState,
 }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [qrCode, setQrCode] = useState("");
@@ -71,7 +68,7 @@ export const TOTPSetupDrawer: React.FC<TOTPSetupDrawerProps> = ({
       } else {
         setErrorDrawer({
           isOpen: true,
-          title: "Setup Failed",
+          title: "Setup failed",
           message: "Failed to generate authenticator setup. Please try again.",
         });
       }
@@ -116,20 +113,20 @@ export const TOTPSetupDrawer: React.FC<TOTPSetupDrawerProps> = ({
   return (
     <>
       <Drawer open={isOpen} onOpenChange={handleOpenChange}>
-        <DrawerContent className="bg-[#1a1a1a] border-[#2a2a2a] max-h-[90vh] overflow-y-auto">
+        <DrawerContent className="bg-[#050505] border-[#2a2a2a] max-h-[90vh] overflow-y-auto">
           <DrawerHeader className="relative">
-            <DrawerTitle className="text-xl font-semibold text-white/90 text-left">
+            <DrawerTitle className="text-lg font-medium text-white/90 text-left">
               Setup Authenticator App
             </DrawerTitle>
-            <p className="text-gray-400 text-sm text-left mt-2">
+            <p className="text-gray-400 text-sm text-left mt-1">
               Scan the QR code with your authenticator app to add your account.
             </p>
           </DrawerHeader>
 
-          <div className=" pb-2 space-y-6">
+          <div className="pb-2 space-y-6">
             {isLoading ? (
               <div className="flex justify-center items-center py-12">
-                <LoadingSpinner message="Setting up authenticator..." fullScreen={false} />
+                <span className="h-6 w-6 border-2 border-t-transparent rounded-full animate-spin" />
               </div>
             ) : (
               <>
@@ -138,8 +135,8 @@ export const TOTPSetupDrawer: React.FC<TOTPSetupDrawerProps> = ({
                   {/* QR Code */}
                   {qrCode && (
                     <div className="flex justify-center py-6">
-                      <div className="bg-white p-4 rounded-lg">
-                        <img src={qrCode} alt="QR Code" className="w-48 h-48" />
+                      <div className="bg-white p-2 rounded-lg">
+                        <img src={qrCode} alt="QR Code" className="w-32 h-32" />
                       </div>
                     </div>
                   )}
@@ -149,10 +146,12 @@ export const TOTPSetupDrawer: React.FC<TOTPSetupDrawerProps> = ({
                     <p className="text-gray-400 text-sm">
                       Can't scan? Enter this code manually:
                     </p>
-                    <div className="flex items-center gap-2 p-3 bg-[#1a1a1a] rounded-lg border border-[#2a2a2a]">
-                      <code className="flex-1 text-[#C7EF6B] text-sm font-mono break-all">
+
+                    <div className="flex items-center gap-2 px-3 py-2 bg-[#13170a] rounded-lg border border-[#2a2a2a]">
+                      <code className="flex-1 text-white/90 text-sm font-mono break-all">
                         {secret || ""}
                       </code>
+
                       <button
                         type="button"
                         onClick={handleCopySecret}
@@ -177,9 +176,9 @@ export const TOTPSetupDrawer: React.FC<TOTPSetupDrawerProps> = ({
               type="button"
               onClick={handleClose}
               disabled={isLoading}
-              className="w-full py-3 rounded-xl font-semibold text-lg bg-[#C7EF6B] text-black hover:bg-[#B8E55A] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3 rounded-full font-medium text-base bg-[#C7EF6B] text-black hover:bg-[#B8E55A] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Continue to Verification
+              Continue to verification
             </button>
           </DrawerFooter>
         </DrawerContent>
