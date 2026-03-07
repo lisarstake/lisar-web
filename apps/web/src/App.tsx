@@ -33,7 +33,6 @@ export default function App() {
     "/forecast",
     "/history",
     "/unstake-amount",
-    "/deposit",
     "/transaction-detail",
     "/leaderboard",
     "/learn-detail",

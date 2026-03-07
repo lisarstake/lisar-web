@@ -11,7 +11,7 @@ import {
   DrawerFooter,
   DrawerHeader,
   DrawerTitle,
-} from "./drawer";
+} from "../ui/drawer";
 import { Mail, CheckCircle } from "lucide-react";
 
 interface EmailConfirmationDrawerProps {

@@ -488,16 +488,7 @@ export const CampaignHomePage: React.FC = () => {
                 to claiming the Welcome Bonus.
               </p>
               <button
-                onClick={() =>
-                  navigate("/deposit", {
-                    state: {
-                      walletType: "savings",
-                      provider: "perena",
-                      tierNumber: 2,
-                      tierTitle: "USD Plus",
-                    },
-                  })
-                }
+                onClick={() => navigate("/wallet?open=deposit")}
                 className="w-full py-2.5 bg-[#C7EF6B] hover:bg-[#B8E55A] text-black font-medium rounded-lg transition-colors text-sm"
               >
                 Make a Deposit
@@ -531,16 +522,7 @@ export const CampaignHomePage: React.FC = () => {
                 Complete all activities to unlock premium perks and brand merchandise.
               </p>
               <button
-                onClick={() =>
-                  navigate("/deposit", {
-                    state: {
-                      walletType: "savings",
-                      provider: "perena",
-                      tierNumber: 2,
-                      tierTitle: "USD Plus",
-                    },
-                  })
-                }
+                onClick={() => navigate("/wallet?open=deposit")}
                 className="w-full py-2.5 bg-[#C7EF6B] hover:bg-[#B8E55A] text-black font-medium rounded-lg transition-colors text-xs"
               >
                 Make a Deposit

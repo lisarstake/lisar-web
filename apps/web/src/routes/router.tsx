@@ -30,10 +30,6 @@ const ValidatorDetailsPage = lazyRetry(
   () => import("@/screens/validator-details-page"),
 );
 const RedeemPage = lazyRetry(() => import("@/screens/redeem-page"));
-const TiersPage = lazyRetry(() => import("@/screens/tiers-page"));
-const StableTiersPage = lazyRetry(() => import("@/screens/stable-tiers-page"));
-const WithdrawPage = lazyRetry(() => import("@/screens/withdraw-page"));
-const DepositPage = lazyRetry(() => import("@/screens/deposit-page"));
 const UnstakePage = lazyRetry(
   () => import("@/screens/unstake-page"),
 );
@@ -208,46 +204,6 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             {withSuspenseAndErrorBoundary(<RedeemPage />)}
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "savings-tiers",
-        element: (
-          <ProtectedRoute>
-            {withSuspenseAndErrorBoundary(<TiersPage />)}
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "stable-tiers",
-        element: (
-          <ProtectedRoute>
-            {withSuspenseAndErrorBoundary(<StableTiersPage />)}
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "withdraw",
-        element: (
-          <ProtectedRoute>
-            {withSuspenseAndErrorBoundary(<WithdrawPage />)}
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "deposit",
-        element: (
-          <ProtectedRoute>
-            {withSuspenseAndErrorBoundary(<DepositPage />)}
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "deposit/:validatorId",
-        element: (
-          <ProtectedRoute>
-            {withSuspenseAndErrorBoundary(<DepositPage />)}
           </ProtectedRoute>
         ),
       },

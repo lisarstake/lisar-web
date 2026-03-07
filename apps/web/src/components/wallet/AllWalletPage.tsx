@@ -125,13 +125,13 @@ export const AllWalletPage: React.FC = () => {
 
   const handleDepositClick = (walletType?: string) => {
     if (walletType === "main") {
-      navigate("/deposit", { state: { walletType: undefined } });
+      navigate("/wallet?open=deposit");
       return;
     }
     if (walletType) {
       navigate(`/wallet/${walletType}`);
     } else {
-      navigate("/deposit", { state: { walletType: undefined } });
+      navigate("/wallet?open=deposit");
     }
   };
 
