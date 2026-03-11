@@ -15,6 +15,7 @@ import { PortfolioProvider } from "@/contexts/PortfolioContext";
 import { WalletCardProvider } from "@/contexts/WalletCardContext";
 import { CampaignProvider } from "@/contexts/CampaignContext";
 import { GuidedTour } from "@/components/general/GuidedTour";
+import { YieldApyProvider } from "@/contexts/YieldApyContext";
 
 export default function App() {
   const location = useLocation();
@@ -37,7 +38,7 @@ export default function App() {
     "/learn-detail",
   ];
 
-  const pagesWithoutBottomNavSpacing = ["/wallet/savings/intro"];
+  const pagesWithoutBottomNavSpacing = ["/wallet/yields/intro"];
 
   const hasBottomNav =
     !pagesWithoutBottomNavSpacing.some((path) =>
@@ -59,7 +60,8 @@ export default function App() {
               <ErrorBoundary>
                 <OrchestratorProvider>
                   <ErrorBoundary>
-                    <WalletProvider>
+                    <YieldApyProvider>
+                      <WalletProvider>
                       <ErrorBoundary>
                         <TransactionProvider>
                           <ErrorBoundary>
@@ -120,7 +122,8 @@ export default function App() {
                           </ErrorBoundary>
                         </TransactionProvider>
                       </ErrorBoundary>
-                    </WalletProvider>
+                      </WalletProvider>
+                    </YieldApyProvider>
                   </ErrorBoundary>
                 </OrchestratorProvider>
               </ErrorBoundary>

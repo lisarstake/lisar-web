@@ -10,10 +10,8 @@ interface AllBalancesDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   ngnBalance: number;
-  usdBalance: number;
   lptBalance: number;
   usdcBalance: number;
-  usdtBalance: number;
   showBalance: boolean;
 }
 
@@ -21,10 +19,8 @@ export const AllBalancesDrawer: React.FC<AllBalancesDrawerProps> = ({
   isOpen,
   onClose,
   ngnBalance,
-  usdBalance,
   lptBalance,
   usdcBalance,
-  usdtBalance,
   showBalance,
 }) => {
   const formatBalance = (value: number, decimals = 2, symbol = "") => {
@@ -48,31 +44,13 @@ export const AllBalancesDrawer: React.FC<AllBalancesDrawerProps> = ({
           <div>
             <div className="space-y-2">
               <div className="flex items-center gap-3 px-3 py-3 rounded-lg bg-[#13170a]">
-                <img
-                  src="/ng_flag.png"
-                  alt="NGN"
-                  className="w-8 h-8 rounded-full"
-                />
+                <img src="/usdc.svg" alt="USDC" className="w-8 h-8" />
                 <div className="flex-1">
-                  <p className="text-white text-sm font-medium">Naira</p>
-                  <p className="text-white/50 text-xs">NGN</p>
+                  <p className="text-white text-sm font-medium">USD Coin</p>
+                  <p className="text-white/50 text-xs">USDC</p>
                 </div>
                 <p className="text-white text-sm font-medium">
-                  {formatBalance(ngnBalance, 2, "₦")}
-                </p>
-              </div>
-              <div className="flex items-center gap-3 px-3 py-3 rounded-lg bg-[#13170a]">
-                <img
-                  src="/us_flag.png"
-                  alt="USD"
-                  className="w-8 h-8 rounded-full"
-                />
-                <div className="flex-1">
-                  <p className="text-white text-sm font-medium">US Dollar</p>
-                  <p className="text-white/50 text-xs">USD</p>
-                </div>
-                <p className="text-white text-sm font-medium">
-                  {formatBalance(usdBalance, 2, "$")}
+                  {formatBalance(usdcBalance, 2, "$")}
                 </p>
               </div>
               <div className="flex items-center gap-3 px-3 py-3 rounded-lg bg-[#13170a]">
@@ -86,23 +64,17 @@ export const AllBalancesDrawer: React.FC<AllBalancesDrawerProps> = ({
                 </p>
               </div>
               <div className="flex items-center gap-3 px-3 py-3 rounded-lg bg-[#13170a]">
-                <img src="/usdc.svg" alt="USDC" className="w-8 h-8" />
+                <img
+                  src="/ng_flag.png"
+                  alt="NGN"
+                  className="w-8 h-8 rounded-full"
+                />
                 <div className="flex-1">
-                  <p className="text-white text-sm font-medium">USD Coin</p>
-                  <p className="text-white/50 text-xs">USDC</p>
+                  <p className="text-white text-sm font-medium">Naira</p>
+                  <p className="text-white/50 text-xs">NGN</p>
                 </div>
                 <p className="text-white text-sm font-medium">
-                  {formatBalance(usdcBalance, 2, "$")}
-                </p>
-              </div>
-              <div className="flex items-center gap-3 px-3 py-3 rounded-lg bg-[#13170a]">
-                <img src="/usdt.svg" alt="USDT" className="w-8 h-8" />
-                <div className="flex-1">
-                  <p className="text-white text-sm font-medium">Tether</p>
-                  <p className="text-white/50 text-xs">USDT</p>
-                </div>
-                <p className="text-white text-sm font-medium">
-                  {formatBalance(usdtBalance, 2, "$")}
+                  {formatBalance(ngnBalance, 2, "₦")}
                 </p>
               </div>
             </div>

@@ -3,8 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { Banknote, ArrowLeft, Star, Zap } from "lucide-react";
 import { useWallet } from "@/contexts/WalletContext";
 import { useDelegation } from "@/contexts/DelegationContext";
+import { YIELD_ASSET_PICKER_PATH } from "@/lib/yieldPaths";
 
-export const SavingsIntroPage: React.FC = () => {
+export const YieldIntroPage: React.FC = () => {
   const navigate = useNavigate();
   const { stablesBalance } = useWallet();
   const { delegatorStakeProfile } = useDelegation();
@@ -31,7 +32,7 @@ export const SavingsIntroPage: React.FC = () => {
     } else if (hasStaking) {
       navigate("/wallet/staking");
     } else {
-      navigate("/wallet/savings/create-plan");
+      navigate(YIELD_ASSET_PICKER_PATH);
     }
   };
 
@@ -48,17 +49,15 @@ export const SavingsIntroPage: React.FC = () => {
         <div className="w-8 h-8" />
       </div>
 
-    
-
       <div className="flex-1 overflow-y-auto px-6 pb-6 scrollbar-hide flex flex-col justify-center">
         <img
           src="/crypto.png"
-          alt="Savings"
+          alt="Yields"
           className="mx-auto h-[200px] w-[200px] object-contain"
         />
 
         <h2 className="mt-6 text-xl font-semibold leading-relaxed">
-          Earn up to 49% per annum on Lisar Earn
+          Earn up to 49% per annum on Lisar Yield
         </h2>
 
         <div className="mt-6 space-y-5">
@@ -79,7 +78,7 @@ export const SavingsIntroPage: React.FC = () => {
         </div>
 
         <p className="mt-5 text-sm leading-relaxed text-[#8a938e]">
-          Unlimited free withdrawals on all plans, withdraw instantly anytime.
+          Unlimited free withdrawals on all yield plans, withdraw instantly anytime.
         </p>
       </div>
 
@@ -88,7 +87,7 @@ export const SavingsIntroPage: React.FC = () => {
           onClick={handleExploreClick}
           className="h-14 w-full rounded-full bg-[#C7EF6B] text-base font-semibold text-black"
         >
-          Explore Earn
+          Explore Yield
         </button>
       </div>
     </div>

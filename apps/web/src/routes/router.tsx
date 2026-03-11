@@ -5,6 +5,7 @@ import { ErrorBoundary } from "@/components/general/ErrorBoundary";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { LoadingSpinner } from "@/components/general/LoadingSpinner";
 import { lazyRetry } from "@/lib/lazyRetry";
+import { YIELD_ASSET_PICKER_PATH } from "@/lib/yieldPaths";
 
 const HomePage = lazyRetry(() => import("@/screens/home-page"));
 const SignupPage = lazyRetry(() => import("@/screens/signup-page"));
@@ -16,14 +17,12 @@ const ResetPasswordPage = lazyRetry(
   () => import("@/screens/reset-password-page"),
 );
 const WalletPage = lazyRetry(() => import("@/screens/wallet-page"));
-const SavingsIntroPage = lazyRetry(
-  () => import("@/screens/savings-intro-page"),
+const YieldAssetPickerPage = lazyRetry(
+  () => import("@/screens/yield-asset-picker-page"),
 );
-const SavingsCreatePlanPage = lazyRetry(
-  () => import("@/screens/savings-create-plan-page"),
-);
-const SavingsCreateFlexiblePage = lazyRetry(
-  () => import("@/screens/savings-create-flexible-page"),
+const YieldIntroPage = lazyRetry(() => import("@/screens/yield-intro-page"));
+const YieldCreateFlexiblePage = lazyRetry(
+  () => import("@/screens/yield-create-flexible-page"),
 );
 const ValidatorPage = lazyRetry(() => import("@/screens/validator-page"));
 const ValidatorDetailsPage = lazyRetry(
@@ -135,26 +134,26 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "wallet/savings/intro",
+        path: "wallet/yields/intro",
         element: (
           <ProtectedRoute>
-            {withSuspenseAndErrorBoundary(<SavingsIntroPage />)}
+            {withSuspenseAndErrorBoundary(<YieldIntroPage />)}
           </ProtectedRoute>
         ),
       },
       {
-        path: "wallet/savings/create-plan",
+        path: YIELD_ASSET_PICKER_PATH.replace(/^\//, ""),
         element: (
           <ProtectedRoute>
-            {withSuspenseAndErrorBoundary(<SavingsCreatePlanPage />)}
+            {withSuspenseAndErrorBoundary(<YieldAssetPickerPage />)}
           </ProtectedRoute>
         ),
       },
       {
-        path: "wallet/savings/create-flexible",
+        path: "wallet/yields/create-flexible",
         element: (
           <ProtectedRoute>
-            {withSuspenseAndErrorBoundary(<SavingsCreateFlexiblePage />)}
+            {withSuspenseAndErrorBoundary(<YieldCreateFlexiblePage />)}
           </ProtectedRoute>
         ),
       },

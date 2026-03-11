@@ -56,6 +56,7 @@ export const WalletTransferFormPage: React.FC = () => {
   const [selectedToken, setSelectedToken] = useState<SupportedToken>("USDT");
   const [selectedNetwork, setSelectedNetwork] =
     useState<SupportedNetwork>("Solana");
+  /*
   const [instantOfframp, setInstantOfframp] = useState(false);
   const [offrampAddress, setOfframpAddress] = useState("");
   const [timerSeconds, setTimerSeconds] = useState(0);
@@ -87,11 +88,22 @@ export const WalletTransferFormPage: React.FC = () => {
     }, 1000);
     return () => clearInterval(timer);
   }, [instantOfframp, timerSeconds]);
+  */
+
 
   const linked = state.user?.linked_account;
   const depositBankName = linked?.bank_name || "Nomba Microfinance Bank";
   const depositAccountNumber = linked?.account_number || "00228811900";
   const depositAccountName = state.user?.full_name || "Lisar User";
+
+  const displayName = (() => {
+    if (!depositAccountName) return "User";
+  
+    const parts = depositAccountName.trim().split(" ");
+    if (parts.length <= 2) return depositAccountName;
+  
+    return `${parts[0]} ${parts[parts.length - 1]}`;
+  })();
 
   const currentTokenConfig = TOKEN_CONFIG[selectedToken];
   const availableNetworks = currentTokenConfig.networks;
@@ -109,6 +121,7 @@ export const WalletTransferFormPage: React.FC = () => {
     return state.user?.wallet_address || "No wallet address";
   }, [selectedNetwork, solanaWalletAddress, state.user?.wallet_address]);
 
+  /*
   const generateOfframpAddress = (network: SupportedNetwork) => {
     if (network === "Solana") {
       const alphabet =
@@ -132,9 +145,9 @@ export const WalletTransferFormPage: React.FC = () => {
     if (!instantOfframp) return;
     setOfframpAddress(generateOfframpAddress(selectedNetwork));
   }, [instantOfframp, selectedNetwork]);
+  */
 
-  const effectiveDepositAddress =
-    instantOfframp && offrampAddress ? offrampAddress : cryptoDepositAddress;
+  const effectiveDepositAddress = cryptoDepositAddress;
 
   const truncatedCryptoAddress = useMemo(() => {
     if (
@@ -146,6 +159,7 @@ export const WalletTransferFormPage: React.FC = () => {
     return `${effectiveDepositAddress.slice(0, 10)}...${effectiveDepositAddress.slice(-15)}`;
   }, [effectiveDepositAddress]);
 
+  /*
   const conversionRateNgn = useMemo(() => {
     const ngnRate = prices.ngn || 0;
     if (!ngnRate) return 0;
@@ -154,6 +168,7 @@ export const WalletTransferFormPage: React.FC = () => {
     }
     return ngnRate;
   }, [prices.ngn, prices.lpt, selectedToken]);
+  */
 
   useEffect(() => {
     if (safeMode !== "deposit" || safeAsset !== "crypto") return;
@@ -313,7 +328,7 @@ export const WalletTransferFormPage: React.FC = () => {
               </div>
               <div className="flex items-center justify-between">
                 <p className="text-sm text-white/60">Account name</p>
-                <p className="text-base text-white">{depositAccountName}</p>
+                <p className="text-base text-white">{displayName}</p>
               </div>
               <div className="flex items-center justify-between">
                 <p className="text-sm text-white/60">Account number</p>
@@ -396,6 +411,7 @@ export const WalletTransferFormPage: React.FC = () => {
               </Select>
             </div>
 
+            {/*
             <div className="rounded-lg bg-[#13170a] p-4 space-y-2">
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
@@ -436,6 +452,7 @@ export const WalletTransferFormPage: React.FC = () => {
                 </div>
               )}
             </div>
+            */}
 
             <div className="space-y-2">
               <p className="text-sm text-white/60">Wallet address</p>

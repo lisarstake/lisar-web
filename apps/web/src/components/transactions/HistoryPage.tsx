@@ -50,7 +50,7 @@ export const HistoryPage: React.FC = () => {
       {/* Header */}
       <div className="flex items-start justify-between px-6 py-6">
         <div>
-          <h1 className="text-lg font-medium text-white">Transactions</h1>
+          <h1 className="text-lg font-medium text-white">Activity</h1>
           <p className="text-xs text-gray-500">
             View all your recent transactions
           </p>

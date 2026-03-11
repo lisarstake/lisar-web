@@ -19,6 +19,7 @@ import { useTransactions } from "@/contexts/TransactionContext";
 import { formatEarnings } from "@/lib/formatters";
 import { getEarliestUnbondingTime } from "@/lib/unbondingTime";
 import { TransactionData } from "@/services/transactions/types";
+import { YIELD_ASSET_PICKER_PATH } from "@/lib/yieldPaths";
 import {
   ArrowDown,
   ArrowLeft,
@@ -151,27 +152,16 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
   const fundingOptions = useMemo<FundingOption[]>(() => {
     if (walletType === "staking") {
       return [
-        {
-          id: "ngn",
-          label: "NGN",
-          icon: "/ng_flag.png",
-          subtitle: "Naira balance",
-          balance: `₦${ngnBalance.toLocaleString(undefined, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })}`,
-          availableBalance: ngnBalance,
-          enabled: true,
-        },
-        {
-          id: "usd",
-          label: "USD",
-          icon: "/us_flag.png",
-          subtitle: "Dollar balance",
-          balance: "Coming soon",
-          availableBalance: null,
-          enabled: false,
-        },
+        
+        // {
+        //   id: "usd",
+        //   label: "USD",
+        //   icon: "/us_flag.png",
+        //   subtitle: "Dollar balance",
+        //   balance: "Coming soon",
+        //   availableBalance: null,
+        //   enabled: false,
+        // },
         {
           id: "lpt",
           label: "LPT",
@@ -184,31 +174,32 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
           availableBalance: highyieldBalance || 0,
           enabled: true,
         },
+        {
+          id: "ngn",
+          label: "NGN",
+          icon: "/ng_flag.png",
+          subtitle: "Naira balance",
+          balance: `₦${ngnBalance.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}`,
+          availableBalance: ngnBalance,
+          enabled: true,
+        },
       ];
     }
 
     return [
-      {
-        id: "ngn",
-        label: "NGN",
-        icon: "/ng_flag.png",
-        subtitle: "Naira balance",
-        balance: `₦${ngnBalance.toLocaleString(undefined, {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        })}`,
-        availableBalance: ngnBalance,
-        enabled: true,
-      },
-      {
-        id: "usd",
-        label: "USD",
-        icon: "/us_flag.png",
-        subtitle: "Dollar balance",
-        balance: "Coming soon",
-        availableBalance: null,
-        enabled: false,
-      },
+     
+      // {
+      //   id: "usd",
+      //   label: "USD",
+      //   icon: "/us_flag.png",
+      //   subtitle: "Dollar balance",
+      //   balance: "Coming soon",
+      //   availableBalance: null,
+      //   enabled: false,
+      // },
       {
         id: "usdc",
         label: "USDC",
@@ -222,17 +213,29 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
         enabled: true,
       },
       {
-        id: "usdt",
-        label: "USDT",
-        icon: "/usdt.svg",
-        subtitle: "Tether USD",
-        balance: `${(solanaUsdtBalance || 0).toLocaleString(undefined, {
+        id: "ngn",
+        label: "NGN",
+        icon: "/ng_flag.png",
+        subtitle: "Naira balance",
+        balance: `₦${ngnBalance.toLocaleString(undefined, {
           minimumFractionDigits: 2,
-          maximumFractionDigits: 4,
-        })} USDT`,
-        availableBalance: solanaUsdtBalance || 0,
+          maximumFractionDigits: 2,
+        })}`,
+        availableBalance: ngnBalance,
         enabled: true,
       },
+      // {
+      //   id: "usdt",
+      //   label: "USDT",
+      //   icon: "/usdt.svg",
+      //   subtitle: "Tether USD",
+      //   balance: `${(solanaUsdtBalance || 0).toLocaleString(undefined, {
+      //     minimumFractionDigits: 2,
+      //     maximumFractionDigits: 4,
+      //   })} USDT`,
+      //   availableBalance: solanaUsdtBalance || 0,
+      //   enabled: true,
+      // },
     ];
   }, [
     walletType,
@@ -243,7 +246,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
   ]);
 
   const handleBackClick = () => {
-    navigate("/wallet");
+    navigate(-1);
   };
 
   const handleDepositClick = () => {
@@ -303,7 +306,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
     setShowTopUpDrawer(false);
     setTopUpDrawerView("options");
     const mode = walletType === "staking" ? "staking" : "savings";
-    navigate(`/wallet/savings/create-flexible?mode=${mode}&source=${assetId}`);
+    navigate(`/wallet/yields/create-flexible?mode=${mode}&source=${assetId}`);
   };
 
   const handleTransactionClick = (transaction: TransactionData) => {
@@ -333,9 +336,9 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
           <div className="flex items-center gap-4">
             <div className="shrink-0">
               <img
-                src="/crypto.png"
+                src="/yield.png"
                 alt="Weekly earnings"
-                className="w-14 h-14 object-cover rounded-lg"
+                className="w-12 h-12 object-cover rounded-lg object-top"
               />
             </div>
             <div className="flex-1">
@@ -432,9 +435,9 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
         <div className="flex items-center gap-4">
           <div className="shrink-0">
             <img
-              src="/crypto.png"
-              alt="Start earning"
-              className="w-14 h-14 object-cover rounded-lg"
+              src="/yield.png"
+              alt="Weekly earnings"
+              className="w-12 h-12 object-cover rounded-lg object-top"
             />
           </div>
           <div className="flex-1">
@@ -475,12 +478,12 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
               <EyeOff size={18} color="#fff" />
             )}
           </button>
-          <button
+          {/* <button
             onClick={() => setShowPortfolioDrawer(true)}
             className="h-10 w-10 rounded-full bg-[#13170a] flex items-center justify-center"
           >
             <RotateCcw size={18} color="#fff" />
-          </button>
+          </button> */}
         </div>
       </div>
 
@@ -583,13 +586,13 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
             if (stablesBalance && stablesBalance > 0) {
               navigate("/wallet/savings");
             } else {
-              navigate("/wallet/savings/create-plan");
+              navigate(YIELD_ASSET_PICKER_PATH);
             }
           } else {
             if (stakedBalance > 0) {
               navigate("/wallet/staking");
             } else {
-              navigate("/wallet/savings/create-plan");
+              navigate(YIELD_ASSET_PICKER_PATH);
             }
           }
         }}

@@ -161,7 +161,7 @@ export const ValidatorDetailsPage: React.FC = () => {
       setShowMoveStakeDrawer(true);
     } else {
       navigate(
-        `/wallet/savings/create-flexible?mode=staking&source=lpt&orchestrator=${currentValidator?.address || ""}`,
+        `/wallet/yields/create-flexible?mode=staking&source=lpt&orchestrator=${currentValidator?.address || ""}`,
       );
     }
   };

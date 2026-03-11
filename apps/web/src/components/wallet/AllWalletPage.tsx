@@ -22,22 +22,27 @@ import { useGuidedTour } from "@/hooks/useGuidedTour";
 import { usePrices } from "@/hooks/usePrices";
 import { ALL_WALLET_TOUR_ID } from "@/lib/tourConfig";
 import { priceService } from "@/lib/priceService";
+import { YIELD_ASSET_PICKER_PATH } from "@/lib/yieldPaths";
 import {
   Bell,
-  CircleQuestionMark,
   Plus,
   Eye,
   EyeOff,
   X,
   ArrowDown,
   ArrowRight,
-  Wallet,
-  LayoutGrid,
-  ChartNoAxesCombined,
-  Clock,
+  CircleDollarSign,
 } from "lucide-react";
 
-const ADD_CASH_AMOUNTS = [20000, 50000, 100000, 250000, 500000];
+const QUICK_DEPOSIT_AMOUNTS = [50, 100, 200, 500, 1000];
+const YIELD_TREND_VALUES = [10, 12, 15, 19, 23, 28, 34, 45, 60];
+const YIELD_PRIMARY_COLOR = "#C7EF6B";
+const YIELD_AREA_COLOR = "rgba(199,239,107,0.18)";
+const YIELD_CHART_HEIGHT = 40;
+const YIELD_CHART_MIN_PERCENT = 0.7;
+const YIELD_CHART_MAX_PERCENT = 0.35;
+const YIELD_SHADOW_OFFSET = 100;
+const YIELD_MARKER_INDEXES = [1, 3, 5, 7];
 
 export const AllWalletPage: React.FC = () => {
   const navigate = useNavigate();
@@ -47,7 +52,6 @@ export const AllWalletPage: React.FC = () => {
   const [transferDrawer, setTransferDrawer] = useState<
     "deposit" | "withdraw" | null
   >(null);
-  const [displayCurrency, setDisplayCurrency] = useState<"USD" | "NGN">("NGN");
   const [showBalance, setShowBalance] = useState(() => {
     const saved = localStorage.getItem("wallet_show_balance");
     return saved ? JSON.parse(saved) : false;
@@ -74,7 +78,6 @@ export const AllWalletPage: React.FC = () => {
   const {
     wallet,
     isLoading: walletLoading,
-    stablesBalance: contextStablesBalance,
     highyieldBalance: contextHighyieldBalance,
     solanaUsdcBalance,
     solanaUsdtBalance,
@@ -91,17 +94,14 @@ export const AllWalletPage: React.FC = () => {
     return state.user?.is_onboarded === false && !state.isLoading;
   }, [state.user?.is_onboarded, state.isLoading]);
 
-  const {} = useGuidedTour({
+  const { } = useGuidedTour({
     tourId: ALL_WALLET_TOUR_ID,
     autoStart: shouldAutoStart,
   });
 
   const highyieldBalance = contextHighyieldBalance || 0;
-  const stablesBalance = contextStablesBalance || 0;
   const solUsdcBalance = solanaUsdcBalance || 0;
   const solUsdtBalance = solanaUsdtBalance || 0;
-  const stakingPosition = parseFloat(delegatorStakeProfile?.currentStake || "0");
-
   const totalIdleUsdBalance = useMemo(() => {
     const lptPriceInUsd = prices.lpt || 0;
     const unstakedLpt = highyieldBalance;
@@ -115,6 +115,50 @@ export const AllWalletPage: React.FC = () => {
     () => priceService.getCurrencySymbol(fiatCurrency),
     [fiatCurrency],
   );
+  const quickDepositSymbol = useMemo(
+    () => priceService.getCurrencySymbol("USD"),
+    [],
+  );
+
+  const yieldChartCoordinates = useMemo(() => {
+    if (YIELD_TREND_VALUES.length < 2) return [];
+    const max = Math.max(...YIELD_TREND_VALUES);
+    const min = Math.min(...YIELD_TREND_VALUES);
+    const range = max === min ? 1 : max - min;
+    return YIELD_TREND_VALUES.map((value, index) => {
+      const x = (index / (YIELD_TREND_VALUES.length - 1)) * 100;
+      const normalized = (value - min) / range;
+      const y =
+        YIELD_CHART_HEIGHT *
+        (YIELD_CHART_MIN_PERCENT -
+          normalized * (YIELD_CHART_MIN_PERCENT - YIELD_CHART_MAX_PERCENT));
+      return { x, y };
+    });
+  }, []);
+  const yieldLinePoints = yieldChartCoordinates
+    .map((point) => `${point.x},${point.y}`)
+    .join(" ");
+  const yieldShadowPath = yieldChartCoordinates.length
+    ? `${yieldChartCoordinates
+        .map((point, index) => `${index === 0 ? "M" : "L"}${point.x},${point.y}`)
+        .join(" ")} ${yieldChartCoordinates
+        .slice()
+        .reverse()
+        .map((point) => `L${point.x},${Math.min(point.y + YIELD_SHADOW_OFFSET, YIELD_CHART_HEIGHT)}`)
+        .join(" ")} Z`
+    : "";
+  const yieldMarkerPositions = useMemo(() => {
+    if (!yieldChartCoordinates.length) return [];
+    return YIELD_MARKER_INDEXES.map((index, markerIndex) => {
+      const point =
+        yieldChartCoordinates[Math.min(index, yieldChartCoordinates.length - 1)];
+      return {
+        id: `yield-marker-${markerIndex}`,
+        x: point.x,
+        y: point.y,
+      };
+    });
+  }, [yieldChartCoordinates]);
 
   const handleNotificationClick = () => {
     navigate("/notifications");
@@ -137,24 +181,22 @@ export const AllWalletPage: React.FC = () => {
   };
 
   const displayBalance = useMemo(() => {
-    return displayCurrency === "NGN"
+    return fiatCurrency === "NGN"
       ? totalIdleUsdBalance * (prices.ngn || 0)
       : totalIdleUsdBalance;
-  }, [displayCurrency, totalIdleUsdBalance, prices.ngn]);
-
-  const displayCurrencySymbol = displayCurrency === "NGN" ? "₦" : "$";
+  }, [fiatCurrency, totalIdleUsdBalance, prices.ngn]);
 
   const walletCards = useMemo(
     () => [
       {
         id: "main",
-        title: "Total cash balance",
+        title: "Total asset balance",
         balance: displayBalance,
-        currencySymbol: displayCurrencySymbol,
+        currencySymbol: fiatSymbol,
         type: "main",
       },
     ],
-    [displayBalance, displayCurrencySymbol],
+    [displayBalance, fiatSymbol],
   );
 
   const renderLoadingStars = (sizeClass: string) => (
@@ -206,7 +248,7 @@ export const AllWalletPage: React.FC = () => {
             </button>
             <div className="flex flex-col gap-0.5">
               <span className="text-gray-100 text-xs">Welcome 👋</span>
-              <span className="text-gray-100 text-sm font-medium">
+              <span className="text-gray-100 text-sm font-medium lowercase">
                 {state.user?.full_name?.split(" ")[0] || "User"}!
               </span>
             </div>
@@ -250,11 +292,10 @@ export const AllWalletPage: React.FC = () => {
                         handleDepositClick(card.type);
                       }
                     }}
-                    className={`rounded-2xl py-5 min-h-[100px] relative overflow-hidden ${
-                      card.type !== "main"
+                    className={`rounded-2xl py-5 min-h-[100px] relative overflow-hidden ${card.type !== "main"
                         ? "cursor-pointer hover:opacity-95 transition-opacity"
                         : ""
-                    }`}
+                      }`}
                     data-tour={
                       card.id === "main" ? "all-wallet-balance-card" : undefined
                     }
@@ -268,9 +309,9 @@ export const AllWalletPage: React.FC = () => {
                       {/* Balance Display */}
                       <div>
                         {walletLoading ||
-                        delegationLoading ||
-                        stablesLoading ||
-                        highyieldLoading ? (
+                          delegationLoading ||
+                          stablesLoading ||
+                          highyieldLoading ? (
                           <div className="flex items-baseline justify-center gap-2 mb-1">
                             {renderLoadingStars("text-xl font-semibold")}
                           </div>
@@ -279,12 +320,12 @@ export const AllWalletPage: React.FC = () => {
                             <span className="text-2xl font-bold text-white/90">
                               {showBalance
                                 ? `${card.currencySymbol}${card.balance.toLocaleString(
-                                    undefined,
-                                    {
-                                      minimumFractionDigits: 2,
-                                      maximumFractionDigits: 2,
-                                    },
-                                  )}`
+                                  undefined,
+                                  {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2,
+                                  },
+                                )}`
                                 : "★★★★"}
                             </span>
                           </div>
@@ -316,15 +357,29 @@ export const AllWalletPage: React.FC = () => {
                           Withdraw
                         </span>
                       </button>
+                      {/*
+                        Accounts navigation temporarily paused while focus shifts
+                        <button
+                          onClick={() => navigate("/accounts")}
+                          className="flex flex-col items-center gap-1.5"
+                        >
+                          <div className="w-12 h-12 rounded-full bg-[#13170a] flex items-center justify-center">
+                            <LayoutGrid size={24} color="#fff" />
+                          </div>
+                          <span className="text-white font-medium text-xs">
+                            Accounts
+                          </span>
+                        </button>
+                      */}
                       <button
-                        onClick={() => navigate("/accounts")}
+                        onClick={() => setShowAllBalancesDrawer(true)}
                         className="flex flex-col items-center gap-1.5"
                       >
                         <div className="w-12 h-12 rounded-full bg-[#13170a] flex items-center justify-center">
-                          <LayoutGrid size={24} color="#fff" />
+                          <CircleDollarSign size={24} color="#fff" />
                         </div>
                         <span className="text-white font-medium text-xs">
-                          Accounts
+                          Assets
                         </span>
                       </button>
                     </div>
@@ -366,14 +421,13 @@ export const AllWalletPage: React.FC = () => {
                   return (
                     <div
                       key={notification.id}
-                      className={`relative bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-xl p-3 overflow-hidden ${
-                        notification.metadata?.severity === "warning"
+                      className={`relative bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-xl p-3 overflow-hidden ${notification.metadata?.severity === "warning"
                           ? "border-yellow-500/30"
                           : notification.metadata?.severity === "error" ||
-                              notification.metadata?.severity === "critical"
+                            notification.metadata?.severity === "critical"
                             ? "border-red-500/30"
                             : "border-[#86B3F7]/30"
-                      }`}
+                        }`}
                     >
                       {/* Close Button */}
                       <button
@@ -396,8 +450,8 @@ export const AllWalletPage: React.FC = () => {
                               notification.metadata?.severity === "warning"
                                 ? "#eab308"
                                 : notification.metadata?.severity === "error" ||
-                                    notification.metadata?.severity ===
-                                      "critical"
+                                  notification.metadata?.severity ===
+                                  "critical"
                                   ? "#ef4444"
                                   : "#86B3F7"
                             }
@@ -448,7 +502,7 @@ export const AllWalletPage: React.FC = () => {
                         <p className="text-white/60 text-[13px]">
                           Earn rewards building a healthy savings habit.
                         </p>
-                        <button className="mt-3 px-4 py-2 bg-[#C7EF6B] text-black rounded-full text-xs font-semibold hover:bg-[#B8E55A] transition-colors relative z-10">
+                        <button className="mt-1 px-3 py-1.5 bg-[#C7EF6B] text-black rounded-full text-[11px] font-semibold hover:bg-[#B8E55A] transition-colors relative z-10">
                           Start earning
                         </button>
                       </div>
@@ -458,89 +512,112 @@ export const AllWalletPage: React.FC = () => {
               })()
             )}
 
-            {/* Balance Section */}
-            <div className="mt-6 bg-[#13170a] rounded-xl py-3 px-4">
+
+            {/* Add Cash Section */}
+            <div className="mt-4 bg-[#13170a] rounded-xl py-3 px-4">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-white/70 text-xs font-medium">
-                  My balance
+                  Quick deposit <span className="text-white"></span>
                 </h2>
-                <button
-                  onClick={() => setShowAllBalancesDrawer(true)}
-                  className="text-[#C7EF6B] text-xs font-medium hover:opacity-80"
-                >
-                  Show all
-                </button>
               </div>
-              <div className="space-y-5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <img src="/ng_flag.png" alt="NGN" className="w-10 h-10" />
-                    <div>
-                      <p className="text-white text-xs font-medium">NGN</p>
-                      <p className="text-white/50 text-[10px] font-medium">
-                        Naira
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center">
-                    <p className="text-white text-xs font-medium">{showBalance ? "0 NGN" : "*****"}</p>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <img src="/us_flag.png" alt="USD" className="w-10 h-10" />
-                    <div>
-                      <p className="text-white text-xs font-medium">
-                        USD (coming soon)
-                      </p>
-                      <p className="text-white/50 text-[10px] font-medium">
-                        US Dollar
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex-col items-start justify-start">
-                    <p className="text-white text-xs font-medium">★ USD</p>
-                    {/* <p className="text-white/50 text-[10px] f★nt-medium">
-                    ★ NGN
-                    </p> */}
-                  </div>
-                </div>
+              <div className="grid grid-cols-3 gap-2">
+                {QUICK_DEPOSIT_AMOUNTS.map((amount) => (
+                  <button
+                    key={amount}
+                    onClick={() => navigate("/wallet/deposit/crypto")}
+                    className="py-2.5 px-3 rounded-lg bg-white/10 text-white text-sm font-medium transition-colors"
+                  >
+                    {quickDepositSymbol}
+                    {amount.toLocaleString(undefined, {
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 0,
+                    })}
+                  </button>
+                ))}
+                <button
+                  onClick={() => navigate("/wallet/deposit/crypto")}
+                  className="py-2.5 px-3 rounded-lg bg-white/10 flex items-center justify-center transition-colors"
+                >
+                  <Plus size={16} className="text-white" />
+                </button>
               </div>
             </div>
 
-            {/* Savings Section */}
+            {/* Yields section */}
             <button
-              onClick={() => {
-                if (stablesBalance > 0) {
-                  navigate("/wallet/savings");
-                  return;
-                }
-
-                if (stakingPosition > 0) {
-                  navigate("/wallet/staking");
-                  return;
-                }
-
-                navigate("/wallet/savings/intro");
-              }}
-              className="mt-6 w-full bg-[#13170a] rounded-xl py-3 px-4 text-left"
+              onClick={() => navigate(YIELD_ASSET_PICKER_PATH)}
+              className="mt-4 w-full bg-[#13170a] rounded-xl py-3 px-4 text-left"
             >
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-white/70 text-xs font-medium">Savings</h2>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-white/70 text-xs font-medium">Yield</h2>
+                
+                </div>
               </div>
-              <div className="space-y-6">
+              <div className="rounded-2xl border border-white/5 bg-white/10 overflow-hidden relative">
+                <svg
+                  viewBox="0 0 100 40"
+                  className="w-full h-24"
+                  preserveAspectRatio="none"
+                >
+                  {yieldShadowPath && (
+                    <path
+                      d={yieldShadowPath}
+                      fill={YIELD_AREA_COLOR}
+                      opacity={0.5}
+                    />
+                  )}
+                  {yieldLinePoints && (
+                    <polyline
+                      points={yieldLinePoints}
+                      fill="none"
+                      stroke={YIELD_PRIMARY_COLOR}
+                      strokeWidth={0.7}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  )}
+                </svg>
+                {yieldMarkerPositions.length > 0 && (
+                  <div className="absolute inset-0">
+                    {yieldMarkerPositions.map((marker, index) => (
+                      <div
+                        key={marker.id}
+                        className="absolute"
+                        style={{
+                          left: `${marker.x}%`,
+                          top: `${(marker.y / YIELD_CHART_HEIGHT) * 100}%`,
+                          transform: "translate(-50%, -120%)",
+                        }}
+                      >
+                        <img
+                          src={
+                            index === 0
+                              ? "/usdc.svg"
+                              : index === 1
+                                ? "/sol1.svg"
+                              : index === 2
+                                ? "/usdt.svg"
+                                : "/livepeer.webp"
+                          }
+                          alt="Yield asset"
+                          className="w-6 h-6 animate-[yield-icon-drift_6s_ease-in-out_infinite]"
+                          style={{ animationDelay: `${-index * 0.6}s` }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="space-y-6 mt-4">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 rounded-full bg-white/10 flex items-center justify-center">
-                      <ChartNoAxesCombined size={22} color="#fff" />
-                    </div>
                     <div>
                       <p className="text-white text-sm font-medium">
-                        Your money, working daily
+                        Your money. Working daily
                       </p>
-                      <p className="text-white/50 text-[10px] font-medium">
-                        Daily returns in USD or crypto. Flexible or fixed
-                        savings
+                      <p className="text-white/50 text-xs font-medium">
+                        Earn daily returns on your assets. Instant withdrawal with no lock-up periods or fees
                       </p>
                     </div>
                   </div>
@@ -548,32 +625,6 @@ export const AllWalletPage: React.FC = () => {
               </div>
             </button>
 
-            {/* Add Cash Section */}
-            <div className="mt-6 bg-[#13170a] rounded-xl py-3 px-4 mb-20">
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-white/70 text-xs font-medium">
-                  Quick deposit <span className="text-white">💸</span>
-                </h2>
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                {ADD_CASH_AMOUNTS.map((amount) => (
-                  <button
-                    key={amount}
-                    onClick={() => navigate("/wallet/deposit/naira")}
-                    className="py-2.5 px-3 rounded-lg bg-white/10 text-white text-sm font-medium transition-colors"
-                  >
-                    {fiatSymbol}
-                    {(amount / 1000).toFixed(0)}K
-                  </button>
-                ))}
-                <button
-                  onClick={() => navigate("/wallet/deposit/naira")}
-                  className="py-2.5 px-3 rounded-lg bg-white/10 flex items-center justify-center transition-colors"
-                >
-                  <Plus size={16} className="text-white" />
-                </button>
-              </div>
-            </div>
           </div>
         </>
       </div>
@@ -598,10 +649,8 @@ export const AllWalletPage: React.FC = () => {
         isOpen={showAllBalancesDrawer}
         onClose={() => setShowAllBalancesDrawer(false)}
         ngnBalance={0}
-        usdBalance={0}
         lptBalance={highyieldBalance}
         usdcBalance={solUsdcBalance}
-        usdtBalance={solUsdtBalance}
         showBalance={showBalance}
       />
 
@@ -612,7 +661,7 @@ export const AllWalletPage: React.FC = () => {
               <DrawerTitle className="text-white text-base font-medium">
                 {transferDrawer === "deposit" ? "Add Cash From" : "Cash Out To"}
               </DrawerTitle>
-              
+
             </div>
           </DrawerHeader>
           <div className="pb-2 space-y-3">
@@ -636,19 +685,6 @@ export const AllWalletPage: React.FC = () => {
                 </div>
               </div>
             </button>
-
-            <div className="w-full rounded-xl bg-[#13170a] px-4 py-4 opacity-70">
-              <div className="flex items-center gap-3">
-                <img src="/us_flag.png" alt="Dollar" className="w-10 h-10" />
-                <div className="flex-1">
-                  <p className="text-white text-sm font-medium">Dollar</p>
-                  <p className="text-xs text-white/60 flex items-center">
-                    USD transfer option is coming soon <Clock size={14} className="ml-1"/>
-                  </p>
-                </div>
-              
-              </div>
-            </div>
 
             <button
               onClick={() => handleTransferOptionSelect("crypto")}

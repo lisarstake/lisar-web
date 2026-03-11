@@ -27,7 +27,7 @@ import {
   DrawerDescription,
 } from "@/components/ui/drawer";
 
-export const SavingsCreateFlexiblePage: React.FC = () => {
+export const YieldCreateFlexiblePage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { orchestrators } = useOrchestrators();
@@ -97,7 +97,7 @@ export const SavingsCreateFlexiblePage: React.FC = () => {
 
     const allowedSources = new Set(["ngn", "usd", "lpt"]);
     if (!allowedSources.has(source)) {
-      navigate("/wallet/savings/create-flexible?mode=staking&source=lpt", {
+      navigate("/wallet/yields/create-flexible?mode=staking&source=lpt", {
         replace: true,
       });
       return;
@@ -124,7 +124,7 @@ export const SavingsCreateFlexiblePage: React.FC = () => {
     if (mode !== "savings") return;
     const allowedSources = new Set(["ngn", "usd", "usdc", "usdt"]);
     if (!allowedSources.has(source)) {
-      navigate("/wallet/savings/create-flexible?mode=savings&source=usdc", {
+      navigate("/wallet/yields/create-flexible?mode=savings&source=usdc", {
         replace: true,
       });
     }
