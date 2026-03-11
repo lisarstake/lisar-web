@@ -2,7 +2,8 @@ import React, { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { YIELD_ASSET_PICKER_PATH } from "@/lib/yieldPaths";
-import { useYieldApy } from "@/contexts/YieldApyContext";
+import { useOrchestrators } from "@/contexts/OrchestratorContext";
+import { useStablesApy } from "@/hooks/useStablesApy";
 
 interface YieldAssetRowProps {
   title: string;
@@ -25,11 +26,11 @@ const YieldAssetRow: React.FC<YieldAssetRowProps> = ({
     <button
       onClick={onClick}
       disabled={isComingSoon}
-      className={`flex w-full items-center justify-between py-3 text-left rounded-xl ${isComingSoon ? "opacity-55 cursor-not-allowed" : ""
+      className={`flex w-full items-center justify-between py-3 text-left rounded-xl ${isComingSoon ? "opacity-75" : ""
         }`}
     >
       <div className="flex items-center gap-3">
-        <img src={imageSrc} alt="asset" className="h-10 w-10 rounded-full object-cover" />
+        <img src={imageSrc} alt="asset" className="h-10 w-10 rounded-full object-contain" />
         <div>
           <p className="text-sm font-semibold">{title}</p>
           <p className="text-xs text-[#909a95]">{subtitle}</p>
@@ -48,7 +49,27 @@ const YieldAssetRow: React.FC<YieldAssetRowProps> = ({
 
 export const YieldAssetPickerPage: React.FC = () => {
   const navigate = useNavigate();
-  const { stablesApyPercent, stakingApyPercent, isLoading } = useYieldApy();
+  const { perena: perenaApy, isLoading } = useStablesApy();
+  const { orchestrators } = useOrchestrators();
+
+  const stablesApyPercent = useMemo(() => {
+    if (!perenaApy) return null;
+    return Math.max(0, perenaApy * 100);
+  }, [perenaApy]);
+
+  const stakingApyPercent = useMemo(() => {
+    if (!orchestrators?.length) return null;
+    const maxApy = orchestrators.reduce((acc, orch) => {
+      const value =
+        typeof orch.apy === "string"
+          ? parseFloat(orch.apy.replace("%", "")) || 0
+          : typeof orch.apy === "number"
+            ? orch.apy
+            : 0;
+      return Math.max(acc, value);
+    }, 0);
+    return maxApy > 0 ? maxApy : null;
+  }, [orchestrators]);
 
   const formatApy = (value: number | null) => {
     if (isLoading || value === null) return "...";
@@ -102,7 +123,7 @@ export const YieldAssetPickerPage: React.FC = () => {
             title="Solana"
             subtitle="Earn daily, withdraw anytime"
             apy="Soon"
-            imageSrc="/solana.svg"
+            imageSrc="/sol1.svg"
             isComingSoon
           />
         </div>
