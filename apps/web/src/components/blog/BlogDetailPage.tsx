@@ -232,11 +232,11 @@ export const BlogDetailPage: React.FC = () => {
                 />
               )}
               <div>
-                <p className="text-gray-900 text-xs sm:text-sm">
+                <p className="text-gray-900 text-sm">
                   {post.author.name}
                 </p>
                 {post.author.role && (
-                  <p className="text-xs sm:text-sm text-gray-600">
+                  <p className="text-sm text-gray-600">
                     {post.author.role}
                   </p>
                 )}
@@ -246,7 +246,7 @@ export const BlogDetailPage: React.FC = () => {
             {/* Date */}
             <div className="flex items-center gap-1 sm:gap-2 text-gray-600 ml-auto">
               <Calendar className="w-4 h-4" />
-              <div className="text-xs sm:text-sm">
+              <div className="text-sm">
                 <span className="hidden sm:inline">{formattedDate}</span>
                 <span className="sm:hidden">{relativeDate}</span>
               </div>
@@ -298,34 +298,34 @@ export const BlogDetailPage: React.FC = () => {
                   </h4>
                 ),
                 h5: ({ children }) => (
-                  <h5 className="text-sm sm:text-base md:text-lg font-semibold text-gray-900 mb-2 mt-3">
+                  <h5 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-2 mt-3">
                     {children}
                   </h5>
                 ),
                 h6: ({ children }) => (
-                  <h6 className="text-xs sm:text-sm md:text-base font-semibold text-gray-900 mb-2 mt-3">
+                  <h6 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-2 mt-3">
                     {children}
                   </h6>
                 ),
                 // Paragraphs
                 p: ({ children }) => (
-                  <p className="text-sm sm:text-base md:text-lg text-gray-700 leading-relaxed mb-4 sm:mb-6">
+                  <p className="text-base md:text-lg text-gray-700 leading-relaxed mb-4 sm:mb-6">
                     {children}
                   </p>
                 ),
                 // Lists
                 ul: ({ children }) => (
-                  <ul className="list-disc list-inside space-y-2 mb-4 sm:mb-6 text-sm sm:text-base md:text-lg text-gray-700">
+                  <ul className="list-disc list-inside space-y-2 mb-4 sm:mb-6 text-base md:text-lg text-gray-700">
                     {children}
                   </ul>
                 ),
                 ol: ({ children }) => (
-                  <ol className="list-decimal list-inside space-y-2 mb-4 sm:mb-6 text-sm sm:text-base md:text-lg text-gray-700">
+                  <ol className="list-decimal list-inside space-y-2 mb-4 sm:mb-6 text-base md:text-lg text-gray-700">
                     {children}
                   </ol>
                 ),
                 li: ({ children }) => (
-                  <li className="ml-4 sm:ml-6">{children}</li>
+                  <li className="ml-4 sm:ml-6 text-base md:text-lg">{children}</li>
                 ),
                 // Blockquote
                 blockquote: ({ children }) => (
@@ -337,14 +337,14 @@ export const BlogDetailPage: React.FC = () => {
                 code: ({ inline, children }: any) => {
                   if (inline) {
                     return (
-                  <code className="bg-gray-100 text-[#235538] px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-xs sm:text-sm font-mono">
+                  <code className="bg-gray-100 text-[#235538] px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-sm font-mono">
                     {children}
                   </code>
                     );
                   }
                   // Code block
                   return (
-                    <code className="block bg-gray-900 text-gray-100 px-4 py-3 sm:px-6 sm:py-4 rounded-lg text-xs sm:text-sm font-mono overflow-x-auto my-4 sm:my-6">
+                    <code className="block bg-gray-900 text-gray-100 px-4 py-3 sm:px-6 sm:py-4 rounded-lg text-sm font-mono overflow-x-auto my-4 sm:my-6">
                       {children}
                     </code>
                   );
@@ -396,12 +396,12 @@ export const BlogDetailPage: React.FC = () => {
                   </tr>
                 ),
                 th: ({ children }) => (
-                  <th className="px-3 py-3 sm:px-6 sm:py-4 text-left text-xs sm:text-sm font-semibold text-gray-900 border-b border-gray-300">
+                  <th className="px-3 py-3 sm:px-6 sm:py-4 text-left text-sm font-semibold text-gray-900 border-b border-gray-300">
                     {children}
                   </th>
                 ),
                 td: ({ children }) => (
-                  <td className="px-3 py-3 sm:px-6 sm:py-4 text-xs sm:text-sm text-gray-700 border-b border-gray-200">
+                  <td className="px-3 py-3 sm:px-6 sm:py-4 text-sm text-gray-700 border-b border-gray-200">
                     {children}
                   </td>
                 ),
@@ -447,7 +447,7 @@ export const BlogDetailPage: React.FC = () => {
                 {post.tags.map((tag) => (
                   <span
                     key={tag}
-                    className="px-3 py-1 bg-gray-100 text-gray-700 text-xs sm:text-sm rounded-full hover:bg-gray-200 transition-colors"
+                    className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full hover:bg-gray-200 transition-colors"
                   >
                     {tag}
                   </span>
