@@ -159,10 +159,10 @@ export const ProfilePage: React.FC = () => {
 
   const displayName = (() => {
     if (!formData.fullName) return "User";
-  
+
     const parts = formData.fullName.trim().split(" ");
     if (parts.length <= 2) return formData.fullName;
-  
+
     return `${parts[0]} ${parts[parts.length - 1]}`;
   })();
 
@@ -215,7 +215,7 @@ export const ProfilePage: React.FC = () => {
             <p className="text-white text-lg font-medium">
               {displayName}
             </p>
-            {hasUsername ? (
+            {/* {hasUsername ? (
               <button className="text-white text-xs bg-[#13170a] px-4 py-1 rounded-full">
                 @{displayUsername}
               </button>
@@ -226,7 +226,7 @@ export const ProfilePage: React.FC = () => {
               >
                 Claim @tag
               </button>
-            )}
+            )} */}
           </div>
         </div>
 

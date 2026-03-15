@@ -70,7 +70,7 @@ export const TransactionDetailsDrawer: React.FC<TransactionDetailsDrawerProps> =
       <DrawerContent className="bg-[#050505] border-[#2a2a2a]">
         <DrawerHeader className="">
           <DrawerTitle className="text-base font-medium text-white text-left">
-      
+
           </DrawerTitle>
         </DrawerHeader>
 

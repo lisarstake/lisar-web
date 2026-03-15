@@ -98,10 +98,10 @@ export const WalletTransferFormPage: React.FC = () => {
 
   const displayName = (() => {
     if (!depositAccountName) return "User";
-  
+
     const parts = depositAccountName.trim().split(" ");
     if (parts.length <= 2) return depositAccountName;
-  
+
     return `${parts[0]} ${parts[parts.length - 1]}`;
   })();
 
@@ -192,9 +192,9 @@ export const WalletTransferFormPage: React.FC = () => {
   const isWithdraw = safeMode === "withdraw";
   const isDisabled = isWithdraw
     ? !amount.trim() ||
-      (safeAsset === "crypto"
-        ? !walletAddress.trim()
-        : !bankName.trim() || !accountNumber.trim() || !accountName.trim())
+    (safeAsset === "crypto"
+      ? !walletAddress.trim()
+      : !bankName.trim() || !accountNumber.trim() || !accountName.trim())
     : false;
 
   const handleCopy = async (value: string) => {
@@ -220,198 +220,198 @@ export const WalletTransferFormPage: React.FC = () => {
         <div className="px-6 pb-32">
           {isWithdraw ? (
             <div className="space-y-5 pt-4">
-            <div>
-              <label className="mb-2 block text-sm text-white/70">
-                Amount {safeAsset === "naira" ? "(NGN)" : ""}
-              </label>
-              <input
-                type="text"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder={safeAsset === "naira" ? "0" : "0"}
-                className="w-full rounded-lg bg-[#13170a] px-4 py-3.5 text-base text-white outline-none"
-              />
-            </div>
-
-            {safeAsset === "naira" ? (
-              <>
-                <div>
-                  <label className="mb-2 block text-sm text-white/70">
-                    Bank
-                  </label>
-                  <Select value={bankName} onValueChange={setBankName}>
-                    <SelectTrigger className="w-full bg-[#13170a] text-white border-none py-6">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-[#13170a] text-white border-none">
-                      {BANK_OPTIONS.map((bank) => (
-                        <SelectItem
-                          key={bank}
-                          value={bank}
-                          className="focus:bg-white/10 focus:text-white"
-                        >
-                          {bank}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <label className="mb-2 block text-sm text-white/70">
-                    Account number
-                  </label>
-                  <input
-                    type="text"
-                    value={accountNumber}
-                    onChange={(e) => setAccountNumber(e.target.value)}
-                    placeholder="Enter account number"
-                    className="w-full rounded-lg bg-[#13170a] px-4 py-3.5 text-base text-white outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="mb-2 block text-sm text-white/70">
-                    Account name
-                  </label>
-                  <input
-                    type="text"
-                    value={accountName}
-                    onChange={(e) => setAccountName(e.target.value)}
-                    placeholder="Enter account name"
-                    className="w-full rounded-lg bg-[#13170a] px-4 py-3.5 text-base text-white outline-none"
-                  />
-                </div>
-              </>
-            ) : (
               <div>
                 <label className="mb-2 block text-sm text-white/70">
-                  Wallet address
+                  Amount {safeAsset === "naira" ? "(NGN)" : ""}
                 </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={walletAddress}
-                    onChange={(e) => setWalletAddress(e.target.value)}
-                    placeholder="Paste wallet address"
-                    className="w-full rounded-lg bg-[#13170a] pr-12 pl-4 py-3.5 text-base text-white outline-none"
-                  />
+                <input
+                  type="text"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  placeholder={safeAsset === "naira" ? "0" : "0"}
+                  className="w-full rounded-lg bg-[#13170a] px-4 py-3.5 text-base text-white outline-none"
+                />
+              </div>
+
+              {safeAsset === "naira" ? (
+                <>
+                  <div>
+                    <label className="mb-2 block text-sm text-white/70">
+                      Bank
+                    </label>
+                    <Select value={bankName} onValueChange={setBankName}>
+                      <SelectTrigger className="w-full bg-[#13170a] text-white border-none py-6">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-[#13170a] text-white border-none">
+                        {BANK_OPTIONS.map((bank) => (
+                          <SelectItem
+                            key={bank}
+                            value={bank}
+                            className="focus:bg-white/10 focus:text-white"
+                          >
+                            {bank}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm text-white/70">
+                      Account number
+                    </label>
+                    <input
+                      type="text"
+                      value={accountNumber}
+                      onChange={(e) => setAccountNumber(e.target.value)}
+                      placeholder="Enter account number"
+                      className="w-full rounded-lg bg-[#13170a] px-4 py-3.5 text-base text-white outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm text-white/70">
+                      Account name
+                    </label>
+                    <input
+                      type="text"
+                      value={accountName}
+                      onChange={(e) => setAccountName(e.target.value)}
+                      placeholder="Enter account name"
+                      className="w-full rounded-lg bg-[#13170a] px-4 py-3.5 text-base text-white outline-none"
+                    />
+                  </div>
+                </>
+              ) : (
+                <div>
+                  <label className="mb-2 block text-sm text-white/70">
+                    Wallet address
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={walletAddress}
+                      onChange={(e) => setWalletAddress(e.target.value)}
+                      placeholder="Paste wallet address"
+                      className="w-full rounded-lg bg-[#13170a] pr-12 pl-4 py-3.5 text-base text-white outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          const text = await navigator.clipboard.readText();
+                          setWalletAddress(text);
+                        } catch (err) {
+                          console.error("Failed to read clipboard");
+                        }
+                      }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2"
+                    >
+                      <ClipboardPaste size={18} className="text-white/60" />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : safeAsset === "naira" ? (
+            <div className="pt-4 space-y-5">
+              <div className="rounded-lg bg-[#13170a] p-3">
+                <img
+                  src="/deposit-naira.png"
+                  alt="Deposit Naira"
+                  className="w-full rounded-lg object-cover"
+                />
+              </div>
+              <div className="rounded-lg bg-[#13170a] p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-white/60">Bank name</p>
+                  <p className="text-base text-white">{depositBankName}</p>
+                </div>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-white/60">Account name</p>
+                  <p className="text-base text-white">{displayName}</p>
+                </div>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-white/60">Account number</p>
                   <button
-                    type="button"
-                    onClick={async () => {
-                      try {
-                        const text = await navigator.clipboard.readText();
-                        setWalletAddress(text);
-                      } catch (err) {
-                        console.error("Failed to read clipboard");
-                      }
-                    }}
-                    className="absolute right-3 top-1/2 -translate-y-1/2"
+                    onClick={() => handleCopy(depositAccountNumber)}
+                    className="flex items-center gap-2 "
                   >
-                    <ClipboardPaste size={18} className="text-white/60" />
+                    <span className="text-base text-white">
+                      {depositAccountNumber}
+                    </span>
+                    {copied ? (
+                      <Check size={16} className="text-[#c7ef6b]" />
+                    ) : (
+                      <Copy size={16} className="text-white/70" />
+                    )}
                   </button>
                 </div>
               </div>
-            )}
-          </div>
-        ) : safeAsset === "naira" ? (
-          <div className="pt-4 space-y-5">
-            <div className="rounded-lg bg-[#13170a] p-3">
-              <img
-                src="/deposit-naira.png"
-                alt="Deposit Naira"
-                className="w-full rounded-lg object-cover"
-              />
+              <p className="text-xs text-white/60">
+                Transfer from your bank app to this account. Your deposit will be
+                credited automatically once payment is confirmed.
+              </p>
             </div>
-            <div className="rounded-lg bg-[#13170a] p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-white/60">Bank name</p>
-                <p className="text-base text-white">{depositBankName}</p>
-              </div>
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-white/60">Account name</p>
-                <p className="text-base text-white">{displayName}</p>
-              </div>
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-white/60">Account number</p>
-                <button
-                  onClick={() => handleCopy(depositAccountNumber)}
-                  className="flex items-center gap-2 "
+          ) : (
+            <div className="pt-4 space-y-5">
+              <div className="rounded-lg bg-[#13170a] p-3">
+                <p className="text-sm text-white/60">Cryptocurrency</p>
+                <Select
+                  value={selectedToken}
+                  onValueChange={(val) => setSelectedToken(val as SupportedToken)}
                 >
-                  <span className="text-base text-white">
-                    {depositAccountNumber}
-                  </span>
-                  {copied ? (
-                    <Check size={16} className="text-[#c7ef6b]" />
-                  ) : (
-                    <Copy size={16} className="text-white/70" />
-                  )}
-                </button>
-              </div>
-            </div>
-            <p className="text-xs text-white/60">
-              Transfer from your bank app to this account. Your deposit will be
-              credited automatically once payment is confirmed.
-            </p>
-          </div>
-        ) : (
-          <div className="pt-4 space-y-5">
-            <div className="rounded-lg bg-[#13170a] p-3">
-              <p className="text-sm text-white/60">Cryptocurrency</p>
-              <Select
-                value={selectedToken}
-                onValueChange={(val) => setSelectedToken(val as SupportedToken)}
-              >
-                <SelectTrigger className="bg-transparent text-white border-none w-full px-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-[#13170a] text-white w-full">
-                  <SelectItem
-                    value="USDC"
-                    className="focus:bg-white/10 focus:text-white"
-                  >
-                    USDC
-                  </SelectItem>
-                  <SelectItem
-                    value="USDT"
-                    className="focus:bg-white/10 focus:text-white"
-                  >
-                    USDT
-                  </SelectItem>
-                  <SelectItem
-                    value="LPT"
-                    className="focus:bg-white/10 focus:text-white"
-                  >
-                    LPT
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="rounded-lg bg-[#13170a] p-3">
-              <p className="text-sm text-white/60">Network</p>
-              <Select
-                value={selectedNetwork}
-                onValueChange={(val) =>
-                  setSelectedNetwork(val as SupportedNetwork)
-                }
-              >
-                <SelectTrigger className="bg-transparent text-white border-none w-full px-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-[#13170a] text-white w-full">
-                  {availableNetworks.map((network) => (
+                  <SelectTrigger className="bg-transparent text-white border-none w-full px-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#13170a] text-white w-full">
                     <SelectItem
-                      key={network}
-                      value={network}
+                      value="USDC"
                       className="focus:bg-white/10 focus:text-white"
                     >
-                      {network}
+                      USDC
                     </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+                    <SelectItem
+                      value="USDT"
+                      className="focus:bg-white/10 focus:text-white"
+                    >
+                      USDT
+                    </SelectItem>
+                    <SelectItem
+                      value="LPT"
+                      className="focus:bg-white/10 focus:text-white"
+                    >
+                      LPT
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-            {/*
+              <div className="rounded-lg bg-[#13170a] p-3">
+                <p className="text-sm text-white/60">Network</p>
+                <Select
+                  value={selectedNetwork}
+                  onValueChange={(val) =>
+                    setSelectedNetwork(val as SupportedNetwork)
+                  }
+                >
+                  <SelectTrigger className="bg-transparent text-white border-none w-full px-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#13170a] text-white w-full">
+                    {availableNetworks.map((network) => (
+                      <SelectItem
+                        key={network}
+                        value={network}
+                        className="focus:bg-white/10 focus:text-white"
+                      >
+                        {network}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/*
             <div className="rounded-lg bg-[#13170a] p-4 space-y-2">
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
@@ -454,49 +454,49 @@ export const WalletTransferFormPage: React.FC = () => {
             </div>
             */}
 
-            <div className="space-y-2">
-              <p className="text-sm text-white/60">Wallet address</p>
-              <div className="rounded-lg bg-[#13170a] p-4">
-                <div className="flex items-center justify-between gap-3">
-                  <p className="text-base text-white/80 break-all">
-                    {truncatedCryptoAddress}
-                  </p>
-                  <button
-                    onClick={() => handleCopy(effectiveDepositAddress)}
-                    className="shrink-0"
-                  >
-                    {copied ? (
-                      <Check size={16} className="text-[#c7ef6b]" />
-                    ) : (
-                      <Copy size={16} className="text-white/70" />
-                    )}
-                  </button>
+              <div className="space-y-2">
+                <p className="text-sm text-white/60">Wallet address</p>
+                <div className="rounded-lg bg-[#13170a] p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-base text-white/80 break-all">
+                      {truncatedCryptoAddress}
+                    </p>
+                    <button
+                      onClick={() => handleCopy(effectiveDepositAddress)}
+                      className="shrink-0"
+                    >
+                      {copied ? (
+                        <Check size={16} className="text-[#c7ef6b]" />
+                      ) : (
+                        <Copy size={16} className="text-white/70" />
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="flex justify-center">
-              <div className="rounded-lg bg-white p-3">
-                <canvas ref={qrCanvasRef} className="h-40 w-40" />
+              <div className="flex justify-center">
+                <div className="rounded-lg bg-white p-3">
+                  <canvas ref={qrCanvasRef} className="h-40 w-40" />
+                </div>
+              </div>
+
+              <div className="rounded-lg bg-[#13170a] p-4 mb-10">
+                <p className="text-sm text-[#c7ef6b] font-medium mb-2">
+                  Important
+                </p>
+                <ul className="space-y-2 text-xs text-white/75 list-disc pl-5">
+                  <li>
+                    Send only {selectedToken} on the {selectedNetwork} network to
+                    this address.
+                  </li>
+                  <li>
+                    Sending unsupported tokens or using the wrong network may
+                    result in loss of funds.
+                  </li>
+                </ul>
               </div>
             </div>
-
-            <div className="rounded-lg bg-[#13170a] p-4 mb-10">
-              <p className="text-sm text-[#c7ef6b] font-medium mb-2">
-                Important
-              </p>
-              <ul className="space-y-2 text-xs text-white/75 list-disc pl-5">
-                <li>
-                  Send only {selectedToken} on the {selectedNetwork} network to
-                  this address.
-                </li>
-                <li>
-                  Sending unsupported tokens or using the wrong network may
-                  result in loss of funds.
-                </li>
-              </ul>
-            </div>
-          </div>
           )}
         </div>
       </div>
@@ -505,11 +505,10 @@ export const WalletTransferFormPage: React.FC = () => {
         <div className="fixed bottom-28 left-0 right-0 px-6 z-20">
           <button
             disabled={isDisabled}
-            className={`h-14 w-full rounded-full text-base font-semibold transition-colors ${
-              isDisabled
-                ? "bg-[#2a2a2a] text-white/40"
-                : "bg-[#c7ef6b] text-black"
-            }`}
+            className={`h-14 w-full rounded-full text-base font-semibold transition-colors ${isDisabled
+              ? "bg-[#2a2a2a] text-white/40"
+              : "bg-[#c7ef6b] text-black"
+              }`}
           >
             Confirm
           </button>

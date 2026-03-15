@@ -124,8 +124,8 @@ export const ExportWalletDrawer: React.FC<ExportWalletDrawerProps> = ({
       } else {
         setExportError(
           response.error ||
-            response.message ||
-            "Invalid code. Please try again."
+          response.message ||
+          "Invalid code. Please try again."
         );
         setOtpCode("");
         otpInputRef.current?.focus();
@@ -270,11 +270,10 @@ export const ExportWalletDrawer: React.FC<ExportWalletDrawerProps> = ({
                     }}
                     placeholder=""
                     disabled={isVerifyingOTP}
-                    className={`w-full px-4 py-3 rounded-lg text-white text-lg tracking-widest bg-[#1a1a1a] border transition-colors ${
-                      exportError
-                        ? "border-red-500 focus:border-red-500"
-                        : "border-[#2a2a2a] focus:border-[#C7EF6B]"
-                    } focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed`}
+                    className={`w-full px-4 py-3 rounded-lg text-white text-lg tracking-widest bg-[#1a1a1a] border transition-colors ${exportError
+                      ? "border-red-500 focus:border-red-500"
+                      : "border-[#2a2a2a] focus:border-[#C7EF6B]"
+                      } focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed`}
                   />
                   <button
                     type="button"
@@ -331,9 +330,8 @@ export const ExportWalletDrawer: React.FC<ExportWalletDrawerProps> = ({
                       setCopied(true);
                       window.setTimeout(() => setCopied(false), 1200);
                     }}
-                    className={`px-3 py-3 bg-[#1f1f1f] border border-[#2a2a2a] rounded-lg hover:bg-[#2a2a2a] transition-all ${
-                      copied ? "scale-105 border-[#C7EF6B]" : ""
-                    }`}
+                    className={`px-3 py-3 bg-[#1f1f1f] border border-[#2a2a2a] rounded-lg hover:bg-[#2a2a2a] transition-all ${copied ? "scale-105 border-[#C7EF6B]" : ""
+                      }`}
                     aria-label={copied ? "Copied" : "Copy private key"}
                   >
                     {copied ? (
@@ -368,11 +366,10 @@ export const ExportWalletDrawer: React.FC<ExportWalletDrawerProps> = ({
               type="button"
               disabled={isVerifying || isExporting}
               onClick={handlePasswordConfirm}
-              className={`w-full py-3 rounded-full font-medium text-base transition-colors ${
-                isVerifying || isExporting
-                  ? "bg-[#636363] text-white cursor-not-allowed"
-                  : "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
-              }`}
+              className={`w-full py-3 rounded-full font-medium text-base transition-colors ${isVerifying || isExporting
+                ? "bg-[#636363] text-white cursor-not-allowed"
+                : "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
+                }`}
             >
               {isVerifying ? (
                 <span className="flex items-center justify-center gap-2">
@@ -395,11 +392,10 @@ export const ExportWalletDrawer: React.FC<ExportWalletDrawerProps> = ({
               type="button"
               disabled={otpCode.length !== 6 || isVerifyingOTP || isExporting}
               onClick={handleOTPVerify}
-              className={`w-full py-3 rounded-full font-medium text-base transition-colors ${
-                otpCode.length === 6 && !isVerifyingOTP && !isExporting
-                  ? "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
-                  : "bg-[#636363] text-white cursor-not-allowed"
-              }`}
+              className={`w-full py-3 rounded-full font-medium text-base transition-colors ${otpCode.length === 6 && !isVerifyingOTP && !isExporting
+                ? "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
+                : "bg-[#636363] text-white cursor-not-allowed"
+                }`}
             >
               {isVerifyingOTP ? (
                 <span className="flex items-center justify-center gap-2">

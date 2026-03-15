@@ -137,8 +137,8 @@ export const PreferencesSettingsPage: React.FC = () => {
               <div className="flex items-center gap-3">
                 <img src="/ng_flag.png" alt="NGN flag" className="h-5 w-5 rounded-full" />
                 <div>
-                <p className="text-base font-medium text-white">NGN</p>
-                <p className="text-sm text-white/60">Use Naira as display currency</p>
+                  <p className="text-base font-medium text-white">NGN</p>
+                  <p className="text-sm text-white/60">Use Naira as display currency</p>
                 </div>
               </div>
               {selectedCurrency === "NGN" && (
@@ -154,8 +154,8 @@ export const PreferencesSettingsPage: React.FC = () => {
               <div className="flex items-center gap-3">
                 <img src="/us_flag.png" alt="USD flag" className="h-5 w-5 rounded-full" />
                 <div>
-                <p className="text-base font-medium text-white">USD</p>
-                <p className="text-sm text-white/60">Use Dollar as display currency</p>
+                  <p className="text-base font-medium text-white">USD</p>
+                  <p className="text-sm text-white/60">Use Dollar as display currency</p>
                 </div>
               </div>
               {selectedCurrency === "USD" ? (

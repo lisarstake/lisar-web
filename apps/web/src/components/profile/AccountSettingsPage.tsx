@@ -93,7 +93,7 @@ export const AccountSettingsPage: React.FC = () => {
           <div className="ml-4">
             <p className="text-base font-medium">Export wallet</p>
             <p className="text-sm text-[#c4cdc9]">
-              Export your wallet private keys 
+              Export your wallet private keys
             </p>
           </div>
         </button>

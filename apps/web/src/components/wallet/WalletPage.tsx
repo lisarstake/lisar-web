@@ -152,7 +152,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
   const fundingOptions = useMemo<FundingOption[]>(() => {
     if (walletType === "staking") {
       return [
-        
+
         // {
         //   id: "usd",
         //   label: "USD",
@@ -190,7 +190,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
     }
 
     return [
-     
+
       // {
       //   id: "usd",
       //   label: "USD",
@@ -338,7 +338,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
               <img
                 src="/yield.png"
                 alt="Weekly earnings"
-                className="w-12 h-12 object-cover rounded-lg object-top"
+                className="w-11 h-11 object-cover rounded-lg object-top"
               />
             </div>
             <div className="flex-1">
@@ -489,11 +489,11 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
 
       <div className="flex-1 overflow-y-auto px-6 pb-24 scrollbar-hide">
         <div className="mt-10 text-center">
-          <p className="text-sm text-white/50">Wallet balance</p>
+          <p className="text-sm text-white/50">Asset balance</p>
           {activeWalletCard?.isLoading ? (
-            <div className="mt-2">{renderLoadingStars("text-lg font-semibold")}</div>
+            <div className="mt-2">{renderLoadingStars("text-xl font-semibold")}</div>
           ) : (
-            <p className="mt-2 text-2xl font-bold text-white/90">
+            <p className="mt-2 text-xl font-bold text-white/90">
               {showBalance
                 ? isStakingWallet
                   ? `${formatEarnings(stakedBalance)} LPT`
@@ -517,7 +517,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
             <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#13170a]">
               <ArrowDown size={24} className="text-[#e8ece9]" />
             </span>
-            <span className="text-xs font-medium">Top up</span>
+            <span className="text-xs font-medium">Deposit</span>
           </button>
 
           <button

@@ -12,7 +12,7 @@ export const YieldIntroPage: React.FC = () => {
   const hasSavings = Boolean(stablesBalance && stablesBalance > 0);
   const hasStaking = Boolean(
     delegatorStakeProfile &&
-      parseFloat(delegatorStakeProfile.currentStake || "0") > 0,
+    parseFloat(delegatorStakeProfile.currentStake || "0") > 0,
   );
 
   useEffect(() => {

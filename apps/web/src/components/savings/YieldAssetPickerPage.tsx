@@ -40,7 +40,7 @@ const YieldAssetRow: React.FC<YieldAssetRowProps> = ({
       <div className="text-right">
         <p className="text-sm font-semibold">{apy}</p>
         <p className="text-xs text-[#909a95]">
-          {isComingSoon ? "" : "per annum"}
+          {isComingSoon ? "" : "p.a"}
         </p>
       </div>
     </button>
@@ -109,7 +109,7 @@ export const YieldAssetPickerPage: React.FC = () => {
             onClick={() => navigate("/wallet/staking")}
           />
         </div>
-        <div className="rounded-xl bg-[#13170a] px-4">
+        {/* <div className="rounded-xl bg-[#13170a] px-4">
           <YieldAssetRow
             title="USDT"
             subtitle="Earn daily, withdraw anytime"
@@ -117,7 +117,7 @@ export const YieldAssetPickerPage: React.FC = () => {
             imageSrc="/usdt.svg"
             isComingSoon
           />
-        </div>
+        </div> */}
         <div className="rounded-xl bg-[#13170a] px-4">
           <YieldAssetRow
             title="Solana"

@@ -39,8 +39,8 @@ const YIELD_TREND_VALUES = [10, 12, 15, 19, 23, 28, 34, 45, 60];
 const YIELD_PRIMARY_COLOR = "#C7EF6B";
 const YIELD_AREA_COLOR = "rgba(199,239,107,0.18)";
 const YIELD_CHART_HEIGHT = 40;
-const YIELD_CHART_MIN_PERCENT = 0.7;
-const YIELD_CHART_MAX_PERCENT = 0.35;
+const YIELD_CHART_MIN_PERCENT = 0.8;
+const YIELD_CHART_MAX_PERCENT = 0.45;
 const YIELD_SHADOW_OFFSET = 100;
 const YIELD_MARKER_INDEXES = [1, 3, 5, 7];
 
@@ -94,7 +94,7 @@ export const AllWalletPage: React.FC = () => {
     return state.user?.is_onboarded === false && !state.isLoading;
   }, [state.user?.is_onboarded, state.isLoading]);
 
-  const { } = useGuidedTour({
+  const {} = useGuidedTour({
     tourId: ALL_WALLET_TOUR_ID,
     autoStart: shouldAutoStart,
   });
@@ -140,18 +140,25 @@ export const AllWalletPage: React.FC = () => {
     .join(" ");
   const yieldShadowPath = yieldChartCoordinates.length
     ? `${yieldChartCoordinates
-        .map((point, index) => `${index === 0 ? "M" : "L"}${point.x},${point.y}`)
+        .map(
+          (point, index) => `${index === 0 ? "M" : "L"}${point.x},${point.y}`,
+        )
         .join(" ")} ${yieldChartCoordinates
         .slice()
         .reverse()
-        .map((point) => `L${point.x},${Math.min(point.y + YIELD_SHADOW_OFFSET, YIELD_CHART_HEIGHT)}`)
+        .map(
+          (point) =>
+            `L${point.x},${Math.min(point.y + YIELD_SHADOW_OFFSET, YIELD_CHART_HEIGHT)}`,
+        )
         .join(" ")} Z`
     : "";
   const yieldMarkerPositions = useMemo(() => {
     if (!yieldChartCoordinates.length) return [];
     return YIELD_MARKER_INDEXES.map((index, markerIndex) => {
       const point =
-        yieldChartCoordinates[Math.min(index, yieldChartCoordinates.length - 1)];
+        yieldChartCoordinates[
+          Math.min(index, yieldChartCoordinates.length - 1)
+        ];
       return {
         id: `yield-marker-${markerIndex}`,
         x: point.x,
@@ -292,10 +299,11 @@ export const AllWalletPage: React.FC = () => {
                         handleDepositClick(card.type);
                       }
                     }}
-                    className={`rounded-2xl py-5 min-h-[100px] relative overflow-hidden ${card.type !== "main"
+                    className={`rounded-2xl py-5 min-h-[100px] relative overflow-hidden ${
+                      card.type !== "main"
                         ? "cursor-pointer hover:opacity-95 transition-opacity"
                         : ""
-                      }`}
+                    }`}
                     data-tour={
                       card.id === "main" ? "all-wallet-balance-card" : undefined
                     }
@@ -309,23 +317,23 @@ export const AllWalletPage: React.FC = () => {
                       {/* Balance Display */}
                       <div>
                         {walletLoading ||
-                          delegationLoading ||
-                          stablesLoading ||
-                          highyieldLoading ? (
+                        delegationLoading ||
+                        stablesLoading ||
+                        highyieldLoading ? (
                           <div className="flex items-baseline justify-center gap-2 mb-1">
                             {renderLoadingStars("text-xl font-semibold")}
                           </div>
                         ) : (
                           <div className="flex items-baseline justify-center gap-2 mb-1">
-                            <span className="text-2xl font-bold text-white/90">
+                            <span className="text-xl font-bold text-white/90">
                               {showBalance
                                 ? `${card.currencySymbol}${card.balance.toLocaleString(
-                                  undefined,
-                                  {
-                                    minimumFractionDigits: 2,
-                                    maximumFractionDigits: 2,
-                                  },
-                                )}`
+                                    undefined,
+                                    {
+                                      minimumFractionDigits: 2,
+                                      maximumFractionDigits: 2,
+                                    },
+                                  )}`
                                 : "★★★★"}
                             </span>
                           </div>
@@ -421,13 +429,14 @@ export const AllWalletPage: React.FC = () => {
                   return (
                     <div
                       key={notification.id}
-                      className={`relative bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-xl p-3 overflow-hidden ${notification.metadata?.severity === "warning"
+                      className={`relative bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-xl p-3 overflow-hidden ${
+                        notification.metadata?.severity === "warning"
                           ? "border-yellow-500/30"
                           : notification.metadata?.severity === "error" ||
-                            notification.metadata?.severity === "critical"
+                              notification.metadata?.severity === "critical"
                             ? "border-red-500/30"
                             : "border-[#86B3F7]/30"
-                        }`}
+                      }`}
                     >
                       {/* Close Button */}
                       <button
@@ -450,8 +459,8 @@ export const AllWalletPage: React.FC = () => {
                               notification.metadata?.severity === "warning"
                                 ? "#eab308"
                                 : notification.metadata?.severity === "error" ||
-                                  notification.metadata?.severity ===
-                                  "critical"
+                                    notification.metadata?.severity ===
+                                      "critical"
                                   ? "#ef4444"
                                   : "#86B3F7"
                             }
@@ -485,7 +494,7 @@ export const AllWalletPage: React.FC = () => {
                 return (
                   <div
                     onClick={() => navigate("/earn")}
-                    className={`mt-2 rounded-xl p-3 bg-[#13170a] relative overflow-hidden cursor-pointer hover:opacity-95 transition-opacity`}
+                    className={`mt-2 rounded-xl p-2 bg-[#13170a] relative overflow-hidden cursor-pointer hover:opacity-95 transition-opacity`}
                   >
                     <div className="flex items-center gap-4">
                       <div className="shrink-0">
@@ -512,14 +521,13 @@ export const AllWalletPage: React.FC = () => {
               })()
             )}
 
-
             {/* Add Cash Section */}
-            <div className="mt-4 bg-[#13170a] rounded-xl py-3 px-4">
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-white/70 text-xs font-medium">
-                  Quick deposit <span className="text-white"></span>
-                </h2>
-              </div>
+            <div className="flex items-center justify-between my-2 mt-4">
+              <h2 className="text-white/70 text-xs font-medium">
+                Quick deposit <span className="text-white">💸</span>
+              </h2>
+            </div>
+            <div className="bg-[#13170a] rounded-xl p-3">
               <div className="grid grid-cols-3 gap-2">
                 {QUICK_DEPOSIT_AMOUNTS.map((amount) => (
                   <button
@@ -544,20 +552,19 @@ export const AllWalletPage: React.FC = () => {
             </div>
 
             {/* Yields section */}
-            <button
+            <div className="my-2 mt-4">
+              <h2 className="text-white/70 text-xs font-medium">
+                Earn yields <span className="text-white"></span>
+              </h2>
+            </div>
+            <div
               onClick={() => navigate(YIELD_ASSET_PICKER_PATH)}
-              className="mt-4 w-full bg-[#13170a] rounded-xl py-3 px-4 text-left"
+              className="w-full bg-[#13170a] rounded-xl p-3 text-left mb-20 cursor-pointer"
             >
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-white/70 text-xs font-medium">Yield</h2>
-                
-                </div>
-              </div>
-              <div className="rounded-2xl border border-white/5 bg-white/10 overflow-hidden relative">
+              <div className="rounded-lg border border-white/5 bg-white/10 overflow-hidden relative">
                 <svg
                   viewBox="0 0 100 40"
-                  className="w-full h-24"
+                  className="w-full h-20"
                   preserveAspectRatio="none"
                 >
                   {yieldShadowPath && (
@@ -596,9 +603,9 @@ export const AllWalletPage: React.FC = () => {
                               ? "/usdc.svg"
                               : index === 1
                                 ? "/sol1.svg"
-                              : index === 2
-                                ? "/usdt.svg"
-                                : "/livepeer.webp"
+                                : index === 2
+                                  ? "/usdt.svg"
+                                  : "/livepeer.webp"
                           }
                           alt="Yield asset"
                           className="w-6 h-6 animate-[yield-icon-drift_6s_ease-in-out_infinite]"
@@ -609,22 +616,25 @@ export const AllWalletPage: React.FC = () => {
                   </div>
                 )}
               </div>
-              <div className="space-y-6 mt-4">
+              <div className="mt-2">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
                     <div>
                       <p className="text-white text-sm font-medium">
-                        Your money. Working daily
+                        Your assets. Working daily
                       </p>
-                      <p className="text-white/50 text-xs font-medium">
-                        Earn daily returns on your assets. Instant withdrawal with no lock-up periods or fees
+                      <p className="text-white/50 text-xs font-medium mt-0.5">
+                        Daily returns on your assets. Withdraw anytime with no lock-up
                       </p>
+
+                      <button className="mt-2.5 px-3 py-1.5 bg-[#C7EF6B] text-black rounded-full text-[13px] font-semibold hover:bg-[#B8E55A] transition-colors relative z-10">
+                        Deposit to yield
+                      </button>
                     </div>
                   </div>
                 </div>
               </div>
-            </button>
-
+            </div>
           </div>
         </>
       </div>
@@ -661,7 +671,6 @@ export const AllWalletPage: React.FC = () => {
               <DrawerTitle className="text-white text-base font-medium">
                 {transferDrawer === "deposit" ? "Add Cash From" : "Cash Out To"}
               </DrawerTitle>
-
             </div>
           </DrawerHeader>
           <div className="pb-2 space-y-3">

@@ -101,9 +101,9 @@ export const RecipientSettingsPage: React.FC = () => {
       banks.find((bank) => bank.code === selectedBankCode) ||
       (showReadOnly
         ? {
-            code: selectedBankCode,
-            name: state.user?.linked_account?.bank_name || "",
-          }
+          code: selectedBankCode,
+          name: state.user?.linked_account?.bank_name || "",
+        }
         : null),
     [banks, selectedBankCode, showReadOnly, state.user?.linked_account],
   );
@@ -277,7 +277,7 @@ export const RecipientSettingsPage: React.FC = () => {
               <SelectTrigger className="w-full rounded-lg bg-[#13170a] border-none py-6 text-white">
                 <SelectValue
                   placeholder={
-                     "Select bank"
+                    "Select bank"
                   }
                 />
               </SelectTrigger>

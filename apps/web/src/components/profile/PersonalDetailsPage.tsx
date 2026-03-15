@@ -98,9 +98,8 @@ export const PersonalDetailsPage: React.FC = () => {
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
             readOnly={hasLinkedAccount}
-            className={`w-full rounded-lg bg-[#13170a] px-4 py-3 text-base outline-none ${
-              hasLinkedAccount ? "text-white/70" : "text-white"
-            }`}
+            className={`w-full rounded-lg bg-[#13170a] px-4 py-3 text-base outline-none ${hasLinkedAccount ? "text-white/70" : "text-white"
+              }`}
             placeholder="Enter full name"
           />
         </div>

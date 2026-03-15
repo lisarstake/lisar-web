@@ -58,39 +58,39 @@ export const InviteFriendsPage: React.FC = () => {
       </div>
 
       <div className="flex-1 px-6 pb-48 flex flex-col items-center justify-center text-center">
-  <img
-    src="/fund.png"
-    alt="Invite reward"
-    className="h-[150px] w-[150px] object-contain"
-  />
+        <img
+          src="/fund.png"
+          alt="Invite reward"
+          className="h-[150px] w-[150px] object-contain"
+        />
 
-  <h2 className="mt-6 text-large font-semibold text-white">
-    Invite Friends, Earn Coins
-  </h2>
+        <h2 className="mt-6 text-large font-semibold text-white">
+          Invite Friends, Earn Coins
+        </h2>
 
-  <p className="mt-3 text-sm leading-relaxed text-[#c4cdc9] max-w-xs">
-    Spread the love ❤️ about Lisar and earn coins as rewards! Join the early savers campiagn to begin
-  </p>
+        <p className="mt-3 text-sm leading-relaxed text-[#c4cdc9] max-w-xs">
+          Spread the love ❤️ about Lisar and earn coins as rewards! Join the early savers campiagn to begin
+        </p>
 
-  <div className="mt-8 rounded-lg border border-white/10 p-3 w-full max-w-sm">
-    <p className="text-base text-[#c4cdc9]">Referral code</p>
+        <div className="mt-8 rounded-lg border border-white/10 p-3 w-full max-w-sm">
+          <p className="text-base text-[#c4cdc9]">Referral code</p>
 
-    <div className="mt-1 flex items-center justify-center">
-      <p className="text-base font-medium text-white">
-        {referralCode || "No code yet"}
-      </p>
+          <div className="mt-1 flex items-center justify-center">
+            <p className="text-base font-medium text-white">
+              {referralCode || "No code yet"}
+            </p>
 
-      <button
-        onClick={handleCopyCode}
-        disabled={!referralCode}
-        className="h-8 w-8 text-[#C7EF6B] flex items-center justify-center disabled:opacity-40"
-        aria-label="Copy referral code"
-      >
-        {copySuccess ? "✓" : <Copy size={18} />}
-      </button>
-    </div>
-  </div>
-</div>
+            <button
+              onClick={handleCopyCode}
+              disabled={!referralCode}
+              className="h-8 w-8 text-[#C7EF6B] flex items-center justify-center disabled:opacity-40"
+              aria-label="Copy referral code"
+            >
+              {copySuccess ? "✓" : <Copy size={18} />}
+            </button>
+          </div>
+        </div>
+      </div>
 
       <div className="fixed left-0 right-0 bottom-30 px-6 z-20 bg-transparent">
         <button

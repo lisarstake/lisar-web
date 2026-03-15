@@ -99,8 +99,8 @@ export const EarnPage: React.FC = () => {
             <div
               key={card.id}
               className={`bg-[#13170a] rounded-xl overflow-hidden ${card.isSocialCard
-                  ? "cursor-pointer hover:bg-[#2a2a2a] transition-colors"
-                  : ""
+                ? "cursor-pointer hover:bg-[#2a2a2a] transition-colors"
+                : ""
                 }`}
               onClick={() => card.isSocialCard && handleCardClick(card)}
             >
@@ -184,8 +184,8 @@ export const EarnPage: React.FC = () => {
                   <button
                     onClick={() => handleCardClick(card)}
                     className={`mt-3 py-1.5 px-4 rounded-full font-medium text-sm transition-colors ${card.isComingSoon
-                        ? "bg-blue-500 text-white cursor-not-allowed opacity-75"
-                        : "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
+                      ? "bg-blue-500 text-white cursor-not-allowed opacity-75"
+                      : "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
                       }`}
                   >
                     {card.buttonText}
