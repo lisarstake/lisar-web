@@ -25,10 +25,10 @@ export const UseCasesSection = () => {
           <Card className="bg-gray-200 rounded-lg shadow-none border border-black flex flex-col justify-between">
             <CardHeader>
               <CardTitle className="text-2xl mb-2 text-black">
-                Deposit from your bank
+              Deposit your assets
               </CardTitle>
               <CardDescription className="text-gray-700">
-                Use your local currency. Deposit directly from your bank account to your Lisar wallet.
+              Transfer supported assets from your wallet or exchange into your Lisar account.
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col items-center justify-center h-full">
@@ -40,10 +40,10 @@ export const UseCasesSection = () => {
           <Card className="bg-gray-200 rounded-lg shadow-none border border-black flex flex-col justify-between">
             <CardHeader>
               <CardTitle className="text-2xl mb-2 text-black">
-                Start earning right away
+               Earn automatically
               </CardTitle>
               <CardDescription className="text-gray-700">
-                Your money starts earning interest once vested. Get up to 15% APY on stablecoins. 
+              Your assets are put to work across trusted networks to generate yield while you hold.
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col items-center justify-center h-full">
@@ -55,10 +55,10 @@ export const UseCasesSection = () => {
           <Card className="bg-gray-200 rounded-lg shadow-none border border-black flex flex-col justify-between">
             <CardHeader>
               <CardTitle className="text-2xl mb-2 text-black">
-                No setup needed
+                Withdraw anytime
               </CardTitle>
               <CardDescription className="text-gray-700">
-                No wallet setup, no seed phrases, no gas fees. We handle everything while you stay in control. 
+              Access your funds whenever you need them. No lockups, no penalties.
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col items-center justify-center h-full">
