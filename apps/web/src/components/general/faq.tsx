@@ -1,33 +1,80 @@
 import { useState } from "react";
 import { Button } from "../ui/button";
 import { Plus } from "lucide-react";
-import {LisarLines} from "./lisar-lines";
+import { LisarLines } from "./lisar-lines";
 
 const FAQ = () => {
   const [expandedQuestion, setExpandedQuestion] = useState<number | null>(null);
 
-  // To support bold in answers (for chain names)
+  type TextPart = { start: number; end: number; text: string } & (
+    | { type: "bold" }
+    | { type: "link"; url: string }
+  );
+
   const renderAnswer = (text: string) => {
-    // Replace **text** with <strong>
     const boldRegex = /\*\*([^\*]+)\*\*/g;
-    const parts = [];
-    let lastIndex = 0;
+    const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+
+    const parts: TextPart[] = [];
+
     let match;
     while ((match = boldRegex.exec(text)) !== null) {
-      if (match.index > lastIndex) {
-        parts.push(text.slice(lastIndex, match.index));
+      parts.push({
+        start: match.index,
+        end: match.index + match[0].length,
+        text: match[1],
+        type: "bold",
+      });
+    }
+
+    while ((match = linkRegex.exec(text)) !== null) {
+      parts.push({
+        start: match.index,
+        end: match.index + match[0].length,
+        text: match[1],
+        url: match[2],
+        type: "link",
+      });
+    }
+
+    parts.sort((a, b) => a.start - b.start);
+
+    const result: React.ReactNode[] = [];
+    let pos = 0;
+
+    for (const part of parts) {
+      if (part.start > pos) {
+        result.push(text.slice(pos, part.start));
       }
-      parts.push(
-        <strong key={match.index} className="font-semibold text-white">
-          {match[1]}
-        </strong>
-      );
-      lastIndex = match.index + match[0].length;
+
+      if (part.type === "link") {
+        result.push(
+          <a
+            key={part.start}
+            href={part.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 underline hover:text-blue-800"
+          >
+            {part.text}
+          </a>,
+        );
+      } else {
+        result.push(
+          <strong key={part.start} className="font-semibold text-white">
+            {part.text}
+          </strong>,
+        );
+      }
+
+      pos = part.end;
     }
-    if (lastIndex < text.length) {
-      parts.push(text.slice(lastIndex));
+
+    if (pos < text.length) {
+      result.push(text.slice(pos));
     }
-    return parts.length > 0 ? parts : text;
+
+    return result.length > 0 ? result : text;
   };
 
   const faqData = [
@@ -35,38 +82,44 @@ const FAQ = () => {
       id: 1,
       question: "What is Lisar?",
       answer:
-        "A platform that lets you Earn, save, and spend globally with crypto.",
+        "Lisar is a platform that helps you earn on idle crypto assets without giving up control of your funds. Deposit supported tokens, earn automatically, and withdraw whenever you need.",
     },
-    
+
     {
       id: 3,
       question: "How do I earn rewards?",
       answer:
-        "When you vest, your money earns daily rewards automatically. Interest starts accruing once your funds are vested.",
+        "Your assets are put to work across established staking and yield networks. Rewards accumulate automatically while your funds remain in your account.",
     },
     {
       id: 4,
       question: "Do I need crypto to get started?",
       answer:
-        "No. You can deposit your local currency from your bank to your Lisar wallet.",
+        "No. You can deposit your local currency from your bank to your Lisar wallet or use your existing crypto assets if you already have one",
     },
     {
       id: 5,
       question: "Is my money safe?",
       answer:
-        "Yes. Your funds are always yours and fully self-custodial.",
+        "Your assets remain yours at all times. Lisar does not lock your funds or require you to hand over custody, and you export your wallet at anytime.",
     },
     {
       id: 6,
       question: "Can I withdraw my money anytime?",
       answer:
-        "Yes, you can withdraw your money from your Lisar wallet to your bank account at anytime.",
+        "Yes. There are no mandatory lockups. You can withdraw your assets whenever you choose, subject only to normal network processing times.",
     },
     {
       id: 7,
       question: "How much can I earn?",
       answer:
-        "Stables vest up to 15% APY. High-yield vest much higher. Returns depend on your chosen vault.",
+        "Returns vary depending on the asset and network conditions. Stable assets typically earn steady yields, while proof-of-stake tokens may earn based on staking rewards.",
+    },
+    {
+      id: 8,
+      question: "I would like to learn more",
+      answer:
+        "Absolutely! You can send us a DM on [X](https://x.com/lisarstake) or join our community on [Telegram](https://t.me/+F0YXOMaiJMxkODVk) to learn more about Lisar.",
     },
   ];
 
@@ -79,10 +132,9 @@ const FAQ = () => {
       {/* Lisar Lines Decorations */}
       <LisarLines position="top-right" />
       <div className="hidden md:block">
-         <LisarLines position="bottom-left" />
+        <LisarLines position="bottom-left" />
       </div>
-     
-      
+
       <div className="text-center mb-8 sm:mb-10 relative z-10">
         <span className="text-xl text-black font-medium">
           Frequently Asked Questions
