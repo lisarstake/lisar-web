@@ -7,7 +7,13 @@ import React, {
   useRef,
   useCallback,
 } from "react";
-import { walletService, mapleService, perenaService } from "@/services";
+import {
+  walletService,
+  mapleService,
+  perenaService,
+  virtualAccountService,
+} from "@/services";
+import type { VirtualAccountDetails } from "@/services/virtual-account";
 import { priceService } from "@/lib/priceService";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -31,14 +37,22 @@ type WalletContextValue = {
   solanaUsdcBalance: number | null;
   solanaUsdtBalance: number | null;
   ethereumUsdcBalance: number | null;
+  nairaBalance: number | null;
+  virtualAccount: VirtualAccountDetails | null;
   solanaWalletAddress: string | null;
   ethereumWalletAddress: string | null;
   solanaWalletId: string | null;
   ethereumWalletId: string | null;
   loadStablesBalance: (force?: boolean) => Promise<void>;
   loadHighyieldBalance: (force?: boolean) => Promise<void>;
+  loadNairaBalance: (force?: boolean) => Promise<void>;
+  loadVirtualAccountDetails: (
+    force?: boolean,
+  ) => Promise<VirtualAccountDetails | null>;
+  setVirtualAccountDetails: (details: VirtualAccountDetails | null) => void;
   stablesLoading: boolean;
   highyieldLoading: boolean;
+  virtualAccountLoading: boolean;
   mapleApy: number | null;
   perenaApy: number | null;
   apyLoading: boolean;
@@ -65,6 +79,9 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
   const [ethereumUsdcBalance, setEthereumUsdcBalance] = useState<number | null>(
     null,
   );
+  const [nairaBalance, setNairaBalance] = useState<number | null>(null);
+  const [virtualAccount, setVirtualAccount] =
+    useState<VirtualAccountDetails | null>(null);
   const [solanaWalletAddress, setSolanaWalletAddress] = useState<string | null>(
     null,
   );
@@ -75,6 +92,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
   const [ethereumWalletId, setEthereumWalletId] = useState<string | null>(null);
   const [stablesLoading, setStablesLoading] = useState<boolean>(false);
   const [highyieldLoading, setHighyieldLoading] = useState<boolean>(false);
+  const [virtualAccountLoading, setVirtualAccountLoading] =
+    useState<boolean>(false);
   const [mapleApy, setMapleApy] = useState<number | null>(null);
   const [perenaApy, setPerenaApy] = useState<number | null>(null);
   const [apyLoading, setApyLoading] = useState<boolean>(false);
@@ -82,6 +101,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
   const apyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const stablesLoadingRef = useRef(false);
   const highyieldLoadingRef = useRef(false);
+  const nairaLoadingRef = useRef(false);
+  const virtualAccountLoadingRef = useRef(false);
 
   const loadStablesBalance = useCallback(
     async (force: boolean = false) => {
@@ -209,6 +230,63 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
     [highyieldBalance, state.user, wallet],
   );
 
+  const loadNairaBalance = useCallback(
+    async (force: boolean = false) => {
+      if (nairaLoadingRef.current) return;
+      if (!force && nairaBalance !== null) return;
+      if (!state.user) return;
+
+      nairaLoadingRef.current = true;
+      try {
+        const response = await virtualAccountService.getBalance();
+        if (response.success && response.data) {
+          setNairaBalance(response.data.available_balance || 0);
+        } else {
+          setNairaBalance(Number(state.user?.fiat_balance || 0));
+        }
+      } catch (error) {
+        setNairaBalance(Number(state.user?.fiat_balance || 0));
+      } finally {
+        nairaLoadingRef.current = false;
+      }
+    },
+    [nairaBalance, state.user],
+  );
+
+  const loadVirtualAccountDetails = useCallback(
+    async (force: boolean = false): Promise<VirtualAccountDetails | null> => {
+      if (virtualAccountLoadingRef.current) return virtualAccount;
+      if (!force && virtualAccount) return virtualAccount;
+      if (!state.user) return null;
+
+      virtualAccountLoadingRef.current = true;
+      setVirtualAccountLoading(true);
+      try {
+        const response = await virtualAccountService.getVirtualAccount();
+        if (response.success && response.data) {
+          setVirtualAccount(response.data);
+          return response.data;
+        }
+        setVirtualAccount(null);
+        return null;
+      } catch (error) {
+        setVirtualAccount(null);
+        return null;
+      } finally {
+        setVirtualAccountLoading(false);
+        virtualAccountLoadingRef.current = false;
+      }
+    },
+    [state.user, virtualAccount],
+  );
+
+  const setVirtualAccountDetails = useCallback(
+    (details: VirtualAccountDetails | null) => {
+      setVirtualAccount(details);
+    },
+    [],
+  );
+
   const loadApys = useCallback(async () => {
     if ((mapleApy !== null && perenaApy !== null) || apyLoading) return;
 
@@ -295,7 +373,13 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
   // Initial load on mount
   useEffect(() => {
     if (state.user) {
-      Promise.all([loadStablesBalance(), loadHighyieldBalance(), loadApys()]);
+      Promise.all([
+        loadStablesBalance(),
+        loadHighyieldBalance(),
+        loadNairaBalance(),
+        loadVirtualAccountDetails(),
+        loadApys(),
+      ]);
     }
   }, [state.user]);
 
@@ -326,6 +410,9 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
     () => ({
       loadStablesBalance,
       loadHighyieldBalance,
+      loadNairaBalance,
+      loadVirtualAccountDetails,
+      setVirtualAccountDetails,
       loadApys,
       refetch: load,
     }),
@@ -343,14 +430,20 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
       solanaUsdcBalance,
       solanaUsdtBalance,
       ethereumUsdcBalance,
+      nairaBalance,
+      virtualAccount,
       solanaWalletAddress,
       ethereumWalletAddress,
       solanaWalletId,
       ethereumWalletId,
       loadStablesBalance: stableFunctions.loadStablesBalance,
       loadHighyieldBalance: stableFunctions.loadHighyieldBalance,
+      loadNairaBalance: stableFunctions.loadNairaBalance,
+      loadVirtualAccountDetails: stableFunctions.loadVirtualAccountDetails,
+      setVirtualAccountDetails: stableFunctions.setVirtualAccountDetails,
       stablesLoading,
       highyieldLoading,
+      virtualAccountLoading,
       mapleApy,
       perenaApy,
       apyLoading,
@@ -365,12 +458,15 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
       solanaUsdcBalance,
       solanaUsdtBalance,
       ethereumUsdcBalance,
+      nairaBalance,
+      virtualAccount,
       solanaWalletAddress,
       ethereumWalletAddress,
       solanaWalletId,
       ethereumWalletId,
       stablesLoading,
       highyieldLoading,
+      virtualAccountLoading,
       mapleApy,
       perenaApy,
       apyLoading,

@@ -72,3 +72,5 @@ export * from "./kyc";
 export * from "./campaign";
 // Export ramp services
 export * from "./ramp";
+// Export virtual-account services
+export * from "./virtual-account";

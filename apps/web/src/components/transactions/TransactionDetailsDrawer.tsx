@@ -23,13 +23,13 @@ const getTransactionLabel = (type: TransactionType) => {
     case "deposit":
       return "Deposit";
     case "withdrawal":
-      return "Send";
+      return "Withdrawal";
     case "delegation":
-      return "Vest";
+      return "Deposit";
     case "undelegation":
-      return "Redeem";
+      return "Withdraw";
     case "mint":
-      return "Top up";
+      return "Deposit";
     case "burn":
       return "Withdraw";
     default:
@@ -64,24 +64,24 @@ export const TransactionDetailsDrawer: React.FC<TransactionDetailsDrawerProps> =
 
   const isPositive = isPositiveTransaction(transaction.transaction_type);
   const amountPrefix = isPositive ? "+" : "-";
+  const isNairaTransaction = transaction.token_symbol?.toUpperCase() === "NGN";
 
   return (
     <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DrawerContent className="bg-[#050505] border-[#2a2a2a]">
         <DrawerHeader className="">
-          <DrawerTitle className="text-base font-medium text-white text-left">
-
+          <DrawerTitle className="text-lg font-medium text-white text-center">
+            {getTransactionLabel(transaction.transaction_type)}
           </DrawerTitle>
         </DrawerHeader>
 
-        <div className="pb-5">
-          <p className="text-white text-lg font-semibold text-center">
-            {amountPrefix}
-            {parseFloat(transaction.amount).toFixed(2)} {transaction.token_symbol}
-          </p>
-        </div>
+        <div className="rounded-xl bg-[#13170a] p-4 space-y-3 mt-3">
+          <div className="flex items-center justify-between gap-4">
+            <span className="text-base text-white/60">Amount</span>
+            <span className="text-sm text-white"> {amountPrefix}
+              {parseFloat(transaction.amount).toFixed(2)} {transaction.token_symbol}</span>
+          </div>
 
-        <div className="rounded-xl bg-[#13170a] p-4 space-y-3">
           <div className="flex items-center justify-between gap-4">
             <span className="text-base text-white/60">Date</span>
             <span className="text-sm text-white">{formatDate(transaction.created_at)}</span>
@@ -93,12 +93,14 @@ export const TransactionDetailsDrawer: React.FC<TransactionDetailsDrawerProps> =
           </div>
 
           <div className="flex items-center justify-between gap-4">
-            <span className="text-base text-white/60">Hash</span>
+            <span className="text-base text-white/60">
+              {isNairaTransaction ? "Reference" : "Hash"}
+            </span>
             <div className="flex items-center gap-2">
               <span className="text-sm text-white">
                 {truncateMiddle(transaction.transaction_hash)}
               </span>
-              {transaction.transaction_hash ? (
+              {transaction.transaction_hash && !isNairaTransaction ? (
                 <a
                   href={getArbitrumScanUrl(transaction.transaction_hash)}
                   target="_blank"
@@ -111,12 +113,14 @@ export const TransactionDetailsDrawer: React.FC<TransactionDetailsDrawerProps> =
             </div>
           </div>
 
-          <div className="flex items-center justify-between gap-4">
-            <span className="text-base text-white/60">Wallet</span>
+          {!isNairaTransaction && <div className="flex items-center justify-between gap-4">
+            <span className="text-base text-white/60">
+              {"Wallet"}
+            </span>
             <span className="text-sm text-white">
               {truncateMiddle(transaction.wallet_address)}
             </span>
-          </div>
+          </div>}
         </div>
       </DrawerContent>
     </Drawer>

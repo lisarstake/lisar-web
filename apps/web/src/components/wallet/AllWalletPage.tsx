@@ -81,6 +81,7 @@ export const AllWalletPage: React.FC = () => {
     highyieldBalance: contextHighyieldBalance,
     solanaUsdcBalance,
     solanaUsdtBalance,
+    nairaBalance,
     stablesLoading,
     highyieldLoading,
   } = useWallet();
@@ -89,6 +90,7 @@ export const AllWalletPage: React.FC = () => {
   const { campaignStatus } = useCampaign();
   const { unreadCount } = useNotification();
   const { prices } = usePrices();
+
   // Start tour for non-onboarded users
   const shouldAutoStart = useMemo(() => {
     return state.user?.is_onboarded === false && !state.isLoading;
@@ -188,10 +190,16 @@ export const AllWalletPage: React.FC = () => {
   };
 
   const displayBalance = useMemo(() => {
-    return fiatCurrency === "NGN"
-      ? totalIdleUsdBalance * (prices.ngn || 0)
-      : totalIdleUsdBalance;
-  }, [fiatCurrency, totalIdleUsdBalance, prices.ngn]);
+    const ngnRate = prices.ngn || 0;
+    const safeNairaBalance = nairaBalance || 0;
+
+    if (fiatCurrency === "NGN") {
+      return totalIdleUsdBalance * ngnRate + safeNairaBalance;
+    }
+
+    const nairaInUsd = ngnRate > 0 ? safeNairaBalance / ngnRate : 0;
+    return totalIdleUsdBalance + nairaInUsd;
+  }, [fiatCurrency, totalIdleUsdBalance, prices.ngn, nairaBalance]);
 
   const walletCards = useMemo(
     () => [
@@ -658,7 +666,7 @@ export const AllWalletPage: React.FC = () => {
       <AllBalancesDrawer
         isOpen={showAllBalancesDrawer}
         onClose={() => setShowAllBalancesDrawer(false)}
-        ngnBalance={0}
+        ngnBalance={nairaBalance ?? 0}
         lptBalance={highyieldBalance}
         usdcBalance={solUsdcBalance}
         showBalance={showBalance}
@@ -688,8 +696,8 @@ export const AllWalletPage: React.FC = () => {
                   </p>
                   <p className="text-xs text-white/60">
                     {transferDrawer === "deposit"
-                      ? "Deposit Naira into your Lisar wallet"
-                      : "Withdraw Naira to your bank account"}
+                      ? "Deposit to your Lisar wallet"
+                      : "Withdraw to your bank account"}
                   </p>
                 </div>
               </div>
@@ -709,8 +717,8 @@ export const AllWalletPage: React.FC = () => {
                   </p>
                   <p className="text-xs text-white/60">
                     {transferDrawer === "deposit"
-                      ? "Deposit crypto from an external wallet"
-                      : "Send crypto to an external wallet address"}
+                      ? "Deposit from an external wallet"
+                      : "Send to an external wallet address"}
                   </p>
                 </div>
               </div>

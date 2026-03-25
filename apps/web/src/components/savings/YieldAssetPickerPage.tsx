@@ -38,9 +38,9 @@ const YieldAssetRow: React.FC<YieldAssetRowProps> = ({
       </div>
 
       <div className="text-right">
-        <p className="text-sm font-semibold">{apy}</p>
+        <p className="text-[13px] font-medium italic">{apy}</p>
         <p className="text-xs text-[#909a95]">
-          {isComingSoon ? "" : "p.a"}
+          {isComingSoon ? "" : "per annum"}
         </p>
       </div>
     </button>
@@ -95,7 +95,7 @@ export const YieldAssetPickerPage: React.FC = () => {
           <YieldAssetRow
             title="USDC"
             subtitle="Earn daily, withdraw anytime"
-            apy={formatApy(stablesApyPercent)}
+            apy="Up to 12%"
             imageSrc="/usdc.svg"
             onClick={() => navigate("/wallet/savings")}
           />
@@ -104,7 +104,7 @@ export const YieldAssetPickerPage: React.FC = () => {
           <YieldAssetRow
             title="Livepeer"
             subtitle="Earn daily, withdraw anytime"
-            apy={formatApy(stakingApyPercent)}
+            apy="Up to 49%"
             imageSrc="/livepeer.webp"
             onClick={() => navigate("/wallet/staking")}
           />

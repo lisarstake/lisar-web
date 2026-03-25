@@ -40,4 +40,5 @@ export const env = {
   VITE_API_BASE_URL: getApiBaseUrl(),
   VITE_RAMP_API_BASE_URL: getRampApiBaseUrl(),
   VITE_RAMP_API_KEY: import.meta.env.VITE_RAMP_API_KEY || "",
+  VITE_VIRTUAL_ACCOUNT_ID: import.meta.env.VITE_VIRTUAL_ACCOUNT_ID || "",
 };

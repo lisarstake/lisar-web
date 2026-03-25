@@ -27,6 +27,10 @@ export const TransactionList: React.FC<TransactionListProps> = ({
   const getTransactionImage = (transaction: TransactionData) => {
     const symbol = transaction.token_symbol?.toUpperCase();
 
+    if (symbol === "NGN") {
+      return "/ng_flag.png";
+    }
+
     if (transaction.transaction_type === "deposit") {
       return "/ng_flag.png";
     }

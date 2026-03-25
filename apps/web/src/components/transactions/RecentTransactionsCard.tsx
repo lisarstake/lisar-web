@@ -46,13 +46,13 @@ export const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
       case "withdrawal":
         return "Send";
       case "delegation":
-        return "Top up";
+        return "Deposit";
       case "undelegation":
         return "Withdraw";
       case "mint":
-        return walletType === "savings" ? "Top up" : "Vest";
+        return walletType === "savings" ? "Deposit" : "Deposit";
       case "burn":
-        return walletType === "savings" ? "Withdraw" : "Redeem";
+        return walletType === "savings" ? "Withdraw" : "Withdraw";
       default:
         return "Transaction";
     }

@@ -1,16 +1,9 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Drawer } from "vaul";
-import {
-  X,
-  Info,
-  CheckCircle2,
-  Circle,
-  Copy,
-  LoaderCircle,
-} from "lucide-react";
+import { LoaderCircle, X } from "lucide-react";
 import { formatNumber } from "@/lib/formatters";
 import { rampService } from "@/services/ramp";
-import { walletService } from "@/services";
+import { virtualAccountService, walletService } from "@/services";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWallet } from "@/contexts/WalletContext";
 import type { OrderData } from "@/services/ramp";
@@ -57,34 +50,35 @@ export const RampDrawer: React.FC<RampDrawerProps> = ({
     ethereumWalletId,
     ethereumWalletAddress,
   } = useWallet();
-  const [isConfirming, setIsConfirming] = useState(false);
-  const [progressStep, setProgressStep] = useState(0);
+
   const [orderData, setOrderData] = useState<OrderData | null>(null);
   const [orderError, setOrderError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(1800);
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
-  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [showSuccess, setShowSuccess] = useState(false);
   const hasCreatedOrder = useRef(false);
 
   const isBuy = details.type === "buy";
 
-  const stopPolling = useCallback(() => {
-    if (pollingRef.current) {
-      clearInterval(pollingRef.current);
-      pollingRef.current = null;
-    }
+  const resolveBankCode = useCallback(async (bankName: string) => {
+    const response = await rampService.getBanks();
+    if (!response.success || !response.data?.length) return null;
+
+    const normalize = (value: string) =>
+      value.toLowerCase().replace(/[^a-z0-9]/g, "");
+    const target = normalize(bankName);
+
+    const exact = response.data.find((bank) => normalize(bank.name) === target);
+    if (exact) return exact.code;
+
+    const fuzzy = response.data.find((bank) => {
+      const candidate = normalize(bank.name);
+      return candidate.includes(target) || target.includes(candidate);
+    });
+    return fuzzy?.code || null;
   }, []);
 
-  // Create order when drawer opens
-  useEffect(() => {
-    if (isOpen && !hasCreatedOrder.current) {
-      hasCreatedOrder.current = true;
-      createOrder();
-    }
-  }, [isOpen]);
-
-  const createOrder = async () => {
+  const createOrder = useCallback(async () => {
     if (!details.cryptoAddress && !isBuy) {
       setOrderError("Wallet address not available. Please try again.");
       return;
@@ -107,14 +101,6 @@ export const RampDrawer: React.FC<RampDrawerProps> = ({
 
         if (response.success && response.data) {
           setOrderData(response.data);
-          if (response.data.status === "completed") {
-            setProgressStep(2);
-          } else if (
-            response.data.status === "pending" ||
-            response.data.status === "processing"
-          ) {
-            startPolling(response.data.id);
-          }
         } else {
           setOrderError(response.error?.message || "Failed to create order");
         }
@@ -124,10 +110,7 @@ export const RampDrawer: React.FC<RampDrawerProps> = ({
           !details.bankAccountNumber ||
           !details.bankAccountName
         ) {
-          setOrderError(
-            "Bank account details not available. Please link your bank account.",
-          );
-          setIsCreatingOrder(false);
+          setOrderError("Naira receiving account not available.");
           return;
         }
 
@@ -145,14 +128,6 @@ export const RampDrawer: React.FC<RampDrawerProps> = ({
 
         if (response.success && response.data) {
           setOrderData(response.data);
-          if (response.data.status === "completed") {
-            setProgressStep(2);
-          } else if (
-            response.data.status === "pending" ||
-            response.data.status === "processing"
-          ) {
-            startPolling(response.data.id);
-          }
         } else {
           setOrderError(response.error?.message || "Failed to create order");
         }
@@ -162,80 +137,31 @@ export const RampDrawer: React.FC<RampDrawerProps> = ({
     } finally {
       setIsCreatingOrder(false);
     }
-  };
+  }, [details, isBuy]);
 
-  const startPolling = useCallback(
-    (orderId: string) => {
-      stopPolling();
-
-      pollingRef.current = setInterval(async () => {
-        try {
-          const response = await rampService.getOrder(orderId);
-          if (response.success && response.data) {
-            const order = response.data;
-            setOrderData(order);
-
-            if (order.status === "completed") {
-              setProgressStep(2);
-              stopPolling();
-            } else if (
-              order.status === "failed" ||
-              order.status === "cancelled"
-            ) {
-              setOrderError(`Order ${order.status}. Please try again.`);
-              stopPolling();
-            } else {
-              setProgressStep(1);
-            }
-          }
-        } catch (error) {
-          console.error("Polling error:", error);
-        }
-      }, 20000);
-    },
-    [stopPolling],
-  );
+  useEffect(() => {
+    if (isOpen && !hasCreatedOrder.current) {
+      hasCreatedOrder.current = true;
+      createOrder();
+    }
+  }, [createOrder, isOpen]);
 
   useEffect(() => {
     if (!isOpen) {
       setTimeout(() => {
-        setIsConfirming(false);
-        setProgressStep(0);
         setOrderData(null);
         setOrderError("");
-        setTimeLeft(1800);
+        setIsSubmitting(false);
+        setIsCreatingOrder(false);
+        setShowSuccess(false);
         hasCreatedOrder.current = false;
-      }, 300);
-      stopPolling();
+      }, 250);
     }
-  }, [isOpen, stopPolling]);
+  }, [isOpen]);
 
-  useEffect(() => {
-    if (isOpen && details.type === "buy" && !isConfirming && timeLeft > 0) {
-      const timerId = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
-      return () => clearTimeout(timerId);
-    }
-  }, [isOpen, details.type, isConfirming, timeLeft]);
-
-  const formatTime = (seconds: number) => {
-    const m = Math.floor(seconds / 60)
-      .toString()
-      .padStart(2, "0");
-    const s = (seconds % 60).toString().padStart(2, "0");
-    return `${m}:${s}`;
-  };
-
-  const handleCopy = async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-    } catch (err) {
-      console.error("Failed to copy", err);
-    }
-  };
-
-  const handleStartConfirmation = async () => {
+  const handleStart = async () => {
     if (!orderData?.id) {
-      setOrderError("Order not created yet. Please try again.");
+      setOrderError("Order not ready yet. Please try again.");
       return;
     }
 
@@ -244,12 +170,48 @@ export const RampDrawer: React.FC<RampDrawerProps> = ({
 
     try {
       if (isBuy) {
-        setIsConfirming(true);
-        startPolling(orderData.id);
+        const paymentAccount = orderData.paymentAccount;
+        if (!paymentAccount) {
+          setOrderError("Payment account details not available.");
+          setIsSubmitting(false);
+          return;
+        }
+
+        const bankCode = await resolveBankCode(paymentAccount.bankName);
+        if (!bankCode) {
+          setOrderError("Unable to resolve bank code for transfer.");
+          setIsSubmitting(false);
+          return;
+        }
+
+        const idempotencyKey =
+          typeof crypto !== "undefined" && "randomUUID" in crypto
+            ? crypto.randomUUID()
+            : `ramp-buy-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+        const transferResp = await virtualAccountService.withdraw({
+          amount: details.fiatAmount,
+          accountNumber: paymentAccount.accountNumber,
+          accountName: paymentAccount.accountName,
+          bankCode,
+          narration: `Convert to ${details.tokenName}`,
+          idempotencyKey,
+        });
+
+        if (!transferResp.success) {
+          setOrderError(
+            transferResp.error?.message ||
+            "Failed to transfer from your Naira balance.",
+          );
+          setIsSubmitting(false);
+          return;
+        }
+
+        setShowSuccess(true);
       } else {
         const cryptoAddress = orderData.cryptoAddress;
         if (!cryptoAddress) {
-          setOrderError("Crypto address not available from order.");
+          setOrderError("Destination address not available.");
           setIsSubmitting(false);
           return;
         }
@@ -286,7 +248,6 @@ export const RampDrawer: React.FC<RampDrawerProps> = ({
             });
           }
         } else {
-          // LPT transfer
           if (!state.user) {
             setOrderError("User not authenticated.");
             setIsSubmitting(false);
@@ -311,14 +272,13 @@ export const RampDrawer: React.FC<RampDrawerProps> = ({
           });
         }
 
-        if (transferResponse?.success) {
-          setIsConfirming(true);
-          startPolling(orderData.id);
-        } else {
-          setOrderError(
-            transferResponse?.error || "Failed to transfer tokens.",
-          );
+        if (!transferResponse?.success) {
+          setOrderError(transferResponse?.error || "Failed to send token.");
+          setIsSubmitting(false);
+          return;
         }
+
+        setShowSuccess(true);
       }
     } catch (error) {
       setOrderError("An error occurred. Please try again.");
@@ -327,51 +287,42 @@ export const RampDrawer: React.FC<RampDrawerProps> = ({
     }
   };
 
-  const handleFinish = () => {
-    stopPolling();
+  const handleDone = () => {
     onConfirm();
     onClose();
   };
 
-  const bankName = isBuy ? orderData?.paymentAccount?.bankName : details.bankName;
-  const accountName = isBuy ? 
-    orderData?.paymentAccount?.accountName :
-    details.bankAccountName;
-  const accountNumber = isBuy ?
-    orderData?.paymentAccount?.accountNumber :
-    details.bankAccountNumber;
+  const actionText = isBuy ? "Deposit" : "Withdraw";
+  const summaryFiatAmount = orderData?.fiatAmount;
+  const summaryTokenAmount = orderData?.cryptoAmount;
+  const summaryTokenName = orderData?.cryptoCurrency;
+  const summaryRate = orderData?.exchangeRate;
+  const summaryStatus = orderData?.status;
 
-  const title = isBuy ? "Buy Crypto" : "Sell Crypto";
-  const actionText = isBuy ? "I have sent" : "Confirm";
-
-  const Skeleton = ({ className = "" }: { className?: string }) => (
-    <div className={`animate-pulse bg-gray-700 rounded ${className}`} />
+  const LoadingValue = () => (
+    <span className="inline-flex items-center">
+      <LoaderCircle className="w-4 h-4 animate-spin text-white/70" />
+    </span>
   );
 
   return (
     <Drawer.Root open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 bg-black/60 z-50 backdrop-blur-sm" />
-        <Drawer.Content className="bg-[#1C1C1E] flex flex-col rounded-t-4xl h-auto mt-24 max-h-[90vh] fixed bottom-0 left-0 right-0 z-50">
-          <div className="p-4 bg-[#1C1C1E] rounded-t-4xl flex-1 overflow-y-auto scrollbar-hide">
-            {!isConfirming && (
-              <div className="flex items-center justify-between mb-6 pt-2">
-                <div className="w-10"></div>
-                <Drawer.Title className="text-white text-lg font-semibold">
-                  {title}
-                </Drawer.Title>
-                <button
-                  onClick={onClose}
-                  className="w-10 h-10 bg-[#2C2C2E] rounded-full flex items-center justify-center text-white transition-colors hover:bg-[#3C3C3E]"
-                >
-                  <X size={20} />
-                </button>
-              </div>
-            )}
-
-            {!isConfirming && (
+        <Drawer.Content className="bg-[#050505] border-t border-[#2a2a2a] flex flex-col rounded-t-4xl h-auto mt-24 max-h-[90vh] fixed bottom-0 left-0 right-0 z-50">
+          <div className="p-4 bg-[#050505] rounded-t-4xl flex-1 overflow-y-auto scrollbar-hide">
+            {!showSuccess ? (
               <>
-                <div className="flex flex-col items-center justify-center mb-4">
+                <div className="flex justify-end pt-2">
+                  <button
+                    onClick={onClose}
+                    className="w-10 h-10 bg-[#13170a] rounded-full flex items-center justify-center text-white transition-colors hover:bg-[#1a1f10]"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+
+                <div className="flex flex-col items-center justify-center mb-6">
                   <div className="w-20 h-20 bg-[#C7EF6B]/20 rounded-full flex items-center justify-center mb-4 relative overflow-hidden">
                     <img
                       src="/ramp.png"
@@ -379,167 +330,103 @@ export const RampDrawer: React.FC<RampDrawerProps> = ({
                       className="w-full h-full object-cover"
                     />
                   </div>
-                  <p className="text-gray-400 text-sm mb-1">
-                    {isBuy ? "You're buying" : "You're selling"}
-                  </p>
-                  <h2 className="text-[#C7EF6B] text-2xl font-bold mb-1">
-                    {formatNumber(details.tokenAmount, 2)} {details.tokenName}
-                  </h2>
-                </div>
-
-                <div className="bg-[#2C2C2E] rounded-2xl p-4 mb-6 space-y-4">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-1 text-gray-400 text-sm">
-                      {isBuy ? "You're spending" : "You're receiving"}
-                    </div>
-                    <span className="text-white text-sm font-medium">
-                      {details.fiatCurrency}{" "}
-                      {formatNumber(details.fiatAmount, 2)}
-                    </span>
-                  </div>
-
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-1 text-gray-400 text-sm">
-                      Price of {details.tokenName}
-                    </div>
-                    <span className="text-white text-sm font-medium">
-                      {details.fiatCurrency}{" "}
-                      {formatNumber(
-                        orderData?.exchangeRate ?? details.exchangeRate,
-                        2,
-                      )}
-                    </span>
-                  </div>
-
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-1 text-gray-400 text-sm">
-                      Estimated processing time
-                    </div>
-                    <span className="text-white text-sm font-medium">
-                      {details.processingTime}
-                    </span>
-                  </div>
-
-                  {isBuy &&
-                    (isCreatingOrder ? (
-                      <>
-                        <div className="w-full h-px bg-gray-700 my-2"></div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-400 text-sm">
-                            Bank Name
-                          </span>
-                          <Skeleton className="h-4 w-24" />
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-400 text-sm">
-                            Account Number
-                          </span>
-                          <Skeleton className="h-4 w-20" />
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-400 text-sm">
-                            Account Name
-                          </span>
-                          <Skeleton className="h-4 w-32" />
-                        </div>
-                      </>
-                    ) : bankName && accountNumber ? (
-                      <>
-                        <div className="w-full h-px bg-gray-700 my-2"></div>
-
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-400 text-sm">
-                            Bank Name
-                          </span>
-                          <span className="text-white text-sm font-medium">
-                            {bankName}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-400 text-sm">
-                            Account Number
-                          </span>
-                          <div className="flex items-center gap-2">
-                            <span className="text-white text-sm font-medium">
-                              {accountNumber}
-                            </span>
-                            <button
-                              onClick={() => handleCopy(accountNumber)}
-                              className="text-[#C7EF6B] hover:text-white transition-colors"
-                            >
-                              <Copy size={14} />
-                            </button>
-                          </div>
-                        </div>
-                        {accountName && (
-                          <div className="flex justify-between items-center">
-                            <span className="text-gray-400 text-sm">
-                              Account Name
-                            </span>
-                            <span className="text-white text-sm font-medium">
-                              {accountName}
-                            </span>
-                          </div>
-                        )}
-                      </>
-                    ) : null)}
-
-                  {!isBuy && bankName && accountNumber && (
-                      <>
-                        <div className="w-full h-[1px] bg-gray-700 my-2"></div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-400 text-sm">
-                            Recipient Bank
-                          </span>
-                          <span className="text-white text-sm font-medium">
-                            {bankName}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-400 text-sm">
-                            Recipient Name
-                          </span>
-                          <span className="text-white text-sm font-medium">
-                            {accountName}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-400 text-sm">
-                            Recipient Account
-                          </span>
-                          <div className="flex items-center gap-2">
-                            <span className="text-white text-sm font-medium">
-                              {accountNumber}
-                            </span>
-                          </div>
-                        </div>
-                      </>
-                    ) }
-
-                  {isBuy && orderData && (
+                  {orderData ? (
                     <>
-                      <div className="w-full h-[1px] bg-gray-700 my-2"></div>
-                      <div className="text-center">
-                        <p className="text-xs text-gray-400 font-medium">
-                          Please send exactly {details.fiatSymbol}
-                          {formatNumber(details.fiatAmount, 2)}. Valid for{" "}
-                          {formatTime(timeLeft)}
-                        </p>
-                      </div>
+                      <p className="text-gray-400 text-sm mb-1 text-center">
+                        {isBuy
+                          ? `You are able to convert ${details.fiatSymbol}${formatNumber(
+                            summaryFiatAmount || 0,
+                            2,
+                          )} to`
+                          : `You are able to convert ${formatNumber(
+                            summaryTokenAmount || 0,
+                            4,
+                          )} ${summaryTokenName || details.tokenName} for`}
+                      </p>
+                      <h2 className="text-[#C7EF6B] text-2xl font-semibold mb-2 text-center">
+                        {isBuy
+                          ? `${formatNumber(summaryTokenAmount || 0, 4)} ${summaryTokenName || details.tokenName}`
+                          : `${details.fiatSymbol}${formatNumber(summaryFiatAmount || 0, 2)}`}
+                      </h2>
                     </>
+                  ) : (
+                    <div className="flex flex-col items-center gap-2 mb-2">
+                      <LoadingValue />
+                      <LoadingValue />
+                    </div>
                   )}
+
                 </div>
+
+                <div className="bg-[#13170a] rounded-2xl p-4 mb-5 space-y-3">
+                  <div className="flex justify-between items-center">
+                    <p className="text-sm text-white/60">
+                      {isBuy ? "You are spending" : "You are receiving"}
+                    </p>
+                    <p className="text-sm font-medium text-white">
+                      {orderData ? (
+                        <>
+                          {details.fiatSymbol}
+                          {formatNumber(summaryFiatAmount || 0, 2)}
+                        </>
+                      ) : (
+                        <LoadingValue />
+                      )}
+                    </p>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <p className="text-sm text-white/60">
+                      {isBuy ? "You will receive" : "You will send"}
+                    </p>
+                    <p className="text-sm font-medium text-white">
+                      {orderData ? (
+                        <>
+                          {formatNumber(summaryTokenAmount || 0, 4)}{" "}
+                          {summaryTokenName || details.tokenName}
+                        </>
+                      ) : (
+                        <LoadingValue />
+                      )}
+                    </p>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <p className="text-sm text-white/60">
+                      Price of {orderData ? summaryTokenName : details.tokenName}
+                    </p>
+                    <p className="text-sm font-medium text-white">
+                      {orderData ? (
+                        <>
+                          {details.fiatSymbol}
+                          {formatNumber(summaryRate || 0, 2)}
+                        </>
+                      ) : (
+                        <LoadingValue />
+                      )}
+                    </p>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <p className="text-sm text-white/60">Estimated completion</p>
+                    <p className="text-sm font-medium text-white">About 1 minute</p>
+                  </div>
+                
+                </div>
+
+                {orderError ? (
+                  <p className="text-sm text-red-400 mb-4 text-center">
+                    {orderError}
+                  </p>
+                ) : null}
 
                 <div className="pb-8">
                   <button
-                    onClick={handleStartConfirmation}
+                    onClick={handleStart}
                     disabled={
                       isSubmitting ||
                       externalLoading ||
                       isCreatingOrder ||
                       !orderData
                     }
-                    className="w-full py-3 rounded-xl font-semibold text-lg bg-[#C7EF6B] text-black hover:bg-[#B8E55A] transition-colors flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed"
+                    className="w-full h-12 rounded-full font-semibold text-lg bg-[#C7EF6B] text-black hover:bg-[#B8E55A] transition-colors flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed"
                   >
                     {isSubmitting ? (
                       <LoaderCircle className="w-6 h-6 animate-spin text-black" />
@@ -549,83 +436,27 @@ export const RampDrawer: React.FC<RampDrawerProps> = ({
                   </button>
                 </div>
               </>
-            )}
-
-            {isConfirming && (
+            ) : (
               <div className="flex flex-col items-center px-4 py-8">
-                <div className="flex flex-col items-center justify-center mb-4">
-                  <div className="w-20 h-20 bg-[#C7EF6B]/20 rounded-full flex items-center justify-center mb-4 relative overflow-hidden">
-                    <img
-                      src="/ramp.png"
-                      alt="Ramp"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
+                <div className="w-20 h-20 bg-[#C7EF6B]/20 rounded-full flex items-center justify-center mb-4 relative overflow-hidden">
+                  <img
+                    src="/fund.png"
+                    alt="Success"
+                    className="w-full h-full object-cover"
+                  />
                 </div>
-                <h2 className="text-white text-xl font-bold mb-2 tracking-wide">
-                  {orderData?.status === "completed"
-                    ? "Payment Complete!"
-                    : "Confirming Payment"}
+                <h2 className="text-white text-xl font-bold mb-2 tracking-wide text-center">
+                  Conversion successful
                 </h2>
-                <p className="text-gray-400 text-sm mb-12">
-                  {orderData?.status === "completed"
-                    ? "Your transaction has been completed successfully."
-                    : "Please do not close or cancel this page"}
+                <p className="text-gray-400 text-sm mb-10 text-center">
+                  Your wallet balance will update in about a minute.
                 </p>
-
-                <div className="relative w-full max-w-[280px] mb-12 px-6">
-                  <div className="absolute left-[39px] top-[24px] bottom-[24px] w-[2px] bg-gray-700 z-0 h-[60px]"></div>
-
-                  <div className="flex items-center gap-6 mb-12 relative z-10">
-                    <div className="w-8 h-8 rounded-full bg-[#1C1C1E] flex items-center justify-center">
-                      {progressStep >= 1 ? (
-                        <div className="w-8 h-8 rounded-full bg-[#C7EF6B] flex items-center justify-center">
-                          <CheckCircle2 size={24} className="text-black" />
-                        </div>
-                      ) : (
-                        <Circle
-                          size={32}
-                          className="text-gray-600 bg-[#1C1C1E] rounded-full"
-                        />
-                      )}
-                    </div>
-                    <span
-                      className={`font-medium text-[15px] flex-1 ${progressStep >= 1 ? "text-[#C7EF6B]" : "text-gray-500"}`}
-                    >
-                      Processing Payment
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-6 relative z-10">
-                    <div className="w-8 h-8 rounded-full bg-[#1C1C1E] flex items-center justify-center">
-                      {progressStep >= 2 ? (
-                        <div className="w-8 h-8 rounded-full bg-[#C7EF6B] flex items-center justify-center">
-                          <CheckCircle2 size={24} className="text-black" />
-                        </div>
-                      ) : (
-                        <Circle
-                          size={32}
-                          className="text-gray-600 bg-[#1C1C1E] rounded-full"
-                        />
-                      )}
-                    </div>
-                    <span
-                      className={`font-medium text-[15px] flex-1 ${progressStep >= 2 ? "text-[#C7EF6B]" : "text-gray-500"}`}
-                    >
-                      Payment Confirmed
-                    </span>
-                  </div>
-                </div>
-
-                <div className="w-full mt-4 pb-4">
+                <div className="w-full mt-2 pb-4">
                   <button
-                    onClick={handleFinish}
-                    disabled={
-                      progressStep < 2 && orderData?.status !== "completed"
-                    }
-                    className="w-full py-3 rounded-xl font-semibold text-lg text-black transition-colors bg-[#C7EF6B] hover:bg-[#B8E55A] disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={handleDone}
+                    className="w-full h-14 rounded-full font-semibold text-lg text-black transition-colors bg-[#C7EF6B] hover:bg-[#B8E55A]"
                   >
-                    Finish
+                    Done
                   </button>
                 </div>
               </div>

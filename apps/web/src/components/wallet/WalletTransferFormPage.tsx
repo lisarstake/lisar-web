@@ -1,10 +1,17 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Check, Copy, Info, ClipboardPaste } from "lucide-react";
+import {
+  ArrowLeft,
+  Check,
+  Copy,
+  Info,
+  ClipboardPaste,
+  LoaderCircle,
+  RotateCcw,
+} from "lucide-react";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWallet } from "@/contexts/WalletContext";
-import { usePrices } from "@/hooks/usePrices";
 import { Switch } from "@/components/ui/switch";
 import { Tooltip } from "@/components/ui/tooltip";
 import {
@@ -15,11 +22,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import QRCode from "qrcode";
+import {
+  virtualAccountService,
+} from "@/services/virtual-account";
+import { rampService } from "@/services/ramp";
+import type { BankInfo } from "@/services/ramp/types";
+import { WithdrawalConfirmationDrawer } from "@/components/general/FiatWithdrawalDrawer";
 
 type TransferMode = "deposit" | "withdraw";
 type TransferAsset = "naira" | "crypto";
-
-const BANK_OPTIONS = ["Moniepoint", "Access Bank", "GTBank"];
+const MIN_WITHDRAWAL_NAIRA = 100;
+const MAX_WITHDRAWAL_NAIRA = 500000;
+const WITHDRAWAL_FEE_NAIRA = 50;
 
 type SupportedToken = "USDC" | "USDT" | "LPT";
 type SupportedNetwork = "Solana" | "Arbitrum";
@@ -40,22 +54,37 @@ export const WalletTransferFormPage: React.FC = () => {
     asset: TransferAsset;
   }>();
   const { state } = useAuth();
-  const { solanaWalletAddress } = useWallet();
-  const { prices } = usePrices();
+  const {
+    solanaWalletAddress,
+    virtualAccount,
+    virtualAccountLoading,
+    loadVirtualAccountDetails,
+    setVirtualAccountDetails,
+  } = useWallet();
   const qrCanvasRef = useRef<HTMLCanvasElement>(null);
 
   const safeMode: TransferMode = mode === "withdraw" ? "withdraw" : "deposit";
   const safeAsset: TransferAsset = asset === "crypto" ? "crypto" : "naira";
+  const isNairaWithdraw = safeMode === "withdraw" && safeAsset === "naira";
 
   const [amount, setAmount] = useState("");
-  const [bankName, setBankName] = useState(BANK_OPTIONS[0]);
+  const [bankCode, setBankCode] = useState("");
+  const [banks, setBanks] = useState<BankInfo[]>([]);
   const [accountNumber, setAccountNumber] = useState("");
   const [accountName, setAccountName] = useState("");
+  const [lookupError, setLookupError] = useState("");
+  const [isLookingUpAccount, setIsLookingUpAccount] = useState(false);
+  const [isSubmittingWithdraw, setIsSubmittingWithdraw] = useState(false);
+  const [showWithdrawFlow, setShowWithdrawFlow] = useState(false);
   const [walletAddress, setWalletAddress] = useState("");
   const [copied, setCopied] = useState(false);
-  const [selectedToken, setSelectedToken] = useState<SupportedToken>("USDT");
+  const [selectedToken, setSelectedToken] = useState<SupportedToken>("USDC");
   const [selectedNetwork, setSelectedNetwork] =
     useState<SupportedNetwork>("Solana");
+  const [isVirtualAccountLoading, setIsVirtualAccountLoading] = useState(false);
+  const [virtualAccountStatus, setVirtualAccountStatus] = useState<
+    "idle" | "loading" | "ready" | "failed"
+  >("idle");
   /*
   const [instantOfframp, setInstantOfframp] = useState(false);
   const [offrampAddress, setOfframpAddress] = useState("");
@@ -91,19 +120,173 @@ export const WalletTransferFormPage: React.FC = () => {
   */
 
 
-  const linked = state.user?.linked_account;
-  const depositBankName = linked?.bank_name || "Nomba Microfinance Bank";
-  const depositAccountNumber = linked?.account_number || "00228811900";
-  const depositAccountName = state.user?.full_name || "Lisar User";
+  const depositBankName = virtualAccount?.bankName || "";
+  const depositAccountNumber =
+    virtualAccount?.accountNumber || "";
+  const depositAccountName =
+    virtualAccount?.accountName || "";
+  const hasDepositAccountDetails = Boolean(
+    depositBankName && depositAccountName && depositAccountNumber,
+  );
 
-  const displayName = (() => {
-    if (!depositAccountName) return "User";
+  const getNameParts = useCallback((fullName?: string) => {
+    const trimmed = (fullName || "").trim();
+    if (!trimmed) {
+      return { firstName: "Lisar", lastName: "User" };
+    }
 
-    const parts = depositAccountName.trim().split(" ");
-    if (parts.length <= 2) return depositAccountName;
+    const parts = trimmed.split(/\s+/);
+    const firstName = parts[0];
+    const lastName = parts.length > 1 ? parts[parts.length - 1] : "User";
 
-    return `${parts[0]} ${parts[parts.length - 1]}`;
-  })();
+    return { firstName, lastName };
+  }, []);
+
+  const initializeVirtualAccount = useCallback(async () => {
+    if (safeMode !== "deposit" || safeAsset !== "naira") return;
+    if (virtualAccount?.accountNumber) {
+      setVirtualAccountStatus("ready");
+      return;
+    }
+
+    setIsVirtualAccountLoading(true);
+    setVirtualAccountStatus("loading");
+
+    const existingAccount = await loadVirtualAccountDetails();
+    if (existingAccount) {
+      setIsVirtualAccountLoading(false);
+      setVirtualAccountStatus("ready");
+      return;
+    }
+
+    const { firstName, lastName } = getNameParts(state.user?.full_name);
+    const createdAccount = await virtualAccountService.createVirtualAccount({
+      firstName,
+      lastName,
+    });
+
+    if (createdAccount.success && createdAccount.data) {
+      setVirtualAccountDetails(createdAccount.data);
+      setIsVirtualAccountLoading(false);
+      setVirtualAccountStatus("ready");
+      return;
+    }
+    setIsVirtualAccountLoading(false);
+    setVirtualAccountStatus("failed");
+  }, [
+    getNameParts,
+    loadVirtualAccountDetails,
+    safeAsset,
+    safeMode,
+    setVirtualAccountDetails,
+    state.user?.full_name,
+    virtualAccount?.accountNumber,
+  ]);
+
+  const loadBanks = useCallback(async () => {
+    if (!isNairaWithdraw) return;
+
+    const response = await rampService.getBanks();
+    if (response.success && response.data?.length) {
+      setBanks(response.data);
+      setBankCode((prev) => prev || response.data?.[0]?.code || "");
+      return;
+    }
+
+    setBanks([]);
+    setBankCode("");
+  }, [isNairaWithdraw]);
+
+  const handleConfirm = useCallback(() => {
+    if (!isNairaWithdraw) return;
+
+    const parsedAmount = Number(amount.replace(/,/g, "").trim());
+    if (
+      !parsedAmount ||
+      parsedAmount < MIN_WITHDRAWAL_NAIRA ||
+      parsedAmount > MAX_WITHDRAWAL_NAIRA
+    ) {
+      return;
+    }
+
+    if (!bankCode || accountNumber.length !== 10 || !accountName.trim()) {
+      return;
+    }
+    setShowWithdrawFlow(true);
+  }, [accountName, accountNumber, amount, bankCode, isNairaWithdraw]);
+
+  const confirmWithdrawal = useCallback(async (_pin: string) => {
+    if (!isNairaWithdraw) return { success: false, error: "Invalid state" };
+    const parsedAmount = Number(amount.replace(/,/g, "").trim());
+    if (
+      !parsedAmount ||
+      parsedAmount < MIN_WITHDRAWAL_NAIRA ||
+      parsedAmount > MAX_WITHDRAWAL_NAIRA
+    ) {
+      return { success: false, error: "Invalid amount" };
+    }
+
+    const withdrawalTotalAmount = Math.max(
+      parsedAmount + WITHDRAWAL_FEE_NAIRA,
+      0,
+    );
+    const idempotencyKey =
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : `wd-${Date.now()}-${Math.random().toString(36).slice(2)}-${accountNumber}`;
+
+    setIsSubmittingWithdraw(true);
+    try {
+      const response = await virtualAccountService.withdraw({
+        amount: withdrawalTotalAmount,
+        accountNumber,
+        accountName,
+        bankCode,
+        narration: "Lisar payout",
+        idempotencyKey,
+      });
+
+      if (!response.success) {
+        return {
+          success: false,
+          error: response.error?.message || "Withdrawal failed",
+        };
+      }
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: "Withdrawal failed" };
+    } finally {
+      setIsSubmittingWithdraw(false);
+    }
+  }, [
+    accountName,
+    accountNumber,
+    amount,
+    bankCode,
+    isNairaWithdraw,
+  ]);
+
+  const displayName = useMemo(() => {
+    const providerName = depositAccountName
+      .replace(/\s+ltd\.?$/i, "")
+      .trim();
+    const userName = (state.user?.full_name || "").trim();
+    const userParts = userName ? userName.split(/\s+/) : [];
+    const normalizedUserName =
+      userParts.length >= 3
+        ? `${userParts[0]} ${userParts[userParts.length - 1]}`
+        : userName || "User";
+
+    if (providerName && normalizedUserName) {
+      return `${providerName} / ${normalizedUserName}`;
+    }
+    return providerName || normalizedUserName;
+  }, [depositAccountName, state.user?.full_name]);
+
+  const showVirtualAccountLoadingState =
+    (isVirtualAccountLoading || virtualAccountLoading) && !hasDepositAccountDetails;
+  const showVirtualAccountFailedState =
+    virtualAccountStatus === "failed" && !hasDepositAccountDetails;
 
   const currentTokenConfig = TOKEN_CONFIG[selectedToken];
   const availableNetworks = currentTokenConfig.networks;
@@ -181,6 +364,64 @@ export const WalletTransferFormPage: React.FC = () => {
     });
   }, [safeMode, safeAsset, effectiveDepositAddress]);
 
+  useEffect(() => {
+    if (safeMode !== "deposit" || safeAsset !== "naira") return;
+    initializeVirtualAccount();
+  }, [initializeVirtualAccount, safeAsset, safeMode]);
+
+  useEffect(() => {
+    if (!isNairaWithdraw) return;
+    loadBanks();
+  }, [isNairaWithdraw, loadBanks]);
+
+  useEffect(() => {
+    if (!isNairaWithdraw) return;
+    if (!bankCode || accountNumber.length !== 10) {
+      setAccountName("");
+      setLookupError("");
+      return;
+    }
+
+    let ignore = false;
+    const runLookup = async () => {
+      setIsLookingUpAccount(true);
+      setLookupError("");
+      try {
+        const response = await rampService.lookupAccount({
+          accountNumber,
+          bankCode,
+        });
+
+        if (!ignore) {
+          if (response.success && response.data?.accountName) {
+            setAccountName(response.data.accountName);
+            setLookupError("");
+          } else {
+            setAccountName("");
+            setLookupError(
+              "Account not found",
+            );
+          }
+        }
+      } catch (error) {
+        if (!ignore) {
+          setAccountName("");
+          setLookupError("Account not found");
+        }
+      } finally {
+        if (!ignore) {
+          setIsLookingUpAccount(false);
+        }
+      }
+    };
+
+    runLookup();
+
+    return () => {
+      ignore = true;
+    };
+  }, [accountNumber, bankCode, isNairaWithdraw]);
+
   const pageTitle = useMemo(() => {
     if (safeMode === "deposit" && safeAsset === "naira") return "Deposit Naira";
     if (safeMode === "deposit" && safeAsset === "crypto")
@@ -190,11 +431,31 @@ export const WalletTransferFormPage: React.FC = () => {
   }, [safeMode, safeAsset]);
 
   const isWithdraw = safeMode === "withdraw";
+  const numericAmount = Number(amount.replace(/,/g, "").trim());
+  const selectedBankName =
+    banks.find((bank) => bank.code === bankCode)?.name || "Selected bank";
+  const hasValidWithdrawalAmount =
+    Number.isFinite(numericAmount) &&
+    numericAmount >= MIN_WITHDRAWAL_NAIRA &&
+    numericAmount <= MAX_WITHDRAWAL_NAIRA;
+  const amountWarning =
+    isNairaWithdraw && amount.trim()
+      ? numericAmount < MIN_WITHDRAWAL_NAIRA
+        ? `Minimum withdrawal is ₦${MIN_WITHDRAWAL_NAIRA.toLocaleString()}`
+        : numericAmount > MAX_WITHDRAWAL_NAIRA
+          ? `Maximum withdrawal is ₦${MAX_WITHDRAWAL_NAIRA.toLocaleString()}`
+          : ""
+      : "";
   const isDisabled = isWithdraw
     ? !amount.trim() ||
     (safeAsset === "crypto"
       ? !walletAddress.trim()
-      : !bankName.trim() || !accountNumber.trim() || !accountName.trim())
+      : !bankCode.trim() ||
+      accountNumber.length !== 10 ||
+      !accountName.trim() ||
+      !hasValidWithdrawalAmount ||
+      isLookingUpAccount ||
+      isSubmittingWithdraw)
     : false;
 
   const handleCopy = async (value: string) => {
@@ -231,6 +492,9 @@ export const WalletTransferFormPage: React.FC = () => {
                   placeholder={safeAsset === "naira" ? "0" : "0"}
                   className="w-full rounded-lg bg-[#13170a] px-4 py-3.5 text-base text-white outline-none"
                 />
+                {amountWarning ? (
+                  <p className="mt-2 text-xs text-amber-300 ml-1">{amountWarning}</p>
+                ) : null}
               </div>
 
               {safeAsset === "naira" ? (
@@ -239,18 +503,18 @@ export const WalletTransferFormPage: React.FC = () => {
                     <label className="mb-2 block text-sm text-white/70">
                       Bank
                     </label>
-                    <Select value={bankName} onValueChange={setBankName}>
+                    <Select value={bankCode} onValueChange={setBankCode}>
                       <SelectTrigger className="w-full bg-[#13170a] text-white border-none py-6">
-                        <SelectValue />
+                        <SelectValue placeholder="Select bank" />
                       </SelectTrigger>
                       <SelectContent className="bg-[#13170a] text-white border-none">
-                        {BANK_OPTIONS.map((bank) => (
+                        {banks.map((bank) => (
                           <SelectItem
-                            key={bank}
-                            value={bank}
+                            key={bank.code}
+                            value={bank.code}
                             className="focus:bg-white/10 focus:text-white"
                           >
-                            {bank}
+                            {bank.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -263,7 +527,11 @@ export const WalletTransferFormPage: React.FC = () => {
                     <input
                       type="text"
                       value={accountNumber}
-                      onChange={(e) => setAccountNumber(e.target.value)}
+                      onChange={(e) =>
+                        setAccountNumber(
+                          e.target.value.replace(/\D/g, "").slice(0, 10),
+                        )
+                      }
                       placeholder="Enter account number"
                       className="w-full rounded-lg bg-[#13170a] px-4 py-3.5 text-base text-white outline-none"
                     />
@@ -276,9 +544,17 @@ export const WalletTransferFormPage: React.FC = () => {
                       type="text"
                       value={accountName}
                       onChange={(e) => setAccountName(e.target.value)}
-                      placeholder="Enter account name"
+                      placeholder={
+                        isLookingUpAccount
+                          ? "Fetching account..."
+                          : "Account name"
+                      }
+                      readOnly
                       className="w-full rounded-lg bg-[#13170a] px-4 py-3.5 text-base text-white outline-none"
                     />
+                    {lookupError ? (
+                      <p className="mt-2 text-xs text-amber-300 ml-1">{lookupError}</p>
+                    ) : null}
                   </div>
                 </>
               ) : (
@@ -324,32 +600,70 @@ export const WalletTransferFormPage: React.FC = () => {
               <div className="rounded-lg bg-[#13170a] p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <p className="text-sm text-white/60">Bank name</p>
-                  <p className="text-base text-white">{depositBankName}</p>
+                  {showVirtualAccountLoadingState ? (
+                    <span className="inline-flex items-center gap-2 text-sm text-white/70">
+                      <LoaderCircle size={14} className="animate-spin" />
+
+                    </span>
+                  ) : (
+                    <p className="text-base text-white">
+                      {showVirtualAccountFailedState
+                        ? "not assigned"
+                        : depositBankName}
+                    </p>
+                  )}
                 </div>
                 <div className="flex items-center justify-between">
                   <p className="text-sm text-white/60">Account name</p>
-                  <p className="text-base text-white">{displayName}</p>
+                  {showVirtualAccountLoadingState ? (
+                    <span className="inline-flex items-center gap-2 text-sm text-white/70">
+                      <LoaderCircle size={14} className="animate-spin" />
+
+                    </span>
+                  ) : (
+                    <p className="text-base text-white">
+                      {showVirtualAccountFailedState ? "not assigned" : displayName}
+                    </p>
+                  )}
                 </div>
                 <div className="flex items-center justify-between">
                   <p className="text-sm text-white/60">Account number</p>
-                  <button
-                    onClick={() => handleCopy(depositAccountNumber)}
-                    className="flex items-center gap-2 "
-                  >
-                    <span className="text-base text-white">
-                      {depositAccountNumber}
+                  {showVirtualAccountLoadingState ? (
+                    <span className="inline-flex items-center gap-2 text-sm text-white/70">
+                      <LoaderCircle size={14} className="animate-spin" />
+
                     </span>
-                    {copied ? (
-                      <Check size={16} className="text-[#c7ef6b]" />
-                    ) : (
-                      <Copy size={16} className="text-white/70" />
-                    )}
-                  </button>
+                  ) : showVirtualAccountFailedState ? (
+                    <button
+                      onClick={initializeVirtualAccount}
+                      className="flex items-center gap-2"
+                    >
+                      <span className="text-base text-white">Retry</span>
+                      <RotateCcw size={16} className="text-white/70" />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleCopy(depositAccountNumber)}
+                      className="flex items-center gap-2 "
+                    >
+                      <span className="text-base text-white">
+                        {depositAccountNumber}
+                      </span>
+                      {copied ? (
+                        <Check size={16} className="text-[#c7ef6b]" />
+                      ) : (
+                        <Copy size={16} className="text-white/70" />
+                      )}
+                    </button>
+                  )}
                 </div>
+                <button className="mt-2 h-12 w-full rounded-md text-base font-medium transition-colors bg-white/10 text-white">
+                  I have sent
+                </button>
               </div>
               <p className="text-xs text-white/60">
-                Transfer from your bank app to this account. Your deposit will be
-                credited automatically once payment is confirmed.
+                Transfer from your bank app to this account. Then click "I have sent" your deposit will be
+                credited automatically.
               </p>
             </div>
           ) : (
@@ -370,12 +684,12 @@ export const WalletTransferFormPage: React.FC = () => {
                     >
                       USDC
                     </SelectItem>
-                    <SelectItem
+                    {/* <SelectItem
                       value="USDT"
                       className="focus:bg-white/10 focus:text-white"
                     >
                       USDT
-                    </SelectItem>
+                    </SelectItem> */}
                     <SelectItem
                       value="LPT"
                       className="focus:bg-white/10 focus:text-white"
@@ -504,16 +818,28 @@ export const WalletTransferFormPage: React.FC = () => {
       {isWithdraw && (
         <div className="fixed bottom-28 left-0 right-0 px-6 z-20">
           <button
+            onClick={handleConfirm}
             disabled={isDisabled}
-            className={`h-14 w-full rounded-full text-base font-semibold transition-colors ${isDisabled
+            className={`h-12 w-full rounded-full text-base font-semibold transition-colors ${isDisabled
               ? "bg-[#2a2a2a] text-white/40"
               : "bg-[#c7ef6b] text-black"
               }`}
           >
-            Confirm
+            Continue
           </button>
         </div>
       )}
+
+      <WithdrawalConfirmationDrawer
+        isOpen={showWithdrawFlow}
+        onClose={() => setShowWithdrawFlow(false)}
+        bankName={selectedBankName}
+        accountNumber={accountNumber}
+        accountName={accountName}
+        amount={numericAmount}
+        fee={WITHDRAWAL_FEE_NAIRA}
+        onConfirmWithdrawal={confirmWithdrawal}
+      />
 
       <BottomNavigation currentPath="/wallet" />
     </div>

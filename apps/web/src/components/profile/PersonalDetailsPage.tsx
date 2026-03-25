@@ -35,9 +35,7 @@ export const PersonalDetailsPage: React.FC = () => {
     }
 
     if (state.user) {
-      const nameFromLinked =
-        state.user.linked_account?.bank_name || state.user.full_name || "";
-      setFullName(nameFromLinked);
+      setFullName(state.user.full_name);
       setEmail(state.user.email || "");
       setDob(state.user.DOB || "");
       setCountry(state.user.country || "");
