@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Copy, Check, Clock } from "lucide-react";
-import { ReceiveCryptoDrawer } from "@/components/general/ReceiveCryptoDrawer";
 
 interface AccountCardProps {
   flag: string;
@@ -78,7 +77,6 @@ export const AccountsPage: React.FC = () => {
 
   const [hasNairaAccount] = useState(true);
   const [hasDollarAccount] = useState(false);
-  const [showReceiveCryptoDrawer, setShowReceiveCryptoDrawer] = useState(false);
 
   const handleBackClick = () => {
     navigate(-1);
@@ -129,17 +127,10 @@ export const AccountsPage: React.FC = () => {
           flag="/crypto.png"
           title="Crypto Wallet"
           description="Receive crypto tokens from any external wallet to top up your Lisar wallet"
-          hasAccount={true}
-          onRequestAccount={() => setShowReceiveCryptoDrawer(true)}
-          buttonText="Show Address"
+          hasAccount={false}
+          isComingSoon
         />
       </div>
-
-      {/* Receive Crypto Drawer */}
-      <ReceiveCryptoDrawer
-        isOpen={showReceiveCryptoDrawer}
-        onClose={() => setShowReceiveCryptoDrawer(false)}
-      />
     </div>
   );
 };

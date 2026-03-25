@@ -3,7 +3,6 @@ import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { ArrowLeft, CircleQuestionMark } from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { ActionDrawer } from "@/components/general/ActionDrawer";
-import { ShareDrawer } from "@/components/general/ShareDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { ValidatorRewardsChart } from "@/components/validator/ValidatorRewardsChart";
 import { ValidatorActionButtons } from "@/components/validator/ValidatorActionButtons";
@@ -29,7 +28,6 @@ export const ValidatorDetailsPage: React.FC = () => {
     tierTitle?: string;
   } | null;
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
-  const [showShareDrawer, setShowShareDrawer] = useState(false);
   const [showUnstakeRestrictionDrawer, setShowUnstakeRestrictionDrawer] =
     useState(false);
   const [showMoveStakeDrawer, setShowMoveStakeDrawer] = useState(false);
@@ -179,7 +177,20 @@ export const ValidatorDetailsPage: React.FC = () => {
   };
 
   const handleShareClick = () => {
-    setShowShareDrawer(true);
+    const validatorName = currentValidator?.ensName || "Validator";
+    const validatorLink = `${window.location.origin}/validator/${validatorId || ""}`;
+    const shareText = `Check out ${validatorName} on Lisar`;
+
+    if (navigator.share) {
+      void navigator.share({
+        title: validatorName,
+        text: shareText,
+        url: validatorLink,
+      });
+      return;
+    }
+
+    void navigator.clipboard.writeText(validatorLink);
   };
 
   const handleHelpClick = () => {
@@ -405,14 +416,6 @@ export const ValidatorDetailsPage: React.FC = () => {
           "APY shows your potential earnings, total stake shows community trust, and fees show the validator's charge.",
           "Click 'Stake' to start earning or 'Unstake' to remove your current stake.",
         ]}
-      />
-
-      {/* Share Drawer */}
-      <ShareDrawer
-        isOpen={showShareDrawer}
-        onClose={() => setShowShareDrawer(false)}
-        validatorName={currentValidator?.ensName || "Unknown Validator"}
-        validatorId={validatorId || ""}
       />
 
       {/* Unstake Restriction Drawer */}
