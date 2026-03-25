@@ -309,7 +309,7 @@ export const RampDrawer: React.FC<RampDrawerProps> = ({
     <Drawer.Root open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 bg-black/60 z-50 backdrop-blur-sm" />
-        <Drawer.Content className="bg-[#050505] border-t border-[#2a2a2a] flex flex-col rounded-t-4xl h-auto mt-24 max-h-[90vh] fixed bottom-0 left-0 right-0 z-50">
+        <Drawer.Content className="bg-[#050505] border-t border-[#2a2a2a] flex flex-col rounded-t-4xl h-auto max-h-[90vh] fixed bottom-0 left-0 right-0 z-50">
           <div className="p-4 bg-[#050505] rounded-t-4xl flex-1 overflow-y-auto scrollbar-hide">
             {!showSuccess ? (
               <>
@@ -408,16 +408,10 @@ export const RampDrawer: React.FC<RampDrawerProps> = ({
                     <p className="text-sm text-white/60">Estimated completion</p>
                     <p className="text-sm font-medium text-white">About 1 minute</p>
                   </div>
-                
+
                 </div>
 
-                {orderError ? (
-                  <p className="text-sm text-red-400 mb-4 text-center">
-                    {orderError}
-                  </p>
-                ) : null}
-
-                <div className="pb-8">
+                <div className="pb-3">
                   <button
                     onClick={handleStart}
                     disabled={
