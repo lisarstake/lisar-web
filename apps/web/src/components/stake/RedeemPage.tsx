@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   ArrowLeft,
@@ -309,6 +309,18 @@ export const RedeemPage: React.FC = () => {
 
   const numericAmount = parseFloat(usdcAmount.replace(/,/g, "")) || 0;
   const hasExceededMax = numericAmount > maxRedeemable;
+  const activePercent = useMemo(() => {
+    if (!maxRedeemable || maxRedeemable <= 0 || !Number.isFinite(numericAmount)) {
+      return null;
+    }
+    const ratio = (numericAmount / maxRedeemable) * 100;
+    const clampedRatio = Math.min(100, Math.max(0, ratio));
+    return presetPercents.reduce((closest, current) => {
+      const currentDiff = Math.abs(current - clampedRatio);
+      const closestDiff = Math.abs(closest - clampedRatio);
+      return currentDiff < closestDiff ? current : closest;
+    }, presetPercents[0]);
+  }, [maxRedeemable, numericAmount]);
 
   if (!selectedEntry) {
     return (
@@ -374,11 +386,9 @@ export const RedeemPage: React.FC = () => {
         {/* Predefined USDC Amounts */}
         <div className="pb-4">
           <div className="flex space-x-3">
-            {[25, 50, 75, 100].map((percent) => {
+            {presetPercents.map((percent) => {
               const amount = (maxRedeemable * (percent / 100)).toFixed(2);
-              const isActive =
-                usdcAmount === amount ||
-                Math.abs(parseFloat(usdcAmount || "0") - parseFloat(amount)) < 0.01;
+              const isActive = activePercent === percent && numericAmount > 0;
               return (
                 <button
                   key={percent}
@@ -510,3 +520,4 @@ export const RedeemPage: React.FC = () => {
     </div>
   );
 };
+  const presetPercents = [25, 50, 75, 100] as const;

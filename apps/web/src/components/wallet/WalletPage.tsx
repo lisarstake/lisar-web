@@ -88,6 +88,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
     nairaBalance,
     highyieldBalance,
     stablesBalance,
+    solanaUsdcBalance,
     refreshAllWalletData,
   } = useWallet();
   const {
@@ -111,6 +112,11 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
   const isStakingWallet = walletType === "staking";
   const stakedBalance = parseFloat(delegatorStakeProfile?.currentStake || "0");
   const ngnBalance = nairaBalance ?? 0;
+  const idleUsdcBalance = solanaUsdcBalance ?? 0;
+  const idleLptBalance = highyieldBalance ?? 0;
+  const idleCryptoOptionBalance = isStakingWallet
+    ? idleLptBalance
+    : idleUsdcBalance;
   const activeWalletCard = useMemo(() => {
     if (walletType === "staking") {
       return cardData.find((item) => item.type === "staking") ?? null;
@@ -130,7 +136,16 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
     displayCurrency === "NGN"
       ? activeWalletCard?.projectedInterestNgn ?? 0
       : activeWalletCard?.projectedInterestUsd ?? 0;
-  const tokenLiveApy = isStakingWallet ? growthApy : perenaApy;
+  const tokenLiveApyPercent = useMemo(() => {
+    if (isStakingWallet) {
+      if (growthApy !== null) return growthApy * 100;
+      const fallback = parseFloat(activeWalletCard?.apyPercent || "");
+      return Number.isFinite(fallback) ? fallback : null;
+    }
+    if (perenaApy !== null) return perenaApy * 100;
+    const fallback = parseFloat(activeWalletCard?.apyPercent || "");
+    return Number.isFinite(fallback) ? fallback : null;
+  }, [activeWalletCard?.apyPercent, growthApy, isStakingWallet, perenaApy]);
   const tokenInfoDescription = isStakingWallet
     ? "Earn yields daily with 7 days unlock period for withdrawals."
     : "Earn yields daily with instant withdrawal.";
@@ -184,6 +199,8 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
   }, [delegatorTransactions]);
 
   const totalStakingBalance = (highyieldBalance || 0) + stakedBalance;
+  const withdrawableWalletBalance =
+    walletType === "staking" ? stakedBalance : stablesBalance || 0;
   const zeroBalance =
     walletType === "staking"
       ? totalStakingBalance <= 0
@@ -237,16 +254,16 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
         label: walletVisual.coinSymbol,
         icon: walletVisual.icon,
         subtitle: `${walletVisual.coinName} balance`,
-        balance: `${assetBalance.toLocaleString(undefined, {
+        balance: `${idleCryptoOptionBalance.toLocaleString(undefined, {
           minimumFractionDigits: 2,
-          maximumFractionDigits: 4,
+          maximumFractionDigits: 2,
         })} ${walletVisual.coinSymbol}`,
-        availableBalance: assetBalance,
+        availableBalance: idleCryptoOptionBalance,
         enabled: true,
       },
     ],
     [
-      assetBalance,
+      idleCryptoOptionBalance,
       ngnBalance,
       walletVisual.coinName,
       walletVisual.coinSymbol,
@@ -295,7 +312,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
   };
 
   const handleWithdrawClick = () => {
-    if (assetBalance <= 0) {
+    if (withdrawableWalletBalance <= 0) {
       setShowWithdrawEmptyDrawer(true);
       return;
     }
@@ -384,7 +401,10 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
     const option = fundingOptions.find((item) => item.id === assetId);
     if (!option || !option.enabled) return;
 
-    if ((option.availableBalance || 0) <= 0) {
+    const isWithdrawFlow =
+      transferMode === "withdraw" || transferMode === "withdraw-unlocked";
+
+    if (!isWithdrawFlow && (option.availableBalance || 0) <= 0) {
       setEmptyFundingAsset(option.label);
       setTopUpDrawerView("empty");
       return;
@@ -823,10 +843,10 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
             <div className="rounded-xl bg-[#13170a] p-4 flex items-center justify-between">
               <p className="text-sm text-white/60">Live APY</p>
               <p className="text-sm font-semibold text-[#C7EF6B]">
-                {apyLoading && tokenLiveApy === null
+                {apyLoading && tokenLiveApyPercent === null
                   ? "Loading..."
-                  : tokenLiveApy !== null
-                    ? `${(tokenLiveApy * 100).toFixed(1)}%`
+                  : tokenLiveApyPercent !== null
+                    ? `${tokenLiveApyPercent.toFixed(1)}%`
                     : "--"}
               </p>
             </div>
@@ -838,7 +858,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
         isOpen={showUnlockSuccessDrawer}
         onClose={() => setShowUnlockSuccessDrawer(false)}
         title="Withdrawal successful"
-        message="Great, your unlocked LPT has been withdrawn to your wallet."
+        message="Great, your unlocked LPT tokens has been withdrawn to your wallet."
       />
 
       <ErrorDrawer

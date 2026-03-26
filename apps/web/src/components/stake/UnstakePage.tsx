@@ -103,6 +103,19 @@ export const UnstakePage: React.FC = () => {
       setIsProcessing(false);
     }
   };
+  const numericLptAmount = parseFloat(lptAmount || "0");
+  const activePercent = (() => {
+    if (!currentStake || currentStake <= 0 || !Number.isFinite(numericLptAmount)) {
+      return null;
+    }
+    const ratio = (numericLptAmount / currentStake) * 100;
+    const clampedRatio = Math.min(100, Math.max(0, ratio));
+    return presetPercents.reduce((closest, current) => {
+      const currentDiff = Math.abs(current - clampedRatio);
+      const closestDiff = Math.abs(closest - clampedRatio);
+      return currentDiff < closestDiff ? current : closest;
+    }, presetPercents[0]);
+  })();
 
   return (
     <div className="h-screen bg-[#050505] text-white flex flex-col">
@@ -153,11 +166,9 @@ export const UnstakePage: React.FC = () => {
         {/* Predefined LPT Amounts */}
         <div className="pb-4">
           <div className="flex space-x-3">
-            {[25, 50, 75, 100].map((percent) => {
+            {presetPercents.map((percent) => {
               const amount = ((currentStake * percent) / 100).toFixed(6);
-              const isActive =
-                Math.abs(parseFloat(lptAmount || "0") - parseFloat(amount)) <
-                0.000001;
+              const isActive = activePercent === percent && numericLptAmount > 0;
               return (
                 <button
                   key={percent}
@@ -238,3 +249,4 @@ export const UnstakePage: React.FC = () => {
     </div>
   );
 };
+  const presetPercents = [25, 50, 75, 100] as const;

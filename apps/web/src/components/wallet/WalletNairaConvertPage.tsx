@@ -181,6 +181,18 @@ export const WalletNairaConvertPage: React.FC = () => {
       : `Withdraw to Naira`;
   const numericAmount = Number(parseFormattedNumber(amount).trim()) || 0;
   const hasExceededBalance = numericAmount > sourceBalance;
+  const activePercent = useMemo(() => {
+    if (!sourceBalance || sourceBalance <= 0 || !Number.isFinite(numericAmount)) {
+      return null;
+    }
+    const ratio = (numericAmount / sourceBalance) * 100;
+    const clampedRatio = Math.min(100, Math.max(0, ratio));
+    return presetPercents.reduce((closest, current) => {
+      const currentDiff = Math.abs(current - clampedRatio);
+      const closestDiff = Math.abs(closest - clampedRatio);
+      return currentDiff < closestDiff ? current : closest;
+    }, presetPercents[0]);
+  }, [numericAmount, sourceBalance]);
 
   const handleAmountSelect = (percent: number) => {
     const nextAmount = sourceBalance * (percent / 100);
@@ -239,10 +251,9 @@ export const WalletNairaConvertPage: React.FC = () => {
 
         <div className="pb-4">
           <div className="flex space-x-3">
-            {[25, 50, 75, 100].map((percent) => {
+            {presetPercents.map((percent) => {
               const nextAmount = (sourceBalance * (percent / 100)).toFixed(2);
-              const isActive =
-                Math.abs(numericAmount - parseFloat(nextAmount)) < 0.01;
+              const isActive = activePercent === percent && numericAmount > 0;
               return (
                 <button
                   key={percent}
@@ -324,3 +335,4 @@ export const WalletNairaConvertPage: React.FC = () => {
     </div>
   );
 };
+  const presetPercents = [25, 50, 75, 100] as const;
