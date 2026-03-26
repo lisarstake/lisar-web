@@ -60,6 +60,7 @@ export const WalletTransferFormPage: React.FC = () => {
     virtualAccountLoading,
     loadVirtualAccountDetails,
     setVirtualAccountDetails,
+    refreshAllWalletData,
   } = useWallet();
   const qrCanvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -76,6 +77,8 @@ export const WalletTransferFormPage: React.FC = () => {
   const [isLookingUpAccount, setIsLookingUpAccount] = useState(false);
   const [isSubmittingWithdraw, setIsSubmittingWithdraw] = useState(false);
   const [showWithdrawFlow, setShowWithdrawFlow] = useState(false);
+  const [isRefreshingTransferState, setIsRefreshingTransferState] =
+    useState(false);
   const [walletAddress, setWalletAddress] = useState("");
   const [copied, setCopied] = useState(false);
   const [selectedToken, setSelectedToken] = useState<SupportedToken>("USDC");
@@ -252,6 +255,7 @@ export const WalletTransferFormPage: React.FC = () => {
           error: response.error?.message || "Withdrawal failed",
         };
       }
+      await refreshAllWalletData();
       return { success: true };
     } catch (error) {
       return { success: false, error: "Withdrawal failed" };
@@ -264,19 +268,25 @@ export const WalletTransferFormPage: React.FC = () => {
     amount,
     bankCode,
     isNairaWithdraw,
+    refreshAllWalletData,
   ]);
 
   const displayName = useMemo(() => {
-    const providerName = depositAccountName
-      .replace(/\s+ltd\.?$/i, "")
+    const rawProviderName = depositAccountName.split("/")[0] || "";
+  
+    const providerName = rawProviderName
+      .replace(/\b(ltd\.?|limited|technologies?|tech|services?)\b/gi, "")
+      .replace(/\s{2,}/g, "")
       .trim();
+  
     const userName = (state.user?.full_name || "").trim();
     const userParts = userName ? userName.split(/\s+/) : [];
+  
     const normalizedUserName =
       userParts.length >= 3
         ? `${userParts[0]} ${userParts[userParts.length - 1]}`
         : userName || "User";
-
+  
     if (providerName && normalizedUserName) {
       return `${providerName} / ${normalizedUserName}`;
     }
@@ -621,7 +631,7 @@ export const WalletTransferFormPage: React.FC = () => {
 
                     </span>
                   ) : (
-                    <p className="text-base text-white">
+                    <p className="text-base text-white whitespace-nowrap overflow-hidden text-ellipsis">
                       {showVirtualAccountFailedState ? "not assigned" : displayName}
                     </p>
                   )}
@@ -657,8 +667,26 @@ export const WalletTransferFormPage: React.FC = () => {
                     </button>
                   )}
                 </div>
-                <button className="mt-2 h-12 w-full rounded-md text-base font-medium transition-colors bg-white/10 text-white">
-                  I have sent
+                <button
+                  onClick={async () => {
+                    if (isRefreshingTransferState) return;
+                    setIsRefreshingTransferState(true);
+                    try {
+                      await refreshAllWalletData();
+                    } finally {
+                      setIsRefreshingTransferState(false);
+                    }
+                  }}
+                  className="mt-2 h-12 w-full rounded-xl text-base font-medium transition-colors bg-white/60 text-white flex items-center justify-center gap-2"
+                >
+                  {isRefreshingTransferState ? (
+                    <>
+                      <LoaderCircle size={18} className="animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    "I have sent"
+                  )}
                 </button>
               </div>
               <p className="text-xs text-white/60">
@@ -825,7 +853,14 @@ export const WalletTransferFormPage: React.FC = () => {
               : "bg-[#c7ef6b] text-black"
               }`}
           >
-            Continue
+            {isLookingUpAccount ? (
+              <span className="inline-flex items-center gap-2">
+                <LoaderCircle size={16} className="animate-spin" />
+                Loading...
+              </span>
+            ) : (
+              "Continue"
+            )}
           </button>
         </div>
       )}

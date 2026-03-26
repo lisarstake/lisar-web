@@ -59,6 +59,9 @@ const WalletTransferFormPage = lazyRetry(
 const WalletNairaConvertPage = lazyRetry(
   () => import("@/screens/wallet-naira-convert-page"),
 );
+const WalletUnlockedWithdrawPage = lazyRetry(
+  () => import("@/screens/wallet-unlocked-withdraw-page"),
+);
 const AccountSettingsPage = lazyRetry(
   () => import("@/screens/account-settings-page"),
 );
@@ -173,6 +176,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             {withSuspenseAndErrorBoundary(<WalletNairaConvertPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "wallet/unlocked-withdraw/:walletType",
+        element: (
+          <ProtectedRoute>
+            {withSuspenseAndErrorBoundary(<WalletUnlockedWithdrawPage />)}
           </ProtectedRoute>
         ),
       },

@@ -4,6 +4,8 @@ import { RecentTransactionsCard } from "../transactions/RecentTransactionsCard";
 import { TransactionDetailsDrawer } from "../transactions/TransactionDetailsDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { PortfolioSelectionDrawer } from "@/components/general/PortfolioSelectionDrawer";
+import { SuccessDrawer } from "@/components/general/SuccessDrawer";
+import { ErrorDrawer } from "@/components/general/ErrorDrawer";
 import {
   Drawer,
   DrawerContent,
@@ -14,13 +16,17 @@ import { useWallet } from "@/contexts/WalletContext";
 import { useDelegation } from "@/contexts/DelegationContext";
 import { useWalletCard } from "@/contexts/WalletCardContext";
 import { useTransactions } from "@/contexts/TransactionContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { useStablesApy } from "@/hooks/useStablesApy";
 import { getEarliestUnbondingTime } from "@/lib/unbondingTime";
 import { TransactionData } from "@/services/transactions/types";
+import { delegationService } from "@/services";
 import { YIELD_ASSET_PICKER_PATH } from "@/lib/yieldPaths";
 import {
   ArrowDown,
   ArrowLeft,
   ArrowRight,
+  CircleQuestionMark,
   DollarSign,
   Eye,
   EyeOff,
@@ -31,7 +37,7 @@ interface WalletPageProps {
 }
 
 type EarningsCardState = "default" | "empty" | "unbonding" | "withdraw-ready";
-type TransferMode = "deposit" | "withdraw";
+type TransferMode = "deposit" | "withdraw" | "withdraw-unlocked";
 type FundingOption = {
   id: "ngn" | "crypto";
   label: string;
@@ -44,7 +50,7 @@ type FundingOption = {
 
 const WALLET_VISUALS = {
   savings: {
-    coinName: "USD Coin",
+    coinName: "USDC",
     coinSymbol: "USDC",
     icon: "/usdc.svg",
     cardGradient:
@@ -71,6 +77,10 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
   const [transferMode, setTransferMode] = useState<TransferMode | null>(null);
   const [showWithdrawEmptyDrawer, setShowWithdrawEmptyDrawer] = useState(false);
   const [showEarningsDrawer, setShowEarningsDrawer] = useState(false);
+  const [showTokenInfoDrawer, setShowTokenInfoDrawer] = useState(false);
+  const [showUnlockSuccessDrawer, setShowUnlockSuccessDrawer] = useState(false);
+  const [showUnlockErrorDrawer, setShowUnlockErrorDrawer] = useState(false);
+  const [unlockErrorMessage, setUnlockErrorMessage] = useState("");
   const [selectedTransaction, setSelectedTransaction] =
     useState<TransactionData | null>(null);
 
@@ -78,9 +88,17 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
     nairaBalance,
     highyieldBalance,
     stablesBalance,
+    refreshAllWalletData,
   } = useWallet();
-  const { delegatorStakeProfile, userDelegation, delegatorTransactions } =
-    useDelegation();
+  const {
+    delegatorStakeProfile,
+    userDelegation,
+    delegatorTransactions,
+    refetch: refetchDelegation,
+  } = useDelegation();
+  const { state } = useAuth();
+  const { perena: perenaApy, growth: growthApy, isLoading: apyLoading } =
+    useStablesApy();
   const {
     cardData,
     displayCurrency,
@@ -112,6 +130,10 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
     displayCurrency === "NGN"
       ? activeWalletCard?.projectedInterestNgn ?? 0
       : activeWalletCard?.projectedInterestUsd ?? 0;
+  const tokenLiveApy = isStakingWallet ? growthApy : perenaApy;
+  const tokenInfoDescription = isStakingWallet
+    ? "Earn yields daily with 7 days unlock period for withdrawals."
+    : "Earn yields daily with instant withdrawal.";
 
   const sevenDayEarnings = useMemo(() => {
     const dailyInterest = weeklyEarningsAmount > 0 ? weeklyEarningsAmount / 7 : 0;
@@ -154,6 +176,11 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
     const validatorId =
       completed.find((tx) => tx.delegate?.id)?.delegate?.id || null;
     return { totalAmount, validatorId };
+  }, [delegatorTransactions]);
+  const unlockedUnbondingLockId = useMemo(() => {
+    const completed = delegatorTransactions?.completedStakeTransactions ?? [];
+    return completed.find((tx) => typeof tx.unbondingLockId === "number")
+      ?.unbondingLockId;
   }, [delegatorTransactions]);
 
   const totalStakingBalance = (highyieldBalance || 0) + stakedBalance;
@@ -284,6 +311,57 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
   const handleTransferOptionSelect = (asset: "naira" | "crypto") => {
     if (!transferMode) return;
 
+    if (transferMode === "withdraw-unlocked") {
+      if (!unlockedUnbondingLockId || completedUnbondingData.totalAmount <= 0) {
+        setUnlockErrorMessage("No unlocked stake available for withdrawal.");
+        setShowUnlockErrorDrawer(true);
+        setShowTopUpDrawer(false);
+        return;
+      }
+
+      if (asset === "naira") {
+        setShowTopUpDrawer(false);
+        navigate(`/wallet/unlocked-withdraw/${currentWalletType}`, {
+          state: {
+            unlockedAmount: completedUnbondingData.totalAmount,
+            unbondingLockId: unlockedUnbondingLockId,
+          },
+        });
+        return;
+      }
+
+      const run = async () => {
+        setShowTopUpDrawer(false);
+        try {
+          if (!state.user?.wallet_id || !state.user?.wallet_address) {
+            throw new Error("Wallet information is missing.");
+          }
+
+          const response = await delegationService.withdrawStake({
+            walletId: state.user.wallet_id,
+            walletAddress: state.user.wallet_address,
+            unbondingLockId: unlockedUnbondingLockId,
+          });
+
+          if (!response.success) {
+            throw new Error(response.message || "Failed to withdraw unlocked stake.");
+          }
+
+          await Promise.all([refreshAllWalletData(), refetchDelegation()]);
+          setShowUnlockSuccessDrawer(true);
+        } catch (error: any) {
+          setUnlockErrorMessage(
+            error?.message || "Unable to complete withdrawal right now.",
+          );
+          setShowUnlockErrorDrawer(true);
+        } finally {
+        }
+      };
+
+      void run();
+      return;
+    }
+
     if (transferMode === "deposit") {
       if (asset === "naira") {
         openNairaConvertPage("deposit");
@@ -347,7 +425,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
               <img
                 src="/yield.png"
                 alt="Weekly earnings"
-                className="w-11 h-11 object-cover rounded-lg object-top"
+                className="w-10 h-10 object-cover rounded-lg object-top"
               />
             </div>
             <div className="flex-1">
@@ -370,7 +448,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
                 this week!
               </h3>
               <p className="text-white/60 text-[13px]">
-                Increase your holdings to earn more rewards
+                Increase your holdings to earn more
               </p>
             </div>
           </div>
@@ -387,23 +465,18 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
               <img
                 src="/livepeer.webp"
                 alt="Stake unlocked"
-                className="w-14 h-14 object-cover rounded-full"
+                className="w-9 h-9 object-cover rounded-full"
               />
             </div>
             <div className="flex-1">
-              <h3 className="text-white text-[14px] font-medium">
-                Yield unlocked
-              </h3>
-              <p className="text-white/60 text-[13px]">
-                You have {completedUnbondingData.totalAmount.toFixed(2)} LPT ready to
-                withdraw
+             
+              <p className="text-white/90 text-[13px]">
+                You have {completedUnbondingData.totalAmount.toFixed(2)} LPT available fro
+                withdrawal
               </p>
               <button onClick={() => {
-                if (completedUnbondingData.validatorId) {
-                  navigate(
-                    `/validator-details/${completedUnbondingData.validatorId}`,
-                  );
-                }
+                setTransferMode("withdraw-unlocked");
+                setShowTopUpDrawer(true);
               }} className="mt-3 px-4 py-2 bg-[#C7EF6B] text-black rounded-full text-xs font-semibold hover:bg-[#B8E55A] transition-colors relative z-10">
                 withdraw
               </button>
@@ -421,14 +494,12 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
               <img
                 src="/livepeer.webp"
                 alt="Unbonding in progress"
-                className="w-14 h-14 object-cover rounded-full"
+                className="w-9 h-9 object-cover rounded-full"
               />
             </div>
             <div className="flex-1">
-              <h3 className="text-white text-[14px] font-medium">
-                Withdrawal processing
-              </h3>
-              <p className="text-white/60 text-[13px]">
+             
+              <p className="text-white/90 text-[13px]">
                 {pendingUnbondingData.timeRemaining
                   ? ` You have a withdrawal in process, ${pendingUnbondingData.timeRemaining}`
                   : ""}
@@ -454,14 +525,10 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
 
         <div className="flex items-center gap-3">
           <button
-            onClick={() => setShowBalance(!showBalance)}
+            onClick={() => setShowTokenInfoDrawer(true)}
             className="h-10 w-10 rounded-full bg-[#13170a] flex items-center justify-center"
           >
-            {showBalance ? (
-              <Eye size={18} color="#fff" />
-            ) : (
-              <EyeOff size={18} color="#fff" />
-            )}
+            <CircleQuestionMark size={22} color="#fff" />
           </button>
          
         </div>
@@ -471,9 +538,21 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
         <div
           className={`mt-5 text-center relative overflow-visible`}
         >
-          <p className="text-sm text-white/50">Wallet balance</p>
+          <div className="flex items-center justify-center gap-0.5">
+            <p className="text-sm text-white/50">Wallet balance</p>
+            <button
+              onClick={() => setShowBalance(!showBalance)}
+              className="h-5 w-5 rounded-full bg-[#13170a] flex items-center justify-center"
+            >
+              {showBalance ? (
+                <Eye size={15} color="#fff" />
+              ) : (
+                <EyeOff size={15} color="#fff" />
+              )}
+            </button>
+          </div>
           {activeWalletCard?.isLoading ? (
-            <div className="mt-1">{renderLoadingStars("text-3xl font-semibold")}</div>
+            <div className="mt-1">{renderLoadingStars("text-xl font-semibold")}</div>
           ) : (
             <p className="mt-1 text-xl font-medium tracking-tight text-white">
               {showBalance ? formattedAssetBalance : "★★★★"}
@@ -561,7 +640,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
             {sevenDayEarnings.map((item) => (
               <div
                 key={item.id}
-                className="rounded-2xl bg-[#13170a] px-4 py-3 grid grid-cols-3 gap-3"
+                className="rounded-xl bg-[#13170a] px-4 py-3 flex justify-between items-center"
               >
                 <div>
                   <p className="text-xs text-white/70">Date</p>
@@ -609,9 +688,12 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
           <DrawerHeader>
             <DrawerTitle className="text-base font-medium text-white text-left">
               {topUpDrawerView === "options"
-                ? transferMode === "withdraw"
+                ? transferMode === "deposit"
+                  ? "Deposit From"
+                  : transferMode === "withdraw" ||
+                      transferMode === "withdraw-unlocked"
                   ? "Withdraw To"
-                  : "Deposit From"
+                  : "Withdraw To"
                 : ""}
             </DrawerTitle>
           </DrawerHeader>
@@ -641,7 +723,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
                             ? "Naira balance"
                             : option.id === "crypto" &&
                                 transferMode === "withdraw"
-                              ? "USDC coin"
+                              ? option.label
                               : option.label}
                         </p>
                         <p className="text-sm text-white/60">
@@ -652,8 +734,8 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
                               ? `Naira balance`
                               : option.id === "crypto" &&
                                   transferMode === "deposit"
-                                ? "USDC coin"
-                                : "USDC coin"}
+                                ? option.subtitle
+                                : option.subtitle}
                         </p>
                       </div>
                     </div>
@@ -726,6 +808,45 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
           </div>
         </DrawerContent>
       </Drawer>
+
+      <Drawer open={showTokenInfoDrawer} onOpenChange={setShowTokenInfoDrawer}>
+        <DrawerContent className="bg-[#050505] border-[#2a2a2a]">
+          <DrawerHeader>
+            <DrawerTitle className="text-base font-medium text-white text-left">
+              {walletVisual.coinName} token
+            </DrawerTitle>
+          </DrawerHeader>
+          <div className="space-y-4 py-2 mt-1">
+            <div className="rounded-xl bg-[#13170a] p-4">
+              <p className="text-sm text-white/85">{tokenInfoDescription}</p>
+            </div>
+            <div className="rounded-xl bg-[#13170a] p-4 flex items-center justify-between">
+              <p className="text-sm text-white/60">Live APY</p>
+              <p className="text-sm font-semibold text-[#C7EF6B]">
+                {apyLoading && tokenLiveApy === null
+                  ? "Loading..."
+                  : tokenLiveApy !== null
+                    ? `${(tokenLiveApy * 100).toFixed(1)}%`
+                    : "--"}
+              </p>
+            </div>
+          </div>
+        </DrawerContent>
+      </Drawer>
+
+      <SuccessDrawer
+        isOpen={showUnlockSuccessDrawer}
+        onClose={() => setShowUnlockSuccessDrawer(false)}
+        title="Withdrawal successful"
+        message="Great, your unlocked LPT has been withdrawn to your wallet."
+      />
+
+      <ErrorDrawer
+        isOpen={showUnlockErrorDrawer}
+        onClose={() => setShowUnlockErrorDrawer(false)}
+        title="Withdrawal failed"
+        message={unlockErrorMessage}
+      />
     </div>
   );
 };

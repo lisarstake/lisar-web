@@ -3,7 +3,12 @@ import { Drawer } from "vaul";
 import { LoaderCircle, X } from "lucide-react";
 import { formatNumber } from "@/lib/formatters";
 import { rampService } from "@/services/ramp";
-import { virtualAccountService, walletService } from "@/services";
+import {
+  delegationService,
+  perenaService,
+  virtualAccountService,
+  walletService,
+} from "@/services";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWallet } from "@/contexts/WalletContext";
 import type { OrderData } from "@/services/ramp";
@@ -26,6 +31,8 @@ export interface RampTransactionDetails {
   customerEmail?: string;
   customerName?: string;
   bankName?: string;
+  lptWithdrawalMode?: "unbond" | "unlocked";
+  unbondingLockId?: number;
 }
 
 interface RampDrawerProps {
@@ -52,40 +59,83 @@ export const RampDrawer: React.FC<RampDrawerProps> = ({
   } = useWallet();
 
   const [orderData, setOrderData] = useState<OrderData | null>(null);
-  const [orderError, setOrderError] = useState("");
+  const [transferError, setTransferError] = useState("");
+  const [orderSetupFailed, setOrderSetupFailed] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [successBodyMessage, setSuccessBodyMessage] = useState("");
   const hasCreatedOrder = useRef(false);
 
   const isBuy = details.type === "buy";
+  const genericFailureMessage = isBuy
+    ? "Sorry your deposit couldn't not be completed at the moment, please try again."
+    : "Sorry your withdrawal couldn't not be completed at the moment, please try again.";
+  const defaultSuccessMessage = isBuy
+    ? `Great, you've successfully deposited ${details.fiatSymbol}${formatNumber(
+      details.fiatAmount || 0,
+      2,
+    )} to your wallet.`
+    : `Great, you've successfully withdrawn ${formatNumber(
+      details.tokenAmount || 0,
+      4,
+    )} ${details.tokenName} to your naira balance.`;
+  const logPrefix = `[RampDrawer][${isBuy ? "BUY" : "SELL"}]`;
+  const log = useCallback((step: string, payload?: unknown) => {
+    if (payload !== undefined) {
+      console.log(`${logPrefix} ${step}`, payload);
+      return;
+    }
+    console.log(`${logPrefix} ${step}`);
+  }, [logPrefix]);
+  const logError = useCallback((step: string, payload?: unknown) => {
+    if (payload !== undefined) {
+      console.error(`${logPrefix} ${step}`, payload);
+      return;
+    }
+    console.error(`${logPrefix} ${step}`);
+  }, [logPrefix]);
 
   const resolveBankCode = useCallback(async (bankName: string) => {
+    log("resolveBankCode:start", { bankName });
     const response = await rampService.getBanks();
-    if (!response.success || !response.data?.length) return null;
+    if (!response.success || !response.data?.length) {
+      logError("resolveBankCode:failed", response);
+      return null;
+    }
 
     const normalize = (value: string) =>
       value.toLowerCase().replace(/[^a-z0-9]/g, "");
     const target = normalize(bankName);
 
     const exact = response.data.find((bank) => normalize(bank.name) === target);
-    if (exact) return exact.code;
+    if (exact) {
+      log("resolveBankCode:matched-exact", { bankCode: exact.code });
+      return exact.code;
+    }
 
     const fuzzy = response.data.find((bank) => {
       const candidate = normalize(bank.name);
       return candidate.includes(target) || target.includes(candidate);
     });
+    log("resolveBankCode:matched-fuzzy", { bankCode: fuzzy?.code || null });
     return fuzzy?.code || null;
-  }, []);
+  }, [log, logError]);
 
   const createOrder = useCallback(async () => {
-    if (!details.cryptoAddress && !isBuy) {
-      setOrderError("Wallet address not available. Please try again.");
+    log("createOrder:start", {
+      details,
+      mode: isBuy ? "deposit" : "withdraw",
+    });
+    if (!details.cryptoAddress && !isBuy && details.tokenName !== "LPT") {
+      logError("createOrder:missing-crypto-address");
+      setOrderSetupFailed(true);
+      setOrderData(null);
       return;
     }
 
     setIsCreatingOrder(true);
-    setOrderError("");
+    setOrderSetupFailed(false);
 
     try {
       if (isBuy) {
@@ -100,17 +150,58 @@ export const RampDrawer: React.FC<RampDrawerProps> = ({
         });
 
         if (response.success && response.data) {
+          log("createOrder:buy-success", {
+            id: response.data.id,
+            status: response.data.status,
+            fiatAmount: response.data.fiatAmount,
+            cryptoAmount: response.data.cryptoAmount,
+            paymentAccount: response.data.paymentAccount,
+          });
           setOrderData(response.data);
         } else {
-          setOrderError(response.error?.message || "Failed to create order");
+          logError("createOrder:buy-failed", response);
+          setOrderSetupFailed(true);
+          setOrderData(null);
         }
       } else {
+        if (
+          details.tokenName === "LPT" &&
+          details.lptWithdrawalMode !== "unlocked"
+        ) {
+          const now = new Date().toISOString();
+          const pseudoOrder: OrderData = {
+            id: `lpt-unstake-${Date.now()}`,
+            type: "sell",
+            status: "ready_for_unstake",
+            fiatAmount: details.fiatAmount,
+            fiatCurrency: details.fiatCurrency,
+            cryptoAmount: details.tokenAmount,
+            cryptoCurrency: "LPT",
+            cryptoNetwork: "arbitrum",
+            customerEmail: details.customerEmail || "",
+            customerName: details.customerName || "",
+            createdAt: now,
+            updatedAt: now,
+            expiresAt: now,
+            exchangeRate: 0
+          };
+          log("createOrder:lpt-skip-sell-order", pseudoOrder);
+          setOrderData(pseudoOrder);
+          return;
+        }
+
         if (
           !details.bankCode ||
           !details.bankAccountNumber ||
           !details.bankAccountName
         ) {
-          setOrderError("Naira receiving account not available.");
+          logError("createOrder:sell-missing-bank-details", {
+            bankCode: details.bankCode,
+            bankAccountNumber: details.bankAccountNumber,
+            bankAccountName: details.bankAccountName,
+          });
+          setOrderSetupFailed(true);
+          setOrderData(null);
           return;
         }
 
@@ -127,59 +218,90 @@ export const RampDrawer: React.FC<RampDrawerProps> = ({
         });
 
         if (response.success && response.data) {
+          log("createOrder:sell-success", {
+            id: response.data.id,
+            status: response.data.status,
+            fiatAmount: response.data.fiatAmount,
+            cryptoAmount: response.data.cryptoAmount,
+            cryptoAddress: response.data.cryptoAddress,
+          });
           setOrderData(response.data);
         } else {
-          setOrderError(response.error?.message || "Failed to create order");
+          logError("createOrder:sell-failed", response);
+          setOrderSetupFailed(true);
+          setOrderData(null);
         }
       }
     } catch (error) {
-      setOrderError("An error occurred. Please try again.");
+      logError("createOrder:exception", error);
+      setOrderSetupFailed(true);
+      setOrderData(null);
     } finally {
       setIsCreatingOrder(false);
+      log("createOrder:complete");
     }
-  }, [details, isBuy]);
+  }, [details, genericFailureMessage, isBuy, log, logError]);
 
   useEffect(() => {
     if (isOpen && !hasCreatedOrder.current) {
+      log("drawer:opened");
       hasCreatedOrder.current = true;
       createOrder();
     }
-  }, [createOrder, isOpen]);
+  }, [createOrder, isOpen, log]);
 
   useEffect(() => {
     if (!isOpen) {
+      log("drawer:closed-reset");
       setTimeout(() => {
         setOrderData(null);
-        setOrderError("");
+        setTransferError("");
+        setOrderSetupFailed(false);
         setIsSubmitting(false);
         setIsCreatingOrder(false);
         setShowSuccess(false);
+        setSuccessBodyMessage("");
         hasCreatedOrder.current = false;
       }, 250);
     }
-  }, [isOpen]);
+  }, [isOpen, log]);
 
   const handleStart = async () => {
+    log("button:clicked", {
+      action: isBuy ? "deposit" : "withdraw",
+      orderId: orderData?.id || null,
+      fiatAmount: details.fiatAmount,
+      tokenAmount: details.tokenAmount,
+      tokenName: details.tokenName,
+    });
     if (!orderData?.id) {
-      setOrderError("Order not ready yet. Please try again.");
+      logError("button:clicked-without-order");
+      if (orderSetupFailed) {
+        await createOrder();
+      }
       return;
     }
 
     setIsSubmitting(true);
-    setOrderError("");
+    setTransferError("");
 
     try {
       if (isBuy) {
+        log("deposit:start", { orderId: orderData.id });
         const paymentAccount = orderData.paymentAccount;
         if (!paymentAccount) {
-          setOrderError("Payment account details not available.");
+          logError("deposit:missing-payment-account", orderData);
+          setTransferError(genericFailureMessage);
           setIsSubmitting(false);
           return;
         }
 
         const bankCode = await resolveBankCode(paymentAccount.bankName);
         if (!bankCode) {
-          setOrderError("Unable to resolve bank code for transfer.");
+          logError("deposit:bank-code-resolution-failed", {
+            bankName: paymentAccount.bankName,
+          });
+          setTransferError(genericFailureMessage);
           setIsSubmitting(false);
           return;
         }
@@ -199,34 +321,86 @@ export const RampDrawer: React.FC<RampDrawerProps> = ({
         });
 
         if (!transferResp.success) {
-          setOrderError(
-            transferResp.error?.message ||
-            "Failed to transfer from your Naira balance.",
-          );
+          logError("deposit:transfer-failed", transferResp);
+          setTransferError(genericFailureMessage);
           setIsSubmitting(false);
           return;
         }
 
+        log("deposit:transfer-success", transferResp);
+        setSuccessBodyMessage(defaultSuccessMessage);
         setShowSuccess(true);
       } else {
+        log("withdraw:start", { orderId: orderData.id });
+        const numericAmount = details.tokenAmount.toString();
+
+        if (
+          details.tokenName === "LPT" &&
+          details.lptWithdrawalMode !== "unlocked"
+        ) {
+          if (!state.user?.wallet_id || !state.user?.wallet_address) {
+            setTransferError(genericFailureMessage);
+            setIsSubmitting(false);
+            return;
+          }
+
+          const unbondResp = await delegationService.unbond({
+            walletId: state.user.wallet_id,
+            walletAddress: state.user.wallet_address,
+            amount: numericAmount,
+          });
+          log("withdraw:lpt-unbond-response", unbondResp);
+
+          if (!unbondResp.success) {
+            logError("withdraw:lpt-unbond-failed", unbondResp);
+            setTransferError(genericFailureMessage);
+            setIsSubmitting(false);
+            return;
+          }
+
+          setSuccessBodyMessage(
+            `Great, you've successfully withdrawn ${formatNumber(
+              details.tokenAmount || 0,
+              4,
+            )} LPT. Your funds will be available for withdrawal in the next 7 days.`,
+          );
+          setShowSuccess(true);
+          return;
+        }
+
         const cryptoAddress = orderData.cryptoAddress;
         if (!cryptoAddress) {
-          setOrderError("Destination address not available.");
+          logError("withdraw:missing-crypto-address", orderData);
+          setTransferError(genericFailureMessage);
           setIsSubmitting(false);
           return;
         }
 
-        const numericAmount = details.tokenAmount.toString();
         let transferResponse;
 
         if (details.tokenName === "USDC") {
           const network = orderData.cryptoNetwork;
           if (network === "solana") {
             if (!solanaWalletAddress || !solanaWalletId) {
-              setOrderError("Solana wallet not found.");
+              setTransferError(genericFailureMessage);
               setIsSubmitting(false);
               return;
             }
+
+            const burnResp = await perenaService.burn({
+              walletId: solanaWalletId,
+              walletAddress: solanaWalletAddress,
+              usdStarAmount: details.tokenAmount,
+            });
+            log("withdraw:usdc-burn-response", burnResp);
+
+            if (!burnResp.success) {
+              logError("withdraw:usdc-burn-failed", burnResp);
+              setTransferError(genericFailureMessage);
+              setIsSubmitting(false);
+              return;
+            }
+
             transferResponse = await walletService.sendSolana({
               walletId: solanaWalletId,
               fromAddress: solanaWalletAddress,
@@ -234,9 +408,10 @@ export const RampDrawer: React.FC<RampDrawerProps> = ({
               token: "USDC",
               amount: details.tokenAmount,
             });
+            log("withdraw:send-solana-response", transferResponse);
           } else {
             if (!ethereumWalletAddress || !ethereumWalletId) {
-              setOrderError("Ethereum wallet not found.");
+              setTransferError(genericFailureMessage);
               setIsSubmitting(false);
               return;
             }
@@ -246,21 +421,47 @@ export const RampDrawer: React.FC<RampDrawerProps> = ({
               to: cryptoAddress,
               amount: numericAmount,
             });
+            log("withdraw:send-evm-usdc-response", transferResponse);
           }
         } else {
-          if (!state.user) {
-            setOrderError("User not authenticated.");
+          if (!state.user?.wallet_id || !state.user?.wallet_address) {
+            setTransferError(genericFailureMessage);
             setIsSubmitting(false);
             return;
           }
+
+          if (details.lptWithdrawalMode === "unlocked") {
+            if (!details.unbondingLockId) {
+              setTransferError(genericFailureMessage);
+              setIsSubmitting(false);
+              return;
+            }
+
+            const withdrawStakeResp = await delegationService.withdrawStake({
+              walletId: state.user.wallet_id,
+              walletAddress: state.user.wallet_address,
+              unbondingLockId: details.unbondingLockId,
+            });
+            log("withdraw:lpt-withdraw-stake-response", withdrawStakeResp);
+
+            if (!withdrawStakeResp.success) {
+              logError("withdraw:lpt-withdraw-stake-failed", withdrawStakeResp);
+              setTransferError(genericFailureMessage);
+              setIsSubmitting(false);
+              return;
+            }
+          }
+
           const approveResponse = await walletService.approveLpt({
             walletId: state.user.wallet_id,
             walletAddress: state.user.wallet_address,
             spender: cryptoAddress,
             amount: numericAmount,
           });
+          log("withdraw:approve-lpt-response", approveResponse);
           if (!approveResponse.success) {
-            setOrderError(approveResponse.message || "Failed to approve LPT.");
+            logError("withdraw:approve-lpt-failed", approveResponse);
+            setTransferError(genericFailureMessage);
             setIsSubmitting(false);
             return;
           }
@@ -270,40 +471,60 @@ export const RampDrawer: React.FC<RampDrawerProps> = ({
             to: cryptoAddress,
             amount: numericAmount,
           });
+          log("withdraw:send-lpt-response", transferResponse);
         }
 
         if (!transferResponse?.success) {
-          setOrderError(transferResponse?.error || "Failed to send token.");
+          logError("withdraw:transfer-failed", transferResponse);
+          setTransferError(genericFailureMessage);
           setIsSubmitting(false);
           return;
         }
 
+        log("withdraw:transfer-success", transferResponse);
+        setSuccessBodyMessage(defaultSuccessMessage);
         setShowSuccess(true);
       }
     } catch (error) {
-      setOrderError("An error occurred. Please try again.");
+      logError("transfer:exception", error);
+      setTransferError(genericFailureMessage);
     } finally {
       setIsSubmitting(false);
+      log("button:completed");
     }
   };
 
   const handleDone = () => {
+    log("success:done-clicked");
     onConfirm();
     onClose();
   };
 
   const actionText = isBuy ? "Deposit" : "Withdraw";
-  const summaryFiatAmount = orderData?.fiatAmount;
-  const summaryTokenAmount = orderData?.cryptoAmount;
-  const summaryTokenName = orderData?.cryptoCurrency;
-  const summaryRate = orderData?.exchangeRate;
-  const summaryStatus = orderData?.status;
+  const hasErrorState = Boolean(transferError);
+  const summaryFiatAmount =
+    details.tokenName === "LPT" ? details.fiatAmount : orderData?.fiatAmount;
+  const summaryTokenAmount =
+    details.tokenName === "LPT" ? details.tokenAmount : orderData?.cryptoAmount;
+  const summaryTokenName =
+    details.tokenName === "LPT" ? details.tokenName : orderData?.cryptoCurrency;
+  const summaryRate =
+    details.tokenName === "LPT" ? details.exchangeRate : orderData?.exchangeRate;
+  const estimatedCompletionText =
+    !isBuy && details.tokenName === "LPT" && details.lptWithdrawalMode !== "unlocked"
+      ? "About 7 days"
+      : "About 1 minute";
 
   const LoadingValue = () => (
     <span className="inline-flex items-center">
       <LoaderCircle className="w-4 h-4 animate-spin text-white/70" />
     </span>
   );
+
+  const handleRetry = () => {
+    log("error:retry-close-drawer");
+    onClose();
+  };
 
   return (
     <Drawer.Root open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -321,134 +542,163 @@ export const RampDrawer: React.FC<RampDrawerProps> = ({
                     <X size={20} />
                   </button>
                 </div>
-
-                <div className="flex flex-col items-center justify-center mb-6">
-                  <div className="w-20 h-20 bg-[#C7EF6B]/20 rounded-full flex items-center justify-center mb-4 relative overflow-hidden">
-                    <img
-                      src="/ramp.png"
-                      alt="Ramp"
-                      className="w-full h-full object-cover"
-                    />
+                {hasErrorState ? (
+                  <div className="flex flex-col items-center px-4">
+                    <div className="w-20 h-20 bg-gray-500/15 rounded-full flex items-center justify-center my-4 relative overflow-hidden">
+                      <img
+                        src="/error.png"
+                        alt="Error"
+                        className="object-cover h-16 w-16"
+                      />
+                    </div>
+                    <h2 className="text-white text-lg font-semibold mb-2 tracking-wide text-center">
+                      {isBuy ? 'Deposit failed' : 'Withdrawal failed'}
+                    </h2>
+                    <p className="text-white/80 text-sm mb-4 text-center max-w-[280px]">
+                      {transferError}
+                    </p>
+                    <div className="w-full space-y-3 pb-4">
+                      <button
+                        onClick={handleRetry}
+                        className="w-full h-12 rounded-full font-semibold text-lg text-black transition-colors bg-[#C7EF6B] hover:bg-[#B8E55A] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center"
+                      >
+                        Try again
+                      </button>
+                    </div>
                   </div>
-                  {orderData ? (
-                    <>
+                ) : (
+                  <>
+                    <div className="flex flex-col items-center justify-center mb-6">
+                      <div className="w-20 h-20 bg-[#C7EF6B]/20 rounded-full flex items-center justify-center mb-4 relative overflow-hidden">
+                        <img
+                          src="/ramp.png"
+                          alt="Ramp"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
                       <p className="text-gray-400 text-sm mb-1 text-center">
                         {isBuy
-                          ? `You are able to convert ${details.fiatSymbol}${formatNumber(
-                            summaryFiatAmount || 0,
+                          ? `You are about to deposit ${details.fiatSymbol}${formatNumber(
+                            details.fiatAmount || 0,
                             2,
-                          )} to`
-                          : `You are able to convert ${formatNumber(
-                            summaryTokenAmount || 0,
+                          )} for`
+                          : `You are about to withdraw ${formatNumber(
+                            details.tokenAmount || 0,
                             4,
-                          )} ${summaryTokenName || details.tokenName} for`}
+                          )} ${details.tokenName} for`}
                       </p>
-                      <h2 className="text-[#C7EF6B] text-2xl font-semibold mb-2 text-center">
-                        {isBuy
-                          ? `${formatNumber(summaryTokenAmount || 0, 4)} ${summaryTokenName || details.tokenName}`
-                          : `${details.fiatSymbol}${formatNumber(summaryFiatAmount || 0, 2)}`}
+                      <h2 className="text-[#C7EF6B] text-2xl font-semibold text-center min-h-[2.25rem] flex items-center">
+                        {orderData ? (
+                          isBuy
+                            ? `${formatNumber(summaryTokenAmount || 0, 4)} ${summaryTokenName || details.tokenName}`
+                            : `${details.fiatSymbol}${formatNumber(summaryFiatAmount || 0, 2)}`
+                        ) : orderSetupFailed ? (
+                          ""
+                        ) : (
+                          <LoadingValue />
+                        )}
                       </h2>
-                    </>
-                  ) : (
-                    <div className="flex flex-col items-center gap-2 mb-2">
-                      <LoadingValue />
-                      <LoadingValue />
                     </div>
-                  )}
 
-                </div>
+                    <div className="bg-[#13170a] rounded-2xl p-4 mb-5 space-y-3">
+                      <div className="flex justify-between items-center">
+                        <p className="text-sm text-white/60">
+                          {isBuy ? "You are spending" : "You are receiving"}
+                        </p>
+                        <p className="text-sm font-medium text-white">
+                          {orderData ? (
+                            <>
+                              {details.fiatSymbol}
+                              {formatNumber(summaryFiatAmount || 0, 2)}
+                            </>
+                          ) : orderSetupFailed ? (
+                            "not assigned"
+                          ) : (
+                            <LoadingValue />
+                          )}
+                        </p>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <p className="text-sm text-white/60">
+                          {isBuy ? "You will receive" : "You will send"}
+                        </p>
+                        <p className="text-sm font-medium text-white">
+                          {orderData ? (
+                            <>
+                              {formatNumber(summaryTokenAmount || 0, 4)}{" "}
+                              {summaryTokenName || details.tokenName}
+                            </>
+                          ) : orderSetupFailed ? (
+                            "not assigned"
+                          ) : (
+                            <LoadingValue />
+                          )}
+                        </p>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <p className="text-sm text-white/60">
+                          Price of {orderData ? summaryTokenName : details.tokenName}
+                        </p>
+                        <p className="text-sm font-medium text-white">
+                          {orderData ? (
+                            <>
+                              {details.fiatSymbol}
+                              {formatNumber(summaryRate || 0, 2)}
+                            </>
+                          ) : orderSetupFailed ? (
+                            "not assigned"
+                          ) : (
+                            <LoadingValue />
+                          )}
+                        </p>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <p className="text-sm text-white/60">Estimated completion</p>
+                        <p className="text-sm font-medium text-white">{estimatedCompletionText}</p>
+                      </div>
 
-                <div className="bg-[#13170a] rounded-2xl p-4 mb-5 space-y-3">
-                  <div className="flex justify-between items-center">
-                    <p className="text-sm text-white/60">
-                      {isBuy ? "You are spending" : "You are receiving"}
-                    </p>
-                    <p className="text-sm font-medium text-white">
-                      {orderData ? (
-                        <>
-                          {details.fiatSymbol}
-                          {formatNumber(summaryFiatAmount || 0, 2)}
-                        </>
-                      ) : (
-                        <LoadingValue />
-                      )}
-                    </p>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <p className="text-sm text-white/60">
-                      {isBuy ? "You will receive" : "You will send"}
-                    </p>
-                    <p className="text-sm font-medium text-white">
-                      {orderData ? (
-                        <>
-                          {formatNumber(summaryTokenAmount || 0, 4)}{" "}
-                          {summaryTokenName || details.tokenName}
-                        </>
-                      ) : (
-                        <LoadingValue />
-                      )}
-                    </p>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <p className="text-sm text-white/60">
-                      Price of {orderData ? summaryTokenName : details.tokenName}
-                    </p>
-                    <p className="text-sm font-medium text-white">
-                      {orderData ? (
-                        <>
-                          {details.fiatSymbol}
-                          {formatNumber(summaryRate || 0, 2)}
-                        </>
-                      ) : (
-                        <LoadingValue />
-                      )}
-                    </p>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <p className="text-sm text-white/60">Estimated completion</p>
-                    <p className="text-sm font-medium text-white">About 1 minute</p>
-                  </div>
+                    </div>
 
-                </div>
-
-                <div className="pb-3">
-                  <button
-                    onClick={handleStart}
-                    disabled={
-                      isSubmitting ||
-                      externalLoading ||
-                      isCreatingOrder ||
-                      !orderData
-                    }
-                    className="w-full h-12 rounded-full font-semibold text-lg bg-[#C7EF6B] text-black hover:bg-[#B8E55A] transition-colors flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed"
-                  >
-                    {isSubmitting ? (
-                      <LoaderCircle className="w-6 h-6 animate-spin text-black" />
-                    ) : (
-                      actionText
-                    )}
-                  </button>
-                </div>
+                    <div className="pb-3">
+                      <button
+                        onClick={orderSetupFailed ? createOrder : handleStart}
+                        disabled={
+                          isSubmitting ||
+                          externalLoading ||
+                          isCreatingOrder ||
+                          (!orderData && !orderSetupFailed)
+                        }
+                        className="w-full h-12 rounded-full font-semibold text-lg bg-[#C7EF6B] text-black hover:bg-[#B8E55A] transition-colors flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed"
+                      >
+                        {isSubmitting || isCreatingOrder ? (
+                          <LoaderCircle className="w-6 h-6 animate-spin text-black" />
+                        ) : (
+                          orderSetupFailed ? "Retry" : actionText
+                        )}
+                      </button>
+                    </div>
+                  </>
+                )}
               </>
             ) : (
-              <div className="flex flex-col items-center px-4 py-8">
-                <div className="w-20 h-20 bg-[#C7EF6B]/20 rounded-full flex items-center justify-center mb-4 relative overflow-hidden">
+              <div className="flex flex-col items-center px-4">
+                <div className="w-20 h-20 bg-[#C7EF6B]/20 rounded-full flex items-center justify-center my-4 relative overflow-hidden">
                   <img
                     src="/fund.png"
                     alt="Success"
-                    className="w-full h-full object-cover"
+                    className="h-18 w-18 object-cover"
                   />
                 </div>
-                <h2 className="text-white text-xl font-bold mb-2 tracking-wide text-center">
-                  Conversion successful
+                <h2 className="text-white text-lg font-semibold mb-2 tracking-wide text-center">
+                  {isBuy ? 'Deposit successful' : 'Withdrawal successful'}
                 </h2>
-                <p className="text-gray-400 text-sm mb-10 text-center">
-                  Your wallet balance will update in about a minute.
+                <p className="text-white/80 text-sm mb-4 text-center">
+                  {successBodyMessage || defaultSuccessMessage}
                 </p>
                 <div className="w-full mt-2 pb-4">
                   <button
                     onClick={handleDone}
-                    className="w-full h-14 rounded-full font-semibold text-lg text-black transition-colors bg-[#C7EF6B] hover:bg-[#B8E55A]"
+                    className="w-full h-12 rounded-full font-semibold text-lg text-black transition-colors bg-[#C7EF6B] hover:bg-[#B8E55A]"
                   >
                     Done
                   </button>

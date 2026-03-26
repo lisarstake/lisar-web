@@ -6,6 +6,7 @@ import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { EmptyState } from "@/components/general/EmptyState";
 import { usePortfolio, type StakeEntry } from "@/contexts/PortfolioContext";
 import { useWallet } from "@/contexts/WalletContext";
+import { useTransactions } from "@/contexts/TransactionContext";
 import { formatEarnings, formatStables } from "@/lib/formatters";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -116,8 +117,9 @@ export const PositionsPage: React.FC = () => {
     (location.state as { walletType?: string })?.walletType || "staking";
   const isSavings = walletType === "savings";
 
-  const { setMode, stakeEntries, isLoading } = usePortfolio();
-  const { ethereumWalletAddress, solanaWalletAddress, ethereumWalletId, solanaWalletId } = useWallet();
+  const { setMode, stakeEntries, isLoading, refetch: refetchPortfolio } = usePortfolio();
+  const { ethereumWalletAddress, solanaWalletAddress, ethereumWalletId, solanaWalletId, refreshAllWalletData } = useWallet();
+  const { refetch: refetchTransactions } = useTransactions();
 
   useEffect(() => {
     setMode(isSavings ? "savings" : "staking");
@@ -222,6 +224,11 @@ export const PositionsPage: React.FC = () => {
           });
 
           if (redeemResp.success) {
+            await Promise.all([
+              refreshAllWalletData(),
+              refetchPortfolio(),
+              refetchTransactions(),
+            ]);
             setSuccessMessage(
               "Withdrawal request submitted successfully. Your funds will be available after processing."
             );
@@ -259,6 +266,11 @@ export const PositionsPage: React.FC = () => {
           });
 
           if (burnResp.success) {
+            await Promise.all([
+              refreshAllWalletData(),
+              refetchPortfolio(),
+              refetchTransactions(),
+            ]);
             setSuccessMessage(
               "Withdrawal successful! Your USDC will be available in your wallet shortly."
             );

@@ -94,7 +94,7 @@ export const YieldAssetPickerPage: React.FC = () => {
         <div className="rounded-xl bg-[#13170a] px-4">
           <YieldAssetRow
             title="USDC"
-            subtitle="Earn daily, withdraw anytime"
+            subtitle="Earn daily, withdraw instantly"
             apy="Up to 12%"
             imageSrc="/usdc.svg"
             onClick={() => navigate("/wallet/savings")}
@@ -103,7 +103,7 @@ export const YieldAssetPickerPage: React.FC = () => {
         <div className="rounded-xl bg-[#13170a] px-4">
           <YieldAssetRow
             title="Livepeer"
-            subtitle="Earn daily, withdraw anytime"
+            subtitle="Earn daily, 7 days unlock period"
             apy="Up to 49%"
             imageSrc="/livepeer.webp"
             onClick={() => navigate("/wallet/staking")}
@@ -121,7 +121,7 @@ export const YieldAssetPickerPage: React.FC = () => {
         <div className="rounded-xl bg-[#13170a] px-4">
           <YieldAssetRow
             title="Solana"
-            subtitle="Earn daily, withdraw anytime"
+            subtitle="Earn daily, 3 days unlock period"
             apy="Soon"
             imageSrc="/sol1.svg"
             isComingSoon

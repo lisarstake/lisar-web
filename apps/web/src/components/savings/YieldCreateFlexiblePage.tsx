@@ -36,9 +36,7 @@ export const YieldCreateFlexiblePage: React.FC = () => {
   const {
     solanaWalletId,
     solanaWalletAddress,
-    loadStablesBalance,
-    loadHighyieldBalance,
-    refetch: refetchWallet,
+    refreshAllWalletData,
   } = useWallet();
   const { refetch: refetchDelegation } = useDelegation();
   const { refetch: refetchTransactions } = useTransactions();
@@ -178,8 +176,7 @@ export const YieldCreateFlexiblePage: React.FC = () => {
         }
 
         await Promise.all([
-          refetchWallet(),
-          loadHighyieldBalance(true),
+          refreshAllWalletData(),
           refetchDelegation(),
           refetchTransactions(),
         ]);
@@ -202,11 +199,7 @@ export const YieldCreateFlexiblePage: React.FC = () => {
           return;
         }
 
-        await Promise.all([
-          refetchWallet(),
-          loadStablesBalance(true),
-          refetchTransactions(),
-        ]);
+        await Promise.all([refreshAllWalletData(), refetchTransactions()]);
       }
 
       setShowSuccessDrawer(true);

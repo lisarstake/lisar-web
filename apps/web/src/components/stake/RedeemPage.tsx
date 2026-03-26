@@ -52,7 +52,7 @@ export const RedeemPage: React.FC = () => {
 
   const { state } = useAuth();
   const {
-    loadStablesBalance,
+    refreshAllWalletData,
     ethereumWalletAddress,
     solanaWalletAddress,
     ethereumWalletId,
@@ -230,9 +230,11 @@ export const RedeemPage: React.FC = () => {
             );
             setShowSuccessDrawer(true);
 
-            await loadStablesBalance();
-            await refetchPortfolio();
-            refetchTransactions();
+            await Promise.all([
+              refreshAllWalletData(),
+              refetchPortfolio(),
+              refetchTransactions(),
+            ]);
             setIsRedeeming(false);
             return response;
           } else {
@@ -266,9 +268,11 @@ export const RedeemPage: React.FC = () => {
             );
             setShowSuccessDrawer(true);
 
-            await loadStablesBalance();
-            await refetchPortfolio();
-            refetchTransactions();
+            await Promise.all([
+              refreshAllWalletData(),
+              refetchPortfolio(),
+              refetchTransactions(),
+            ]);
             setIsRedeeming(false);
             return response;
           } else {

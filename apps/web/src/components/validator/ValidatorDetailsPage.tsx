@@ -14,6 +14,7 @@ import { useOrchestrators } from "@/contexts/OrchestratorContext";
 import { useDelegation } from "@/contexts/DelegationContext";
 import { useTransactions } from "@/contexts/TransactionContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useWallet } from "@/contexts/WalletContext";
 import { delegationService } from "@/services";
 import { totpService } from "@/services/totp";
 import { getEarliestUnbondingTime } from "@/lib/unbondingTime";
@@ -47,6 +48,7 @@ export const ValidatorDetailsPage: React.FC = () => {
   const { userDelegation, delegatorTransactions, refetch } = useDelegation();
   const { transactions } = useTransactions();
   const { state } = useAuth();
+  const { refreshAllWalletData } = useWallet();
 
   const currentValidator = orchestrators.find(
     (orch) => orch.address === validatorId
@@ -230,7 +232,7 @@ export const ValidatorDetailsPage: React.FC = () => {
         setShowSuccessDrawer(true);
         setShowWithdrawConfirmDrawer(false);
         setPendingAction(null);
-        await refetch();
+        await Promise.all([refetch(), refreshAllWalletData()]);
       } else {
         setErrorMessage(response.message || "Failed to restake tokens");
         setShowErrorDrawer(true);
@@ -318,7 +320,7 @@ export const ValidatorDetailsPage: React.FC = () => {
         setShowSuccessDrawer(true);
         setShowMoveStakeDrawer(false);
         setPendingAction(null);
-        await refetch();
+        await Promise.all([refetch(), refreshAllWalletData()]);
       } else {
         setErrorMessage(response.message || "Failed to move stake");
         setShowErrorDrawer(true);

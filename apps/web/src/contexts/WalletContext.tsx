@@ -32,6 +32,7 @@ type WalletContextValue = {
   isLoading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
+  refreshAllWalletData: () => Promise<void>;
   stablesBalance: number | null;
   highyieldBalance: number | null;
   solanaUsdcBalance: number | null;
@@ -370,6 +371,22 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
     highyieldBalance,
   ]);
 
+  const refreshAllWalletData = useCallback(async () => {
+    await Promise.all([
+      load(),
+      loadStablesBalance(true),
+      loadHighyieldBalance(true),
+      loadNairaBalance(true),
+      loadVirtualAccountDetails(true),
+    ]);
+  }, [
+    load,
+    loadStablesBalance,
+    loadHighyieldBalance,
+    loadNairaBalance,
+    loadVirtualAccountDetails,
+  ]);
+
   // Initial load on mount
   useEffect(() => {
     if (state.user) {
@@ -405,72 +422,66 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
     state.user?.fiat_type,
   ]);
 
-  //  Memoize stable functions
-  const stableFunctions = useMemo(
+  const value = useMemo<WalletContextValue>(
     () => ({
+      wallet,
+      isLoading,
+      error,
+      refetch: load,
+      refreshAllWalletData,
+      stablesBalance,
+      highyieldBalance,
+      solanaUsdcBalance,
+      solanaUsdtBalance,
+      ethereumUsdcBalance,
+      nairaBalance,
+      virtualAccount,
+      solanaWalletAddress,
+      ethereumWalletAddress,
+      solanaWalletId,
+      ethereumWalletId,
+      loadStablesBalance,
+      loadHighyieldBalance,
+      loadNairaBalance,
+      loadVirtualAccountDetails,
+      setVirtualAccountDetails,
+      stablesLoading,
+      highyieldLoading,
+      virtualAccountLoading,
+      mapleApy,
+      perenaApy,
+      apyLoading,
+      loadApys,
+    }),
+    [
+      wallet,
+      isLoading,
+      error,
+      load,
+      refreshAllWalletData,
+      stablesBalance,
+      highyieldBalance,
+      solanaUsdcBalance,
+      solanaUsdtBalance,
+      ethereumUsdcBalance,
+      nairaBalance,
+      virtualAccount,
+      solanaWalletAddress,
+      ethereumWalletAddress,
+      solanaWalletId,
+      ethereumWalletId,
+      stablesLoading,
+      highyieldLoading,
+      virtualAccountLoading,
+      mapleApy,
+      perenaApy,
+      apyLoading,
       loadStablesBalance,
       loadHighyieldBalance,
       loadNairaBalance,
       loadVirtualAccountDetails,
       setVirtualAccountDetails,
       loadApys,
-      refetch: load,
-    }),
-    [],
-  );
-
-  const value = useMemo<WalletContextValue>(
-    () => ({
-      wallet,
-      isLoading,
-      error,
-      refetch: stableFunctions.refetch,
-      stablesBalance,
-      highyieldBalance,
-      solanaUsdcBalance,
-      solanaUsdtBalance,
-      ethereumUsdcBalance,
-      nairaBalance,
-      virtualAccount,
-      solanaWalletAddress,
-      ethereumWalletAddress,
-      solanaWalletId,
-      ethereumWalletId,
-      loadStablesBalance: stableFunctions.loadStablesBalance,
-      loadHighyieldBalance: stableFunctions.loadHighyieldBalance,
-      loadNairaBalance: stableFunctions.loadNairaBalance,
-      loadVirtualAccountDetails: stableFunctions.loadVirtualAccountDetails,
-      setVirtualAccountDetails: stableFunctions.setVirtualAccountDetails,
-      stablesLoading,
-      highyieldLoading,
-      virtualAccountLoading,
-      mapleApy,
-      perenaApy,
-      apyLoading,
-      loadApys: stableFunctions.loadApys,
-    }),
-    [
-      wallet,
-      isLoading,
-      error,
-      stablesBalance,
-      highyieldBalance,
-      solanaUsdcBalance,
-      solanaUsdtBalance,
-      ethereumUsdcBalance,
-      nairaBalance,
-      virtualAccount,
-      solanaWalletAddress,
-      ethereumWalletAddress,
-      solanaWalletId,
-      ethereumWalletId,
-      stablesLoading,
-      highyieldLoading,
-      virtualAccountLoading,
-      mapleApy,
-      perenaApy,
-      apyLoading,
-      stableFunctions,
     ],
   );
 

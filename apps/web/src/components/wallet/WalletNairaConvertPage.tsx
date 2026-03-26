@@ -7,6 +7,7 @@ import {
   type RampTransactionDetails,
 } from "@/components/general/RampDrawer";
 import { useAuth } from "@/contexts/AuthContext";
+import { useDelegation } from "@/contexts/DelegationContext";
 import { useWallet } from "@/contexts/WalletContext";
 import { usePrices } from "@/hooks/usePrices";
 import { rampService } from "@/services/ramp";
@@ -25,17 +26,15 @@ export const WalletNairaConvertPage: React.FC = () => {
   const tokenSymbol = safeWalletType === "staking" ? "LPT" : "USDC";
 
   const { state } = useAuth();
+  const { userDelegation } = useDelegation();
   const { prices } = usePrices();
   const {
     stablesBalance,
-    highyieldBalance,
     nairaBalance,
     virtualAccount,
     solanaWalletAddress,
     ethereumWalletAddress,
-    loadStablesBalance,
-    loadHighyieldBalance,
-    loadNairaBalance,
+    refreshAllWalletData,
   } = useWallet();
 
   const [amount, setAmount] = useState("");
@@ -46,9 +45,16 @@ export const WalletNairaConvertPage: React.FC = () => {
   );
 
   const nairaSourceBalance = nairaBalance || 0;
+  const stakedLptBalance = useMemo(
+    () => parseFloat(userDelegation?.bondedAmount || "0") || 0,
+    [userDelegation?.bondedAmount],
+  );
   const availableTokenBalance = useMemo(
-    () => (safeWalletType === "staking" ? highyieldBalance || 0 : stablesBalance || 0),
-    [highyieldBalance, safeWalletType, stablesBalance],
+    () =>
+      safeWalletType === "staking"
+        ? stakedLptBalance
+        : stablesBalance || 0,
+    [safeWalletType, stablesBalance, stakedLptBalance],
   );
   const sourceBalance = safeMode === "deposit" ? nairaSourceBalance : availableTokenBalance;
   const sourceBalanceLabel =
@@ -308,11 +314,7 @@ export const WalletNairaConvertPage: React.FC = () => {
           onClose={() => setShowRampDrawer(false)}
           details={rampDetails}
           onConfirm={async () => {
-            await Promise.all([
-              loadStablesBalance(true),
-              loadHighyieldBalance(true),
-              loadNairaBalance(true),
-            ]);
+            await refreshAllWalletData();
             navigate("/wallet");
           }}
         />

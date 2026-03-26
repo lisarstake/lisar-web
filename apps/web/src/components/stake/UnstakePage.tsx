@@ -26,7 +26,7 @@ export const UnstakePage: React.FC = () => {
   const { orchestrators } = useOrchestrators();
   const { userDelegation } = useDelegation();
   const { state } = useAuth();
-  const { refetch: refetchWallet } = useWallet();
+  const { refreshAllWalletData } = useWallet();
 
   const delegatedStake =
     userDelegation && userDelegation.delegate.id === validatorId
@@ -90,7 +90,7 @@ export const UnstakePage: React.FC = () => {
       });
 
       if (response.success) {
-        await refetchWallet();
+        await refreshAllWalletData();
         setShowSuccessDrawer(true);
       } else {
         setErrorMessage("Sorry an error occurred and withdrawal didn't complete, please try again.");
