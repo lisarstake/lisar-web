@@ -2,29 +2,32 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   ArrowLeft,
+  EyeClosed,
+  EyeIcon,
   LoaderCircle,
-  Wallet2,
   WalletCards,
 } from "lucide-react";
-import { ActionDrawer } from "@/components/general/ActionDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { ErrorDrawer } from "@/components/general/ErrorDrawer";
 import { SuccessDrawer } from "@/components/general/SuccessDrawer";
-import { OTPVerificationDrawer } from "@/components/auth/OTPVerificationDrawer";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTransactions } from "@/contexts/TransactionContext";
 import { usePortfolio, type StakeEntry } from "@/contexts/PortfolioContext";
-import { perenaService, walletService, mapleService } from "@/services";
-import { totpService } from "@/services/totp";
+import { perenaService, mapleService } from "@/services";
+import { authService } from "@/services/auth";
 import { priceService } from "@/lib/priceService";
 import { useWallet } from "@/contexts/WalletContext";
 import {
   formatNumber,
-  formatStables,
   parseFormattedNumber,
 } from "@/lib/formatters";
 import { usePageTracking } from "@/hooks/usePageTracking";
-import { useStablesApy } from "@/hooks/useStablesApy";
 
 export const RedeemPage: React.FC = () => {
   // Track redeem page visit
@@ -38,17 +41,22 @@ export const RedeemPage: React.FC = () => {
   } | null;
 
   const selectedEntry = locationState?.entry;
+  const destinationWalletType =
+    locationState?.walletType === "staking" ? "staking" : "savings";
   const isMaple = selectedEntry?.name.toLowerCase().includes("maple");
   const isPerena = selectedEntry?.name.toLowerCase().includes("perena");
 
   const [usdcAmount, setUsdcAmount] = useState("0");
   const [showConfirmDrawer, setShowConfirmDrawer] = useState(false);
-  const [showOTPDrawer, setShowOTPDrawer] = useState(false);
   const [isRedeeming, setIsRedeeming] = useState(false);
   const [showErrorDrawer, setShowErrorDrawer] = useState(false);
   const [showSuccessDrawer, setShowSuccessDrawer] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [confirmError, setConfirmError] = useState("");
+  const [isVerifyingPassword, setIsVerifyingPassword] = useState(false);
 
   const { state } = useAuth();
   const {
@@ -113,14 +121,14 @@ export const RedeemPage: React.FC = () => {
     const numericAmount = parseFloat(usdcAmount.replace(/,/g, "")) || 0;
 
     if (numericAmount <= 0) {
-      setErrorMessage("Please enter a valid amount to redeem.");
+      setErrorMessage("Please enter a valid amount to withdraw.");
       setShowErrorDrawer(true);
       return;
     }
 
     if (numericAmount > maxRedeemable) {
       setErrorMessage(
-        `Maximum redeemable amount is ${formatNumber(
+        `Maximum withdrawable amount is ${formatNumber(
           maxRedeemable.toString()
         )} USDC.`
       );
@@ -128,183 +136,157 @@ export const RedeemPage: React.FC = () => {
       return;
     }
 
+    setConfirmPassword("");
+    setConfirmError("");
     setShowConfirmDrawer(true);
   };
 
-  const handleRedeem = async () => {
-    setIsRedeeming(true);
-    setShowConfirmDrawer(false);
-    setShowOTPDrawer(true);
-  };
+  const executeWithdraw = async () => {
+    if (!selectedEntry) {
+      setErrorMessage("No position selected. Please try again.");
+      setShowErrorDrawer(true);
+      return;
+    }
 
-  const handleOTPVerify = async (code: string) => {
-    const response = await totpService.verify({ token: code });
-    if (response.success) {
-      setShowOTPDrawer(false);
-      setIsRedeeming(true);
+    const numericAmount = parseFloat(usdcAmount.replace(/,/g, "")) || 0;
 
-      if (!selectedEntry) {
-        setErrorMessage("No position selected. Please try again.");
+    if (numericAmount <= 0) {
+      setErrorMessage("Please enter a valid amount to withdraw.");
+      setShowErrorDrawer(true);
+      return;
+    }
+
+    if (numericAmount > maxRedeemable) {
+      setErrorMessage(
+        `Maximum withdrawable amount is ${formatNumber(
+          maxRedeemable.toString()
+        )} USDC.`
+      );
+      setShowErrorDrawer(true);
+      return;
+    }
+
+    if (isMaple) {
+      if (!ethereumWalletAddress || !ethereumWalletId) {
+        setErrorMessage("Ethereum wallet not found. Please create a wallet first.");
         setShowErrorDrawer(true);
-        setIsRedeeming(false);
-        return response;
+        return;
       }
 
-      const numericAmount = parseFloat(usdcAmount.replace(/,/g, "")) || 0;
+      const maplePoolId = import.meta.env.VITE_MAPLE_USDC_POOL_ID;
+      const positionsResp = await mapleService.getPositions(
+        ethereumWalletAddress,
+        maplePoolId
+      );
 
-      if (numericAmount <= 0) {
-        setErrorMessage("Please enter a valid amount to redeem.");
+      if (
+        !positionsResp.success ||
+        !positionsResp.data?.hasPositions ||
+        !positionsResp.data.positions ||
+        positionsResp.data.positions.length === 0
+      ) {
+        setErrorMessage("No positions found. Please try again.");
         setShowErrorDrawer(true);
-        setIsRedeeming(false);
-        return response;
+        return;
       }
 
-      if (numericAmount > maxRedeemable) {
+      const totalShares = positionsResp.data.positions.reduce(
+        (sum, position) => {
+          const shares = parseFloat(position.redeemableSharesRaw || "0");
+          return sum + (isNaN(shares) ? 0 : shares);
+        },
+        0
+      );
+
+      if (totalShares <= 0) {
+        setErrorMessage("No shares available for withdrawal.");
+        setShowErrorDrawer(true);
+        return;
+      }
+
+      const sharesToRedeem = numericAmount.toString();
+      const redeemResp = await mapleService.requestRedeem({
+        walletId: ethereumWalletId,
+        walletAddress: ethereumWalletAddress,
+        poolAddress: maplePoolId,
+        shares: sharesToRedeem,
+      });
+
+      if (!redeemResp.success) {
         setErrorMessage(
-          `Maximum redeemable amount is ${formatNumber(
-            maxRedeemable.toString()
-          )} USDC.`
+          redeemResp.error || "Failed to request withdrawal. Please try again."
         );
         setShowErrorDrawer(true);
-        setIsRedeeming(false);
-        return response;
+        return;
       }
-
-      try {
-        if (isMaple) {
-          if (!ethereumWalletAddress || !ethereumWalletId) {
-            setErrorMessage(
-              "Ethereum wallet not found. Please create a wallet first."
-            );
-            setShowErrorDrawer(true);
-            setIsRedeeming(false);
-            return response;
-          }
-
-          const maplePoolId = import.meta.env.VITE_MAPLE_USDC_POOL_ID;
-          const positionsResp = await mapleService.getPositions(
-            ethereumWalletAddress,
-            maplePoolId
-          );
-
-          if (
-            !positionsResp.success ||
-            !positionsResp.data?.hasPositions ||
-            !positionsResp.data.positions ||
-            positionsResp.data.positions.length === 0
-          ) {
-            setErrorMessage("No positions found. Please try again.");
-            setShowErrorDrawer(true);
-            setIsRedeeming(false);
-            return response;
-          }
-
-          const totalShares = positionsResp.data.positions.reduce(
-            (sum, position) => {
-              const shares = parseFloat(position.redeemableSharesRaw || "0");
-              return sum + (isNaN(shares) ? 0 : shares);
-            },
-            0
-          );
-
-          if (totalShares <= 0) {
-            setErrorMessage("No shares available for withdrawal.");
-            setShowErrorDrawer(true);
-            setIsRedeeming(false);
-            return response;
-          }
-
-          // Shares are 1:1 with USDC, so use the amount directly
-          const sharesToRedeem = numericAmount.toString();
-
-          const redeemResp = await mapleService.requestRedeem({
-            walletId: ethereumWalletId,
-            walletAddress: ethereumWalletAddress,
-            poolAddress: maplePoolId,
-            shares: sharesToRedeem,
-          });
-
-          if (redeemResp.success) {
-            setSuccessMessage(
-              "Your funds will be available in your wallet shortly."
-            );
-            setShowSuccessDrawer(true);
-
-            await Promise.all([
-              refreshAllWalletData(),
-              refetchPortfolio(),
-              refetchTransactions(),
-            ]);
-            setIsRedeeming(false);
-            return response;
-          } else {
-            setErrorMessage(
-              redeemResp.error ||
-              "Failed to request withdrawal. Please try again."
-            );
-            setShowErrorDrawer(true);
-            setIsRedeeming(false);
-            return response;
-          }
-        } else if (isPerena) {
-          if (!solanaWalletAddress || !solanaWalletId) {
-            setErrorMessage(
-              "Solana wallet not found. Please create a wallet first."
-            );
-            setShowErrorDrawer(true);
-            setIsRedeeming(false);
-            return response;
-          }
-
-          const burnResp = await perenaService.burn({
-            walletId: solanaWalletId,
-            walletAddress: solanaWalletAddress,
-            usdStarAmount: numericAmount,
-          });
-
-          if (burnResp.success) {
-            setSuccessMessage(
-              "Your funds will be available in your wallet shortly."
-            );
-            setShowSuccessDrawer(true);
-
-            await Promise.all([
-              refreshAllWalletData(),
-              refetchPortfolio(),
-              refetchTransactions(),
-            ]);
-            setIsRedeeming(false);
-            return response;
-          } else {
-            setErrorMessage(
-              burnResp.error || "Failed to withdraw. Please try again."
-            );
-            setShowErrorDrawer(true);
-            setIsRedeeming(false);
-            return response;
-          }
-        } else {
-          setErrorMessage("Invalid position type. Please try again.");
-          setShowErrorDrawer(true);
-          setIsRedeeming(false);
-          return response;
-        }
-      } catch (error) {
-        const errorMsg =
-          error instanceof Error
-            ? error.message
-            : "An error occurred while processing withdrawal. Please try again.";
-        setErrorMessage(errorMsg);
+    } else if (isPerena) {
+      if (!solanaWalletAddress || !solanaWalletId) {
+        setErrorMessage("Solana wallet not found. Please create a wallet first.");
         setShowErrorDrawer(true);
-        setIsRedeeming(false);
-        return response;
+        return;
       }
+
+      const burnResp = await perenaService.burn({
+        walletId: solanaWalletId,
+        walletAddress: solanaWalletAddress,
+        usdStarAmount: numericAmount,
+      });
+
+      if (!burnResp.success) {
+        setErrorMessage(burnResp.error || "Failed to withdraw. Please try again.");
+        setShowErrorDrawer(true);
+        return;
+      }
+    } else {
+      setErrorMessage("Invalid position type. Please try again.");
+      setShowErrorDrawer(true);
+      return;
     }
-    return response;
+
+    setSuccessMessage("You've withdrawn successfully from your yield balance and your balance has been updated.");
+    setShowSuccessDrawer(true);
+    await Promise.all([
+      refreshAllWalletData(),
+      refetchPortfolio(),
+      refetchTransactions(),
+    ]);
   };
 
-  const handleOTPSuccess = () => {
-    setShowOTPDrawer(false);
+  const handleWithdraw = async () => {
+    if (!state.user?.email) {
+      setConfirmError("No user email found.");
+      return;
+    }
+    if (!confirmPassword) {
+      setConfirmError("Please enter your password.");
+      return;
+    }
+
+    setConfirmError("");
+    setIsVerifyingPassword(true);
+    setIsRedeeming(true);
+
+    try {
+      const loginResp = await authService.signin({
+        email: state.user.email,
+        password: confirmPassword,
+      });
+
+      if (!loginResp.success) {
+        setConfirmError(loginResp.message || "Incorrect password.");
+        setIsVerifyingPassword(false);
+        setIsRedeeming(false);
+        return;
+      }
+
+      setShowConfirmDrawer(false);
+      await executeWithdraw();
+    } catch (error) {
+      setConfirmError("An error occurred. Please try again.");
+    } finally {
+      setIsVerifyingPassword(false);
+      setIsRedeeming(false);
+    }
   };
 
   const numericAmount = parseFloat(usdcAmount.replace(/,/g, "")) || 0;
@@ -471,49 +453,88 @@ export const RedeemPage: React.FC = () => {
         isOpen={showSuccessDrawer}
         onClose={() => {
           setShowSuccessDrawer(false);
-          navigate("/portfolio/positions", {
-            state: { walletType: "savings" },
-          });
+          navigate(`/wallet/${destinationWalletType}`);
         }}
-        title="Redemption Successful!"
+        title="Withdrawal Successful!"
         message={successMessage}
       />
 
-      {/* Confirm Redeem Drawer */}
-      <ActionDrawer
-        isOpen={showConfirmDrawer}
-        onClose={() => !isRedeeming && setShowConfirmDrawer(false)}
-        title="Proceed to Redeem"
-        content={[
-          `You are about to redeem ${formatNumber(
-            usdcAmount.replace(/,/g, "")
-          )} USDC${isMaple ? " from USD Base" : isPerena ? " from USD Plus" : ""}.`,
-          "Once confirmed, your funds will be processed and available in your wallet.",
-        ]}
-        actions={[
-          {
-            label: "Redeem",
-            onClick: handleRedeem,
-          },
-          {
-            label: "Cancel",
-            onClick: () => setShowConfirmDrawer(false),
-            variant: "secondary",
-          },
-        ]}
-        isProcessing={isRedeeming}
-      />
+      <Drawer
+        open={showConfirmDrawer}
+        onOpenChange={(open) => !isRedeeming && setShowConfirmDrawer(open)}
+      >
+        <DrawerContent className="bg-[#050505] border-[#2a2a2a]">
+          <DrawerHeader>
+            <DrawerTitle className="text-lg font-medium text-white text-left">
+              Confirm withdrawal
+            </DrawerTitle>
+          </DrawerHeader>
 
-      {/* OTP Verification Drawer */}
-      <OTPVerificationDrawer
-        isOpen={showOTPDrawer}
-        onClose={() => !isRedeeming && setShowOTPDrawer(false)}
-        title="Redeem Verification"
-        description="Enter the 6-digit code from your Authenticator App to proceed."
-        onVerify={handleOTPVerify}
-        onSuccess={handleOTPSuccess}
-        showSuccessDrawer={false}
-      />
+          <div className="space-y-4 py-1">
+            <p className="text-sm text-white/80">
+              You are about to withdraw{" "}
+              {formatNumber(usdcAmount.replace(/,/g, ""))} USDC
+              {isMaple ? " from your yield balance. Please enter your password to confirm action" : isPerena ? " from your yield balance. Please enter your password to confirm action" : ""}.
+            </p>
+            {/* <p className="text-sm text-white/60">
+              Enter your account password to authorize this withdrawal.
+            </p> */}
+
+            <div>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => {
+                    setConfirmPassword(e.target.value);
+                    setConfirmError("");
+                  }}
+                  placeholder="Enter your password"
+                  className="w-full pr-12 px-4 py-3 bg-[#13170a] border border-[#2a2a2a] rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:border-[#C7EF6B]"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-300 hover:text-white"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? (
+                    <EyeIcon className="w-5 h-5" />
+                  ) : (
+                    <EyeClosed className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
+              {confirmError && (
+                <p className="text-red-500 text-sm mt-2 pl-1">{confirmError}</p>
+              )}
+            </div>
+
+            <div className="flex gap-3 pt-1">
+             
+              <button
+                type="button"
+                onClick={handleWithdraw}
+                disabled={isRedeeming || isVerifyingPassword}
+                className={`flex-1 h-12 rounded-full font-semibold transition-colors ${
+                  isRedeeming || isVerifyingPassword
+                    ? "bg-[#636363] text-white cursor-not-allowed"
+                    : "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
+                }`}
+              >
+                {isRedeeming || isVerifyingPassword ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <LoaderCircle className="animate-spin h-5 w-5 text-white" />
+                    Processing..
+                  </span>
+                ) : (
+                  "Withdraw"
+                )}
+              </button>
+            </div>
+          </div>
+        </DrawerContent>
+      </Drawer>
 
       {/* Bottom Navigation */}
       <BottomNavigation />

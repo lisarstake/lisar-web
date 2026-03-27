@@ -14,13 +14,14 @@ import {
 } from "@/components/ui/drawer";
 import { useWallet } from "@/contexts/WalletContext";
 import { useDelegation } from "@/contexts/DelegationContext";
+import { useOrchestrators } from "@/contexts/OrchestratorContext";
 import { useWalletCard } from "@/contexts/WalletCardContext";
 import { useTransactions } from "@/contexts/TransactionContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useStablesApy } from "@/hooks/useStablesApy";
 import { usePerenaWeeklyYield } from "@/hooks/usePerenaWeeklyYield";
-import { usePrices } from "@/hooks/usePrices";
 import { getEarliestUnbondingTime } from "@/lib/unbondingTime";
+import { getOrchestratorDisplayName } from "@/lib/orchestrators";
 import { TransactionData } from "@/services/transactions/types";
 import { delegationService } from "@/services";
 import { YIELD_ASSET_PICKER_PATH } from "@/lib/yieldPaths";
@@ -101,8 +102,8 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
     refetch: refetchDelegation,
   } = useDelegation();
   const { state } = useAuth();
-  const { perena: perenaApy, growth: growthApy, isLoading: apyLoading } =
-    useStablesApy();
+  const { orchestrators } = useOrchestrators();
+  const { perena: perenaApy, isLoading: apyLoading } = useStablesApy();
   const {
     cardData,
     displayCurrency,
@@ -111,7 +112,6 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
     displayFiatSymbol,
   } = useWalletCard();
   const { transactions, isLoading: transactionsLoading } = useTransactions();
-  const { prices } = usePrices();
   const { data: perenaWeeklyYieldData } = usePerenaWeeklyYield(
     solanaWalletAddress || null,
   );
@@ -134,43 +134,71 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
     ? WALLET_VISUALS.staking
     : WALLET_VISUALS.savings;
   const assetBalance = activeWalletCard?.balance ?? 0;
-  const equivalentBalance = activeWalletCard?.displayBalanceValue ?? 0;
   const formattedAssetBalance = `${assetBalance.toLocaleString(undefined, {
     minimumFractionDigits: 2,
-    maximumFractionDigits: 4,
+    maximumFractionDigits: 3,
   })} ${walletVisual.coinSymbol}`;
-  const weeklyEarningsAmount =
-    displayCurrency === "NGN"
-      ? activeWalletCard?.projectedInterestNgn ?? 0
-      : activeWalletCard?.projectedInterestUsd ?? 0;
   const tokenLiveApyPercent = useMemo(() => {
     if (isStakingWallet) {
-      if (growthApy !== null) return 46;
-      const fallback = parseFloat(activeWalletCard?.apyPercent || "");
-      return Number.isFinite(fallback) ? fallback : null;
+      const delegateId = userDelegation?.delegate?.id;
+      const normalizedDelegateId = delegateId?.toLowerCase();
+      const matchedOrchestrator = orchestrators.find(
+        (orch) => orch.address?.toLowerCase() === normalizedDelegateId,
+      );
+      const rawApy = matchedOrchestrator?.apy;
+
+      if (typeof rawApy === "string") {
+        const parsed = parseFloat(rawApy.replace("%", ""));
+        if (Number.isFinite(parsed)) return parsed;
+      }
+
+      if (typeof rawApy === "number" && Number.isFinite(rawApy)) {
+        return rawApy;
+      }
+
+      return 48;
     }
     if (perenaApy !== null) return perenaApy * 100;
     const fallback = parseFloat(activeWalletCard?.apyPercent || "");
     return Number.isFinite(fallback) ? fallback : null;
-  }, [activeWalletCard?.apyPercent, growthApy, isStakingWallet, perenaApy]);
+  }, [
+    activeWalletCard?.apyPercent,
+    isStakingWallet,
+    orchestrators,
+    perenaApy,
+    userDelegation?.delegate?.id,
+  ]);
   const tokenInfoDescription = isStakingWallet
     ? "Earn yields daily with 7 days unlock period for withdrawals."
     : "Earn yields daily with instant withdrawal.";
 
-  const sevenDayEarnings = useMemo(() => {
-    const ngnRate = prices.ngn || 0;
-    const multiplier = displayCurrency === "NGN" ? ngnRate : 1;
+  const currentValidatorName = useMemo(() => {
+    if (!isStakingWallet) return null;
+    const delegateId = userDelegation?.delegate?.id;
+    if (!delegateId) return "--";
+    // const normalizedDelegateId = delegateId.toLowerCase();
+    const match = orchestrators.find(
+      (orch) => orch.address === delegateId,
+    );
 
+    if (match) {
+      return getOrchestratorDisplayName(match);
+    }
+
+    return "Unknown validator";
+  }, [isStakingWallet, orchestrators, userDelegation?.delegate?.id]);
+
+  const sevenDayEarnings = useMemo(() => {
     const weeklyTotal = !isStakingWallet
-      ? (perenaWeeklyYieldData?.earnings ??
-          perenaWeeklyYieldData?.yieldAmount ??
-          0) * multiplier
-      : weeklyEarningsAmount;
+      ? perenaWeeklyYieldData?.earnings ?? perenaWeeklyYieldData?.yieldAmount ?? 0
+      : tokenLiveApyPercent !== null
+        ? (assetBalance * tokenLiveApyPercent * 7) / (100 * 365)
+        : 0;
     const dailyYield = weeklyTotal > 0 ? weeklyTotal / 7 : 0;
     const dailyYields = Array.from({ length: 7 }).map(() => dailyYield);
 
     const totalYield = dailyYields.reduce((sum, value) => sum + value, 0);
-    const baseBalance = Math.max(equivalentBalance - totalYield, 0);
+    const baseBalance = Math.max(assetBalance - totalYield, 0);
 
     const formatDate = (value: Date) => {
       const day = `${value.getDate()}`.padStart(2, "0");
@@ -196,12 +224,10 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
 
     return oldestToNewest.reverse();
   }, [
-    displayCurrency,
-    equivalentBalance,
+    assetBalance,
     isStakingWallet,
     perenaWeeklyYieldData,
-    prices.ngn,
-    weeklyEarningsAmount,
+    tokenLiveApyPercent,
   ]);
 
   const pendingUnbondingData = useMemo(() => {
@@ -526,7 +552,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
               />
             </div>
             <div className="flex-1">
-             
+
               <p className="text-white/90 text-[13px]">
                 You have {completedUnbondingData.totalAmount.toFixed(2)} LPT available fro
                 withdrawal
@@ -555,7 +581,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
               />
             </div>
             <div className="flex-1">
-             
+
               <p className="text-white/90 text-[13px]">
                 {pendingUnbondingData.timeRemaining
                   ? ` You have a withdrawal in process, ${pendingUnbondingData.timeRemaining}`
@@ -587,7 +613,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
           >
             <CircleQuestionMark size={22} color="#fff" />
           </button>
-         
+
         </div>
       </div>
 
@@ -706,21 +732,21 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
                 <div>
                   <p className="text-xs text-white/70">Yield</p>
                   <p className="text-sm font-semibold text-[#2fc083]">
-                    {displayFiatSymbol}
                     {item.interest.toLocaleString(undefined, {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}
+                    {` ${walletVisual.coinSymbol}`}
                   </p>
                 </div>
                 <div>
                   <p className="text-xs text-white/70">Balance</p>
                   <p className="text-sm font-semibold text-white">
-                    {displayFiatSymbol}
                     {item.balance.toLocaleString(undefined, {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}
+                    {` ${walletVisual.coinSymbol}`}
                   </p>
                 </div>
               </div>
@@ -748,9 +774,9 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
                 ? transferMode === "deposit"
                   ? "Deposit From"
                   : transferMode === "withdraw" ||
-                      transferMode === "withdraw-unlocked"
-                  ? "Withdraw To"
-                  : "Withdraw To"
+                    transferMode === "withdraw-unlocked"
+                    ? "Withdraw To"
+                    : "Withdraw To"
                 : ""}
             </DrawerTitle>
           </DrawerHeader>
@@ -761,25 +787,23 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
                   key={option.id}
                   onClick={() => handleFundingOptionSelect(option.id)}
                   disabled={!option.enabled}
-                  className={`w-full rounded-xl px-4 py-3 text-left ${
-                    option.enabled ? "bg-[#13170a]" : "bg-[#13170a] opacity-60"
-                  }`}
+                  className={`w-full rounded-xl px-4 py-3 text-left ${option.enabled ? "bg-[#13170a]" : "bg-[#13170a] opacity-60"
+                    }`}
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
                       <img
                         src={option.icon}
                         alt={option.label}
-                        className={`h-8 w-8 object-cover ${
-                          option.id === "crypto" ? "rounded-full" : ""
-                        }`}
+                        className={`h-8 w-8 object-cover ${option.id === "crypto" ? "rounded-full" : ""
+                          }`}
                       />
                       <div>
                         <p className="text-base font-medium text-white">
                           {option.id === "ngn" && transferMode === "withdraw"
                             ? "Naira balance"
                             : option.id === "crypto" &&
-                                transferMode === "withdraw"
+                              transferMode === "withdraw"
                               ? option.label
                               : option.label}
                         </p>
@@ -787,10 +811,10 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
                           {option.id === "ngn" && transferMode === "deposit"
                             ? `Naira balance`
                             : option.id === "ngn" &&
-                                transferMode === "withdraw"
+                              transferMode === "withdraw"
                               ? `Naira balance`
                               : option.id === "crypto" &&
-                                  transferMode === "deposit"
+                                transferMode === "deposit"
                                 ? option.subtitle
                                 : option.subtitle}
                         </p>
@@ -877,6 +901,14 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
             <div className="rounded-xl bg-[#13170a] p-4">
               <p className="text-sm text-white/85">{tokenInfoDescription}</p>
             </div>
+            {isStakingWallet && (
+              <div className="rounded-xl bg-[#13170a] p-4 flex items-center justify-between">
+                <p className="text-sm text-white/60">Current orchestrator</p>
+                <p className="text-sm font-medium text-white max-w-[60%] text-right truncate">
+                  {currentValidatorName || "--"}
+                </p>
+              </div>
+            )}
             <div className="rounded-xl bg-[#13170a] p-4 flex items-center justify-between">
               <p className="text-sm text-white/60">Live APY</p>
               <p className="text-sm font-semibold text-[#C7EF6B]">

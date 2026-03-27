@@ -23,7 +23,7 @@ interface OrchestratorContextType {
 }
 
 const OrchestratorContext = createContext<OrchestratorContextType | undefined>(
-  undefined
+  undefined,
 );
 
 interface OrchestratorProviderProps {
@@ -34,7 +34,7 @@ export const OrchestratorProvider: React.FC<OrchestratorProviderProps> = ({
   children,
 }) => {
   const [orchestrators, setOrchestrators] = useState<OrchestratorResponse[]>(
-    []
+    [],
   );
   const [orchestratorRewards, setOrchestratorRewards] = useState<
     Record<string, DelegatorRewardsData>
@@ -50,13 +50,14 @@ export const OrchestratorProvider: React.FC<OrchestratorProviderProps> = ({
 
       const queryParams: OrchestratorQueryParams = params || {
         page: 1,
-        limit: 12,
+        limit: 15,
         sortBy: "apy",
         sortOrder: "desc",
         active: true,
       };
 
       const response = await delegationService.getOrchestrators(queryParams);
+      console.log("Orchestrators response:", response);
 
       let fetchedOrchestrators: OrchestratorResponse[] = [];
       if (response.success && response.data && Array.isArray(response.data)) {
@@ -71,6 +72,8 @@ export const OrchestratorProvider: React.FC<OrchestratorProviderProps> = ({
         setError(response.message || "Failed to fetch orchestrators");
       }
 
+      
+
       // Fetch rewards for all orchestrators
       if (fetchedOrchestrators.length > 0) {
         try {
@@ -79,7 +82,7 @@ export const OrchestratorProvider: React.FC<OrchestratorProviderProps> = ({
               try {
                 const rewardsResponse =
                   await delegationService.getDelegatorRewards(
-                    orchestrator.address
+                    orchestrator.address,
                   );
                 if (rewardsResponse.success) {
                   return {
@@ -91,7 +94,7 @@ export const OrchestratorProvider: React.FC<OrchestratorProviderProps> = ({
               } catch (error) {
                 return null;
               }
-            }
+            },
           );
 
           const rewardsResults = await Promise.all(rewardsPromises);
@@ -145,7 +148,7 @@ export const useOrchestrators = (): OrchestratorContextType => {
   const context = useContext(OrchestratorContext);
   if (context === undefined) {
     throw new Error(
-      "useOrchestrators must be used within an OrchestratorProvider"
+      "useOrchestrators must be used within an OrchestratorProvider",
     );
   }
   return context;
