@@ -83,7 +83,7 @@ export const AccountsPage: React.FC = () => {
   };
 
   const handleRequestAccount = () => {
-    console.log("Request account clicked");
+  
   };
 
   return (

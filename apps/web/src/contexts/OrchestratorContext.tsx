@@ -57,7 +57,6 @@ export const OrchestratorProvider: React.FC<OrchestratorProviderProps> = ({
       };
 
       const response = await delegationService.getOrchestrators(queryParams);
-      console.log("Orchestrators response:", response);
 
       let fetchedOrchestrators: OrchestratorResponse[] = [];
       if (response.success && response.data && Array.isArray(response.data)) {

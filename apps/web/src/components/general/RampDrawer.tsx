@@ -83,10 +83,10 @@ export const RampDrawer: React.FC<RampDrawerProps> = ({
   const logPrefix = `[RampDrawer][${isBuy ? "BUY" : "SELL"}]`;
   const log = useCallback((step: string, payload?: unknown) => {
     if (payload !== undefined) {
-      console.log(`${logPrefix} ${step}`, payload);
+    
       return;
     }
-    console.log(`${logPrefix} ${step}`);
+  
   }, [logPrefix]);
   const logError = useCallback((step: string, payload?: unknown) => {
     if (payload !== undefined) {
