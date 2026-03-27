@@ -1,8 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
-import { HelpDrawer } from "@/components/general/HelpDrawer";
-import { LisarLines } from "@/components/general/lisar-lines";
 import { PortfolioSelectionDrawer } from "@/components/general/PortfolioSelectionDrawer";
 import { AllBalancesDrawer } from "@/components/general/AllBalancesDrawer";
 import {
@@ -11,7 +9,6 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import { WalletPage } from "@/components/wallet/WalletPage";
 import { useOrchestrators } from "@/contexts/OrchestratorContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWallet } from "@/contexts/WalletContext";
