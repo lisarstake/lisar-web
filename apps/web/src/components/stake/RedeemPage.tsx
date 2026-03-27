@@ -1,16 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
-  ChevronLeft,
-  CircleQuestionMark,
+  ArrowLeft,
   LoaderCircle,
   Wallet2,
+  WalletCards,
 } from "lucide-react";
-import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { ActionDrawer } from "@/components/general/ActionDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
-import { ErrorDrawer } from "@/components/ui/ErrorDrawer";
-import { SuccessDrawer } from "@/components/ui/SuccessDrawer";
+import { ErrorDrawer } from "@/components/general/ErrorDrawer";
+import { SuccessDrawer } from "@/components/general/SuccessDrawer";
 import { OTPVerificationDrawer } from "@/components/auth/OTPVerificationDrawer";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTransactions } from "@/contexts/TransactionContext";
@@ -43,7 +42,6 @@ export const RedeemPage: React.FC = () => {
   const isPerena = selectedEntry?.name.toLowerCase().includes("perena");
 
   const [usdcAmount, setUsdcAmount] = useState("0");
-  const [showHelpDrawer, setShowHelpDrawer] = useState(false);
   const [showConfirmDrawer, setShowConfirmDrawer] = useState(false);
   const [showOTPDrawer, setShowOTPDrawer] = useState(false);
   const [isRedeeming, setIsRedeeming] = useState(false);
@@ -54,19 +52,14 @@ export const RedeemPage: React.FC = () => {
 
   const { state } = useAuth();
   const {
-    loadStablesBalance,
+    refreshAllWalletData,
     ethereumWalletAddress,
     solanaWalletAddress,
     ethereumWalletId,
     solanaWalletId,
   } = useWallet();
   const { refetch: refetchTransactions } = useTransactions();
-  const { refetch: refetchPortfolio } = usePortfolio();
-  const {
-    maple: mapleApy,
-    perena: perenaApy,
-    isLoading: apyLoading,
-  } = useStablesApy();
+  const { refetch: refetchPortfolio } = usePortfolio()
 
   const maxRedeemable = selectedEntry?.yourStake || 0;
 
@@ -237,15 +230,17 @@ export const RedeemPage: React.FC = () => {
             );
             setShowSuccessDrawer(true);
 
-            await loadStablesBalance();
-            await refetchPortfolio();
-            refetchTransactions();
+            await Promise.all([
+              refreshAllWalletData(),
+              refetchPortfolio(),
+              refetchTransactions(),
+            ]);
             setIsRedeeming(false);
             return response;
           } else {
             setErrorMessage(
               redeemResp.error ||
-                "Failed to request withdrawal. Please try again."
+              "Failed to request withdrawal. Please try again."
             );
             setShowErrorDrawer(true);
             setIsRedeeming(false);
@@ -273,9 +268,11 @@ export const RedeemPage: React.FC = () => {
             );
             setShowSuccessDrawer(true);
 
-            await loadStablesBalance();
-            await refetchPortfolio();
-            refetchTransactions();
+            await Promise.all([
+              refreshAllWalletData(),
+              refetchPortfolio(),
+              refetchTransactions(),
+            ]);
             setIsRedeeming(false);
             return response;
           } else {
@@ -310,12 +307,20 @@ export const RedeemPage: React.FC = () => {
     setShowOTPDrawer(false);
   };
 
-  const handleHelpClick = () => {
-    setShowHelpDrawer(true);
-  };
-
   const numericAmount = parseFloat(usdcAmount.replace(/,/g, "")) || 0;
   const hasExceededMax = numericAmount > maxRedeemable;
+  const activePercent = useMemo(() => {
+    if (!maxRedeemable || maxRedeemable <= 0 || !Number.isFinite(numericAmount)) {
+      return null;
+    }
+    const ratio = (numericAmount / maxRedeemable) * 100;
+    const clampedRatio = Math.min(100, Math.max(0, ratio));
+    return presetPercents.reduce((closest, current) => {
+      const currentDiff = Math.abs(current - clampedRatio);
+      const closestDiff = Math.abs(closest - clampedRatio);
+      return currentDiff < closestDiff ? current : closest;
+    }, presetPercents[0]);
+  }, [maxRedeemable, numericAmount]);
 
   if (!selectedEntry) {
     return (
@@ -334,64 +339,23 @@ export const RedeemPage: React.FC = () => {
   return (
     <div className="h-screen bg-[#050505] text-white flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-8">
+      <div className="flex items-center justify-between px-6 pt-8 pb-4">
         <button
           onClick={handleBackClick}
-          className="w-8 h-8 flex items-center justify-center"
+          className="h-10 w-10 rounded-full bg-[#13170a] flex items-center justify-center"
         >
-          <ChevronLeft color="#86B3F7" />
+          <ArrowLeft className="text-white" size={22} />
         </button>
 
-        <h1 className="text-lg font-medium text-white">Redeem</h1>
-
-        <button
-          onClick={handleHelpClick}
-          className="w-8 h-8 bg-[#2a2a2a] rounded-full flex items-center justify-center"
-        >
-          <CircleQuestionMark color="#86B3F7" size={16} />
-        </button>
+        <div className="w-8 h-8" />
+        <div className="w-8 h-8" />
       </div>
 
-      {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto px-6 pb-28 scrollbar-hide">
-        {/* Provider Indicator */}
-        <div className="">
-          <div className="bg-[#1a1a1a] rounded-lg p-3 border border-[#2a2a2a]">
-            <div className="flex items-center gap-3">
-              <img
-                src={
-                  isMaple
-                    ? "/maple.svg"
-                    : isPerena
-                      ? "/perena2.png"
-                      : "/highyield-1.svg"
-                }
-                alt={selectedEntry.name}
-                className="w-8 h-8 object-contain"
-              />
-              <div>
-                <p className="text-white/90 text-sm font-medium">
-                  {isMaple
-                    ? "USD Base"
-                    : isPerena
-                      ? "USD Plus"
-                      : selectedEntry.name}
-                </p>
-                <p className="text-gray-400 text-xs">
-                  {isMaple
-                    ? `Up to ${apyLoading && mapleApy === null ? "..." : mapleApy ? (mapleApy * 100).toFixed(1) : "6.5"}% APY`
-                    : isPerena
-                      ? `Up to ${apyLoading && perenaApy === null ? "..." : perenaApy ? (perenaApy * 100).toFixed(1) : "14"}% APY`
-                      : `${(selectedEntry.apy * 100).toFixed(1)}% APY`}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
 
+      <div className="flex-1 overflow-y-auto px-6 pb-28 scrollbar-hide">
         {/* Amount Input Field */}
-        <div className="py-6">
-          <div className="bg-[#1a1a1a] rounded-lg p-3 flex items-center gap-3">
+        <div className="pt-2 pb-4">
+          <div className="bg-[#13170a] rounded-lg p-3 flex items-center gap-3">
             <input
               type="text"
               value={usdcAmount ? formatNumber(usdcAmount) : ""}
@@ -407,12 +371,7 @@ export const RedeemPage: React.FC = () => {
               placeholder="USDC"
               className="flex-1 bg-transparent text-white text-lg font-medium focus:outline-none"
             />
-            <button
-              onClick={handleMaxClick}
-              className="text-[#86B3F7] text-sm font-medium transition-colors"
-            >
-              Max
-            </button>
+
           </div>
           <p className="text-gray-400 text-xs mt-2 pl-2">
             ≈ {currencySymbol}
@@ -421,51 +380,48 @@ export const RedeemPage: React.FC = () => {
               maximumFractionDigits: 2,
             })}
           </p>
-          {hasExceededMax && (
-            <p className="text-[#FF6B6B] text-xs mt-1 pl-2">
-              Maximum redeemable: {formatNumber(maxRedeemable.toString())} USDC
-            </p>
-          )}
+
         </div>
 
         {/* Predefined USDC Amounts */}
         <div className="pb-4">
           <div className="flex space-x-3">
-            {[maxRedeemable * 0.25, maxRedeemable * 0.5, maxRedeemable * 0.75]
-              .filter((amount) => amount > 0)
-              .map((amount, index) => {
-                const amountStr = amount.toFixed(2);
-                const isActive =
-                  usdcAmount === amountStr ||
-                  Math.abs(parseFloat(usdcAmount || "0") - amount) < 0.01;
-                return (
-                  <button
-                    key={index}
-                    onClick={() => handleAmountSelect(amountStr)}
-                    className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-colors ${
-                      isActive
-                        ? "bg-[#86B3F7] text-black"
-                        : "bg-[#1a1a1a] text-white/80 hover:bg-[#2a2a2a]"
+            {presetPercents.map((percent) => {
+              const amount = (maxRedeemable * (percent / 100)).toFixed(2);
+              const isActive = activePercent === percent && numericAmount > 0;
+              return (
+                <button
+                  key={percent}
+                  onClick={() => handleAmountSelect(amount)}
+                  className={`flex-1 py-2.5 px-2 rounded-full text-sm font-medium transition-colors ${isActive
+                    ? "bg-[#C7EF6B] text-black"
+                    : "bg-[#13170a] text-white/80 hover:bg-[#1a1f10]"
                     }`}
-                  >
-                    {formatNumber(amountStr)} USDC
-                  </button>
-                );
-              })}
+                >
+                  {percent}%
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        {/* Vested Amount Info */}
-        <div className="py-4">
-          <h3 className="text-base font-medium text-white/90 mb-2">
-            Vested amount
+        {/* Balance */}
+        <div className="rounded-lg bg-[#13170a] p-4 mt-3">
+          <h3 className="text-sm text-white/60 mb-0.5 flex items-center gap-1.5">
+            <WalletCards size={16} /> Wallet balance
           </h3>
-          <div className="bg-[#1a1a1a] rounded-lg p-4 border border-[#2a2a2a]">
+          <div className="bg-[#13170a] rounded-lg border border-[#13170a]">
             <div className="flex items-center space-x-3">
-              <Wallet2 size={20} color="#86B3F7" />
+
               <div className="flex-1">
-                <span className="text-gray-400 text-sm">
-                  {formatStables(maxRedeemable)} USDC
+                <span className="text-gray-100 text-sm font-medium">
+                  {(maxRedeemable ?? 0).toLocaleString(
+                    undefined,
+                    {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    },
+                  )} USDC
                 </span>
               </div>
             </div>
@@ -474,7 +430,7 @@ export const RedeemPage: React.FC = () => {
       </div>
 
       {/* Proceed Button - Fixed at bottom */}
-      <div className="px-6 py-4 bg-[#050505] pb-24">
+      <div className="px-6 py-3.5 bg-[#050505] pb-24">
         <button
           onClick={handleProceed}
           disabled={
@@ -483,14 +439,13 @@ export const RedeemPage: React.FC = () => {
             isRedeeming ||
             hasExceededMax
           }
-          className={`w-full py-3 rounded-lg font-semibold text-lg transition-colors ${
-            usdcAmount &&
+          className={`w-full py-3 rounded-full font-semibold text-lg transition-colors ${usdcAmount &&
             parseFloat(usdcAmount) > 0 &&
             !isRedeeming &&
             !hasExceededMax
-              ? "bg-[#86B3F7] text-black hover:bg-[#6da7fd]"
-              : "bg-[#636363] text-white cursor-not-allowed"
-          }`}
+            ? "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
+            : "bg-[#636363] text-white cursor-not-allowed"
+            }`}
         >
           {isRedeeming ? (
             <span className="flex items-center justify-center gap-2">
@@ -498,22 +453,10 @@ export const RedeemPage: React.FC = () => {
               Processing..
             </span>
           ) : (
-            "Redeem"
+            "Withdraw"
           )}
         </button>
       </div>
-
-      {/* Help Drawer */}
-      <HelpDrawer
-        isOpen={showHelpDrawer}
-        onClose={() => setShowHelpDrawer(false)}
-        title="Redeeming Guide"
-        content={[
-          "Redeem your vested funds to withdraw them back to your wallet.",
-          "Enter the amount you want to redeem (up to your vested amount).",
-          "Review all details before confirming your redemption.",
-        ]}
-      />
 
       {/* Error Drawer */}
       <ErrorDrawer
@@ -577,3 +520,4 @@ export const RedeemPage: React.FC = () => {
     </div>
   );
 };
+  const presetPercents = [25, 50, 75, 100] as const;

@@ -1,16 +1,18 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { ChevronLeft, CircleQuestionMark, Eye, EyeOff, RefreshCw } from "lucide-react";
+import { ArrowLeft, CircleQuestionMark, Eye, EyeOff, RefreshCw } from "lucide-react";
 import QRCode from "qrcode";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { usePortfolio, type StakeEntry } from "@/contexts/PortfolioContext";
 import { useWalletCard } from "@/contexts/WalletCardContext";
 import { useTransactions } from "@/contexts/TransactionContext";
-import { RecentTransactionsCard } from "@/components/wallet/RecentTransactionsCard";
+import { RecentTransactionsCard } from "@/components/transactions/RecentTransactionsCard";
+import { TransactionDetailsDrawer } from "@/components/transactions/TransactionDetailsDrawer";
 import { PortfolioSkeleton } from "./PortfolioSkeleton";
 import { formatEarnings, formatStables } from "@/lib/formatters";
 import { getColorForAddress } from "@/lib/qrcode";
+import { TransactionData } from "@/services/transactions/types";
 
 interface StakeEntryItemProps {
   entry: StakeEntry;
@@ -98,6 +100,8 @@ export const PortfolioPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] =
+    useState<TransactionData | null>(null);
   const [isCurrencyRotating, setIsCurrencyRotating] = useState(false);
 
   const walletType =
@@ -158,8 +162,8 @@ export const PortfolioPage: React.FC = () => {
     navigate("/history", { state: { walletType } });
   };
 
-  const handleTransactionClick = (transaction: any) => {
-    navigate(`/transaction-detail/${transaction.id}`);
+  const handleTransactionClick = (transaction: TransactionData) => {
+    setSelectedTransaction(transaction);
   };
 
   const handleHelpClick = () => {
@@ -182,9 +186,9 @@ export const PortfolioPage: React.FC = () => {
         <div className="flex items-center justify-between py-8 mb-2">
           <button
             onClick={handleBackClick}
-            className="w-8 h-8 flex items-center justify-center"
+            className="h-10 w-10 rounded-full bg-[#13170a] flex items-center justify-center"
           >
-            <ChevronLeft color="#C7EF6B" />
+            <ArrowLeft className="text-white" size={22} />
           </button>
           <h1 className="text-lg font-medium text-white">Portfolio</h1>
           <button
@@ -409,6 +413,12 @@ export const PortfolioPage: React.FC = () => {
           "Total stake shows your combined investment across all validators.",
           "Earnings can be viewed weekly, monthly, or yearly. Next payout shows when you'll receive rewards.",
         ]}
+      />
+
+      <TransactionDetailsDrawer
+        transaction={selectedTransaction}
+        isOpen={selectedTransaction !== null}
+        onClose={() => setSelectedTransaction(null)}
       />
 
       <BottomNavigation currentPath="/portfolio" />

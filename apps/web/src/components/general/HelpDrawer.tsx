@@ -22,7 +22,7 @@ export const HelpDrawer: React.FC<HelpDrawerProps> = ({
 }) => {
   return (
     <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DrawerContent>
+     <DrawerContent className="bg-[#050505] border-[#2a2a2a]">
         <DrawerHeader>
           <DrawerTitle className="text-center text-xl font-semibold text-white">
             {title}
@@ -40,7 +40,7 @@ export const HelpDrawer: React.FC<HelpDrawerProps> = ({
         <DrawerFooter>
           <button
             onClick={onClose}
-            className="w-full py-3 rounded-lg font-semibold text-lg bg-[#C7EF6B] text-black hover:bg-[#B8E55A] transition-colors"
+            className="w-full h-12 rounded-full bg-[#C7EF6B] text-black text-base font-semibold"
           >
             Got it
           </button>

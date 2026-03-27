@@ -9,7 +9,7 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { useAuth } from "@/contexts/AuthContext";
-import { ErrorDrawer } from "@/components/ui/ErrorDrawer";
+import { ErrorDrawer } from "@/components/general/ErrorDrawer";
 import { CheckCircle } from "lucide-react";
 
 interface ForgotPasswordFormData {
@@ -136,13 +136,12 @@ export const ForgotPasswordForm: React.FC = () => {
               value={formData.email}
               onChange={handleInputChange}
               placeholder="example@gmail.com"
-              className={`w-full px-4 py-3 bg-[#121212] border rounded-lg text-white placeholder-gray-400 focus:outline-none transition-colors ${
-                currentState === "active" ||
-                currentState === "email-sent" ||
-                currentState === "success"
+              className={`w-full px-4 py-3 bg-[#121212] border rounded-lg text-white placeholder-gray-400 focus:outline-none transition-colors ${currentState === "active" ||
+                  currentState === "email-sent" ||
+                  currentState === "success"
                   ? "border-[#C7EF6B]"
                   : "border-[#121212]"
-              }`}
+                }`}
             />
           </div>
 
@@ -150,17 +149,16 @@ export const ForgotPasswordForm: React.FC = () => {
           <button
             type="submit"
             disabled={!isFormValid || isSubmitting}
-            className={`w-full py-3 px-6 rounded-lg font-semibold text-lg transition-colors ${
-              isFormValid && !isSubmitting
+            className={`w-full py-3 px-6 rounded-lg font-semibold text-lg transition-colors ${isFormValid && !isSubmitting
                 ? "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
                 : "bg-[#636363] text-white cursor-not-allowed"
-            }`}
+              }`}
           >
             {isSubmitting ? "Processing..." : "Reset password"}
           </button>
         </form>
 
-        {/* Drawer for Email Sent and Success States */}
+     
         <Drawer
           open={currentState === "email-sent" || currentState === "success"}
           onOpenChange={(open) => !open && handleDrawerClose()}
@@ -199,7 +197,7 @@ export const ForgotPasswordForm: React.FC = () => {
                   Go to login
                 </button>
               )}
-            </DrawerFooter> 
+            </DrawerFooter>
           </DrawerContent>
         </Drawer>
 

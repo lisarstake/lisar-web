@@ -193,7 +193,7 @@ export class WalletService implements IWalletApiService {
     }
   }
 
-  // Get Solana wallet balance (always fetches all token balances)
+  // Get Solana wallet balance
   async getSolanaBalance(
     walletAddress: string,
   ): Promise<SolanaBalanceResponse> {

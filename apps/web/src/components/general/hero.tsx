@@ -18,15 +18,15 @@ const Hero = () => {
           <div className="space-y-8 order-1 md:order-1">
             <div>
               <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-4">
-                Earn, Save, and Spend Globally
+                An Easy Way To Grow Your Assets
               </h1>
               <p className="text-lg md:text-xl text-gray-600 italic font-playfair">
-                A DeFi Bank Built for Everyone
+              Deposit, Earn, Withdraw Anytime.
               </p>
             </div>
 
             <p className="text-lg text-gray-700 leading-relaxed">
-              Earn, save, and spend globally with crypto. Earn competitive returns while keeping full custody of your funds.
+              Earn yields on your assets with full self custody. Use your assets when you need them. Grow them while you don’t.
             </p>
 
             {/* CTA Buttons */}

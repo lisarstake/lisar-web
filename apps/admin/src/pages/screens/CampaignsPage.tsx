@@ -77,7 +77,7 @@ export const CampaignsPage: React.FC = () => {
             {/* Card 2: Tier Breakdown */}
             <SummaryCard
               title="Tier Distribution"
-              subtitle="Users per tier"
+              subtitle="Users per tier (tier 1, 2 and 3)"
               value={`${(campaignOverview?.users_by_tier.tier_1 || 0).toLocaleString()} -  ${(campaignOverview?.users_by_tier.tier_2 || 0).toLocaleString()} - ${(campaignOverview?.users_by_tier.tier_3 || 0).toLocaleString()}`}
               color="blue"
               isLoading={isLoadingOverview}

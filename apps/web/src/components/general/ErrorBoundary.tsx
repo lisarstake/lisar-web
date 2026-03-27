@@ -110,7 +110,7 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({ error, onReset }) => {
       <div className="max-w-md w-full text-center">
         <div className="mb-6 flex justify-center">
           <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center">
-            <AlertCircle size={30} color="#ef4444" />
+            <AlertCircle size={22} color="#ef4444" />
           </div>
         </div>
 
@@ -128,16 +128,16 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({ error, onReset }) => {
             <>
               <button
                 onClick={handleReload}
-                className="w-full py-3 px-4 rounded-xl font-semibold bg-[#C7EF6B] text-black hover:bg-[#B8E55A] transition-colors flex items-center justify-center space-x-2"
+                className="w-full py-2.5 px-4 rounded-full font-semibold bg-[#C7EF6B] text-black hover:bg-[#B8E55A] transition-colors flex items-center justify-center space-x-2"
               >
-                <RefreshCw size={18} />
+                <RefreshCw size={166} />
                 <span>Reload Page</span>
               </button>
               <button
                 onClick={handleGoHome}
-                className="w-full py-3 px-4 rounded-xl font-semibold bg-[#1a1a1a] text-white/90 hover:bg-[#2a2a2a] transition-colors flex items-center justify-center space-x-2 border border-[#2a2a2a]"
+                className="w-full py-2.5 px-4 rounded-full font-semibold bg-[#1a1a1a] text-white/90 hover:bg-[#2a2a2a] transition-colors flex items-center justify-center space-x-2 border border-[#2a2a2a]"
               >
-                <Home size={18} />
+                <Home size={166} />
                 <span>Return back</span>
               </button>
             </>
@@ -145,13 +145,13 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({ error, onReset }) => {
             <>
               <button
                 onClick={onReset}
-                className="w-full py-3 px-4 rounded-xl font-semibold bg-[#C7EF6B] text-black hover:bg-[#B8E55A] transition-colors flex items-center justify-center space-x-2"
+                className="w-full py-2.5 px-4 rounded-full font-semibold bg-[#C7EF6B] text-black hover:bg-[#B8E55A] transition-colors flex items-center justify-center space-x-2"
               >
                 <span>Try Again</span>
               </button>
               <button
                 onClick={handleGoHome}
-                className="w-full py-3 px-4 rounded-xl font-semibold bg-[#1a1a1a] text-white/90 hover:bg-[#2a2a2a] transition-colors flex items-center justify-center space-x-2 border border-[#2a2a2a]"
+                className="w-full py-2.5 px-4 rounded-full font-semibold bg-[#1a1a1a] text-white/90 hover:bg-[#2a2a2a] transition-colors flex items-center justify-center space-x-2 border border-[#2a2a2a]"
               >
                 <span>Return back</span>
               </button>

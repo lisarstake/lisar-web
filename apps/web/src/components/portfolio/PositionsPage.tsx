@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { ChevronLeft, Info, CircleQuestionMark } from "lucide-react";
+import { ArrowLeft, Info, CircleQuestionMark } from "lucide-react";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { EmptyState } from "@/components/general/EmptyState";
 import { usePortfolio, type StakeEntry } from "@/contexts/PortfolioContext";
 import { useWallet } from "@/contexts/WalletContext";
+import { useTransactions } from "@/contexts/TransactionContext";
 import { formatEarnings, formatStables } from "@/lib/formatters";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -19,7 +20,7 @@ import { OTPVerificationDrawer } from "@/components/auth/OTPVerificationDrawer";
 import { totpService } from "@/services/totp";
 import { Button } from "../ui/button";
 import { mapleService, perenaService, walletService } from "@/services";
-import { ErrorDrawer } from "@/components/ui/ErrorDrawer";
+import { ErrorDrawer } from "@/components/general/ErrorDrawer";
 import { SuccessDrawer } from "@/components/ui/SuccessDrawer";
 import { LoaderCircle } from "lucide-react";
 
@@ -116,8 +117,9 @@ export const PositionsPage: React.FC = () => {
     (location.state as { walletType?: string })?.walletType || "staking";
   const isSavings = walletType === "savings";
 
-  const { setMode, stakeEntries, isLoading } = usePortfolio();
-  const { ethereumWalletAddress, solanaWalletAddress, ethereumWalletId, solanaWalletId } = useWallet();
+  const { setMode, stakeEntries, isLoading, refetch: refetchPortfolio } = usePortfolio();
+  const { ethereumWalletAddress, solanaWalletAddress, ethereumWalletId, solanaWalletId, refreshAllWalletData } = useWallet();
+  const { refetch: refetchTransactions } = useTransactions();
 
   useEffect(() => {
     setMode(isSavings ? "savings" : "staking");
@@ -222,6 +224,11 @@ export const PositionsPage: React.FC = () => {
           });
 
           if (redeemResp.success) {
+            await Promise.all([
+              refreshAllWalletData(),
+              refetchPortfolio(),
+              refetchTransactions(),
+            ]);
             setSuccessMessage(
               "Withdrawal request submitted successfully. Your funds will be available after processing."
             );
@@ -229,7 +236,7 @@ export const PositionsPage: React.FC = () => {
           } else {
             setErrorMessage(
               redeemResp.error ||
-                "Failed to request withdrawal. Please try again."
+              "Failed to request withdrawal. Please try again."
             );
             setShowErrorDrawer(true);
           }
@@ -259,6 +266,11 @@ export const PositionsPage: React.FC = () => {
           });
 
           if (burnResp.success) {
+            await Promise.all([
+              refreshAllWalletData(),
+              refetchPortfolio(),
+              refetchTransactions(),
+            ]);
             setSuccessMessage(
               "Withdrawal successful! Your USDC will be available in your wallet shortly."
             );
@@ -295,9 +307,9 @@ export const PositionsPage: React.FC = () => {
         <div className="flex items-center justify-between py-8 mb-2">
           <button
             onClick={handleBackClick}
-            className="w-8 h-8 flex items-center justify-center"
+            className="h-10 w-10 rounded-full bg-[#13170a] flex items-center justify-center"
           >
-            <ChevronLeft color="#C7EF6B" />
+            <ArrowLeft className="text-white" size={22} />
           </button>
           <h1 className="text-lg font-medium text-white">My Vest</h1>
           <button
@@ -414,11 +426,10 @@ export const PositionsPage: React.FC = () => {
               <button
                 onClick={handleWithdrawClick}
                 disabled={isProcessing}
-                className={`w-full py-3 rounded-xl font-semibold text-lg transition-colors ${
-                  isProcessing
-                    ? "bg-[#636363] text-white cursor-not-allowed opacity-70"
-                    : "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
-                }`}
+                className={`w-full py-3 rounded-xl font-semibold text-lg transition-colors ${isProcessing
+                  ? "bg-[#636363] text-white cursor-not-allowed opacity-70"
+                  : "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
+                  }`}
               >
                 {isProcessing ? (
                   <span className="flex items-center justify-center gap-2">

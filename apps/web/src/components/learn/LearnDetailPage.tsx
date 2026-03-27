@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ChevronLeft, CircleQuestionMark } from "lucide-react";
+import { ArrowLeft, CircleQuestionMark } from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { mockLearnContent, LearnContent } from "@/mock/learn";
@@ -37,54 +37,54 @@ export const LearnDetailPage: React.FC = () => {
   // Track completed mandatory videos
   const markVideoAsCompleted = (videoSlug: string): boolean => {
     if (!content || content.category !== "mandatory") return false;
-    
+
     const completedKey = "onboarding_videos_completed";
     const completed = JSON.parse(localStorage.getItem(completedKey) || "[]");
-    
+
     if (!completed.includes(videoSlug)) {
       completed.push(videoSlug);
       localStorage.setItem(completedKey, JSON.stringify(completed));
-      
+
       // Check if all 3 mandatory videos are completed
       const mandatoryVideos = learnContent
         .filter((c) => c.category === "mandatory")
         .map((c) => c.slug);
-      
+
       const allCompleted = mandatoryVideos.every((slug) =>
         completed.includes(slug)
       );
-      
+
       return allCompleted;
     }
-    
+
     // Check if all are already completed
     const mandatoryVideos = learnContent
       .filter((c) => c.category === "mandatory")
       .map((c) => c.slug);
-    
+
     const allCompleted = mandatoryVideos.every((slug) =>
       completed.includes(slug)
     );
-    
+
     return allCompleted;
   };
 
   const updateOnboardingStatus = async () => {
     try {
       if (!state.user?.user_id) return;
-      
+
       const response = await authService.updateOnboardingStatus(
         state.user.user_id,
         { is_onboarded: true }
       );
-      
+
       if (response.success && response.data) {
         // Refresh user data to update onboarding status
         await refreshUser();
-        
+
         // Clear completed videos tracking
         localStorage.removeItem("onboarding_videos_completed");
-        
+
         // Redirect to wallet after a brief delay
         setTimeout(() => {
           navigate("/wallet");
@@ -97,16 +97,16 @@ export const LearnDetailPage: React.FC = () => {
 
   const handleVideoEnded = () => {
     if (!content) return;
-    
+
     // Mark mandatory video as completed and check if all are done
     const allMandatoryCompleted = markVideoAsCompleted(content.slug);
-    
+
     // If all mandatory videos are completed and user is not onboarded, update status
     if (allMandatoryCompleted && state.user && !state.user.is_onboarded) {
       updateOnboardingStatus();
       return;
     }
-    
+
     const nextVideo = findNextVideoInCategory(content);
     if (nextVideo) {
       navigate(`/learn/${nextVideo.slug}`);
@@ -211,9 +211,9 @@ export const LearnDetailPage: React.FC = () => {
       <div className="flex items-center justify-between px-6 py-8">
         <button
           onClick={handleBackClick}
-          className="w-8 h-8 flex items-center justify-center"
+          className="h-10 w-10 rounded-full bg-[#13170a] flex items-center justify-center"
         >
-          <ChevronLeft color="#C7EF6B" />
+          <ArrowLeft className="text-white" size={22} />
         </button>
 
         <button
@@ -261,13 +261,12 @@ export const LearnDetailPage: React.FC = () => {
                 contentSentences.map((sentence, index) => (
                   <span
                     key={index}
-                    className={`text-sm leading-relaxed transition-all duration-500 ${
-                      index === currentHighlight
-                        ? "text-[#C7EF6B] bg-[#C7EF6B]/10 px-0.5 py-1 rounded"
-                        : index < currentHighlight
-                          ? "text-gray-400"
-                          : "text-gray-300"
-                    }`}
+                    className={`text-sm leading-relaxed transition-all duration-500 ${index === currentHighlight
+                      ? "text-[#C7EF6B] bg-[#C7EF6B]/10 px-0.5 py-1 rounded"
+                      : index < currentHighlight
+                        ? "text-gray-400"
+                        : "text-gray-300"
+                      }`}
                   >
                     {sentence}
                     {index < contentSentences.length - 1 ? " " : ""}

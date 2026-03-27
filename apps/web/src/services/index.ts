@@ -70,3 +70,7 @@ export * from "./maple";
 export * from "./kyc";
 // Export campaign services
 export * from "./campaign";
+// Export ramp services
+export * from "./ramp";
+// Export virtual-account services
+export * from "./virtual-account";

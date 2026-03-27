@@ -77,7 +77,8 @@ class PriceService {
         // On 429 (rate limit), treat cache as fresh so we don't retry for CACHE_DURATION
         const is429 =
           (error instanceof Error && error.message?.includes("429")) ||
-          (typeof (error as any)?.response?.status === "number" && (error as any).response.status === 429);
+          (typeof (error as any)?.response?.status === "number" &&
+            (error as any).response.status === 429);
         if (is429) {
           this.lastFetch = now;
         }
@@ -90,7 +91,7 @@ class PriceService {
   private async fetchPricesFromAPI(): Promise<PriceData> {
     const [cryptoResponse, fiatResponse] = await Promise.all([
       fetch(
-        "https://api.coingecko.com/api/v3/simple/price?ids=solana,livepeer&vs_currencies=usd"
+        "https://api.coingecko.com/api/v3/simple/price?ids=solana,livepeer&vs_currencies=usd",
       ),
       fetch("https://api.exchangerate-api.com/v4/latest/USD"),
     ]);
@@ -141,17 +142,20 @@ class PriceService {
       case "USD":
         return lptAmount * lptPriceInUsd;
       case "NGN":
-        return (lptAmount * lptPriceInUsd) * prices.ngn;
+        return lptAmount * lptPriceInUsd * prices.ngn;
       case "EUR":
-        return (lptAmount * lptPriceInUsd) * prices.eur;
+        return lptAmount * lptPriceInUsd * prices.eur;
       case "GBP":
-        return (lptAmount * lptPriceInUsd) * prices.gbp;
+        return lptAmount * lptPriceInUsd * prices.gbp;
       default:
         return lptAmount * lptPriceInUsd;
     }
   }
 
-  async convertFiatToLpt(fiatAmount: number, fiatCode: string): Promise<number> {
+  async convertFiatToLpt(
+    fiatAmount: number,
+    fiatCode: string,
+  ): Promise<number> {
     const prices = await this.getPrices();
     const lptPriceInUsd = prices.lpt;
 
@@ -169,7 +173,10 @@ class PriceService {
     }
   }
 
-  async convertFiatToUsd(fiatAmount: number, fiatCode: string): Promise<number> {
+  async convertFiatToUsd(
+    fiatAmount: number,
+    fiatCode: string,
+  ): Promise<number> {
     const prices = await this.getPrices();
 
     switch (fiatCode.toUpperCase()) {
@@ -189,9 +196,26 @@ class PriceService {
     }
   }
 
+  async convertUsdToFiat(usdAmount: number, fiatCode: string): Promise<number> {
+    const prices = await this.getPrices();
+
+    switch (fiatCode.toUpperCase()) {
+      case "USD":
+        return usdAmount;
+      case "NGN":
+        return usdAmount * prices.ngn;
+      case "EUR":
+        return usdAmount * prices.eur;
+      case "GBP":
+        return usdAmount * prices.gbp;
+      default:
+        return usdAmount;
+    }
+  }
+
   getCurrencySymbol(fiatCode: string): string {
     const currency = SUPPORTED_CURRENCIES.find(
-      (c) => c.code === fiatCode.toUpperCase()
+      (c) => c.code === fiatCode.toUpperCase(),
     );
     return currency?.symbol || "$";
   }

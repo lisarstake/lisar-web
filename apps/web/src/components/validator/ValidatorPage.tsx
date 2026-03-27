@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { OrchestratorList } from "../validator/OrchestratorList";
 import { useOrchestrators } from "@/contexts/OrchestratorContext";
 import { FilterType } from "@/types/wallet";
-import { ChevronLeft, CircleQuestionMark } from "lucide-react";
+import { ArrowLeft, CircleQuestionMark } from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 
@@ -80,9 +80,9 @@ export const ValidatorPage: React.FC = () => {
       <div className="flex items-center justify-between px-6 py-8">
         <button
           onClick={handleBackClick}
-          className="w-8 h-8 flex items-center justify-center"
+          className="h-10 w-10 rounded-full bg-[#13170a] flex items-center justify-center"
         >
-          <ChevronLeft color="#C7EF6B" />
+          <ArrowLeft className="text-white" size={22} />
         </button>
 
         <h1 className="text-lg font-medium text-white">{tierName}</h1>

@@ -2,7 +2,7 @@
  * Authentication API Types
  */
 
-import { env } from '@/lib/env'
+import { env } from "@/lib/env";
 
 // Base API Response
 export interface AuthApiResponse<T> {
@@ -96,7 +96,13 @@ export interface ResetPasswordResponse {
   success: boolean;
 }
 
-// User Profile Types 
+// User Profile Types
+export interface LinkedAccount {
+  account_number: string;
+  bank_code: string;
+  bank_name: string;
+}
+
 export interface User {
   username?: string;
   is_totp_enabled?: boolean;
@@ -112,6 +118,7 @@ export interface User {
   country?: string;
   state?: string;
   fiat_type?: string;
+  linked_account?: LinkedAccount | null;
   fiat_balance: number;
   lpt_balance: number;
   is_suspended: boolean;
@@ -121,7 +128,6 @@ export interface User {
   created_date: string;
   updated_at: string;
 }
-
 
 export interface Wallet {
   id: string;
@@ -145,6 +151,7 @@ export interface UpdateProfileRequest {
   country?: string;
   state?: string;
   fiat_type?: string;
+  linked_account?: LinkedAccount | null;
 }
 
 export interface UpdateOnboardingStatusRequest {
@@ -209,5 +216,5 @@ export interface AuthConfig {
 export const AUTH_CONFIG: AuthConfig = {
   baseUrl: env.VITE_API_BASE_URL,
   timeout: 100000,
-  retryAttempts: 3
+  retryAttempts: 3,
 };
