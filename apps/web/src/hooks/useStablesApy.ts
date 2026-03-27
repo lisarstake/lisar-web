@@ -26,8 +26,6 @@ export const useStablesApy = (): StablesApy => {
   );
   const [delegatedGrowthApyLoading, setDelegatedGrowthApyLoading] =
     useState(false);
-
-  // Ensure APYs are loaded when hook is used
   useEffect(() => {
     loadApys();
   }, [loadApys]);
@@ -51,7 +49,6 @@ export const useStablesApy = (): StablesApy => {
         : typeof apyValue === "number"
           ? apyValue
           : 0;
-
     return parsed / 100;
   }, [delegateId, orchestrators]);
 
@@ -92,9 +89,7 @@ export const useStablesApy = (): StablesApy => {
               orchestrator.address?.toLowerCase() === delegateId,
           );
 
-          if (!matchedOrchestrator?.apy) {
-            continue;
-          }
+          if (!matchedOrchestrator?.apy) continue;
 
           const parsed =
             typeof matchedOrchestrator.apy === "string"

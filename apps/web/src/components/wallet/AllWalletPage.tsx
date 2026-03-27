@@ -43,6 +43,7 @@ const YIELD_CHART_MIN_PERCENT = 0.8;
 const YIELD_CHART_MAX_PERCENT = 0.45;
 const YIELD_SHADOW_OFFSET = 100;
 const YIELD_MARKER_INDEXES = [1, 3, 5, 7];
+const NAIRA_OPTION_ENABLED = false;
 
 export const AllWalletPage: React.FC = () => {
   const navigate = useNavigate();
@@ -684,7 +685,12 @@ export const AllWalletPage: React.FC = () => {
           <div className="pb-2 space-y-3">
             <button
               onClick={() => handleTransferOptionSelect("naira")}
-              className="w-full rounded-xl bg-[#13170a] px-4 py-4 text-left"
+              disabled={!NAIRA_OPTION_ENABLED}
+              className={`w-full rounded-xl px-4 py-4 text-left ${
+                NAIRA_OPTION_ENABLED
+                  ? "bg-[#13170a]"
+                  : "bg-[#13170a] opacity-50 cursor-not-allowed"
+              }`}
             >
               <div className="flex items-center gap-3">
                 <img src="/ng_flag.png" alt="Naira" className="w-10 h-10" />

@@ -441,13 +441,36 @@ export class PerenaService implements IPerenaApiService {
       });
 
       const data = response.data?.data ?? response.data;
+      const normalizedYieldAmount =
+        typeof data === "number"
+          ? data
+          : (data?.earnings ??
+              data?.yieldAmount ??
+              data?.weeklyUsdYield ??
+              data?.yield ??
+              0);
+
       return {
         success: true,
         data: {
-          yieldAmount:
+          yieldAmount: normalizedYieldAmount,
+          earnings:
             typeof data === "number"
-              ? data
-              : (data?.yieldAmount ?? data?.weeklyUsdYield ?? data?.yield ?? 0),
+              ? normalizedYieldAmount
+              : (data?.earnings ?? normalizedYieldAmount),
+          earningsFormatted:
+            typeof data === "object" ? data?.earningsFormatted : undefined,
+          currentBalance:
+            typeof data === "object" ? data?.currentBalance : undefined,
+          currentDay: typeof data === "object" ? data?.currentDay : undefined,
+          weekStart: typeof data === "object" ? data?.weekStart : undefined,
+          weekEnd: typeof data === "object" ? data?.weekEnd : undefined,
+          priceAtWeekStart:
+            typeof data === "object" ? data?.priceAtWeekStart : undefined,
+          currentPrice: typeof data === "object" ? data?.currentPrice : undefined,
+          priceChange: typeof data === "object" ? data?.priceChange : undefined,
+          priceChangeFormatted:
+            typeof data === "object" ? data?.priceChangeFormatted : undefined,
         },
       };
     } catch (error: any) {

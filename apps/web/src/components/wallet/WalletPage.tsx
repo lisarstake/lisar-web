@@ -18,6 +18,8 @@ import { useWalletCard } from "@/contexts/WalletCardContext";
 import { useTransactions } from "@/contexts/TransactionContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useStablesApy } from "@/hooks/useStablesApy";
+import { usePerenaWeeklyYield } from "@/hooks/usePerenaWeeklyYield";
+import { usePrices } from "@/hooks/usePrices";
 import { getEarliestUnbondingTime } from "@/lib/unbondingTime";
 import { TransactionData } from "@/services/transactions/types";
 import { delegationService } from "@/services";
@@ -89,6 +91,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
     highyieldBalance,
     stablesBalance,
     solanaUsdcBalance,
+    solanaWalletAddress,
     refreshAllWalletData,
   } = useWallet();
   const {
@@ -108,6 +111,10 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
     displayFiatSymbol,
   } = useWalletCard();
   const { transactions, isLoading: transactionsLoading } = useTransactions();
+  const { prices } = usePrices();
+  const { data: perenaWeeklyYieldData } = usePerenaWeeklyYield(
+    solanaWalletAddress || null,
+  );
 
   const isStakingWallet = walletType === "staking";
   const stakedBalance = parseFloat(delegatorStakeProfile?.currentStake || "0");
@@ -138,7 +145,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
       : activeWalletCard?.projectedInterestUsd ?? 0;
   const tokenLiveApyPercent = useMemo(() => {
     if (isStakingWallet) {
-      if (growthApy !== null) return growthApy * 100;
+      if (growthApy !== null) return 46;
       const fallback = parseFloat(activeWalletCard?.apyPercent || "");
       return Number.isFinite(fallback) ? fallback : null;
     }
@@ -151,7 +158,22 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
     : "Earn yields daily with instant withdrawal.";
 
   const sevenDayEarnings = useMemo(() => {
-    const dailyInterest = weeklyEarningsAmount > 0 ? weeklyEarningsAmount / 7 : 0;
+    const ngnRate = prices.ngn || 0;
+    const multiplier = displayCurrency === "NGN" ? ngnRate : 1;
+
+    // Savings: use weekly earnings from API and spread over seven days.
+    // LPT: use existing calculated weekly earnings and spread over seven days.
+    const weeklyTotal = !isStakingWallet
+      ? (perenaWeeklyYieldData?.earnings ??
+          perenaWeeklyYieldData?.yieldAmount ??
+          0) * multiplier
+      : weeklyEarningsAmount;
+    const dailyYield = weeklyTotal > 0 ? weeklyTotal / 7 : 0;
+    const dailyYields = Array.from({ length: 7 }).map(() => dailyYield);
+
+    const totalYield = dailyYields.reduce((sum, value) => sum + value, 0);
+    const baseBalance = Math.max(equivalentBalance - totalYield, 0);
+
     const formatDate = (value: Date) => {
       const day = `${value.getDate()}`.padStart(2, "0");
       const month = `${value.getMonth() + 1}`.padStart(2, "0");
@@ -159,17 +181,30 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
       return `${day}-${month}-${year}`;
     };
 
-    return Array.from({ length: 7 }).map((_, index) => {
+    let runningBalance = baseBalance;
+    const oldestToNewest = Array.from({ length: 7 }).map((_, index) => {
+      const offsetFromToday = 6 - index;
       const date = new Date();
-      date.setDate(date.getDate() - index);
+      date.setDate(date.getDate() - offsetFromToday);
+      const interest = dailyYields[offsetFromToday] || 0;
+      runningBalance += interest;
       return {
-        id: `earning-${index}`,
+        id: `earning-${offsetFromToday}`,
         date: formatDate(date),
-        interest: dailyInterest,
-        balance: equivalentBalance,
+        interest,
+        balance: runningBalance,
       };
     });
-  }, [equivalentBalance, weeklyEarningsAmount]);
+
+    return oldestToNewest.reverse();
+  }, [
+    displayCurrency,
+    equivalentBalance,
+    isStakingWallet,
+    perenaWeeklyYieldData,
+    prices.ngn,
+    weeklyEarningsAmount,
+  ]);
 
   const pendingUnbondingData = useMemo(() => {
     const pending = delegatorTransactions?.pendingStakeTransactions ?? [];
@@ -247,7 +282,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
           maximumFractionDigits: 2,
         })}`,
         availableBalance: ngnBalance,
-        enabled: true,
+        enabled: false,
       },
       {
         id: "crypto",
