@@ -312,11 +312,11 @@ export const YieldCreateFlexiblePage: React.FC = () => {
           setShowSuccessDrawer(false);
           navigate(mode === "staking" ? "/wallet/staking" : "/wallet/savings");
         }}
-        title="You've topped up!"
+        title="You've deposited!"
         message={
           mode === "staking"
-            ? "Your top up request processed successfully and your wallet has been credited."
-            : "Your top up request processed successfully and your wallet has been credited."
+            ? "Your deposit processed successfully and your wallet has been credited."
+            : "Your deposit processed successfully and your wallet has been credited."
         }
       />
 
@@ -338,18 +338,18 @@ export const YieldCreateFlexiblePage: React.FC = () => {
             <div className="flex justify-center mb-2">
               <div className="w-24 h-24 bg-[#C7EF6B]/20 rounded-full my-3 flex items-center justify-center relative overflow-hidden">
                 <img
-                  src="/crypto.png"
+                  src="/fund.png"
                   alt="Confirm"
-                  className="w-16 h-16 object-cover"
+                  className="w-20 h-20 object-cover"
                 />
               </div>
             </div>
             <DrawerDescription className="text-sm text-white/60 px-4">
-              Proceed to top up your {" "}
-              {mode === "staking" ? "staking" : "savings"} wallet. Once confirmed you will earning rewards at {" "}
+              Deposit to your {" "}
+              {mode === "staking" ? "Livepeer" : "USDC"} wallet. Once confirmed you will start earning rewards at {" "}
               {mode === "staking"
                 ? `${(selectedOrchestratorData?.apy || 0).toFixed(1)}%`
-                : `${apyLoading && perenaApy === null ? "..." : perenaApy ? (perenaApy * 100).toFixed(1) : "10"}%`}
+                : `${apyLoading && perenaApy === null ? "..." : perenaApy ? (perenaApy * 100).toFixed(1) : "10"}%`} APY
             </DrawerDescription>
           </DrawerHeader>
           <DrawerFooter className="space-y-3">

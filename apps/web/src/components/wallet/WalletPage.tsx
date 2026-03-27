@@ -417,7 +417,11 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
         openNairaConvertPage("deposit");
       } else {
         setShowTopUpDrawer(false);
-        navigate("/wallet/deposit/crypto");
+        if (currentWalletType === "savings") {
+          navigate("/wallet/yields/create-flexible?mode=savings&source=usdc");
+        } else {
+          navigate("/wallet/yields/create-flexible?mode=staking&source=lpt");
+        }
       }
       return;
     }
