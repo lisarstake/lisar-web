@@ -193,7 +193,7 @@ export default function EarningsBreakdownPage() {
             Earn even more by funding your plans
           </p>
           <button
-            onClick={() => navigate("/deposit")}
+            onClick={() => navigate("/wallet?open=deposit")}
             className="w-full py-2.5 rounded-lg bg-[#86B3F7] hover:bg-[#96C3F7] text-black text-sm font-medium transition-colors"
           >
             Add more cash

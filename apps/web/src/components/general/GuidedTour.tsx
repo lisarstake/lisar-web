@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback, useRef } from "react";
 import { X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useGuidedTourContext } from "@/contexts/GuidedTourContext";
-import { getTourConfig, LEARN_TOUR_ID } from "@/lib/tourConfig";
+import { ALL_WALLET_TOUR_ID, getTourConfig, LEARN_TOUR_ID } from "@/lib/tourConfig";
 import { TourStep } from "@/types/tour";
 import { useAuth } from "@/contexts/AuthContext";
 import { authService } from "@/services/auth";
@@ -74,6 +74,19 @@ export const GuidedTour: React.FC = () => {
   const [showSkipConfirmation, setShowSkipConfirmation] = useState(false);
   const rafIdRef = useRef<number | null>(null);
   const scrollContainersRef = useRef<Element[]>([]);
+
+  const markUserOnboarded = useCallback(async () => {
+    try {
+      if (authState.user?.user_id && authState.user?.is_onboarded === false) {
+        await authService.updateOnboardingStatus(authState.user.user_id, {
+          is_onboarded: true,
+        });
+        await refreshUser();
+      }
+    } catch (error) {
+      // Failed to update onboarding status - user can proceed anyway
+    }
+  }, [authState.user?.is_onboarded, authState.user?.user_id, refreshUser]);
 
   useEffect(() => {
     setShowSkipConfirmation(false);
@@ -364,10 +377,12 @@ export const GuidedTour: React.FC = () => {
     setShowSkipConfirmation(true);
   };
 
-  const handleConfirmSkip = () => {
+  const handleConfirmSkip = async () => {
+    if (tourState.tourId === ALL_WALLET_TOUR_ID) {
+      await markUserOnboarded();
+    }
     skipTour();
     setShowSkipConfirmation(false);
-    navigate("/learn");
   };
 
   const handleCancelSkip = () => {
@@ -383,17 +398,7 @@ export const GuidedTour: React.FC = () => {
 
     // Special handling for learn tour "Watch" button
     if (tourState.tourId === LEARN_TOUR_ID && currentStep?.id === "learn-onboarding") {
-      // Mark user as onboarded
-      try {
-        if (authState.user?.user_id && authState.user?.is_onboarded === false) {
-          await authService.updateOnboardingStatus(authState.user.user_id, {
-            is_onboarded: true,
-          });
-          await refreshUser();
-        }
-      } catch (error) {
-        // Failed to update onboarding status - user can proceed anyway
-      }
+      await markUserOnboarded();
       
       // Complete the tour and navigate to first video
       completeTour();
@@ -405,8 +410,13 @@ export const GuidedTour: React.FC = () => {
     }
 
     if (isLastStep) {
+      if (tourState.tourId === ALL_WALLET_TOUR_ID) {
+        await markUserOnboarded();
+      }
       completeTour();
-      navigate("/learn");
+      if (tourState.tourId !== ALL_WALLET_TOUR_ID) {
+        navigate("/learn");
+      }
     } else {
       nextStep();
     }
@@ -463,13 +473,14 @@ export const GuidedTour: React.FC = () => {
           left: `${spotlightPosition.left}px`,
           width: `${spotlightPosition.width}px`,
           height: `${spotlightPosition.height}px`,
-          boxShadow: "0 0 0 2px rgba(199, 239, 107, 0.1)",
+          boxShadow:
+            "0 0 0 1px rgba(199, 239, 107, 0.18), 0 0 24px rgba(199, 239, 107, 0.22)",
         }}
       />
 
       {/* Tooltip */}
       <div
-        className="fixed bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-5 shadow-2xl transition-all duration-300"
+        className="fixed bg-[#050505] border border-[#2a2a2a] rounded-2xl p-5 shadow-2xl transition-all duration-300"
         style={{
           zIndex: 10000,
           ...tooltipPosition,
@@ -484,7 +495,7 @@ export const GuidedTour: React.FC = () => {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between mb-3">
-          <h3 className="text-white font-semibold text-lg pr-6">
+          <h3 className="text-white font-semibold text-base pr-6">
             {showSkipConfirmation ? "Skip Guide?" : currentStep.title}
           </h3>
           {canSkipCurrentStep && (
@@ -504,7 +515,7 @@ export const GuidedTour: React.FC = () => {
         </div>
 
         {/* Description or skip prompt */}
-        <p className="text-gray-300 text-sm mb-4 leading-relaxed">
+        <p className="text-[#c8c8c8] text-sm mb-4 leading-relaxed">
           {showSkipConfirmation
             ? "Are you sure you want to skip the onboarding guide? It explains how to navigate the app effectively."
             : currentStep.description}
@@ -524,7 +535,7 @@ export const GuidedTour: React.FC = () => {
                   previousStep();
                 }
               }}
-              className="px-3 py-1.5 text-gray-300 border border-[#2a2a2a] rounded-lg hover:border-[#3a3a3a] transition-colors text-sm"
+              className="px-3 py-1.5 text-gray-300 border border-[#2a2a2a] rounded-full hover:border-[#3a3a3a] transition-colors text-sm"
             >
               {secondaryActionLabel}
             </button>
@@ -540,7 +551,7 @@ export const GuidedTour: React.FC = () => {
                 handleNextStep();
               }
             }}
-            className="px-4 py-1.5 bg-[#C7EF6B] text-black rounded-lg hover:bg-[#d4f57b] transition-colors text-sm font-medium"
+            className="px-4 py-1.5 bg-[#C7EF6B] text-black rounded-full hover:bg-[#d4f57b] transition-colors text-sm font-semibold"
           >
             {primaryActionLabel}
           </button>

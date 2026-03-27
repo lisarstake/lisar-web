@@ -12,7 +12,17 @@ import React, {
 } from "react";
 import { User, Wallet, Session, AuthApiResponse } from "@/services/auth/types";
 import { authService } from "@/services/auth";
-import mixpanel from 'mixpanel-browser';
+import { walletService } from "@/services";
+import mixpanel from "mixpanel-browser";
+
+async function ensureSolanaWalletAfterSignup(): Promise<void> {
+  try {
+    const r = await walletService.getWallets("solana");
+    if (r.success && r.wallets.length === 0) {
+      await walletService.createSolanaWallet({ make_primary: true });
+    }
+  } catch {}
+}
 
 // Auth State
 interface AuthState {
@@ -42,12 +52,12 @@ interface AuthContextType {
   createWallet: (
     email: string,
     password: string,
-    fullName: string
+    fullName: string,
   ) => Promise<AuthApiResponse<any>>;
   signin: (
     email: string,
     password: string,
-    rememberMe?: boolean
+    rememberMe?: boolean,
   ) => Promise<AuthApiResponse<any>>;
   signinWithGoogle: () => Promise<void>;
   handleGoogleCallback: (rememberMe?: boolean) => Promise<AuthApiResponse<any>>;
@@ -55,7 +65,7 @@ interface AuthContextType {
   forgotPassword: (email: string) => Promise<AuthApiResponse<any>>;
   resetPassword: (
     accessToken: string,
-    newPassword: string
+    newPassword: string,
   ) => Promise<AuthApiResponse<any>>;
   updateProfile: (data: {
     full_name?: string;
@@ -66,6 +76,11 @@ interface AuthContextType {
     country?: string;
     state?: string;
     fiat_type?: string;
+    linked_account?: {
+      account_number: string;
+      bank_code: string;
+      bank_name: string;
+    } | null;
   }) => Promise<AuthApiResponse<User>>;
   clearError: () => void;
   refreshUser: () => Promise<void>;
@@ -320,7 +335,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const createWallet = async (
     email: string,
     password: string,
-    fullName: string
+    fullName: string,
   ): Promise<AuthApiResponse<any>> => {
     dispatch({ type: "AUTH_START" });
 
@@ -332,12 +347,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
       if (response.success && response.data) {
         // Track Sign Up event
-        mixpanel.track('Sign Up', {
+        mixpanel.track("Sign Up", {
           email: email,
-          signup_method: 'email',
+          signup_method: "email",
           full_name: fullName,
         });
-        
+
         // Return the wallet data for the next step
         return response;
       } else {
@@ -363,7 +378,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const signin = async (
     email: string,
     password: string,
-    rememberMe: boolean = false
+    rememberMe: boolean = false,
   ): Promise<AuthApiResponse<any>> => {
     dispatch({ type: "AUTH_START" });
 
@@ -418,18 +433,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             },
           });
 
+          ensureSolanaWalletAfterSignup();
+
           // Identify user and track Sign In
           mixpanel.identify(userResponse.data.user_id);
           mixpanel.people.set({
-            '$email': userResponse.data.email,
-            '$name': userResponse.data.full_name,
-            'username': userResponse.data.username,
-            'wallet_address': userResponse.data.wallet_address,
+            $email: userResponse.data.email,
+            $name: userResponse.data.full_name,
+            username: userResponse.data.username,
+            wallet_address: userResponse.data.wallet_address,
           });
-          mixpanel.track('Sign In', {
+          mixpanel.track("Sign In", {
             user_id: userResponse.data.user_id,
             email: userResponse.data.email,
-            login_method: 'email',
+            login_method: "email",
             success: true,
           });
 
@@ -466,7 +483,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           if (rememberMe && response.data.session.expires_at) {
             storage.setItem(
               "auth_expiry",
-              response.data.session.expires_at.toString()
+              response.data.session.expires_at.toString(),
             );
           }
 
@@ -490,18 +507,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               },
             });
 
+            ensureSolanaWalletAfterSignup();
+
             // Identify user and track Sign In
             mixpanel.identify(userResponse.data.user_id);
             mixpanel.people.set({
-              '$email': userResponse.data.email,
-              '$name': userResponse.data.full_name,
-              'username': userResponse.data.username,
-              'wallet_address': userResponse.data.wallet_address,
+              $email: userResponse.data.email,
+              $name: userResponse.data.full_name,
+              username: userResponse.data.username,
+              wallet_address: userResponse.data.wallet_address,
             });
-            mixpanel.track('Sign In', {
+            mixpanel.track("Sign In", {
               user_id: userResponse.data.user_id,
               email: userResponse.data.email,
-              login_method: 'email',
+              login_method: "email",
               success: true,
             });
           }
@@ -544,7 +563,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const handleGoogleCallback = async (rememberMe: boolean = true): Promise<AuthApiResponse<any>> => {
+  const handleGoogleCallback = async (
+    rememberMe: boolean = true,
+  ): Promise<AuthApiResponse<any>> => {
     try {
       dispatch({ type: "AUTH_START" });
 
@@ -564,10 +585,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
           // Store expiration if rememberMe is true
           if (rememberMe && session.expires_at) {
-            storage.setItem(
-              "auth_expiry",
-              session.expires_at.toString()
-            );
+            storage.setItem("auth_expiry", session.expires_at.toString());
           }
         }
 
@@ -612,32 +630,36 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           },
         });
 
+        ensureSolanaWalletAfterSignup();
+
         // Check if this is a new user (sign up) or existing user (sign in)
-        const isNewUser = data.user.created_at && 
-          (new Date().getTime() - new Date(data.user.created_at).getTime()) < 60000; // Within last minute
+        const isNewUser =
+          data.user.created_at &&
+          new Date().getTime() - new Date(data.user.created_at).getTime() <
+            60000; // Within last minute
 
         // Identify user
         mixpanel.identify(user.user_id);
         mixpanel.people.set({
-          '$email': user.email,
-          '$name': user.full_name,
-          'username': user.username,
-          'wallet_address': user.wallet_address,
+          $email: user.email,
+          $name: user.full_name,
+          username: user.username,
+          wallet_address: user.wallet_address,
         });
 
         // Track event
         if (isNewUser) {
-          mixpanel.track('Sign Up', {
+          mixpanel.track("Sign Up", {
             user_id: user.user_id,
             email: user.email,
-            signup_method: 'google',
+            signup_method: "google",
             full_name: user.full_name,
           });
         } else {
-          mixpanel.track('Sign In', {
+          mixpanel.track("Sign In", {
             user_id: user.user_id,
             email: user.email,
-            login_method: 'google',
+            login_method: "google",
             success: true,
           });
         }
@@ -668,7 +690,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const forgotPassword = async (
-    email: string
+    email: string,
   ): Promise<AuthApiResponse<any>> => {
     try {
       const response = await authService.forgotPassword({ email });
@@ -687,7 +709,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const resetPassword = async (
     accessToken: string,
-    newPassword: string
+    newPassword: string,
   ): Promise<AuthApiResponse<any>> => {
     try {
       const response = await authService.resetPassword({
@@ -727,6 +749,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     state?: string;
     fiat_type?: string;
     username?: string;
+    linked_account?: {
+      account_number: string;
+      bank_code: string;
+      bank_name: string;
+    } | null;
   }): Promise<AuthApiResponse<User>> => {
     try {
       const response = await authService.updateProfile(data);

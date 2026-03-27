@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { ErrorDrawer } from "@/components/ui/ErrorDrawer";
+import { ErrorDrawer } from "@/components/general/ErrorDrawer";
 import { SuccessDrawer } from "@/components/ui/SuccessDrawer";
 import { LoadingSpinner } from "@/components/general/LoadingSpinner";
 import { extractTokensFromHash, clearHashFromURL } from "@/lib/tokenExtractor";
@@ -49,7 +49,7 @@ export const LoginForm: React.FC = () => {
   useEffect(() => {
     const tokens = extractTokensFromHash();
     if (tokens) {
-     
+
       if (tokens.provider_token) {
         handleGoogleOAuthLogin(tokens);
       } else {

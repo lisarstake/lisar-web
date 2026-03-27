@@ -5,7 +5,7 @@ import {
   extractResetTokenFromURL,
   clearResetTokenFromURL,
 } from "@/lib/resetTokenExtractor";
-import { ErrorDrawer } from "@/components/ui/ErrorDrawer";
+import { ErrorDrawer } from "@/components/general/ErrorDrawer";
 import {
   Drawer,
   DrawerContent,
@@ -156,11 +156,10 @@ export const ResetPasswordForm: React.FC = () => {
                 value={formData.newPassword}
                 onChange={handleInputChange}
                 placeholder="Enter new password"
-                className={`w-full px-4 py-3 pr-12 bg-[#121212] border rounded-lg text-white placeholder-gray-400 focus:outline-none transition-colors ${
-                  currentState === "active" || currentState === "success"
+                className={`w-full px-4 py-3 pr-12 bg-[#121212] border rounded-lg text-white placeholder-gray-400 focus:outline-none transition-colors ${currentState === "active" || currentState === "success"
                     ? "border-[#C7EF6B]"
                     : "border-[#121212]"
-                }`}
+                  }`}
               />
               <button
                 type="button"
@@ -192,13 +191,12 @@ export const ResetPasswordForm: React.FC = () => {
                 value={formData.confirmPassword}
                 onChange={handleInputChange}
                 placeholder="Confirm new password"
-                className={`w-full px-4 py-3 pr-12 bg-[#121212] border rounded-lg text-white placeholder-gray-400 focus:outline-none transition-colors ${
-                  passwordError
+                className={`w-full px-4 py-3 pr-12 bg-[#121212] border rounded-lg text-white placeholder-gray-400 focus:outline-none transition-colors ${passwordError
                     ? "border-red-500 focus:border-red-500"
                     : currentState === "active" || currentState === "success"
                       ? "border-[#C7EF6B]"
                       : "border-[#121212]"
-                }`}
+                  }`}
               />
               <button
                 type="button"
@@ -223,11 +221,10 @@ export const ResetPasswordForm: React.FC = () => {
           <button
             type="submit"
             disabled={!isFormValid || isSubmitting}
-            className={`w-full py-3 px-6 rounded-lg font-semibold text-lg transition-colors ${
-              isFormValid && !isSubmitting
+            className={`w-full py-3 px-6 rounded-lg font-semibold text-lg transition-colors ${isFormValid && !isSubmitting
                 ? "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
                 : "bg-[#636363] text-white cursor-not-allowed"
-            }`}
+              }`}
           >
             {isSubmitting ? "Processing..." : "Reset password"}
           </button>

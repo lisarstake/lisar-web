@@ -28,7 +28,7 @@ export const UseCasesSection = () => {
               Deposit your assets
               </CardTitle>
               <CardDescription className="text-gray-700">
-              Transfer supported assets from your wallet or exchange into your Lisar account.
+              Transfer supported assets from your wallet or exchange into your Lisar wallet.
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col items-center justify-center h-full">
