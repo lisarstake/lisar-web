@@ -46,6 +46,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
         {/* Yield */}
         <Link
           to={YIELD_ASSET_PICKER_PATH}
+          data-tour="nav-yield"
           className={`flex flex-col items-center py-2 px-3 ${
             isActive(YIELD_ASSET_PICKER_PATH) ? "text-[#C7EF6B]" : "text-gray-400"
           }`}
@@ -60,7 +61,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
         {/* Transactions */}
         <Link
           to="/history"
-          data-tour="nav-forecast"
+          data-tour="nav-activity"
           className={`flex flex-col items-center py-2 px-3 ${
             isActive("/history") ? "text-[#C7EF6B]" : "text-gray-400"
           }`}
@@ -106,7 +107,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
         {/* Earn */}
         <Link
           to="/earn"
-          data-tour="nav-earn"
+          data-tour="nav-explore"
           className={`flex flex-col items-center py-2 px-3 ${
             isActive("/earn") ? "text-[#C7EF6B]" : "text-gray-400"
           }`}

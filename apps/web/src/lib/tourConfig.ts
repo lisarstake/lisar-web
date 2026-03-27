@@ -28,74 +28,92 @@ export const allWalletTourConfig: TourConfig = {
   name: "All Wallets Tour",
   steps: [
     {
-      id: "welcome",
-      target: '[data-tour="all-wallet-balance-card"]',
-      title: "Welcome to Lisar 👋",
+      id: "profile-settings",
+      target: '[data-tour="all-wallet-profile-icon"]',
+      title: "Profile & Settings",
       description:
-        "Swipe through the cards to see your other wallets and their balances.",
+        "Tap here to open your settings, edit personal details, and export your wallet.",
       position: "bottom",
-      highlightPadding: 10,
-    },
-    {
-      id: "wallet-help",
-      target: '[data-tour="all-wallet-help-icon"]',
-      title: "Need Help?",
-      description:
-        "Tap the help icon on any card to learn more about that wallet type and how it works.",
-      position: "bottom",
-      highlightPadding: 5,
-    },
-
-    {
-      id: "stables-card",
-      target: '[data-tour="all-wallet-stables-card"]',
-      title: "Stables",
-      description:
-        "Explore different account types. The stable account earns stable yields with low risk.",
-      position: "top",
       highlightPadding: 8,
     },
     {
-      id: "high-yield-card",
-      target: '[data-tour="all-wallet-high-yield-card"]',
-      title: "High Yield",
+      id: "notifications",
+      target: '[data-tour="all-wallet-notification-icon"]',
+      title: "Notifications",
       description:
-        "The high yield account maximizes your returns with higher APY. Perfect for long-term investment goals.",
-      position: "top",
+        "Check messages, alerts, and important updates from Lisar.",
+      position: "bottom",
       highlightPadding: 8,
     },
     {
-      id: "nav-wallet",
+      id: "wallet-actions",
+      target: '[data-tour="all-wallet-quick-actions"]',
+      title: "Wallet Quick Actions",
+      description:
+        "Use these shortcuts to deposit, withdraw, and view your asset balances quickly.",
+      position: "bottom",
+      highlightPadding: 8,
+    },
+    {
+      id: "message-card",
+      target: '[data-tour="all-wallet-message-card"]',
+      title: "Messages & Announcements",
+      description:
+        "This card keeps you updated with announcements and important information.",
+      position: "bottom",
+      highlightPadding: 8,
+    },
+    {
+      id: "quick-deposit",
+      target: '[data-tour="all-wallet-quick-deposit"]',
+      title: "Quick Deposit",
+      description:
+        "Add funds to your wallet quickly using preset deposit amounts.",
+      position: "bottom",
+      highlightPadding: 8,
+    },
+    {
+      id: "yield-section",
+      target: '[data-tour="all-wallet-yield-section"]',
+      title: "Earn Daily Yields",
+      description:
+        "Put your assets to work and grow your balance with daily yield opportunities.",
+      position: "bottom",
+      highlightPadding: 8,
+    },
+    {
+      id: "nav-home",
       target: '[data-tour="nav-wallet"]',
-      title: "Home Navigation",
+      title: "Home",
       description:
-        "Access your wallet anytime from this tab. View different wallets and their balance.",
+        "Home brings you back to your wallet dashboard and quick actions.",
       position: "top",
       highlightPadding: 8,
     },
     {
-      id: "nav-forecast",
-      target: '[data-tour="nav-forecast"]',
-      title: "Yields",
-      description: "Calculate potential returns for different account types.",
+      id: "nav-yield",
+      target: '[data-tour="nav-yield"]',
+      title: "Yield",
+      description:
+        "Open Yield to create positions and keep your assets earning.",
       position: "top",
       highlightPadding: 8,
     },
     {
-      id: "nav-learn",
-      target: '[data-tour="nav-learn"]',
-      title: "Learn More",
+      id: "nav-activity",
+      target: '[data-tour="nav-activity"]',
+      title: "Activity",
       description:
-        "Discover educational content about Lisar and guides to help you get started.",
+        "Track your transaction history and all recent wallet activity.",
       position: "top",
       highlightPadding: 8,
     },
     {
-      id: "nav-earn",
-      target: '[data-tour="nav-earn"]',
-      title: "Earn Rewards",
+      id: "nav-explore",
+      target: '[data-tour="nav-explore"]',
+      title: "Explore",
       description:
-        "Explore earning opportunities and other perks for being a Lisar user.",
+        "Discover new opportunities, campaigns, and updates from Lisar.",
       position: "top",
       highlightPadding: 8,
     },

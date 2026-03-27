@@ -93,9 +93,10 @@ export const AllWalletPage: React.FC = () => {
   const { prices } = usePrices();
 
   // Start tour for non-onboarded users
-  const shouldAutoStart = useMemo(() => {
-    return state.user?.is_onboarded === false && !state.isLoading;
-  }, [state.user?.is_onboarded, state.isLoading]);
+  const shouldAutoStart = true
+  // const shouldAutoStart = useMemo(() => {
+  //   return state.user?.is_onboarded === false && !state.isLoading;
+  // }, [state.user?.is_onboarded, state.isLoading]);
 
   const {} = useGuidedTour({
     tourId: ALL_WALLET_TOUR_ID,
@@ -246,6 +247,7 @@ export const AllWalletPage: React.FC = () => {
           <div className="flex items-center space-x-2.5">
             <button
               onClick={handleProfileClick}
+              data-tour="all-wallet-profile-icon"
               className="w-10 h-10 bg-[#86B3F7] rounded-full flex items-center justify-center hover:bg-[#96C3F7] transition-colors cursor-pointer"
             >
               {state.user?.img ? (
@@ -282,6 +284,7 @@ export const AllWalletPage: React.FC = () => {
             </button>
             <button
               onClick={handleNotificationClick}
+              data-tour="all-wallet-notification-icon"
               className="relative w-9 h-9 rounded-full flex items-center justify-center bg-[#13170a] hover:bg-[#3a3a3a] transition-colors cursor-pointer"
             >
               <Bell size={22} color="#fff" />
@@ -351,7 +354,10 @@ export const AllWalletPage: React.FC = () => {
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex items-center justify-center gap-6 mt-6">
+                    <div
+                      data-tour="all-wallet-quick-actions"
+                      className="flex items-center justify-center gap-6 mt-6"
+                    >
                       <button
                         onClick={() => setTransferDrawer("deposit")}
                         className="flex flex-col items-center gap-1.5"
@@ -412,7 +418,7 @@ export const AllWalletPage: React.FC = () => {
 
             {/* System Notification Card */}
             {activeSystemNotifications.length > 0 ? (
-              <div className="relative">
+              <div className="relative" data-tour="all-wallet-message-card">
                 {activeSystemNotifications.length > 2 && (
                   <div
                     className="absolute inset-0 bg-[#151515] rounded-2xl border border-[#13170a]"
@@ -502,6 +508,7 @@ export const AllWalletPage: React.FC = () => {
                       Object.keys(status.enrollment).length > 0));
                 return (
                   <div
+                    data-tour="all-wallet-message-card"
                     onClick={() => navigate("/earn")}
                     className={`mt-2 rounded-xl p-2 bg-[#13170a] relative overflow-hidden cursor-pointer hover:opacity-95 transition-opacity`}
                   >
@@ -531,114 +538,118 @@ export const AllWalletPage: React.FC = () => {
             )}
 
             {/* Add Cash Section */}
-            <div className="flex items-center justify-between my-2 mt-4">
-              <h2 className="text-white/70 text-xs font-medium">
-                Quick deposit <span className="text-white">💸</span>
-              </h2>
-            </div>
-            <div className="bg-[#13170a] rounded-xl p-3">
-              <div className="grid grid-cols-3 gap-2">
-                {QUICK_DEPOSIT_AMOUNTS.map((amount) => (
+            <div data-tour="all-wallet-quick-deposit">
+              <div className="flex items-center justify-between my-2 mt-4">
+                <h2 className="text-white/70 text-xs font-medium">
+                  Quick deposit <span className="text-white">💸</span>
+                </h2>
+              </div>
+              <div className="bg-[#13170a] rounded-xl p-3">
+                <div className="grid grid-cols-3 gap-2">
+                  {QUICK_DEPOSIT_AMOUNTS.map((amount) => (
+                    <button
+                      key={amount}
+                      onClick={() => navigate("/wallet/deposit/crypto")}
+                      className="py-2.5 px-3 rounded-lg bg-white/10 text-white text-sm font-medium transition-colors"
+                    >
+                      {quickDepositSymbol}
+                      {amount.toLocaleString(undefined, {
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0,
+                      })}
+                    </button>
+                  ))}
                   <button
-                    key={amount}
                     onClick={() => navigate("/wallet/deposit/crypto")}
-                    className="py-2.5 px-3 rounded-lg bg-white/10 text-white text-sm font-medium transition-colors"
+                    className="py-2.5 px-3 rounded-lg bg-white/10 flex items-center justify-center transition-colors"
                   >
-                    {quickDepositSymbol}
-                    {amount.toLocaleString(undefined, {
-                      minimumFractionDigits: 0,
-                      maximumFractionDigits: 0,
-                    })}
+                    <Plus size={16} className="text-white" />
                   </button>
-                ))}
-                <button
-                  onClick={() => navigate("/wallet/deposit/crypto")}
-                  className="py-2.5 px-3 rounded-lg bg-white/10 flex items-center justify-center transition-colors"
-                >
-                  <Plus size={16} className="text-white" />
-                </button>
+                </div>
               </div>
             </div>
 
             {/* Yields section */}
-            <div className="my-2 mt-4">
-              <h2 className="text-white/70 text-xs font-medium">
-                Earn yields <span className="text-white"></span>
-              </h2>
-            </div>
-            <div
-              onClick={() => navigate(YIELD_ASSET_PICKER_PATH)}
-              className="w-full bg-[#13170a] rounded-xl p-3 text-left mb-20 cursor-pointer"
-            >
-              <div className="rounded-lg border border-white/5 bg-white/10 overflow-hidden relative">
-                <svg
-                  viewBox="0 0 100 40"
-                  className="w-full h-20"
-                  preserveAspectRatio="none"
-                >
-                  {yieldShadowPath && (
-                    <path
-                      d={yieldShadowPath}
-                      fill={YIELD_AREA_COLOR}
-                      opacity={0.5}
-                    />
-                  )}
-                  {yieldLinePoints && (
-                    <polyline
-                      points={yieldLinePoints}
-                      fill="none"
-                      stroke={YIELD_PRIMARY_COLOR}
-                      strokeWidth={0.7}
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  )}
-                </svg>
-                {yieldMarkerPositions.length > 0 && (
-                  <div className="absolute inset-0">
-                    {yieldMarkerPositions.map((marker, index) => (
-                      <div
-                        key={marker.id}
-                        className="absolute"
-                        style={{
-                          left: `${marker.x}%`,
-                          top: `${(marker.y / YIELD_CHART_HEIGHT) * 100}%`,
-                          transform: "translate(-50%, -120%)",
-                        }}
-                      >
-                        <img
-                          src={
-                            index === 0
-                              ? "/usdc.svg"
-                              : index === 1
-                                ? "/sol1.svg"
-                                : index === 2
-                                  ? "/usdt.svg"
-                                  : "/livepeer.webp"
-                          }
-                          alt="Yield asset"
-                          className="w-6 h-6 animate-[yield-icon-drift_6s_ease-in-out_infinite]"
-                          style={{ animationDelay: `${-index * 0.6}s` }}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
+            <div data-tour="all-wallet-yield-section">
+              <div className="my-2 mt-4">
+                <h2 className="text-white/70 text-xs font-medium">
+                  Earn yields <span className="text-white"></span>
+                </h2>
               </div>
-              <div className="mt-2">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div>
-                      <p className="text-white text-sm font-medium">
-                        Your assets. Working daily
-                      </p>
-                      <p className="text-white/50 text-xs font-medium mt-0.5">
-                        Daily returns on your assets. Withdraw anytime with no lock-up
-                      </p>
+              <div
+                onClick={() => navigate(YIELD_ASSET_PICKER_PATH)}
+                className="w-full bg-[#13170a] rounded-xl p-3 text-left mb-20 cursor-pointer"
+              >
+                <div className="rounded-lg border border-white/5 bg-white/10 overflow-hidden relative">
+                  <svg
+                    viewBox="0 0 100 40"
+                    className="w-full h-20"
+                    preserveAspectRatio="none"
+                  >
+                    {yieldShadowPath && (
+                      <path
+                        d={yieldShadowPath}
+                        fill={YIELD_AREA_COLOR}
+                        opacity={0.5}
+                      />
+                    )}
+                    {yieldLinePoints && (
+                      <polyline
+                        points={yieldLinePoints}
+                        fill="none"
+                        stroke={YIELD_PRIMARY_COLOR}
+                        strokeWidth={0.7}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    )}
+                  </svg>
+                  {yieldMarkerPositions.length > 0 && (
+                    <div className="absolute inset-0">
+                      {yieldMarkerPositions.map((marker, index) => (
+                        <div
+                          key={marker.id}
+                          className="absolute"
+                          style={{
+                            left: `${marker.x}%`,
+                            top: `${(marker.y / YIELD_CHART_HEIGHT) * 100}%`,
+                            transform: "translate(-50%, -120%)",
+                          }}
+                        >
+                          <img
+                            src={
+                              index === 0
+                                ? "/usdc.svg"
+                                : index === 1
+                                  ? "/sol1.svg"
+                                  : index === 2
+                                    ? "/usdt.svg"
+                                    : "/livepeer.webp"
+                            }
+                            alt="Yield asset"
+                            className="w-6 h-6 animate-[yield-icon-drift_6s_ease-in-out_infinite]"
+                            style={{ animationDelay: `${-index * 0.6}s` }}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="mt-2">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <div>
+                        <p className="text-white text-sm font-medium">
+                          Your assets. Working daily
+                        </p>
+                        <p className="text-white/50 text-xs font-medium mt-0.5">
+                          Daily returns on your assets. Withdraw anytime with no lock-up
+                        </p>
 
-                      <button className="mt-2.5 px-3 py-1.5 bg-[#C7EF6B] text-black rounded-full text-[13px] font-semibold hover:bg-[#B8E55A] transition-colors relative z-10">
-                        Deposit to yield
-                      </button>
+                        <button className="mt-2.5 px-3 py-1.5 bg-[#C7EF6B] text-black rounded-full text-[13px] font-semibold hover:bg-[#B8E55A] transition-colors relative z-10">
+                          Deposit to yield
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
