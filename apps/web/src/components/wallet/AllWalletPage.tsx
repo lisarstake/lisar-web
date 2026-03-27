@@ -93,10 +93,10 @@ export const AllWalletPage: React.FC = () => {
   const { prices } = usePrices();
 
   // Start tour for non-onboarded users
-  const shouldAutoStart = true
-  // const shouldAutoStart = useMemo(() => {
-  //   return state.user?.is_onboarded === false && !state.isLoading;
-  // }, [state.user?.is_onboarded, state.isLoading]);
+  // const shouldAutoStart = true
+  const shouldAutoStart = useMemo(() => {
+    return state.user?.is_onboarded === false && !state.isLoading;
+  }, [state.user?.is_onboarded, state.isLoading]);
 
   const {} = useGuidedTour({
     tourId: ALL_WALLET_TOUR_ID,
