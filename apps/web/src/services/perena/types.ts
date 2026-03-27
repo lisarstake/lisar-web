@@ -3,7 +3,7 @@
  * Defines interfaces for perena-related API operations
  */
 
-import { env } from '@/lib/env'
+import { env } from "@/lib/env";
 
 // Base API Response
 export interface PerenaApiResponse<T> {
@@ -152,6 +152,27 @@ export interface PortfolioResponse {
   error?: string;
 }
 
+// Yield Types
+export interface WeeklyYieldData {
+  yieldAmount: number;
+  earnings?: number;
+  earningsFormatted?: string;
+  currentBalance?: number;
+  currentDay?: number;
+  weekStart?: string;
+  weekEnd?: string;
+  priceAtWeekStart?: number;
+  currentPrice?: number;
+  priceChange?: number;
+  priceChangeFormatted?: string;
+}
+
+export interface WeeklyYieldResponse {
+  success: boolean;
+  data: WeeklyYieldData;
+  error?: string;
+}
+
 // Configuration
 export interface PerenaConfig {
   baseUrl: string;
@@ -164,4 +185,3 @@ export const PERENA_CONFIG: PerenaConfig = {
   timeout: 100000,
   retryAttempts: 3,
 };
-

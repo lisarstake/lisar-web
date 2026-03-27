@@ -1,20 +1,20 @@
 import React, { useState, useMemo } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { ChevronLeft, CircleQuestionMark } from "lucide-react";
+import { ArrowLeft, CircleQuestionMark } from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { ActionDrawer } from "@/components/general/ActionDrawer";
-import { ShareDrawer } from "@/components/general/ShareDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { ValidatorRewardsChart } from "@/components/validator/ValidatorRewardsChart";
 import { ValidatorActionButtons } from "@/components/validator/ValidatorActionButtons";
 import { ValidatorAboutSection } from "@/components/validator/ValidatorAboutSection";
-import { SuccessDrawer } from "@/components/ui/SuccessDrawer";
-import { ErrorDrawer } from "@/components/ui/ErrorDrawer";
+import { SuccessDrawer } from "@/components/general/SuccessDrawer";
+import { ErrorDrawer } from "@/components/general/ErrorDrawer";
 import { OTPVerificationDrawer } from "@/components/auth/OTPVerificationDrawer";
 import { useOrchestrators } from "@/contexts/OrchestratorContext";
 import { useDelegation } from "@/contexts/DelegationContext";
 import { useTransactions } from "@/contexts/TransactionContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useWallet } from "@/contexts/WalletContext";
 import { delegationService } from "@/services";
 import { totpService } from "@/services/totp";
 import { getEarliestUnbondingTime } from "@/lib/unbondingTime";
@@ -29,7 +29,6 @@ export const ValidatorDetailsPage: React.FC = () => {
     tierTitle?: string;
   } | null;
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
-  const [showShareDrawer, setShowShareDrawer] = useState(false);
   const [showUnstakeRestrictionDrawer, setShowUnstakeRestrictionDrawer] =
     useState(false);
   const [showMoveStakeDrawer, setShowMoveStakeDrawer] = useState(false);
@@ -49,6 +48,7 @@ export const ValidatorDetailsPage: React.FC = () => {
   const { userDelegation, delegatorTransactions, refetch } = useDelegation();
   const { transactions } = useTransactions();
   const { state } = useAuth();
+  const { refreshAllWalletData } = useWallet();
 
   const currentValidator = orchestrators.find(
     (orch) => orch.address === validatorId
@@ -74,21 +74,21 @@ export const ValidatorDetailsPage: React.FC = () => {
   // Filter transactions for this specific validator
   const validatorTransactions = delegatorTransactions
     ? {
-        pending: delegatorTransactions.pendingStakeTransactions.filter(
-          (tx) => tx.delegate.id === validatorId
-        ),
-        completed: delegatorTransactions.completedStakeTransactions.filter(
-          (tx) => tx.delegate.id === validatorId
-        ),
-        currentRound: parseInt(delegatorTransactions.currentRound),
-      }
+      pending: delegatorTransactions.pendingStakeTransactions.filter(
+        (tx) => tx.delegate.id === validatorId
+      ),
+      completed: delegatorTransactions.completedStakeTransactions.filter(
+        (tx) => tx.delegate.id === validatorId
+      ),
+      currentRound: parseInt(delegatorTransactions.currentRound),
+    }
     : { pending: [], completed: [], currentRound: 0 };
 
   // Check if user has a stake with validator
   const hasStakeWithValidator = Boolean(
     userDelegation &&
-      userDelegation.delegate?.id === validatorId &&
-      parseFloat(userDelegation.bondedAmount) > 0
+    userDelegation.delegate?.id === validatorId &&
+    parseFloat(userDelegation.bondedAmount) > 0
   );
 
   // check if user has just staked
@@ -131,7 +131,7 @@ export const ValidatorDetailsPage: React.FC = () => {
     if (!hasPendingUnbonding) {
       return null;
     }
-    
+
     return getEarliestUnbondingTime(pendingUnbondingTransactions);
   }, [pendingUnbondingTransactions, hasPendingUnbonding]);
 
@@ -160,12 +160,9 @@ export const ValidatorDetailsPage: React.FC = () => {
     if (hasStakeWithDifferentValidator) {
       setShowMoveStakeDrawer(true);
     } else {
-      navigate(`/stake/${currentValidator?.address}`, {
-        state: {
-          tierNumber: locationState?.tierNumber,
-          tierTitle: locationState?.tierTitle,
-        },
-      });
+      navigate(
+        `/wallet/yields/create-flexible?mode=staking&source=lpt&orchestrator=${currentValidator?.address || ""}`,
+      );
     }
   };
 
@@ -182,7 +179,20 @@ export const ValidatorDetailsPage: React.FC = () => {
   };
 
   const handleShareClick = () => {
-    setShowShareDrawer(true);
+    const validatorName = currentValidator?.ensName || "Validator";
+    const validatorLink = `${window.location.origin}/validator/${validatorId || ""}`;
+    const shareText = `Check out ${validatorName} on Lisar`;
+
+    if (navigator.share) {
+      void navigator.share({
+        title: validatorName,
+        text: shareText,
+        url: validatorLink,
+      });
+      return;
+    }
+
+    void navigator.clipboard.writeText(validatorLink);
   };
 
   const handleHelpClick = () => {
@@ -222,7 +232,7 @@ export const ValidatorDetailsPage: React.FC = () => {
         setShowSuccessDrawer(true);
         setShowWithdrawConfirmDrawer(false);
         setPendingAction(null);
-        await refetch();
+        await Promise.all([refetch(), refreshAllWalletData()]);
       } else {
         setErrorMessage(response.message || "Failed to restake tokens");
         setShowErrorDrawer(true);
@@ -310,7 +320,7 @@ export const ValidatorDetailsPage: React.FC = () => {
         setShowSuccessDrawer(true);
         setShowMoveStakeDrawer(false);
         setPendingAction(null);
-        await refetch();
+        await Promise.all([refetch(), refreshAllWalletData()]);
       } else {
         setErrorMessage(response.message || "Failed to move stake");
         setShowErrorDrawer(true);
@@ -334,19 +344,19 @@ export const ValidatorDetailsPage: React.FC = () => {
       <div className="flex items-center justify-between px-6 py-8">
         <button
           onClick={handleBackClick}
-          className="w-8 h-8 flex items-center justify-center"
+          className="h-10 w-10 rounded-full bg-[#13170a] flex items-center justify-center"
         >
-          <ChevronLeft color="#C7EF6B" />
+          <ArrowLeft className="text-white" size={22} />
         </button>
 
         <h1 className="text-lg font-medium text-white">
           {currentValidator?.ensIdentity?.name || currentValidator?.ensName
             ? (currentValidator?.ensIdentity?.name || currentValidator?.ensName)
-                .length > 16
+              .length > 16
               ? (
-                  currentValidator?.ensIdentity?.name ||
-                  currentValidator?.ensName
-                ).slice(0, 16) + ".."
+                currentValidator?.ensIdentity?.name ||
+                currentValidator?.ensName
+              ).slice(0, 16) + ".."
               : currentValidator?.ensIdentity?.name || currentValidator?.ensName
             : "Unknown V.."}
         </h1>
@@ -365,8 +375,8 @@ export const ValidatorDetailsPage: React.FC = () => {
         <h2 className="text-2xl font-bold text-white">
           {currentValidator
             ? Math.round(
-                parseFloat(currentValidator.totalStake)
-              ).toLocaleString()
+              parseFloat(currentValidator.totalStake)
+            ).toLocaleString()
             : "0"}{" "}
           LPT
         </h2>
@@ -408,14 +418,6 @@ export const ValidatorDetailsPage: React.FC = () => {
           "APY shows your potential earnings, total stake shows community trust, and fees show the validator's charge.",
           "Click 'Stake' to start earning or 'Unstake' to remove your current stake.",
         ]}
-      />
-
-      {/* Share Drawer */}
-      <ShareDrawer
-        isOpen={showShareDrawer}
-        onClose={() => setShowShareDrawer(false)}
-        validatorName={currentValidator?.ensName || "Unknown Validator"}
-        validatorId={validatorId || ""}
       />
 
       {/* Unstake Restriction Drawer */}
@@ -474,7 +476,7 @@ export const ValidatorDetailsPage: React.FC = () => {
             label: "Proceed to withdraw",
             onClick: () => {
               setShowWithdrawConfirmDrawer(false);
-              navigate(`/withdraw-network/${currentValidator?.address}`);
+              navigate(`/unstake-amount/${currentValidator?.address}`);
             },
           },
           {

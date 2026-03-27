@@ -11,6 +11,7 @@ import { useDelegation } from "./DelegationContext";
 import { usePrices } from "@/hooks/usePrices";
 import { useStablesApy } from "@/hooks/useStablesApy";
 import { usePerenaPortfolio } from "@/hooks/usePerenaPortfolio";
+import { usePerenaWeeklyYield } from "@/hooks/usePerenaWeeklyYield";
 
 export interface WalletCardData {
   type: "savings" | "staking";
@@ -33,20 +34,27 @@ interface WalletCardContextValue {
 }
 
 const WalletCardContext = createContext<WalletCardContextValue | undefined>(
-  undefined
+  undefined,
 );
 
 export const WalletCardProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  const [displayCurrency, setDisplayCurrency] = useState<"USD" | "NGN">(() => {
-    const saved = localStorage.getItem("wallet_display_currency");
-    return (saved === "NGN" || saved === "USD" ? saved : "NGN") as "USD" | "NGN";
-  });
+  const [displayCurrency, setDisplayCurrency] = useState<"USD" | "NGN">("USD");
   const [showBalance, setShowBalance] = useState(() => {
     const saved = localStorage.getItem("wallet_show_balance");
     return saved ? JSON.parse(saved) : false;
   });
+
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "wallet_show_balance" && e.newValue) {
+        setShowBalance(JSON.parse(e.newValue));
+      }
+    };
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
 
   const {
     stablesBalance,
@@ -58,9 +66,14 @@ export const WalletCardProvider: React.FC<{ children: ReactNode }> = ({
   const { delegatorStakeProfile, isLoading: delegationLoading } =
     useDelegation();
   const { prices } = usePrices();
-  const { perena: perenaApy, growth: growthApy, isLoading: apyLoading } =
-    useStablesApy();
+  const {
+    perena: perenaApy,
+    growth: growthApy,
+    isLoading: apyLoading,
+  } = useStablesApy();
   const { data: perenaPortfolio } = usePerenaPortfolio(solanaWalletAddress);
+  const { data: perenaWeeklyYield, isLoading: weeklyYieldLoading } =
+    usePerenaWeeklyYield(solanaWalletAddress);
 
   useEffect(() => {
     localStorage.setItem("wallet_display_currency", displayCurrency);
@@ -72,12 +85,10 @@ export const WalletCardProvider: React.FC<{ children: ReactNode }> = ({
 
   const savingsBalance = stablesBalance ?? 0;
   const stakingBalance = useMemo(() => {
-    const unstakedLpt = highyieldBalance ?? 0;
-    const stakedLpt = delegatorStakeProfile
+    return delegatorStakeProfile
       ? parseFloat(delegatorStakeProfile.currentStake || "0")
       : 0;
-    return unstakedLpt + stakedLpt;
-  }, [highyieldBalance, delegatorStakeProfile]);
+  }, [delegatorStakeProfile]);
 
   const cardData = useMemo<WalletCardData[]>(() => {
     const savingsDisplayValue =
@@ -85,8 +96,9 @@ export const WalletCardProvider: React.FC<{ children: ReactNode }> = ({
         ? savingsBalance * (prices.ngn || 0)
         : savingsBalance;
     const savingsInterestUsd =
+      perenaWeeklyYield?.yieldAmount ??
       perenaPortfolio?.earnings ??
-      savingsBalance * (perenaApy ?? 0.14) * (2 / 365);
+      savingsBalance * (perenaApy ?? 0.14) * (7 / 365);
     const savingsInterestNgn = savingsInterestUsd * (prices.ngn || 0);
 
     const stakingUsdValue = stakingBalance * (prices.lpt || 0);
@@ -94,8 +106,7 @@ export const WalletCardProvider: React.FC<{ children: ReactNode }> = ({
       displayCurrency === "NGN"
         ? stakingUsdValue * (prices.ngn || 0)
         : stakingUsdValue;
-    const stakingInterestUsd =
-      stakingUsdValue * (growthApy ?? 0.6) * (2 / 365);
+    const stakingInterestUsd = stakingUsdValue * (growthApy ?? 0.6) * (7 / 365);
     const stakingInterestNgn = stakingInterestUsd * (prices.ngn || 0);
 
     return [
@@ -133,10 +144,12 @@ export const WalletCardProvider: React.FC<{ children: ReactNode }> = ({
     perenaApy,
     growthApy,
     perenaPortfolio?.earnings,
+    perenaWeeklyYield?.yieldAmount,
     apyLoading,
     stablesLoading,
     highyieldLoading,
     delegationLoading,
+    weeklyYieldLoading,
   ]);
 
   const displayFiatSymbol = displayCurrency === "NGN" ? "₦" : "$";
@@ -150,12 +163,7 @@ export const WalletCardProvider: React.FC<{ children: ReactNode }> = ({
       setShowBalance,
       displayFiatSymbol,
     }),
-    [
-      cardData,
-      displayCurrency,
-      showBalance,
-      displayFiatSymbol,
-    ]
+    [cardData, displayCurrency, showBalance, displayFiatSymbol],
   );
 
   return (

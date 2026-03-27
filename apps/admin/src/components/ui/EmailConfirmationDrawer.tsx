@@ -25,7 +25,7 @@ export const EmailConfirmationDrawer: React.FC<
 > = ({ isOpen, onClose, email }) => {
   return (
     <Drawer open={isOpen} onOpenChange={onClose}>
-      <DrawerContent className="bg-[#121212] border-[#2a2a2a]">
+      <DrawerContent className="bg-[#050505]">
         <DrawerHeader className="text-center">
           <div className="flex justify-center mb-4">
             <div className="w-16 h-16 bg-[#C7EF6B]/10 rounded-full flex items-center justify-center relative">

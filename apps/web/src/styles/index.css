@@ -180,6 +180,28 @@
     display: none; /* Chrome, Safari, Opera */
   }
 
+  @keyframes wallet-star-float {
+    0%,
+    100% {
+      transform: translateY(0);
+      opacity: 0.95;
+    }
+    50% {
+      transform: translateY(-3px);
+      opacity: 1;
+    }
+  }
+
+  @keyframes yield-icon-drift {
+    0%,
+    100% {
+      transform: translateX(-3px);
+    }
+    50% {
+      transform: translateX(3px);
+    }
+  }
+
   /* Ensure overflow areas are white */
   #root {
     background-color: white;
@@ -194,7 +216,11 @@
 
   /* App main container */
   .app-main {
-    min-height: 100vh;
+    height: 100dvh;
+    max-height: 100dvh;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
   }
 
   /* Pages with bottom navigation */
@@ -204,7 +230,7 @@
 
   @media (min-width: 768px) {
     .app-main.with-bottom-nav {
-      padding-bottom: 65; /* Keep same padding on desktop */
+      padding-bottom: 65px; /* Keep same padding on desktop */
     }
   }
 

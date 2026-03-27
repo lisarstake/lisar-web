@@ -9,8 +9,25 @@ import {
   TransactionData,
   TransactionType,
 } from "@/services/transactions/types";
-import { transactionService } from "@/services";
+import { transactionService, virtualAccountService } from "@/services";
 import { useAuth } from "./AuthContext";
+
+const mapNairaTypeToTransactionType = (
+  type: string,
+): TransactionData["transaction_type"] => {
+  if (type === "withdrawal" || type === "conversion_out" || type === "fee") {
+    return "withdrawal";
+  }
+  return "deposit";
+};
+
+const mapNairaStatusToTransactionStatus = (
+  status: string,
+): TransactionData["status"] => {
+  if (status === "failed") return "failed";
+  if (status === "completed") return "confirmed";
+  return "pending";
+};
 
 interface TransactionContextType {
   transactions: TransactionData[];
@@ -47,19 +64,46 @@ export const TransactionProvider: React.FC<TransactionProviderProps> = ({
       setIsLoading(true);
       setError(null);
 
-      const response = await transactionService.getUserTransactions(
-        state.user.user_id
+      const [defaultResponse, nairaResponse] = await Promise.all([
+        transactionService.getUserTransactions(state.user.user_id),
+        virtualAccountService.getTransactions({
+          limit: 100,
+          offset: 0,
+        }),
+      ]);
+
+      const defaultTransactions =
+        defaultResponse.success && defaultResponse.data ? defaultResponse.data : [];
+
+      const nairaTransactions =
+        nairaResponse.success && nairaResponse.data
+          ? nairaResponse.data.transactions.map((tx) => ({
+              id: `naira-${tx.id}`,
+              user_id: state.user?.user_id || "",
+              transaction_hash: tx.reference,
+              transaction_type: mapNairaTypeToTransactionType(tx.type),
+              amount: String(tx.amount || 0),
+              token_address: "",
+              token_symbol: "NGN",
+              wallet_address: "",
+              wallet_id: "",
+              status: mapNairaStatusToTransactionStatus(tx.status),
+              source: "naira",
+              svix_id: "",
+              created_at: tx.createdAt,
+            }))
+          : [];
+
+      const mergedTransactions = [...defaultTransactions, ...nairaTransactions];
+      const sortedTransactions = mergedTransactions.sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
       );
 
-      if (response.success && response.data) {
-        // Sort transactions by created_at (newest first)
-        const sortedTransactions = response.data.sort(
-          (a, b) =>
-            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        );
-        setTransactions(sortedTransactions);
-      } else {
-        setError(response.message || "Failed to fetch transactions");
+      setTransactions(sortedTransactions);
+
+      if (!defaultResponse.success && !nairaResponse.success) {
+        setError(defaultResponse.message || "Failed to fetch transactions");
       }
     } catch (err) {
       setError("An error occurred while fetching transactions");

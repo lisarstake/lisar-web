@@ -50,7 +50,7 @@ export interface ScheduledTask {
   retry_count: number;
 }
 
-// Campaign User Model (matches API response)
+// Campaign User Model 
 export interface CampaignUser {
   user_id: string;
   user_email: string;

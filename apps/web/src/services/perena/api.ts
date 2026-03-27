@@ -17,7 +17,8 @@ import {
   GetPriceApiResponse,
   PortfolioRequest,
   PortfolioResponse,
-} from './types';
+  WeeklyYieldResponse,
+} from "./types";
 
 export interface IPerenaApiService {
   // Get current USD* price
@@ -46,5 +47,7 @@ export interface IPerenaApiService {
 
   // Get portfolio data for a wallet
   getPortfolio(request: PortfolioRequest): Promise<PortfolioResponse>;
-}
 
+  // Get weekly yield for a wallet
+  getWeeklyYield(walletAddress: string): Promise<WeeklyYieldResponse>;
+}

@@ -1,14 +1,15 @@
 import {
-  Calculator,
-  CalculatorIcon,
   CircleDollarSign,
   CoinsIcon,
+  Globe,
   House,
-  Landmark,
-  TvMinimalPlay,
+  List,
+  ScrollText,
+  TextAlignJustify,
 } from "lucide-react";
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
+import { YIELD_ASSET_PICKER_PATH } from "@/lib/yieldPaths";
 
 interface BottomNavigationProps {
   currentPath?: string;
@@ -24,7 +25,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
   };
 
   return (
-    <div className="fixed md:absolute bottom-0 left-0 right-0 bg-[#1a1a1a] border-t border-[#2a2a2a] px-4 py-2 z-50">
+    <div className="fixed md:absolute bottom-0 left-0 right-0 bg-[#050505] border-t border-[#2a2a2a] px-4 py-2 z-50">
       <div className="flex items-center justify-around">
         {/* Home */}
         <Link
@@ -42,8 +43,39 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
           )}
         </Link>
 
-        {/* Forecast */}
+        {/* Yield */}
         <Link
+          to={YIELD_ASSET_PICKER_PATH}
+          data-tour="nav-yield"
+          className={`flex flex-col items-center py-2 px-3 ${
+            isActive(YIELD_ASSET_PICKER_PATH) ? "text-[#C7EF6B]" : "text-gray-400"
+          }`}
+        >
+          <CircleDollarSign size={22} className="mb-1" />
+          <span className="text-xs">Yield</span>
+          {isActive(YIELD_ASSET_PICKER_PATH) && (
+            <div className="w-6 h-0.5 bg-[#C7EF6B] mt-1 rounded-full"></div>
+          )}
+        </Link>
+
+        {/* Transactions */}
+        <Link
+          to="/history"
+          data-tour="nav-activity"
+          className={`flex flex-col items-center py-2 px-3 ${
+            isActive("/history") ? "text-[#C7EF6B]" : "text-gray-400"
+          }`}
+        >
+          <List size={22} className="mb-1" />
+          <span className="text-xs">Activity</span>
+          {isActive("/history") && (
+            <div className="w-6 h-0.5 bg-[#C7EF6B] mt-1 rounded-full"></div>
+          )}
+        </Link>
+
+
+        {/* Forecast */}
+        {/* <Link
           to="/forecast"
           data-tour="nav-forecast"
           className={`flex flex-col items-center py-2 px-3 ${
@@ -55,10 +87,10 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
           {isActive("/forecast") && (
             <div className="w-6 h-0.5 bg-[#C7EF6B] mt-1 rounded-full"></div>
           )}
-        </Link>
+        </Link> */}
 
         {/* Learn */}
-        <Link
+        {/* <Link
           to="/learn"
           data-tour="nav-learn"
           className={`flex flex-col items-center py-2 px-3 ${
@@ -70,18 +102,18 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
           {isActive("/learn") && (
             <div className="w-6 h-0.5 bg-[#C7EF6B] mt-1 rounded-full"></div>
           )}
-        </Link>
+        </Link> */}
 
         {/* Earn */}
         <Link
           to="/earn"
-          data-tour="nav-earn"
+          data-tour="nav-explore"
           className={`flex flex-col items-center py-2 px-3 ${
             isActive("/earn") ? "text-[#C7EF6B]" : "text-gray-400"
           }`}
         >
-          <CircleDollarSign size={22} className="mb-1" />
-          <span className="text-xs">Earn</span>
+          <Globe size={22} className="mb-1" />
+          <span className="text-xs">Explore</span>
           {isActive("/earn") && (
             <div className="w-6 h-0.5 bg-[#C7EF6B] mt-1 rounded-full"></div>
           )}

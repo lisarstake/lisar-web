@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { ErrorDrawer } from "@/components/ui/ErrorDrawer";
-import { EmailConfirmationDrawer } from "@/components/ui/EmailConfirmationDrawer";
+import { ErrorDrawer } from "@/components/general/ErrorDrawer";
+import { EmailConfirmationDrawer } from "@/components/general/EmailConfirmationDrawer";
 import {
   EyeClosed,
   EyeIcon,
@@ -331,11 +331,10 @@ export const SignupForm: React.FC = () => {
                   !isValidatingReferral &&
                   referralValidation.message && (
                     <div
-                      className={`flex items-center text-sm ${
-                        referralValidation.isValid
+                      className={`flex items-center text-sm ${referralValidation.isValid
                           ? "text-[#C7EF6B]"
                           : "text-red-400"
-                      }`}
+                        }`}
                     >
                       {referralValidation.message}
                     </div>
@@ -348,11 +347,10 @@ export const SignupForm: React.FC = () => {
           <button
             type="submit"
             disabled={!isFormValid || isSubmitting}
-            className={`w-full py-3 px-6 rounded-lg font-semibold text-lg transition-colors ${
-              isFormValid && !isSubmitting
+            className={`w-full py-3 px-6 rounded-lg font-semibold text-lg transition-colors ${isFormValid && !isSubmitting
                 ? "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
                 : "bg-[#636363] text-white cursor-not-allowed"
-            }`}
+              }`}
           >
             {isSubmitting ? (
               <span className="flex items-center justify-center gap-2">
