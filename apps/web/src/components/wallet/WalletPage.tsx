@@ -161,8 +161,6 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
     const ngnRate = prices.ngn || 0;
     const multiplier = displayCurrency === "NGN" ? ngnRate : 1;
 
-    // Savings: use weekly earnings from API and spread over seven days.
-    // LPT: use existing calculated weekly earnings and spread over seven days.
     const weeklyTotal = !isStakingWallet
       ? (perenaWeeklyYieldData?.earnings ??
           perenaWeeklyYieldData?.yieldAmount ??
@@ -623,7 +621,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
               : "≈ ★★★★"}
           </p> */}
 
-          <div className="mt-6 flex items-center justify-center gap-6">
+          <div className="mt-7 flex items-center justify-center gap-6">
             <button
               onClick={handleDepositClick}
               className="flex flex-col items-center gap-1.5"
@@ -664,7 +662,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
 
         {renderEarningsCard()}
 
-        <div className="mt-6">
+        <div className="my-6">
           <h2 className="text-sm text-white/80 mb-3">Recent transactions</h2>
           <RecentTransactionsCard
             transactions={recentTransactions}
@@ -688,7 +686,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
         <DrawerContent className="bg-[#050505] border-[#2a2a2a]">
           <DrawerHeader>
             <DrawerTitle className="text-base font-medium text-white text-left">
-              Yield Earned
+              Earned last 7 days
             </DrawerTitle>
           </DrawerHeader>
           <div className="space-y-3 py-1 max-h-[40vh] overflow-y-auto pr-1 mt-3">

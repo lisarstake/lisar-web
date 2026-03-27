@@ -575,7 +575,7 @@ export const AllWalletPage: React.FC = () => {
               </div>
               <div
                 onClick={() => navigate(YIELD_ASSET_PICKER_PATH)}
-                className="w-full bg-[#13170a] rounded-xl p-3 text-left mb-20 cursor-pointer"
+                className="w-full bg-[#13170a] rounded-xl p-3 text-left mb-24 cursor-pointer"
               >
                 <div className="rounded-lg border border-white/5 bg-white/10 overflow-hidden relative">
                   <svg
