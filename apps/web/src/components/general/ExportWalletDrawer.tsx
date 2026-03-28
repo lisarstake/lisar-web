@@ -34,21 +34,47 @@ export const ExportWalletDrawer: React.FC<ExportWalletDrawerProps> = ({
   const [isExporting, setIsExporting] = useState(false);
   const [exportPassword, setExportPassword] = useState("");
   const [exportError, setExportError] = useState("");
+  const [exportErrorTone, setExportErrorTone] = useState<"warning" | "error">(
+    "error",
+  );
   const [privateKey, setPrivateKey] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  const getErrorText = (value: unknown): string => {
+    if (typeof value === "string") return value;
+    if (value && typeof value === "object" && "message" in value) {
+      const message = (value as { message?: unknown }).message;
+      if (typeof message === "string") return message;
+    }
+    return "";
+  };
+
+  const isInvalidCredentialsError = (message: string): boolean => {
+    const normalized = message.toLowerCase();
+    return (
+      normalized.includes("invalid") ||
+      normalized.includes("incorrect") ||
+      normalized.includes("wrong password") ||
+      normalized.includes("invalid credential") ||
+      normalized.includes("unauthorized") ||
+      normalized.includes("password")
+    );
+  };
 
   const handleClose = () => {
     setExportStep("intro");
     setExportPassword("");
     setPrivateKey("");
     setExportError("");
+    setExportErrorTone("error");
     onClose();
   };
 
   const handlePasswordConfirm = async () => {
     try {
       setExportError("");
+      setExportErrorTone("error");
       if (!state.user?.email) {
         setExportError("No user email found.");
         return;
@@ -64,7 +90,21 @@ export const ExportWalletDrawer: React.FC<ExportWalletDrawerProps> = ({
       });
       setIsVerifying(false);
       if (!loginResp.success) {
-        setExportError(loginResp.message || "Incorrect password.");
+        const backendMessage = [
+          loginResp.message,
+          getErrorText(loginResp.error),
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .trim();
+
+        if (isInvalidCredentialsError(backendMessage)) {
+          setExportErrorTone("warning");
+          setExportError("Wrong password. Please try again.");
+        } else {
+          setExportErrorTone("error");
+          setExportError("An error occurred. Please try again.");
+        }
         return;
       }
 
@@ -72,6 +112,7 @@ export const ExportWalletDrawer: React.FC<ExportWalletDrawerProps> = ({
       setExportError("");
     } catch (e) {
       setIsVerifying(false);
+      setExportErrorTone("error");
       setExportError("An error occurred. Please try again.");
     }
   };
@@ -154,7 +195,13 @@ export const ExportWalletDrawer: React.FC<ExportWalletDrawerProps> = ({
                   </button>
                 </div>
                 {exportError && (
-                  <p className="text-red-500 text-sm mt-2 pl-1">
+                  <p
+                    className={`text-sm mt-2 pl-1 ${
+                      exportErrorTone === "warning"
+                        ? "text-amber-300"
+                        : "text-red-500"
+                    }`}
+                  >
                     {exportError}
                   </p>
                 )}
