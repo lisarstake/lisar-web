@@ -25,6 +25,30 @@ interface BlogApiResponse {
   data: BlogPost;
 }
 
+const getAbsoluteImageUrl = (image: string | undefined, siteUrl: string): string => {
+  const fallback = `${siteUrl}/metaimage.png`;
+
+  if (!image || image.trim().length === 0) {
+    return fallback;
+  }
+
+  if (image.startsWith('http://') || image.startsWith('https://')) {
+    return image;
+  }
+
+  return image.startsWith('/') ? `${siteUrl}${image}` : `${siteUrl}/${image}`;
+};
+
+const getImageMimeType = (imageUrl: string): string => {
+  const normalized = imageUrl.toLowerCase().split('?')[0];
+
+  if (normalized.endsWith('.png')) return 'image/png';
+  if (normalized.endsWith('.webp')) return 'image/webp';
+  if (normalized.endsWith('.gif')) return 'image/gif';
+  if (normalized.endsWith('.svg')) return 'image/svg+xml';
+  return 'image/jpeg';
+};
+
 export const onRequest: PagesFunction<Env> = async (context) => {
   const { request, env, params } = context;
   const slug = params.slug as string;
@@ -64,18 +88,9 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     const siteUrl = env.VITE_SITE_URL || 'https://lisar.io';
     const currentUrl = `${siteUrl}/blog/${slug}`;
     
-    // Ensure cover image is absolute URL - this is critical for social media
-    let coverImageUrl = post.cover_image || '/lisar.png';
-    
-    if (!coverImageUrl.startsWith('http://') && !coverImageUrl.startsWith('https://')) {
-      // If it's a relative URL, make it absolute
-      if (coverImageUrl.startsWith('/')) {
-        coverImageUrl = `${siteUrl}${coverImageUrl}`;
-      } else {
-        coverImageUrl = `${siteUrl}/${coverImageUrl}`;
-      }
-    }
-    
+    // Ensure cover image is absolute URL - this is critical for social media.
+    const coverImageUrl = getAbsoluteImageUrl(post.cover_image, siteUrl);
+    const coverImageType = getImageMimeType(coverImageUrl);
  
 
     // Escape HTML entities
@@ -114,7 +129,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     <meta property="og:description" content="${excerpt}" />
     <meta property="og:image" content="${coverImageUrl}" />
     <meta property="og:image:secure_url" content="${coverImageUrl}" />
-    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:type" content="${coverImageType}" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="${title}" />

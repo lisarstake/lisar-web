@@ -141,10 +141,21 @@ export const BlogDetailPage: React.FC = () => {
   const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
   const siteUrl = typeof window !== 'undefined' ? window.location.origin : 'https://lisar.io';
   
-  // Ensure cover image is absolute URL for social sharing
-  const absoluteCoverImage = post.cover_image?.startsWith('http')
-    ? post.cover_image
-    : `${siteUrl}${post.cover_image?.startsWith('/') ? '' : '/'}${post.cover_image}`;
+  // Ensure cover image is absolute URL for social sharing.
+  const absoluteCoverImage = post.cover_image
+    ? (post.cover_image.startsWith('http')
+      ? post.cover_image
+      : `${siteUrl}${post.cover_image.startsWith('/') ? '' : '/'}${post.cover_image}`)
+    : `${siteUrl}/metaimage.png`;
+  const imageType = absoluteCoverImage.toLowerCase().includes('.png')
+    ? 'image/png'
+    : absoluteCoverImage.toLowerCase().includes('.webp')
+      ? 'image/webp'
+      : absoluteCoverImage.toLowerCase().includes('.gif')
+        ? 'image/gif'
+        : absoluteCoverImage.toLowerCase().includes('.svg')
+          ? 'image/svg+xml'
+          : 'image/jpeg';
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
@@ -161,7 +172,7 @@ export const BlogDetailPage: React.FC = () => {
         <meta property="og:description" content={post.excerpt} />
         <meta property="og:image" content={absoluteCoverImage} />
         <meta property="og:image:secure_url" content={absoluteCoverImage} />
-        <meta property="og:image:type" content="image/jpeg" />
+        <meta property="og:image:type" content={imageType} />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta property="og:image:alt" content={post.title} />
@@ -173,14 +184,14 @@ export const BlogDetailPage: React.FC = () => {
         ))}
         
         {/* Twitter */}
-        <meta property="twitter:card" content="summary_large_image" />
-        <meta property="twitter:url" content={currentUrl} />
-        <meta property="twitter:title" content={`${post.title} - Lisar Blog`} />
-        <meta property="twitter:description" content={post.excerpt} />
-        <meta property="twitter:image" content={absoluteCoverImage} />
-        <meta property="twitter:image:alt" content={post.title} />
-        <meta property="twitter:site" content="@LisarGlobal" />
-        <meta property="twitter:creator" content="@LisarGlobal" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content={currentUrl} />
+        <meta name="twitter:title" content={`${post.title} - Lisar Blog`} />
+        <meta name="twitter:description" content={post.excerpt} />
+        <meta name="twitter:image" content={absoluteCoverImage} />
+        <meta name="twitter:image:alt" content={post.title} />
+        <meta name="twitter:site" content="@LisarGlobal" />
+        <meta name="twitter:creator" content="@LisarGlobal" />
         
         {/* Additional Meta Tags */}
         <meta name="author" content={post.author.name} />
