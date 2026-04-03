@@ -85,7 +85,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     }
 
     // Build absolute URLs
-    const siteUrl = env.VITE_SITE_URL || 'https://lisar.io';
+    const siteUrl = env.VITE_SITE_URL || 'https://lisarstake.com';
     const currentUrl = `${siteUrl}/blog/${slug}`;
     
     // Ensure cover image is absolute URL - this is critical for social media.

@@ -618,69 +618,89 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
       </div>
 
       <div className="flex-1 overflow-y-auto px-6 pb-24 scrollbar-hide">
-        <div
-          className={`mt-5 text-center relative overflow-visible`}
-        >
-          <div className="flex items-center justify-center gap-0.5">
-            <p className="text-sm text-white/50">Wallet balance</p>
-            <button
-              onClick={() => setShowBalance(!showBalance)}
-              className="h-5 w-5 rounded-full bg-[#13170a] flex items-center justify-center"
-            >
-              {showBalance ? (
-                <Eye size={15} color="#fff" />
+        <div className="mt-5">
+          <div
+            className={`${isStakingWallet
+              ? "bg-transparent border-2 border-[#C7EF6B]/30 hover:border-[#C7EF6B]/50"
+              : "bg-[#6da7fd] border-2 border-[#86B3F7]/30 hover:border-[#86B3F7]/50"
+              } rounded-2xl p-5 relative overflow-hidden transition-colors min-h-[190px]`}
+          >
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center gap-1">
+                  <p
+                    className={`text-sm ${isStakingWallet ? "text-white/80" : "text-white/90"
+                      }`}
+                  >
+                    Wallet balance
+                  </p>
+                  <button
+                    onClick={() => setShowBalance(!showBalance)}
+                    className="shrink-0 cursor-pointer hover:opacity-70 transition-opacity"
+                  >
+                    {showBalance ? (
+                      <Eye
+                        size={18}
+                        color={
+                          isStakingWallet
+                            ? "rgba(199, 239, 107, 0.8)"
+                            : "rgba(255, 255, 255, 0.8)"
+                        }
+                      />
+                    ) : (
+                      <EyeOff
+                        size={18}
+                        color={
+                          isStakingWallet
+                            ? "rgba(199, 239, 107, 0.8)"
+                            : "rgba(255, 255, 255, 0.8)"
+                        }
+                      />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {activeWalletCard?.isLoading ? (
+                <div className="mt-1">{renderLoadingStars("text-xl font-semibold")}</div>
               ) : (
-                <EyeOff size={15} color="#fff" />
+                <p className="mt-1 text-xl font-medium tracking-tight text-white">
+                  {showBalance ? formattedAssetBalance : "★★★★"}
+                </p>
               )}
-            </button>
-          </div>
-          {activeWalletCard?.isLoading ? (
-            <div className="mt-1">{renderLoadingStars("text-xl font-semibold")}</div>
-          ) : (
-            <p className="mt-1 text-xl font-medium tracking-tight text-white">
-              {showBalance ? formattedAssetBalance : "★★★★"}
-            </p>
-          )}
 
-          {/* <p className="mt-1 text-sm text-white/50">
-            {showBalance
-              ? `≈ ${displayFiatSymbol}${equivalentBalance.toLocaleString(undefined, {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}`
-              : "≈ ★★★★"}
-          </p> */}
+              <div className="mt-7 flex items-center justify-center gap-6">
+                <button
+                  onClick={handleDepositClick}
+                  className="flex flex-col items-center gap-1.5"
+                >
+                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#13170a]">
+                    <ArrowDown size={22} className="text-[#e8ece9]" />
+                  </span>
+                  <span className="text-xs font-medium">Deposit</span>
+                </button>
 
-          <div className="mt-7 flex items-center justify-center gap-6">
-            <button
-              onClick={handleDepositClick}
-              className="flex flex-col items-center gap-1.5"
-            >
-              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#13170a]">
-                <ArrowDown size={22} className="text-[#e8ece9]" />
-              </span>
-              <span className="text-xs font-medium">Deposit</span>
-            </button>
+                <button
+                  onClick={handleWithdrawClick}
+                  className="flex flex-col items-center gap-1.5"
+                >
+                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#13170a]">
+                    <ArrowRight size={22} className="text-[#e8ece9]" />
+                  </span>
+                  <span className="text-xs font-medium">Withdraw</span>
+                </button>
 
-            <button
-              onClick={handleWithdrawClick}
-              className="flex flex-col items-center gap-1.5"
-            >
-              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#13170a]">
-                <ArrowRight size={22} className="text-[#e8ece9]" />
-              </span>
-              <span className="text-xs font-medium">Withdraw</span>
-            </button>
-
-            <button
-              onClick={() => setShowEarningsDrawer(true)}
-              className="flex flex-col items-center gap-1.5"
-            >
-              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#13170a]">
-                <DollarSign size={22} className="text-[#e8ece9]" />
-              </span>
-              <span className="text-xs font-medium">Earnings</span>
-            </button>
+                <button
+                  onClick={() => setShowEarningsDrawer(true)}
+                  className="flex flex-col items-center gap-1.5"
+                >
+                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#13170a]">
+                    <DollarSign size={22} className="text-[#e8ece9]" />
+                  </span>
+                  <span className="text-xs font-medium">Earnings</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
