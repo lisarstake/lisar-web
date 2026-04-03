@@ -139,7 +139,7 @@ export const BlogDetailPage: React.FC = () => {
 
   // Get the full URL for sharing
   const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
-  const siteUrl = typeof window !== 'undefined' ? window.location.origin : 'https://lisar.io';
+  const siteUrl = typeof window !== 'undefined' ? window.location.origin : 'https://lisarstake.com';
   
   // Ensure cover image is absolute URL for social sharing.
   const absoluteCoverImage = post.cover_image
