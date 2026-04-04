@@ -63,22 +63,33 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   }
 
   try {
-    // Fetch blog post data from your API
-    const apiBaseUrl = env.VITE_API_BASE_URL || 'https://api.lisar.io';
-    const apiUrl = `${apiBaseUrl}/blog/posts/${slug}`;
-    
-    const response = await fetch(apiUrl, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    // Fetch blog post data from available API bases.
+    const apiBaseCandidates = [
+      env.VITE_API_BASE_URL,
+      'https://lisar-api-3-pi90.onrender.com/api/v1',
+      'https://api.lisar.io',
+    ].filter((value): value is string => Boolean(value));
 
-    if (!response.ok) {
-      return context.next();
+    let post: BlogPost | undefined;
+    for (const apiBaseUrl of apiBaseCandidates) {
+      const apiUrl = `${apiBaseUrl}/blog/posts/${slug}`;
+      try {
+        const response = await fetch(apiUrl, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) continue;
+        const result = (await response.json()) as BlogApiResponse;
+        if (result?.data) {
+          post = result.data;
+          break;
+        }
+      } catch {
+        // Try next candidate.
+      }
     }
-
-    const result = (await response.json()) as BlogApiResponse;
-    const post = result.data;
 
     if (!post) {
       return context.next();
