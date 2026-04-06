@@ -78,7 +78,7 @@ export const allWalletTourConfig: TourConfig = {
       title: "Earn Daily Yields",
       description:
         "Put your assets to work and grow your balance with daily yield opportunities.",
-      position: "bottom",
+      position: "top",
       highlightPadding: 8,
     },
     {
