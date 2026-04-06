@@ -844,7 +844,7 @@ export const WalletTransferFormPage: React.FC = () => {
       </div>
 
       {isWithdraw && (
-        <div className="fixed bottom-28 left-0 right-0 px-6 z-20">
+        <div className="px-6 pb-24 pt-3 bg-[#050505] shrink-0">
           <button
             onClick={handleConfirm}
             disabled={isDisabled}
