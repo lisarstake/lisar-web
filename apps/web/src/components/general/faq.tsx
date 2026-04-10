@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "../ui/button";
 import { Plus } from "lucide-react";
-import { LisarLines } from "./lisar-lines";
+import { LisarLines } from "@/components/landing/lisar-lines";
 
 const FAQ = () => {
   const [expandedQuestion, setExpandedQuestion] = useState<number | null>(null);

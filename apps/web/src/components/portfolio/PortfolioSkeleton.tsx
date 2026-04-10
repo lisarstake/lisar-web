@@ -24,7 +24,7 @@ export const PortfolioSkeleton: React.FC = () => {
         <div className="flex items-center justify-between py-8 mb-2">
           <button
             onClick={handleBackClick}
-            className="h-10 w-10 rounded-full bg-[#13170a] flex items-center justify-center"
+            className="h-10 w-10 rounded-full bg-[#071510] flex items-center justify-center"
           >
             <ArrowLeft className="text-white" size={22} />
           </button>
