@@ -69,7 +69,7 @@ export const HowItWorksSection = () => {
         </RevealOnScroll>
 
         <div className="mt-12 grid gap-12 md:grid-cols-[1fr_1fr] md:gap-16 lg:grid-cols-[1.3fr_1fr]">
-          <div className="space-y-6 md:space-y-8 md:mt-0">
+          <div className="order-2 md:order-1 space-y-6 md:space-y-8 md:mt-0">
             {steps.map((step, index) => (
               <RevealOnScroll key={step.marker} delay={index * 0.06}>
                 <article className="grid grid-cols-[54px_1fr] gap-4 md:grid-cols-[90px_1fr] md:gap-3">
@@ -98,7 +98,7 @@ export const HowItWorksSection = () => {
             ))}
           </div>
 
-          <div className="order-1 md:order-3">
+          <div className="order-1 md:order-2">
             <RevealOnScroll>
               <img
                 src="/how-to.png"
