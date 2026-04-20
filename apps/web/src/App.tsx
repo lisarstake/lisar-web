@@ -21,6 +21,10 @@ export default function App() {
 
   const useDesktopView =
     location.pathname === "/" || 
+    location.pathname === "/lisar-growth" || 
+    location.pathname === "/lisar-savings" || 
+    location.pathname === "/privacy-policy" || 
+    location.pathname === "/terms-of-use" || 
     location.pathname === "/dashboard" ||
     location.pathname.startsWith("/blog");
 

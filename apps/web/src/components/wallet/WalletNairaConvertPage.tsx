@@ -205,7 +205,7 @@ export const WalletNairaConvertPage: React.FC = () => {
       <div className="flex items-center justify-between px-6 pt-8 pb-2">
         <button
           onClick={() => navigate(-1)}
-          className="h-10 w-10 rounded-full bg-[#13170a] flex items-center justify-center"
+          className="h-10 w-10 rounded-full bg-[#071510] flex items-center justify-center"
         >
           <ArrowLeft className="text-white" size={22} />
         </button>
@@ -215,37 +215,37 @@ export const WalletNairaConvertPage: React.FC = () => {
 
       <div className="flex-1 overflow-y-auto px-6 pb-28 scrollbar-hide">
         <div className="pt-2 pb-4">
-          <div className="bg-[#13170a] rounded-lg p-3 flex items-center gap-3 mt-2">
-          <input
-            type="text"
-            value={amount ? formatNumber(amount) : ""}
-            onChange={(e) => {
-              const rawValue = parseFormattedNumber(e.target.value);
-              let numericValue = rawValue.replace(/[^0-9.]/g, "");
-              const parts = numericValue.split(".");
-              if (parts.length > 2) {
-                numericValue = `${parts[0]}.${parts.slice(1).join("")}`;
-              }
-              setAmount(numericValue);
-              setError("");
-            }}
-            placeholder="0"
-            className="flex-1 bg-transparent text-white text-lg font-medium focus:outline-none"
-          />
+          <div className="bg-[#071510] rounded-lg p-3 flex items-center gap-3 mt-2">
+            <input
+              type="text"
+              value={amount ? formatNumber(amount) : ""}
+              onChange={(e) => {
+                const rawValue = parseFormattedNumber(e.target.value);
+                let numericValue = rawValue.replace(/[^0-9.]/g, "");
+                const parts = numericValue.split(".");
+                if (parts.length > 2) {
+                  numericValue = `${parts[0]}.${parts.slice(1).join("")}`;
+                }
+                setAmount(numericValue);
+                setError("");
+              }}
+              placeholder="0"
+              className="flex-1 bg-transparent text-white text-lg font-medium focus:outline-none"
+            />
           </div>
           <p className="text-gray-400 text-xs mt-2 pl-2">
             {safeMode === "deposit"
               ? `≈ ${(numericAmount / Math.max(tokenRateInNgn, 1e-9)).toLocaleString(
-                  undefined,
-                  {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 4,
-                  },
-                )} ${tokenSymbol}`
-              : `≈ ₦${(numericAmount * tokenRateInNgn).toLocaleString(undefined, {
+                undefined,
+                {
                   minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}`}
+                  maximumFractionDigits: 4,
+                },
+              )} ${tokenSymbol}`
+              : `≈ ₦${(numericAmount * tokenRateInNgn).toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}`}
           </p>
         </div>
 
@@ -258,11 +258,10 @@ export const WalletNairaConvertPage: React.FC = () => {
                 <button
                   key={percent}
                   onClick={() => handleAmountSelect(percent)}
-                  className={`flex-1 py-2.5 px-2 rounded-full text-sm font-medium transition-colors ${
-                    isActive
+                  className={`flex-1 py-2.5 px-2 rounded-full text-sm font-medium transition-colors ${isActive
                       ? "bg-[#C7EF6B] text-black"
-                      : "bg-[#13170a] text-white/80 hover:bg-[#1a1f10]"
-                  }`}
+                      : "bg-[#071510] text-white/80 hover:bg-[#1a1f10]"
+                    }`}
                 >
                   {percent}%
                 </button>
@@ -271,23 +270,23 @@ export const WalletNairaConvertPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="rounded-lg bg-[#13170a] p-4 mt-3">
+        <div className="rounded-lg bg-[#071510] p-4 mt-3">
           <h3 className="text-sm text-white/60 mb-0.5 flex items-center gap-1.5">
             <WalletCards size={16} /> {sourceBalanceLabel}
           </h3>
-          <div className="bg-[#13170a] rounded-lg border border-[#13170a]">
+          <div className="bg-[#071510] rounded-lg border border-[#071510]">
             <div className="flex items-center space-x-3">
               <div className="flex-1">
                 <span className="text-gray-100 text-sm font-medium">
                   {safeMode === "deposit"
                     ? `₦${sourceBalance.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}`
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}`
                     : `${sourceBalance.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 4,
-                      })} ${tokenSymbol}`}
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 4,
+                    })} ${tokenSymbol}`}
                 </span>
               </div>
             </div>
@@ -302,18 +301,17 @@ export const WalletNairaConvertPage: React.FC = () => {
 
         {error ? <p className="mt-2 text-xs text-amber-300">{error}</p> : null}
 
-     
+
       </div>
 
       <div className="px-6 py-3.5 bg-[#050505] pb-24">
         <button
           onClick={handleContinue}
           disabled={numericAmount <= 0 || hasExceededBalance}
-          className={`h-12 w-full rounded-full text-base font-semibold transition-colors ${
-            numericAmount > 0 && !hasExceededBalance
+          className={`h-12 w-full rounded-full text-base font-semibold transition-colors ${numericAmount > 0 && !hasExceededBalance
               ? "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
               : "bg-[#636363] text-white cursor-not-allowed"
-          }`}
+            }`}
         >
           Continue
         </button>
@@ -335,4 +333,4 @@ export const WalletNairaConvertPage: React.FC = () => {
     </div>
   );
 };
-  const presetPercents = [25, 50, 75, 100] as const;
+const presetPercents = [25, 50, 75, 100] as const;

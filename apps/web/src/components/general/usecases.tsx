@@ -5,7 +5,7 @@ import {
   CardDescription,
   CardContent,
 } from "../ui/card";
-import {LisarLines} from "./lisar-lines";
+import {LisarLines} from "@/components/landing/lisar-lines";
 
 export const UseCasesSection = () => {
   return (

@@ -61,7 +61,7 @@ export const EarnPage: React.FC = () => {
 
   const handleCardClick = (card: EarnCard) => {
     if (card.id === "1") {
-      navigate("/campaign");
+      // navigate("/campaign");
     } else if (card.isComingSoon) {
       window.open(
         "https://t.me/+F0YXOMaiJMxkODVk",
@@ -84,7 +84,7 @@ export const EarnPage: React.FC = () => {
           </div>
           {/* <button
             onClick={handleHelpClick}
-            className="w-8 h-8 bg-[#2a2a2a] rounded-full flex items-center justify-center"
+            className="w-8 h-8 bg-[#505050] rounded-full flex items-center justify-center"
           >
             <CircleQuestionMark color="#86B3F7" size={16} />
           </button> */}
@@ -98,8 +98,8 @@ export const EarnPage: React.FC = () => {
           {earnCards.map((card) => (
             <div
               key={card.id}
-              className={`bg-[#13170a] rounded-xl overflow-hidden ${card.isSocialCard
-                ? "cursor-pointer hover:bg-[#2a2a2a] transition-colors"
+              className={`bg-[#2a2a2a] rounded-xl overflow-hidden ${card.isSocialCard
+                ? "cursor-pointer hover:bg-[#505050] transition-colors"
                 : ""
                 }`}
               onClick={() => card.isSocialCard && handleCardClick(card)}

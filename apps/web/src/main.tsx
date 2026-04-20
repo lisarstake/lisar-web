@@ -18,7 +18,7 @@ mixpanel.init(import.meta.env.VITE_MIXPANEL_TOKEN || "", {
   record_sessions_percent: 100,
 });
 
-// Handle chunk loading errors globally
+// Handle chunk loading errors
 window.addEventListener("error", (event) => {
   if (
     event.message.includes("Failed to fetch dynamically imported module") ||
