@@ -1,75 +1,177 @@
-import { CircleArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import RevealOnScroll from "./reveal-on-scroll";
-import SectionHeading from "./section-heading";
 
-const growthOptions = [
-  {
-    title: "Save with USD with instantly withdrawal",
-    description:
-      "Earn yields in USD while maintaining full liquidity. Your funds stay accessible 24/7 so you can withdraw anytime without penalties or waiting periods.",
-    cta: "Learn more about USD savings",
-    image: "/h1.svg",
-  },
-  {
-    title: "Explore High-yielding growth opportunities",
-    description:
-      "Access alternative investment vehicles that deliver higher returns than traditional savings accounts. These volatile opportunities offer greater upside potential but carry additional risk exposure.",
-    cta: "What you should know about high-yield",
-    image: "/h2.svg",
-  },
-  {
-    title: "Own stocks from top global companies",
-    description:
-      "Build fractional ownership in world-leading companies like Tesla, Apple, and Nvidia. Start with as little as $1 and track your portfolio's performance in real-time.",
-    cta: "Discover companies available",
-    image: "/h3.svg",
-  },
-];
+type GrowthCard = {
+  title: string;
+  rate?: string;
+  description: string;
+  benefits: string[];
+  cta: string;
+  featured?: boolean;
+  action?: () => void;
+};
 
 export const GrowthOptionsSection = () => {
-  return (
-    <section className="w-full px-6 pt-5 pb-12 md:px-8 md:pt-5 md:pb-16">
-      <SectionHeading
-        tag="GROW"
-        supportingText="Explore different pathways to building wealth"
-        className="mt-10"
-      />
-      <div className="mx-auto w-full space-y-6">
-        {growthOptions.map((item, index) => {
-          const isReversed = index % 2 === 1;
-          return (
-            <RevealOnScroll key={item.title} delay={index * 0.06}>
-              <article
-                className={`grid gap-6 bg-white p-6 md:p-8 md:items-center ${
-                  isReversed
-                    ? "md:grid-cols-[1.1fr_0.9fr]"
-                    : "md:grid-cols-[0.9fr_1.1fr]"
-                }`}
-              >
-                <div className={isReversed ? "md:order-2" : ""}>
-                  <img
-                    src={item.image}
-                    alt={item.title}
-                    className="w-full h-[250px] md:h-[400px] object-contain rounded-2xl bg-[#f3f7ef]"
-                  />
-                </div>
+  const navigate = useNavigate();
 
-                <div className={isReversed ? "md:order-1" : ""}>
-                  <h3 className="text-[#071510] text-2xl md:text-4xl leading-tight font-semibold tracking-tight">
-                    {item.title}
+  const cards: GrowthCard[] = [
+    {
+      title: "Lisar Savings",
+      rate: "15",
+      description:
+        "Your naira is deployed into stablecoin yield strategies — dollar-pegged assets that generate consistent, predictable daily returns.",
+      benefits: [
+        "Daily interest, compounding automatically",
+        "Dollar-backed yield",
+        "Withdraw when you need to",
+
+      ],
+      cta: "Open savings account",
+      action: () => navigate("/signup"),
+    },
+    {
+      title: "Lisar Growth",
+      rate: "40",
+      description:
+        "Pick a digital asset — like choosing a stock. Your naira is deployed into staking positions on that asset. Returns are tied to network staking yields.",
+      benefits: [
+        "Up to 40% annual yield",
+        "Daily compounding returns",
+        "Returns tied to network yields",
+
+      ],
+      cta: "Open growth account",
+      featured: true,
+      action: () => navigate("/signup"),
+    },
+    {
+      title: "Not sure which to choose?",
+      description:
+        "Most Lisar users split across both. Savings for stability, growth for upside. The calculator shows you exactly what each option returns on your specific amount and over a given timeline.",
+      benefits: [
+        "Real yield estimates",
+        "Compare both products side by side",
+        "See actual returns before committing",
+      ],
+      cta: "Try the calculator",
+      action: () => {
+        const section = document.getElementById("yield-estimate");
+        section?.scrollIntoView({ behavior: "smooth", block: "start" });
+      },
+    },
+  ];
+
+  return (
+    <section id="growth-options" className="w-full px-6 py-14 md:px-8 md:py-18">
+      <div className="mx-auto w-full max-w-7xl">
+        <RevealOnScroll>
+          <p className="inline-flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.2em] text-[#235538]">
+            <span className="h-px w-8 bg-[#235538]" />
+            Explore the paths
+          </p>
+          <h2 className="mt-5 text-[2.5rem] leading-[0.95] tracking-[-0.03em] text-[#111111] md:text-[3rem]">
+            <span className="block font-serif font-semibold">Two ways to</span>
+            <span className="block font-serif italic text-[#235538]">
+              grow your money.
+            </span>
+          </h2>
+          <p className="mt-6 max-w-3xl text-lg leading-relaxed text-[#5e6660] md:text-[1.12rem]">
+            Pick a one that fits how you think about risk and reward.
+          </p>
+        </RevealOnScroll>
+
+        <div className="mt-11 grid gap-6 lg:grid-cols-3">
+          {cards.map((card, index) => {
+            const isFeatured = card.featured;
+            return (
+              <RevealOnScroll key={card.title} delay={index * 0.06}>
+                <article
+                  className={`relative h-full rounded-[30px] border px-8 py-9 pb-32 ${
+                    isFeatured
+                      ? "border-[#235538] bg-[#235538] text-[#e9f2ea]"
+                      : "border-[#dbe2dd] bg-white text-[#222a24]"
+                  }`}
+                >
+                  <h3
+                    className={`mt-4 font-serif text-[1rem] leading-[0.95] md:text-[1.5rem] ${
+                      isFeatured ? "text-[#f2f7f2]" : "text-[#222a24]"
+                    }`}
+                  >
+                    {card.title}
                   </h3>
-                  <p className="mt-4 text-[#4a6256] text-base md:text-xl leading-relaxed">
-                    {item.description}
+                  {card.rate ? (
+                    <div className="mt-3">
+                      <p
+                        className={`font-serif text-[3.5rem] leading-none md:text-[4.5rem] ${
+                          isFeatured ? "text-[#e6f2e7]" : "text-[#235538]"
+                        }`}
+                      >
+                        {card.rate}
+                        <span className="text-[0.48em]">% APY</span>
+                      </p>
+
+                    </div>
+                  ) : (
+                    <div className="mt-4">
+
+                      <p className={`mt-2 text-xs uppercase tracking-[0.2em] ${
+                        isFeatured ? "text-[#cfe2d3]" : "text-[#5e6660]"
+                      }`}>
+                        Use the calculator
+                      </p>
+                    </div>
+                  )}
+
+                  <p
+                    className={`mt-5 text-sm md:text-base leading-relaxed ${
+                      isFeatured ? "text-[#cfe2d3]" : "text-[#5e6660]"
+                    }`}
+                  >
+                    {card.description}
                   </p>
-                  <button className="mt-5 inline-flex items-center gap-2 text-[#b98417] text-sm md:text-base font-medium">
-                    {item.cta}
-                    <CircleArrowRight size={16} />
+
+                  <ul className="mt-7 space-y-3 text-sm md:text-base">
+                    {card.benefits.map((benefit) => (
+                      <li key={benefit} className="flex items-start gap-3">
+                        <span
+                          className={`mt-0.5 text-xs inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full ${
+                            isFeatured
+                              ? "bg-[#4e785d] text-[#d9e9dc]"
+                              : "bg-[#eaf1ec] text-[#235538]"
+                          }`}
+                        >
+                          ★
+                        </span>
+                        <span
+                          className={`italic leading-relaxed ${
+                            isFeatured ? "text-[#d7e7db]" : "text-[#4c5750]"
+                          }`}
+                        >
+                          {benefit}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <button
+                    type="button"
+                    onClick={card.action}
+                    className={`absolute bottom-9 left-8 right-8 inline-flex w-auto items-center justify-center gap-2 rounded-full border-black px-5 py-2.5 text-[1.04rem] font-medium transition-colors ${
+                      isFeatured
+                        ? "border-white/70 border bg-transparent text-white hover:bg-white/10"
+                        : "border-black border-2 bg-[#C7EF6B] text-black hover:bg-[#b7e354]"
+                    }`}
+                  >
+                    {card.cta}
+                    <ArrowRight size={18} />
                   </button>
-                </div>
-              </article>
-            </RevealOnScroll>
-          );
-        })}
+
+                </article>
+              </RevealOnScroll>
+            );
+          })}
+        </div>
       </div>
     </section>
   );

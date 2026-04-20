@@ -17,7 +17,7 @@ export const SectionHeading = ({
         {tag}
       </span> : null}
       {supportingText ? (
-        <p className="text-2xl font-medium leading-tight text-[#2e3f34] capitalize md:text-4xl">
+        <p className="text-lg font-medium leading-tight text-[#2e3f34] capitalize md:text-xl">
           {supportingText}
         </p>
       ) : null}

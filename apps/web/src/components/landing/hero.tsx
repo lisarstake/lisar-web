@@ -1,96 +1,131 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { CornerDownRight } from "lucide-react";
-import { LisarLines } from "./lisar-lines";
+import { Check, ChevronDown, Info } from "lucide-react";
 import RevealOnScroll from "./reveal-on-scroll";
+
+type CompareOption = {
+  name: string;
+  apy: string;
+  iconSrc: string;
+  note: string;
+  interestType: string;
+  withdraw: string;
+  yieldType: string;
+};
+
+const compareOptions: CompareOption[] = [
+  {
+    name: "Traditional banks",
+    apy: "5.79% APY",
+    iconSrc: "/sol.svg",
+    note: "Liquid staking benchmark",
+    interestType: "Daily",
+    withdraw: "Anytime",
+    yieldType: "Naira yield",
+  },
+  {
+    name: "Fintech wallets",
+    apy: "4.31% APY",
+    iconSrc: "/usdc.svg",
+    note: "Stablecoin savings benchmark",
+    interestType: "Daily",
+    withdraw: "Anytime",
+    yieldType: "USD-backed yield",
+  },
+  {
+    name: "Savings apps",
+    apy: "4.15% APY",
+    iconSrc: "/usdt.svg",
+    note: "Alternative stable benchmark",
+    interestType: "Daily",
+    withdraw: "Anytime",
+    yieldType: "USD-backed yield",
+  },
+
+];
 
 const Hero = () => {
   const navigate = useNavigate();
+  const [openCompare, setOpenCompare] = useState(false);
+  const [selectedCompare, setSelectedCompare] = useState<CompareOption>(compareOptions[0]);
+  const comparisonRows = [
+    { label: "Returns", lisar: "10-15% APY", compare: selectedCompare.apy },
+    { label: "Interest", lisar: "Daily", compare: selectedCompare.interestType },
+    { label: "Withdraw", lisar: "Anytime", compare: selectedCompare.withdraw },
+    { label: "Yield", lisar: "USD yield", compare: selectedCompare.yieldType },
+  ];
 
   return (
-    <section className="w-full relative overflow-hidden">
-      <LisarLines position="top-right" />
-      <div className="hidden md:block">
-        <LisarLines position="bottom-left" />
-      </div>
+    <section className="w-full overflow-visible bg-white min-h-[90vh] flex items-center">
+      <div className="mx-auto w-full max-w-7xl px-6 pt-14 md:px-10 md:pt-14">
+        <div className="grid items-center gap-8 md:grid-cols-[1.3fr_1fr] md:gap-10">
+          <div>
+            <RevealOnScroll>
+              <h1 className="text-[#111111] text-[2.7rem] leading-[0.98] tracking-[-0.03em] md:text-[4.5rem]">
+                <span className="font-serif font-bold">The better way to</span>
+                <br />
+                <span className="font-serif italic font-bold text-[#235538]">save and invest.</span>
+              </h1>
+            </RevealOnScroll>
 
-      <div className="absolute inset-0 opacity-40 pointer-events-none [background:repeating-linear-gradient(to_right,transparent_0,transparent_28px,rgba(7,21,16,0.05)_29px)]" />
+            <RevealOnScroll delay={0.08}>
+              <p className="mt-6 max-w-xl text-base text-[#5f6762] md:text-[1.1rem]">
+                Lisar helps millions of customers achieve their financial goals by helping them save and invest with ease. <span className="hidden md:inline">Deposit with naira, earn dollar-backed yield daily on your savings.</span>
+              </p>
+            </RevealOnScroll>
 
-      <div className="max-w-7xl mx-auto px-6 md:px-10 pt-16 pb-0 md:pt-24 md:pb-0 relative z-10">
-        <div className="mx-auto max-w-5xl text-center">
-          <RevealOnScroll>
-            <h1 className="leading-[1.03] font-medium tracking-[-0.04em] text-[#071510] text-[2.8rem] md:text-[4.8rem]">
-              Do more
-              <br />
-              with your money
-            </h1>
-          </RevealOnScroll>
+            <RevealOnScroll delay={0.12}>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={() => navigate("/login")}
+                  className="rounded-full border-2 border-black bg-[#C7EF6B] px-4 py-3 md:px-8 text-lg font-medium text-black transition hover:bg-[#C7EF6B] cursor-pointer"
+                >
+                  Create a free account
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const section = document.getElementById("why-lisar");
+                    section?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }}
+                  className="rounded-full border border-[#d5dcd6] bg-white px-4 py-3 md:px-8 text-lg font-medium text-[#2a332d] transition hover:bg-[#f3f5f4] cursor-pointer"
+                >
+                  Learn more
+                </button>
+              </div>
+            </RevealOnScroll>
 
-          <RevealOnScroll delay={0.06}>
-            <p className="mx-auto mt-7 max-w-2xl text-base md:text-xl text-[#496255]">
-              One app for saving, growing, and managing your money with
-              confidence. Deposit, earn daily returns, withdraw anytime.
-            </p>
-          </RevealOnScroll>
+            <RevealOnScroll delay={0.16}>
+              <div className="mt-8 flex flex-wrap items-center gap-4 text-xs text-[#707872] md:text-sm">
+                <span className="inline-flex items-center gap-2">
+                  <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-[#235538] text-[10px] text-[#C7EF6B]">
+                   <Check size={12} />
+                  </span>
+                  Naira deposits
+                </span>
+                <span className="hidden h-4 w-px bg-[#d9dfdb] md:block" />
+                <span className="inline-flex items-center gap-2">
+                  <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-[#235538] text-[10px] text-[#C7EF6B]">
+                   <Check size={12} />
+                  </span>
+                  Dollar-backed yield
+                </span>
+                <span className="hidden h-4 w-px bg-[#d9dfdb] md:block" />
+                <span className="inline-flex items-center gap-2">
+                  <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-[#235538] text-[10px] text-[#C7EF6B]">
+                   <Check size={12} />
+                  </span>
+                  Daily interest
+                </span>
+              </div>
+            </RevealOnScroll>
+          </div>
 
-          <RevealOnScroll delay={0.1}>
-            <div className="mt-10 flex flex-wrap justify-center gap-3">
-              <button
-                className="inline-flex items-center gap-2 rounded-lg bg-[#C7EF6B] px-7 py-3.5 text-base md:text-lg font-medium text-[#060E0A] transition hover:bg-[#b7e354]"
-                onClick={() => navigate("/login")}
-              >
-                Start building wealth
-                <CornerDownRight size={17} />
-              </button>
-            </div>
+          <RevealOnScroll delay={0.12}>
+            <img src="/hero.svg" className="rounded-xl w-[450px]" />
           </RevealOnScroll>
         </div>
-
-        <RevealOnScroll delay={0.12}>
-          <div className="mt-12 md:mt-14">
-            <div className="relative h-[250px] md:h-[410px]">
-              <article className="group absolute left-2 top-16 md:left-8 md:top-20 z-10 w-[34%] md:w-[31%] rotate-[-4.6deg] rounded-xl md:rounded-4xl bg-[#10251c] px-4 md:px-8 pt-4 md:pt-8 pb-16 md:pb-28 text-[#d8e8d0] transition-transform duration-300 hover:scale-[1.06]">
-                <h3 className="text-[1.1rem] md:text-[2.15rem] leading-[1.05] font-semibold">
-                  Invest in real
-                  <br />
-                  assets
-                </h3>
-                <img
-                  src="/h1.svg"
-                  alt="Real asset investing"
-                  className="mt-3 md:mt-7 h-28 md:h-64 w-full object-contain"
-                />
-              </article>
-
-              <article className="group absolute left-1/2 top-5 z-20 w-[38%] md:w-[32%] -translate-x-1/2 rounded-xl md:rounded-4xl bg-[#050505] px-4 md:px-8 pt-4 md:pt-8 pb-16 md:pb-28 text-white transition-transform duration-300 hover:scale-[1.06] hover:z-30">
-                <h3 className="text-[1.1rem] md:text-[2.15rem] leading-[1.05] font-semibold">
-                  Save in naira or
-                  <br />
-                  dollars
-                </h3>
-                <img
-                  src="/h2.svg"
-                  alt="Naira and dollar savings"
-                  className="mt-3 md:mt-7 h-28 md:h-64 w-full object-contain"
-                />
-              </article>
-
-              <article className="group absolute right-2 top-16 md:right-8 md:top-20 z-10 w-[34%] md:w-[31%] rotate-[4.6deg] rounded-xl md:rounded-4xl border border-[#dce4d7] bg-[#dff2c2] px-4 md:px-8 pt-4 md:pt-8 pb-16 md:pb-28 text-[#071510] transition-transform duration-300 hover:scale-[1.06]">
-                <h3 className="text-[1.1rem] md:text-[2.15rem] leading-[1.05] font-semibold">
-                  Save with friends
-                  <br />
-                  and family
-                </h3>
-                <img
-                  src="/h3.svg"
-                  alt="Community saving"
-                  className="mt-3 md:mt-7 h-28 md:h-64 w-full object-contain"
-                />
-              </article>
-
-              <div className="pointer-events-none absolute left-1/2 bottom-[-180px] md:bottom-[-250px] z-40 h-[20px] w-[170%] -translate-x-1/2 rounded-t-[100%] bg-[#f7faf5] border-[#e5ecdf]" />
-            </div>
-          </div>
-        </RevealOnScroll>
       </div>
     </section>
   );

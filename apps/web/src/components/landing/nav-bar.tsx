@@ -2,46 +2,31 @@ import { type ComponentType, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  Banknote,
-  BarChart3,
   BookOpen,
-  Box,
-  Building2,
+  Calculator,
   ChevronDown,
   FileText,
-  HelpCircle,
-  Library,
-  Link2,
+  Landmark,
   Menu,
-  PiggyBank,
+  Newspaper,
+  ShieldCheck,
+  Users,
   X,
 } from "lucide-react";
 
-type MenuKey = "personal" | "business" | "developer" | "learn";
-
-type MenuItem = {
+type ResourceItem = {
   title: string;
-  description: string;
   icon: ComponentType<{ className?: string }>;
-  badge?: string;
+  toneClass: string;
   action?: () => void;
-};
-
-type MenuConfig = {
-  title: string;
-  primary: MenuItem[];
-  secondaryTitle?: string;
-  secondary?: { title: string; action?: () => void }[];
 };
 
 const Navbar = () => {
   const navigate = useNavigate();
-  const [activeMenu, setActiveMenu] = useState<MenuKey | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [mobileActiveMenu, setMobileActiveMenu] = useState<MenuKey | null>(
-    null,
-  );
+  const [resourcesOpen, setResourcesOpen] = useState(false);
+  const [mobileResourcesOpen, setMobileResourcesOpen] = useState(true);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 8);
@@ -52,7 +37,6 @@ const Navbar = () => {
 
   useEffect(() => {
     if (!mobileOpen) {
-      setMobileActiveMenu(null);
       return;
     }
 
@@ -63,112 +47,77 @@ const Navbar = () => {
     };
   }, [mobileOpen]);
 
-  const menuConfig = useMemo<Record<MenuKey, MenuConfig>>(
-    () => ({
-      personal: {
-        title: "Personal",
-        primary: [
-          {
-            title: "Savings",
-            description: "Save and earn amazing returns",
-            icon: PiggyBank,
-          },
-          {
-            title: "Growth",
-            description: "Grow your wealth with easy",
-            icon: Banknote,
-          },
-          {
-            title: "Stocks",
-            description: "Own a slice of top companies",
-            icon: BarChart3,
-            badge: "Soon",
-          },
-        ],
-        secondaryTitle: "Tools",
-        secondary: [{ title: "Estimate your earnings" }],
+  const resources = useMemo<ResourceItem[]>(
+    () => [
+      {
+        title: "Blog",
+        icon: BookOpen,
+        toneClass: "bg-[#dbe9f8] text-[#1e66d4]",
+        action: () => navigate("/blog"),
       },
-      business: {
-        title: "Business",
-        primary: [
-          {
-            title: "Camadrie",
-            description: "Put your business cash to work",
-            icon: Building2,
-          },
-        ],
+      {
+        title: "Calculator",
+        icon: Calculator,
+        toneClass: "bg-[#ddf4e7] text-[#129b49]",
+        action: () => {
+          const section = document.getElementById("yield-estimate");
+          section?.scrollIntoView({ behavior: "smooth", block: "start" });
+        },
       },
-      developer: {
-        title: "Developer",
-        primary: [
-          {
-            title: "API",
-            description: "Offer yields in your app",
-            icon: Box,
-            badge: "Soon",
-          },
-          {
-            title: "Docs",
-            description: "Read how to integrate the API",
-            icon: FileText,
-            badge: "Soon",
-          },
-        ],
+      {
+        title: "Community",
+        icon: Users,
+        toneClass: "bg-[#d8f3ef] text-[#0b8f86]",
+        action: () => {
+          const section = document.getElementById("community");
+          section?.scrollIntoView({ behavior: "smooth", block: "start" });
+        },
       },
-      learn: {
-        title: "Learn",
-        primary: [
-          {
-            title: "Videos",
-            description: "Learn from our library of video guides",
-            icon: Library,
-          },
-          {
-            title: "Blog",
-            description: "Announcements, articles and stories",
-            icon: BookOpen,
-            action: () => navigate("/blog"),
-          },
-          {
-            title: "Community",
-            description: "Connect with other Lisar users",
-            icon: HelpCircle,
-          },
-        ],
+
+      {
+        title: "Newsletter",
+        icon: Newspaper,
+        toneClass: "bg-[#eaebee] text-[#404654]",
+        action: () => {
+          const footer = document.getElementById("newsletter");
+          footer?.scrollIntoView({ behavior: "smooth", block: "start" });
+        },
       },
-    }),
+      {
+        title: "Terms",
+        icon: FileText,
+        toneClass: "bg-[#e9eef7] text-[#2f5ea8]",
+        action: () => navigate("/terms-of-use"),
+      },
+      {
+        title: "Privacy",
+        icon: ShieldCheck,
+        toneClass: "bg-[#e8f2ec] text-[#2f6a43]",
+        action: () => navigate("/privacy-policy"),
+      },
+
+    ],
     [navigate],
   );
 
-  const navItems: { key: MenuKey; label: string }[] = [
-    { key: "personal", label: "Personal" },
-    { key: "business", label: "Business" },
-    { key: "developer", label: "Developer" },
-    { key: "learn", label: "Learn" },
-  ];
-
-  const currentMenu = activeMenu ? menuConfig[activeMenu] : null;
-  const mobileHeaderDark = isScrolled || mobileOpen;
-  const modalTransition = { duration: 0.24, ease: [0.22, 1, 0.36, 1] as const };
+  const transition = { duration: 0.24, ease: [0.22, 1, 0.36, 1] as const };
 
   return (
     <>
       <header className="fixed top-0 inset-x-0 z-50 md:px-5">
         <div
-          className={`w-full transition-all duration-300 ${
-            mobileHeaderDark ? "bg-white border-b border-[#e8eee4]" : "bg-white"
-          } mx-auto max-w-7xl md:mt-4 md:rounded-3xl md:border-0 ${
-            isScrolled
+          className={`w-full transition-all duration-300 ${isScrolled ? "bg-white border-b border-[#e5ebe8]" : "bg-white"
+            } mx-auto max-w-7xl md:mt-4 md:rounded-3xl md:border-0 ${isScrolled
               ? "md:border md:border-[#dce4d7] md:bg-white/95 md:shadow-[0_10px_30px_rgba(6,14,10,0.08)] md:backdrop-blur"
               : "md:bg-white"
-          } px-4 md:px-6`}
+            } px-4 md:px-6`}
         >
           <div
-            className="relative px-4 md:px-6"
-            onMouseLeave={() => setActiveMenu(null)}
+            className="relative px-2 md:px-3"
+            onMouseLeave={() => setResourcesOpen(false)}
           >
-            <nav className="flex h-18 items-center justify-between">
-              <div className="flex items-center gap-5 xl:gap-8">
+            <nav className="flex h-18 items-center justify-between gap-6">
+              <div className="flex items-center gap-8 xl:gap-10">
                 <button
                   className="flex items-center gap-2 cursor-pointer"
                   onClick={() => navigate("/")}
@@ -177,155 +126,82 @@ const Navbar = () => {
                   <img
                     src="/Logo.svg"
                     alt="Lisar Logo"
-                    className="hidden md:block h-4 w-auto"
-                  />
-                  <img
-                    src={"/Logo.svg"}
-                    alt="Lisar Logo"
-                    className="md:hidden h-4 w-auto"
+                    className="h-4 w-auto"
                   />
                 </button>
 
-                <div className="relative hidden lg:block">
-                  <div className="flex items-center gap-0.5 xl:gap-1">
-                    {navItems.map((item) => {
-                      const isActive = activeMenu === item.key;
-                      return (
-                        <motion.button
-                          key={item.key}
-                          type="button"
-                          onMouseEnter={() => setActiveMenu(item.key)}
-                          onFocus={() => setActiveMenu(item.key)}
-                          whileHover={{ y: -1 }}
-                          transition={{ duration: 0.2 }}
-                          className={`inline-flex cursor-pointer items-center gap-1 rounded-lg px-2.5 py-1.5 text-base font-medium transition-colors ${
-                            isActive
-                              ? "text-[#060E0A]"
-                              : "text-[#4a5f55] hover:text-[#060E0A]"
+                <div className="hidden lg:flex items-center gap-7 text-[17px] font-medium text-[#3f4f63]">
+                  <button
+                    type="button"
+                    className="cursor-pointer transition-colors hover:text-[#10251c]"
+                    onClick={() => {
+                      const section = document.getElementById("growth-options");
+                      section?.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }}
+                  >
+                    Save
+                  </button>
+                  <button
+                    type="button"
+                    className="cursor-pointer transition-colors hover:text-[#10251c]"
+                    onClick={() => {
+                      const section = document.getElementById("growth-options");
+                      section?.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }}
+                  >
+                    Invest
+                  </button>
+                  <button
+                    type="button"
+                    className="cursor-pointer transition-colors hover:text-[#10251c]"
+                    onClick={() => {
+                      if (window.location.pathname === "/") {
+                        const section = document.getElementById("faq");
+                        section?.scrollIntoView({ behavior: "smooth", block: "start" });
+                        return;
+                      }
+                      navigate("/");
+                    }}
+                  >
+                    FAQ
+                  </button>
+
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onMouseEnter={() => setResourcesOpen(true)}
+                      onFocus={() => setResourcesOpen(true)}
+                      className={`inline-flex cursor-pointer items-center gap-1 transition-colors ${resourcesOpen
+                          ? "text-[#10251c]"
+                          : "text-[#3f4f63] hover:text-[#10251c]"
+                        }`}
+                    >
+                      <span>Resources</span>
+                      <ChevronDown
+                        size={18}
+                        className={`transition-transform ${resourcesOpen ? "rotate-180" : ""
                           }`}
-                        >
-                          {item.label}
-                          <ChevronDown
-                            size={14}
-                            className={
-                              isActive ? "text-[#060E0A]" : "text-[#6d8178]"
-                            }
-                          />
-                        </motion.button>
-                      );
-                    })}
+                      />
+                    </button>
                   </div>
-
-                  <AnimatePresence>
-                    {currentMenu ? (
-                      <motion.div
-                        className="absolute left-0 top-full pt-2"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 8 }}
-                        transition={modalTransition}
-                      >
-                        <motion.div
-                          className={`rounded-2xl border border-[#e8efe4] bg-white p-4 shadow-[0_16px_32px_rgba(6,14,10,0.12)] ${
-                            currentMenu.secondary?.length
-                              ? "min-w-[560px] max-w-[680px]"
-                              : "min-w-[360px] max-w-[440px]"
-                          }`}
-                        >
-                          <div
-                            className={`grid gap-5 ${
-                              currentMenu.secondary?.length
-                                ? "grid-cols-[1.45fr_1fr]"
-                                : "grid-cols-1"
-                            }`}
-                          >
-                            <div
-                              className={
-                                currentMenu.secondary?.length
-                                  ? "pr-5 border-r border-[#edf2ea]"
-                                  : ""
-                              }
-                            >
-                              <div className="space-y-3">
-                                {currentMenu.primary.map((entry) => {
-                                  const Icon = entry.icon;
-                                  return (
-                                    <button
-                                      key={entry.title}
-                                      type="button"
-                                      onClick={() => {
-                                        setActiveMenu(null);
-                                        entry.action?.();
-                                      }}
-                                      className="w-full cursor-pointer text-left group"
-                                    >
-                                      <div className="flex items-start gap-3">
-                                        <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#ecf6df] text-[#254333]">
-                                          <Icon className="h-4 w-4" />
-                                        </div>
-                                        <div>
-                                          <p className="text-[16px] leading-tight font-medium text-[#0e2a1f] group-hover:text-[#060E0A]">
-                                            {entry.title}
-                                            {entry.badge ? (
-                                              <span className="ml-2 rounded-md bg-[#C7EF6B] px-1.5 py-0.5 text-[10px] font-bold text-[#060E0A]">
-                                                {entry.badge}
-                                              </span>
-                                            ) : null}
-                                          </p>
-                                          <p className="mt-0.5 text-[15px] text-[#61786c]">
-                                            {entry.description}
-                                          </p>
-                                        </div>
-                                      </div>
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            </div>
-
-                            {currentMenu.secondary?.length ? (
-                              <div>
-                                <p className="mb-2 text-[18px] font-medium text-[#0e2a1f]">
-                                  {currentMenu.secondaryTitle}
-                                </p>
-                                <div className="space-y-2.5">
-                                  {currentMenu.secondary.map((link) => (
-                                    <button
-                                      key={link.title}
-                                      type="button"
-                                      onClick={() => {
-                                        setActiveMenu(null);
-                                        link.action?.();
-                                      }}
-                                      className="group flex cursor-pointer items-center gap-1.5 text-left text-[15px] text-[#61786c] hover:text-[#060E0A]"
-                                    >
-                                      <span>{link.title}</span>
-                                    </button>
-                                  ))}
-                                </div>
-                              </div>
-                            ) : null}
-                          </div>
-                        </motion.div>
-                      </motion.div>
-                    ) : null}
-                  </AnimatePresence>
                 </div>
               </div>
 
-              <div className="hidden lg:flex items-center gap-2.5 ml-auto">
+              <div className="hidden lg:flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => navigate("/signup")}
+                  className="inline-flex cursor-pointer items-center rounded-full border-2 border-black bg-[#C7EF6B] px-7 py-2.5 text-base font-medium text-black transition-colors hover:bg-[#C7EF6B]"
+                >
+                  Create a free account
+                </button>
+
                 <button
                   type="button"
                   onClick={() => navigate("/login")}
-                  className="cursor-pointer px-2 py-1.5 text-base text-[#1f3f2f] font-medium hover:text-[#060E0A] transition-colors"
+                  className="inline-flex cursor-pointer items-center rounded-full border border-[#b9c3bf] bg-white px-7 py-2.5 text-base font-medium text-[#1a2433] transition-colors hover:bg-[#f3f5f4]"
                 >
-                  Log in
-                </button>
-                <button
-                  onClick={() => navigate("/login")}
-                  className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-[#C7EF6B] px-3.5 py-2 text-base text-[#060E0A] font-medium hover:bg-[#b8e55a] transition-colors"
-                >
-                  Create an account
+                  Sign in
                 </button>
               </div>
 
@@ -333,7 +209,7 @@ const Navbar = () => {
                 <button
                   type="button"
                   onClick={() => setMobileOpen((prev) => !prev)}
-                  className={`cursor-pointer rounded-lg p-2 text-[#1f3f2f]`}
+                  className="cursor-pointer rounded-lg p-2 text-[#1f3f2f]"
                   aria-label="Toggle menu"
                 >
                   {mobileOpen ? <X size={18} /> : <Menu size={18} />}
@@ -342,144 +218,162 @@ const Navbar = () => {
             </nav>
 
             <AnimatePresence>
+              {resourcesOpen ? (
+                <motion.div
+                  className="hidden lg:block absolute left-24 top-full pt-3"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 8 }}
+                  transition={transition}
+                >
+                  <div className="w-[400px] rounded-3xl border border-[#e6ece8] bg-white p-6 shadow-[0_20px_40px_rgba(6,14,10,0.12)]">
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-4">
+                      {resources.map((item) => {
+                        const Icon = item.icon;
+
+                        return (
+                          <button
+                            key={item.title}
+                            type="button"
+                            onClick={() => {
+                              setResourcesOpen(false);
+                              item.action?.();
+                            }}
+                            className="group flex cursor-pointer items-center gap-3 rounded-2xl p-2 text-left"
+                          >
+                            <div
+                              className={`flex h-[28px] w-[28px] shrink-0 items-center justify-center rounded-[26px] ${item.toneClass}`}
+                            >
+                              <Icon className="h-4 w-4" />
+                            </div>
+                            <p className="text-[16px] leading-none font-medium text-[#3f4f63] transition-colors group-hover:text-[#10251c]">
+                              {item.title}
+                            </p>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </motion.div>
+              ) : null}
+            </AnimatePresence>
+
+            <AnimatePresence>
               {mobileOpen ? (
                 <motion.div
                   className="lg:hidden fixed inset-0 z-[70]"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  transition={modalTransition}
+                  transition={transition}
                 >
-                  <div className="fixed inset-0 bg-[#050505] px-7 pt-7 pb-8 flex flex-col overflow-y-auto">
+                  <div className="fixed inset-0 bg-white px-7 pt-7 pb-8 flex flex-col overflow-y-auto">
                     <div className="flex justify-end">
                       <button
                         type="button"
                         onClick={() => setMobileOpen(false)}
-                        className="cursor-pointer text-white/90"
+                        className="cursor-pointer text-[#1f3f2f]"
                         aria-label="Close menu"
                       >
                         <X size={30} strokeWidth={1.7} />
                       </button>
                     </div>
 
-                    <div className="mt-6 space-y-5">
-                      {navItems.map((item) => {
-                        const isOpen = mobileActiveMenu === item.key;
-                        const section = menuConfig[item.key];
-
-                        return (
-                          <div key={item.key}>
-                            <motion.button
-                              type="button"
-                              onClick={() =>
-                                setMobileActiveMenu((prev) =>
-                                  prev === item.key ? null : item.key,
-                                )
-                              }
-                              whileTap={{ scale: 0.99 }}
-                              className="w-full cursor-pointer flex items-center justify-between text-left text-base font-medium text-white"
-                            >
-                              <span>{item.label}</span>
-                              <ChevronDown
-                                size={14}
-                                className={`text-[#C7EF6B] transition-transform ${isOpen ? "rotate-180" : ""}`}
-                              />
-                            </motion.button>
-
-                            <AnimatePresence>
-                              {isOpen ? (
-                                <motion.div
-                                  className="mt-5 space-y-5"
-                                  initial={{ opacity: 0, height: 0 }}
-                                  animate={{ opacity: 1, height: "auto" }}
-                                  exit={{ opacity: 0, height: 0 }}
-                                  transition={modalTransition}
-                                >
-                                  <div className="space-y-4">
-                                    {section.primary.map((entry) => {
-                                      const Icon = entry.icon;
-                                      return (
-                                        <button
-                                          key={entry.title}
-                                          type="button"
-                                          onClick={() => {
-                                            setMobileOpen(false);
-                                            entry.action?.();
-                                          }}
-                                          className="w-full cursor-pointer text-left"
-                                        >
-                                          <div className="flex items-start gap-3">
-                                            <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/15 text-white">
-                                              <Icon className="h-4 w-4" />
-                                            </div>
-                                            <div>
-                                              <p className="text-[16px] leading-tight font-medium text-white">
-                                                {entry.title}
-                                                {entry.badge ? (
-                                                  <span className="ml-2 rounded-md bg-[#C7EF6B] px-1.5 py-0.5 text-[10px] font-bold text-[#060E0A]">
-                                                    {entry.badge}
-                                                  </span>
-                                                ) : null}
-                                              </p>
-                                              <p className="mt-0.5 text-[15px] text-white/65">
-                                                {entry.description}
-                                              </p>
-                                            </div>
-                                          </div>
-                                        </button>
-                                      );
-                                    })}
-                                  </div>
-
-                                  {section.secondary?.length ? (
-                                    <div className="border-t border-white/20 pt-4">
-                                      <p className="text-[15px] font-medium text-white mb-2">
-                                        {section.secondaryTitle}
-                                      </p>
-                                      <div className="space-y-2">
-                                        {section.secondary.map((link) => (
-                                          <button
-                                            key={link.title}
-                                            type="button"
-                                            onClick={() => {
-                                              setMobileOpen(false);
-                                              link.action?.();
-                                            }}
-                                            className="cursor-pointer text-left text-[15px] text-white/65"
-                                          >
-                                            {link.title}
-                                          </button>
-                                        ))}
-                                      </div>
-                                    </div>
-                                  ) : null}
-                                </motion.div>
-                              ) : null}
-                            </AnimatePresence>
-                          </div>
-                        );
-                      })}
-                    </div>
-
-                    <div className="mt-6 space-y-2">
+                    <div className="mt-8 space-y-5 text-base font-medium text-[#111111]">
                       <button
                         type="button"
+                        className="block cursor-pointer text-left"
                         onClick={() => {
                           setMobileOpen(false);
-                          navigate("/login");
+                          const section = document.getElementById("growth-options");
+                          section?.scrollIntoView({ behavior: "smooth", block: "start" });
                         }}
-                        className="block cursor-pointer text-left text-base text-white/75 font-medium"
                       >
-                        Log In
+                        Save
                       </button>
                       <button
                         type="button"
-                        onClick={() => setMobileOpen(false)}
-                        className="block cursor-pointer text-left text-base text-white/75 font-medium"
+                        className="block cursor-pointer text-left"
+                        onClick={() => {
+                          setMobileOpen(false);
+                          const section = document.getElementById("growth-options");
+                          section?.scrollIntoView({ behavior: "smooth", block: "start" });
+                        }}
                       >
-                        FAQ's
+                        Invest
                       </button>
-                     
+                      <button
+                        type="button"
+                        className="block cursor-pointer text-left"
+                        onClick={() => {
+                          setMobileOpen(false);
+                          if (window.location.pathname === "/") {
+                            const section = document.getElementById("faq");
+                            section?.scrollIntoView({
+                              behavior: "smooth",
+                              block: "start",
+                            });
+                            return;
+                          }
+                          navigate("/");
+                        }}
+                      >
+                        FAQ
+                      </button>
+
+                      <div>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setMobileResourcesOpen((prev) => !prev)
+                          }
+                          className="w-full cursor-pointer flex items-center justify-between text-left"
+                        >
+                          <span>Resources</span>
+                          <ChevronDown
+                            size={16}
+                            className={`text-[#111111] transition-transform ${mobileResourcesOpen ? "rotate-180" : ""
+                              }`}
+                          />
+                        </button>
+
+                        <AnimatePresence>
+                          {mobileResourcesOpen ? (
+                            <motion.div
+                              className="mt-4 grid grid-cols-2 gap-3"
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: "auto" }}
+                              exit={{ opacity: 0, height: 0 }}
+                              transition={transition}
+                            >
+                              {resources.map((item) => {
+                                const Icon = item.icon;
+
+                                return (
+                                  <button
+                                    key={item.title}
+                                    type="button"
+                                    onClick={() => {
+                                      setMobileOpen(false);
+                                      item.action?.();
+                                    }}
+                                    className="cursor-pointer rounded-xl bg-[#f3f5f4] p-3 text-left"
+                                  >
+                                    <div
+                                      className={`mb-2 flex h-9 w-9 items-center justify-center rounded-xl ${item.toneClass}`}
+                                    >
+                                      <Icon className="h-4 w-4" />
+                                    </div>
+                                    <p className="text-sm text-[#111111]">
+                                      {item.title}
+                                    </p>
+                                  </button>
+                                );
+                              })}
+                            </motion.div>
+                          ) : null}
+                        </AnimatePresence>
+                      </div>
                     </div>
                   </div>
                 </motion.div>
