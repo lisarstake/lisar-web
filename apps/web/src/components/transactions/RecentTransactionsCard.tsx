@@ -81,7 +81,7 @@ export const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
 
   if (isLoading) {
     return (
-      <div className="bg-[#13170a] rounded-lg overflow-hidden">
+      <div className="bg-[#071510] rounded-lg overflow-hidden">
         <div className="divide-y divide-[#2a2a2a]">
           {Array.from({ length: skeletonCount }).map((_, index) => (
             <div
@@ -119,7 +119,7 @@ export const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
   }
 
   return (
-    <div className="bg-[#13170a] rounded-lg overflow-hidden">
+    <div className="bg-[#071510] rounded-lg overflow-hidden">
       <div className="divide-y divide-[#2a2a2a]">
         {transactions.map((transaction) => (
           <div

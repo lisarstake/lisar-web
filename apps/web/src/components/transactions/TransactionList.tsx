@@ -181,7 +181,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                 <div
                   key={transaction.id}
                   onClick={() => onTransactionClick(transaction)}
-                  className="flex items-center justify-between p-4 bg-[#13170a] rounded-xl transition-colors cursor-pointer"
+                  className="flex items-center justify-between p-4 bg-[#071510] rounded-xl transition-colors cursor-pointer"
                 >
                   <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 flex items-center justify-center">

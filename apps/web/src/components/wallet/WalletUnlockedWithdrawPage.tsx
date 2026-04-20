@@ -136,7 +136,7 @@ export const WalletUnlockedWithdrawPage: React.FC = () => {
       <div className="flex items-center justify-between px-6 pt-8 pb-2">
         <button
           onClick={() => navigate(-1)}
-          className="h-10 w-10 rounded-full bg-[#13170a] flex items-center justify-center"
+          className="h-10 w-10 rounded-full bg-[#071510] flex items-center justify-center"
         >
           <ArrowLeft className="text-white" size={22} />
         </button>
@@ -146,7 +146,7 @@ export const WalletUnlockedWithdrawPage: React.FC = () => {
 
       <div className="flex-1 overflow-y-auto px-6 pb-28 scrollbar-hide">
         <div className="pt-2 pb-4">
-          <div className="bg-[#13170a] rounded-lg p-3 flex items-center gap-3 mt-2">
+          <div className="bg-[#071510] rounded-lg p-3 flex items-center gap-3 mt-2">
             <input
               type="text"
               value={formatNumber(fixedAmount)}
@@ -163,11 +163,11 @@ export const WalletUnlockedWithdrawPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="rounded-lg bg-[#13170a] p-4 mt-3">
+        <div className="rounded-lg bg-[#071510] p-4 mt-3">
           <h3 className="text-sm text-white/60 mb-0.5 flex items-center gap-1.5">
             <WalletCards size={16} /> LPT staked balance
           </h3>
-          <div className="bg-[#13170a] rounded-lg border border-[#13170a]">
+          <div className="bg-[#071510] rounded-lg border border-[#071510]">
             <div className="flex items-center space-x-3">
               <div className="flex-1">
                 <span className="text-gray-100 text-sm font-medium">
@@ -188,11 +188,10 @@ export const WalletUnlockedWithdrawPage: React.FC = () => {
         <button
           onClick={handleContinue}
           disabled={!fixedAmount || !unbondingLockId}
-          className={`h-12 w-full rounded-full text-base font-semibold transition-colors ${
-            fixedAmount > 0 && unbondingLockId
+          className={`h-12 w-full rounded-full text-base font-semibold transition-colors ${fixedAmount > 0 && unbondingLockId
               ? "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
               : "bg-[#636363] text-white cursor-not-allowed"
-          }`}
+            }`}
         >
           Continue
         </button>

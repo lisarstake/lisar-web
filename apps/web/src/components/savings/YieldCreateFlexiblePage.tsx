@@ -216,7 +216,7 @@ export const YieldCreateFlexiblePage: React.FC = () => {
       <div className="flex items-center justify-between px-6 pt-8 pb-4">
         <button
           onClick={() => navigate(-1)}
-          className="h-10 w-10 rounded-full bg-[#13170a] flex items-center justify-center"
+          className="h-10 w-10 rounded-full bg-[#071510] flex items-center justify-center"
           aria-label="Back"
         >
           <ArrowLeft className="text-white" size={22} />
@@ -230,7 +230,7 @@ export const YieldCreateFlexiblePage: React.FC = () => {
       </div>
 
       <div className="flex-1 overflow-y-auto px-6 pb-6 scrollbar-hide">
-        <div className="rounded-xl px-4 py-4 bg-[#13170a]">
+        <div className="rounded-xl px-4 py-4 bg-[#071510]">
           <p className="text-sm text-white/60">Amount</p>
           <div className="mt-2 flex items-center justify-between gap-4">
             <input
@@ -251,7 +251,7 @@ export const YieldCreateFlexiblePage: React.FC = () => {
         </div>
 
         {mode === "staking" && (
-          <div className="mt-4 rounded-xl bg-[#13170a] px-4 py-4">
+          <div className="mt-4 rounded-xl bg-[#071510] px-4 py-4">
             <p className="text-sm text-white/60">Orchestrator</p>
             <div className="mt-0">
               <Select
@@ -261,7 +261,7 @@ export const YieldCreateFlexiblePage: React.FC = () => {
                 <SelectTrigger className="bg-transparent text-white/90 border-none w-full px-0">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-[#13170a] text-white/90 w-full">
+                <SelectContent className="bg-[#071510] text-white/90 w-full">
                   {stakingOrchestratorOptions.map((item) => (
                     <SelectItem
                       key={item.id}
@@ -277,7 +277,7 @@ export const YieldCreateFlexiblePage: React.FC = () => {
           </div>
         )}
 
-        <div className="mt-4 flex items-center justify-between rounded-xl bg-[#13170a] px-4 py-4">
+        <div className="mt-4 flex items-center justify-between rounded-xl bg-[#071510] px-4 py-4">
           <p className="text-sm text-white/60">Interest rate</p>
           <p className="text-sm font-semibold text-white/80">
             {mode === "staking"

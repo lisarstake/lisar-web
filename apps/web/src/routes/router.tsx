@@ -82,6 +82,14 @@ const InviteFriendsPage = lazyRetry(
 );
 const BlogPage = lazyRetry(() => import("@/screens/blog-page"));
 const BlogDetailPage = lazyRetry(() => import("@/screens/blog-detail-page"));
+const LisarGrowthPage = lazyRetry(() => import("@/screens/lisar-growth-page"));
+const LisarSavingsPage = lazyRetry(
+  () => import("@/screens/lisar-savings-page"),
+);
+const PrivacyPolicyPage = lazyRetry(
+  () => import("@/screens/privacy-policy-page"),
+);
+const TermsOfUsePage = lazyRetry(() => import("@/screens/terms-of-use-page"));
 const NotFoundPage = lazyRetry(() => import("@/screens/NotFoundPage"));
 
 const withSuspense = (element: ReactNode) => (
@@ -128,6 +136,22 @@ export const router = createBrowserRouter([
       {
         path: "blog/:slug",
         element: withSuspenseAndErrorBoundary(<BlogDetailPage />),
+      },
+      {
+        path: "lisar-growth",
+        element: withSuspenseAndErrorBoundary(<LisarGrowthPage />),
+      },
+      {
+        path: "lisar-savings",
+        element: withSuspenseAndErrorBoundary(<LisarSavingsPage />),
+      },
+      {
+        path: "privacy-policy",
+        element: withSuspenseAndErrorBoundary(<PrivacyPolicyPage />),
+      },
+      {
+        path: "terms-of-use",
+        element: withSuspenseAndErrorBoundary(<TermsOfUsePage />),
       },
 
       // Protected routes
