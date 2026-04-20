@@ -41,19 +41,19 @@ export const OrchestratorItem: React.FC<OrchestratorItemProps> = ({
   if (isLoading) {
     return (
       <div
-        className="flex items-center justify-between p-4 bg-[#1a1a1a] rounded-xl border border-[#2a2a2a]"
+        className="flex items-center justify-between p-4 bg-[#1a1a1a] rounded-xl border border-[#505050]"
         data-tour={tourId}
       >
         <div className="flex items-center space-x-3">
-          <Skeleton className="w-12 h-12 rounded-full bg-[#2a2a2a]" />
+          <Skeleton className="w-12 h-12 rounded-full bg-[#505050]" />
           <div className="space-y-2">
-            <Skeleton className="h-4 w-32 bg-[#2a2a2a]" />
-            <Skeleton className="h-3 w-20 bg-[#2a2a2a]" />
+            <Skeleton className="h-4 w-32 bg-[#505050]" />
+            <Skeleton className="h-3 w-20 bg-[#505050]" />
           </div>
         </div>
         <div className="text-right space-y-2">
-          <Skeleton className="h-4 w-16 bg-[#2a2a2a] ml-auto" />
-          <Skeleton className="h-3 w-12 bg-[#2a2a2a] ml-auto" />
+          <Skeleton className="h-4 w-16 bg-[#505050] ml-auto" />
+          <Skeleton className="h-3 w-12 bg-[#505050] ml-auto" />
         </div>
       </div>
     );
@@ -67,7 +67,7 @@ export const OrchestratorItem: React.FC<OrchestratorItemProps> = ({
 
   return (
     <div
-      className="flex items-center justify-between p-4 bg-[#1a1a1a] rounded-xl border border-[#2a2a2a] hover:border-[#C7EF6B]/30 transition-colors cursor-pointer"
+      className="flex items-center justify-between p-4 bg-[#1a1a1a] rounded-xl border border-[#505050] hover:border-[#C7EF6B]/30 transition-colors cursor-pointer"
       onClick={handleClick}
       data-tour={tourId}
     >

@@ -215,7 +215,7 @@ export const RecipientSettingsPage: React.FC = () => {
       <div className="flex items-center justify-between px-6 pt-8 pb-4">
         <button
           onClick={() => navigate(-1)}
-          className="h-10 w-10 rounded-full bg-[#071510] flex items-center justify-center"
+          className="h-10 w-10 rounded-full bg-[#2a2a2a] flex items-center justify-center"
           aria-label="Back"
         >
           <ArrowLeft className="text-white" size={22} />
@@ -228,7 +228,7 @@ export const RecipientSettingsPage: React.FC = () => {
               setSelectedBankCode("");
               setAccountName("");
             }}
-            className="h-10 w-10 rounded-full bg-[#071510] flex items-center justify-center"
+            className="h-10 w-10 rounded-full bg-[#2a2a2a] flex items-center justify-center"
             aria-label="Edit"
           >
             <SquarePen className="text-white" size={18} />
@@ -244,7 +244,7 @@ export const RecipientSettingsPage: React.FC = () => {
             Account number
           </label>
           {showReadOnly ? (
-            <div className="w-full rounded-lg bg-[#071510] px-4 py-3 text-base text-white/90">
+            <div className="w-full rounded-lg bg-[#2a2a2a] px-4 py-3 text-base text-white/90">
               {accountNumber}
             </div>
           ) : (
@@ -253,7 +253,7 @@ export const RecipientSettingsPage: React.FC = () => {
               onChange={(e) =>
                 setAccountNumber(e.target.value.replace(/\D/g, "").slice(0, 10))
               }
-              className="w-full rounded-lg bg-[#071510] px-4 py-3 text-base text-white/90 outline-none"
+              className="w-full rounded-lg bg-[#2a2a2a] px-4 py-3 text-base text-white/90 outline-none"
               placeholder="Enter account number"
             />
           )}
@@ -262,7 +262,7 @@ export const RecipientSettingsPage: React.FC = () => {
         <div>
           <label className="mb-2 block text-sm text-white/70">Bank</label>
           {showReadOnly ? (
-            <div className="w-full rounded-lg bg-[#071510] px-4 py-3 text-base text-white/90">
+            <div className="w-full rounded-lg bg-[#2a2a2a] px-4 py-3 text-base text-white/90">
               {state.user?.linked_account?.bank_name}
             </div>
           ) : (
@@ -274,14 +274,14 @@ export const RecipientSettingsPage: React.FC = () => {
                 setAccountName("");
               }}
             >
-              <SelectTrigger className="w-full rounded-lg bg-[#071510] border-none py-6 text-white">
+              <SelectTrigger className="w-full rounded-lg bg-[#2a2a2a] border-none py-6 text-white">
                 <SelectValue
                   placeholder={
                     "Select bank"
                   }
                 />
               </SelectTrigger>
-              <SelectContent className="bg-[#071510] text-white border-none">
+              <SelectContent className="bg-[#2a2a2a] text-white border-none">
                 {banks.map((bank) => (
                   <SelectItem
                     key={bank.code}
@@ -300,7 +300,7 @@ export const RecipientSettingsPage: React.FC = () => {
           <label className="mb-2 block text-sm text-white/70">
             Account name
           </label>
-          <div className="w-full rounded-lg bg-[#071510] px-4 py-3 text-base text-white/90 min-h-12 flex items-center">
+          <div className="w-full rounded-lg bg-[#2a2a2a] px-4 py-3 text-base text-white/90 min-h-12 flex items-center">
             {lookupLoading ? (
               <span className="inline-flex items-center gap-2 text-white/70">
                 <LoaderCircle size={15} className="animate-spin" />

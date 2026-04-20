@@ -41,7 +41,7 @@ export const YieldIntroPage: React.FC = () => {
       <div className="flex items-center justify-between px-6 pt-8 pb-4">
         <button
           onClick={() => navigate(-1)}
-          className="h-10 w-10 rounded-full bg-[#071510] flex items-center justify-center"
+          className="h-10 w-10 rounded-full bg-[#2a2a2a] flex items-center justify-center"
           aria-label="Back"
         >
           <ArrowLeft className="text-white" size={22} />

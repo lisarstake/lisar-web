@@ -135,7 +135,7 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({ error, onReset }) => {
               </button>
               <button
                 onClick={handleGoHome}
-                className="w-full py-2.5 px-4 rounded-full font-semibold bg-[#1a1a1a] text-white/90 hover:bg-[#2a2a2a] transition-colors flex items-center justify-center space-x-2 border border-[#2a2a2a]"
+                className="w-full py-2.5 px-4 rounded-full font-semibold bg-[#1a1a1a] text-white/90 hover:bg-[#505050] transition-colors flex items-center justify-center space-x-2 border border-[#505050]"
               >
                 <Home size={166} />
                 <span>Return back</span>
@@ -151,7 +151,7 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({ error, onReset }) => {
               </button>
               <button
                 onClick={handleGoHome}
-                className="w-full py-2.5 px-4 rounded-full font-semibold bg-[#1a1a1a] text-white/90 hover:bg-[#2a2a2a] transition-colors flex items-center justify-center space-x-2 border border-[#2a2a2a]"
+                className="w-full py-2.5 px-4 rounded-full font-semibold bg-[#1a1a1a] text-white/90 hover:bg-[#505050] transition-colors flex items-center justify-center space-x-2 border border-[#505050]"
               >
                 <span>Return back</span>
               </button>

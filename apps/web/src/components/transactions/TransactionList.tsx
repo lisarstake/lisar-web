@@ -137,7 +137,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
       <EmptyState
         icon={Info}
         iconColor="#86B3F7"
-        iconBgColor="#2a2a2a"
+        iconBgColor="#505050"
         title="No transactions"
         description="You haven't made any transactions yet."
       />
@@ -154,7 +154,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
               {Array.from({ length: 2 }).map((_, itemIndex) => (
                 <div
                   key={`skeleton-item-${itemIndex}`}
-                  className="flex items-center justify-between p-4 bg-[#1a1a1a] rounded-xl border border-[#2a2a2a]"
+                  className="flex items-center justify-between p-4 bg-[#1a1a1a] rounded-xl border border-[#505050]"
                 >
                   <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 bg-gray-700 rounded-full animate-pulse"></div>
@@ -181,7 +181,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                 <div
                   key={transaction.id}
                   onClick={() => onTransactionClick(transaction)}
-                  className="flex items-center justify-between p-4 bg-[#071510] rounded-xl transition-colors cursor-pointer"
+                  className="flex items-center justify-between p-4 bg-[#2a2a2a] rounded-xl transition-colors cursor-pointer"
                 >
                   <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 flex items-center justify-center">

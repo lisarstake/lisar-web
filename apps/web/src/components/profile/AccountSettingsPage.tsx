@@ -12,7 +12,7 @@ import { BottomNavigation } from "../general/BottomNavigation";
 import { ExportWalletDrawer } from "@/components/general/ExportWalletDrawer";
 
 const rowClass =
-  "flex w-full items-center rounded-xl bg-[#071510] px-4 py-4 text-left";
+  "flex w-full items-center rounded-xl bg-[#2a2a2a] px-4 py-4 text-left";
 
 export const AccountSettingsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -50,7 +50,7 @@ export const AccountSettingsPage: React.FC = () => {
       <div className="flex items-center justify-between px-6 pt-8 pb-4">
         <button
           onClick={() => navigate(-1)}
-          className="h-10 w-10 rounded-full bg-[#071510] flex items-center justify-center"
+          className="h-10 w-10 rounded-full bg-[#2a2a2a] flex items-center justify-center"
           aria-label="Back"
         >
           <ArrowLeft className="text-white" size={22} />

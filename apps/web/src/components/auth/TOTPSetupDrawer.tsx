@@ -113,7 +113,7 @@ export const TOTPSetupDrawer: React.FC<TOTPSetupDrawerProps> = ({
   return (
     <>
       <Drawer open={isOpen} onOpenChange={handleOpenChange}>
-        <DrawerContent className="bg-[#050505] border-[#2a2a2a] max-h-[90vh] overflow-y-auto">
+        <DrawerContent className="bg-[#050505] border-[#505050] max-h-[90vh] overflow-y-auto">
           <DrawerHeader className="relative">
             <DrawerTitle className="text-lg font-medium text-white/90 text-left">
               Setup Authenticator App
@@ -147,7 +147,7 @@ export const TOTPSetupDrawer: React.FC<TOTPSetupDrawerProps> = ({
                       Can't scan? Enter this code manually:
                     </p>
 
-                    <div className="flex items-center gap-2 px-3 py-2 bg-[#071510] rounded-lg border border-[#2a2a2a]">
+                    <div className="flex items-center gap-2 px-3 py-2 bg-[#2a2a2a] rounded-lg border border-[#505050]">
                       <code className="flex-1 text-white/90 text-sm font-mono break-all">
                         {secret || ""}
                       </code>
@@ -156,7 +156,7 @@ export const TOTPSetupDrawer: React.FC<TOTPSetupDrawerProps> = ({
                         type="button"
                         onClick={handleCopySecret}
                         disabled={!secret}
-                        className="shrink-0 p-2 hover:bg-[#2a2a2a] rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="shrink-0 p-2 hover:bg-[#505050] rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {copied ? (
                           <Check size={18} color="#C7EF6B" />

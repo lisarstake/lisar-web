@@ -29,7 +29,7 @@ export default function NotFoundPage() {
         <div className="flex justify-center mb-6">
           <div className="relative">
             {/* Large circle background */}
-            <div className="w-16 h-16 bg-[#1a1a1a] rounded-full flex items-center justify-center border-2 border-[#2a2a2a]">
+            <div className="w-16 h-16 bg-[#1a1a1a] rounded-full flex items-center justify-center border-2 border-[#505050]">
               {/* 404 text */}
               <span className="text-base font-bold text-[#C7EF6B]">404</span>
             </div>
@@ -51,7 +51,7 @@ export default function NotFoundPage() {
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <button
             onClick={handleGoBack}
-            className="flex items-center justify-center gap-2 px-6 py-3 bg-[#1a1a1a] border border-[#2a2a2a] text-white rounded-lg font-medium hover:bg-[#2a2a2a] transition-colors"
+            className="flex items-center justify-center gap-2 px-6 py-3 bg-[#1a1a1a] border border-[#505050] text-white rounded-lg font-medium hover:bg-[#505050] transition-colors"
           >
             Return Back
           </button>

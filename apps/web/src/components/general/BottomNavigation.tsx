@@ -25,15 +25,14 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
   };
 
   return (
-    <div className="fixed md:absolute bottom-0 left-0 right-0 bg-[#050505] border-t border-[#2a2a2a] px-4 py-2 z-50">
+    <div className="fixed md:absolute bottom-0 left-0 right-0 bg-[#050505] border-t border-[#505050] px-4 py-2 z-50">
       <div className="flex items-center justify-around">
         {/* Home */}
         <Link
           to="/wallet"
           data-tour="nav-wallet"
-          className={`flex flex-col items-center py-2 px-3 ${
-            isActive("/wallet") ? "text-[#C7EF6B]" : "text-gray-400"
-          }`}
+          className={`flex flex-col items-center py-2 px-3 ${isActive("/wallet") ? "text-[#C7EF6B]" : "text-gray-400"
+            }`}
         >
           <House size={22} className="mb-1" />
 
@@ -44,7 +43,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
         </Link>
 
         {/* Yield */}
-        <Link
+        {/* <Link
           to={YIELD_ASSET_PICKER_PATH}
           data-tour="nav-yield"
           className={`flex flex-col items-center py-2 px-3 ${
@@ -56,15 +55,14 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
           {isActive(YIELD_ASSET_PICKER_PATH) && (
             <div className="w-6 h-0.5 bg-[#C7EF6B] mt-1 rounded-full"></div>
           )}
-        </Link>
+        </Link> */}
 
         {/* Transactions */}
         <Link
           to="/history"
           data-tour="nav-activity"
-          className={`flex flex-col items-center py-2 px-3 ${
-            isActive("/history") ? "text-[#C7EF6B]" : "text-gray-400"
-          }`}
+          className={`flex flex-col items-center py-2 px-3 ${isActive("/history") ? "text-[#C7EF6B]" : "text-gray-400"
+            }`}
         >
           <List size={22} className="mb-1" />
           <span className="text-xs">Activity</span>
@@ -108,9 +106,8 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
         <Link
           to="/earn"
           data-tour="nav-explore"
-          className={`flex flex-col items-center py-2 px-3 ${
-            isActive("/earn") ? "text-[#C7EF6B]" : "text-gray-400"
-          }`}
+          className={`flex flex-col items-center py-2 px-3 ${isActive("/earn") ? "text-[#C7EF6B]" : "text-gray-400"
+            }`}
         >
           <Globe size={22} className="mb-1" />
           <span className="text-xs">Explore</span>

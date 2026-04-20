@@ -12,9 +12,9 @@ interface TourButtonProps {
  * A button component to start or restart the guided tour.
  * Can be used in settings, profile, or anywhere you want to give users access to the tour.
  */
-export const TourButton: React.FC<TourButtonProps> = ({ 
+export const TourButton: React.FC<TourButtonProps> = ({
   variant = 'full',
-  className = '' 
+  className = ''
 }) => {
   const { startTour, isCompleted } = useGuidedTour({
     tourId: ALL_WALLET_TOUR_ID,
@@ -36,7 +36,7 @@ export const TourButton: React.FC<TourButtonProps> = ({
   return (
     <button
       onClick={startTour}
-      className={`flex items-center gap-2 px-4 py-2 bg-[#2a2a2a] hover:bg-[#3a3a3a] rounded-lg transition-colors ${className}`}
+      className={`flex items-center gap-2 px-4 py-2 bg-[#505050] hover:bg-[#3a3a3a] rounded-lg transition-colors ${className}`}
     >
       <Info size={18} color="#C7EF6B" />
       <span className="text-gray-300 text-sm">

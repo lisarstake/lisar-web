@@ -29,7 +29,7 @@ export const PortfolioSelectionDrawer: React.FC<
         <div className="pt-2 space-y-3 pb-2">
           <button
             onClick={() => onSelect("savings")}
-            className="w-full flex items-center gap-3 px-3 py-3.5 rounded-lg bg-[#071510] hover:bg-[#151515] transition-colors text-left shadow-md shadow-black/20"
+            className="w-full flex items-center gap-3 px-3 py-3.5 rounded-lg bg-[#2a2a2a] hover:bg-[#151515] transition-colors text-left shadow-md shadow-black/20"
           >
             <img src="/usdc.svg" alt="High Yield" className="w-8 h-8" />
             <span className="flex-1 text-white text-base font-medium">
@@ -39,7 +39,7 @@ export const PortfolioSelectionDrawer: React.FC<
           </button>
           <button
             onClick={() => onSelect("growth")}
-            className="w-full flex items-center gap-3 px-3 py-3.5 rounded-lg bg-[#071510] hover:bg-[#151515] transition-colors text-left shadow-md shadow-black/20"
+            className="w-full flex items-center gap-3 px-3 py-3.5 rounded-lg bg-[#2a2a2a] hover:bg-[#151515] transition-colors text-left shadow-md shadow-black/20"
           >
             <img src="/livepeer.webp" alt="High Yield" className="w-8 h-8" />
             <span className="flex-1 text-white text-base font-medium">

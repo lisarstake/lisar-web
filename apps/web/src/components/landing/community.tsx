@@ -13,7 +13,7 @@ export const HighlightShowcaseSection = () => {
           <h2 className="mt-5 text-[2.5rem] leading-[0.95] tracking-[-0.03em] text-[#111111] md:text-[3rem]">
             <span className="block font-serif font-semibold">Come build</span>
             <span className="block font-serif italic text-[#235538]">
-            with the team.
+              with the team.
             </span>
           </h2>
         </RevealOnScroll>
@@ -31,7 +31,7 @@ export const HighlightShowcaseSection = () => {
               </div>
 
               <div>
-                <h3 className="text-[#071510] text-xl md:text-3xl leading-[1.02] font-semibold tracking-tight">
+                <h3 className="text-[#2a2a2a] text-xl md:text-3xl leading-[1.02] font-semibold tracking-tight">
                   LISAR OpenBuild
                 </h3>
                 <p className="mt-4 text-[#4a6256] text-base md:text-lg leading-relaxed">

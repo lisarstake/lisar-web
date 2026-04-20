@@ -46,14 +46,12 @@ export const ConfirmDrawer: React.FC<ConfirmDrawerProps> = ({
         <DrawerHeader>
           <div className="flex justify-center mb-4">
             <div
-              className={`w-12 h-12 ${
-                variant === "danger" ? "bg-red-500/10" : "bg-yellow-500/10"
-              } rounded-full flex items-center justify-center`}
+              className={`w-12 h-12 ${variant === "danger" ? "bg-red-500/10" : "bg-yellow-500/10"
+                } rounded-full flex items-center justify-center`}
             >
               <AlertTriangle
-                className={`w-6 h-6 ${
-                  variant === "danger" ? "text-red-400" : "text-yellow-400"
-                }`}
+                className={`w-6 h-6 ${variant === "danger" ? "text-red-400" : "text-yellow-400"
+                  }`}
               />
             </div>
           </div>
@@ -68,17 +66,16 @@ export const ConfirmDrawer: React.FC<ConfirmDrawerProps> = ({
         <DrawerFooter>
           <button
             onClick={handleConfirm}
-            className={`w-full py-3 rounded-xl font-semibold text-lg transition-colors ${
-              variant === "danger"
+            className={`w-full py-3 rounded-xl font-semibold text-lg transition-colors ${variant === "danger"
                 ? "bg-red-600 text-white hover:bg-red-500"
                 : "bg-yellow-600 text-white hover:bg-yellow-500"
-            }`}
+              }`}
           >
             {confirmText}
           </button>
           <button
             onClick={onClose}
-            className="w-full py-3 rounded-xl font-semibold text-lg bg-[#2a2a2a] text-white hover:bg-[#3a3a3a] transition-colors"
+            className="w-full py-3 rounded-xl font-semibold text-lg bg-[#505050] text-white hover:bg-[#3a3a3a] transition-colors"
           >
             {cancelText}
           </button>

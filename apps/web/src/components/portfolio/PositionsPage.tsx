@@ -38,7 +38,7 @@ const StakeEntryItem: React.FC<StakeEntryItemProps> = ({ entry, onClick }) => {
 
   return (
     <div
-      className="bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-xl p-4 border border-[#2a2a2a] cursor-pointer hover:border-[#C7EF6B]/30 transition-colors"
+      className="bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-xl p-4 border border-[#505050] cursor-pointer hover:border-[#C7EF6B]/30 transition-colors"
       onClick={onClick}
     >
       <div className="flex items-center justify-between">
@@ -83,18 +83,18 @@ const StakeEntryItem: React.FC<StakeEntryItemProps> = ({ entry, onClick }) => {
 
 const StakeEntrySkeleton: React.FC = () => {
   return (
-    <div className="bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-xl p-4 border border-[#2a2a2a]">
+    <div className="bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-xl p-4 border border-[#505050]">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2.5">
-          <Skeleton className="w-12 h-12 rounded-full bg-[#2a2a2a]" />
+          <Skeleton className="w-12 h-12 rounded-full bg-[#505050]" />
           <div>
-            <Skeleton className="h-4 w-32 mb-2 bg-[#2a2a2a]" />
-            <Skeleton className="h-3 w-20 bg-[#2a2a2a]" />
+            <Skeleton className="h-4 w-32 mb-2 bg-[#505050]" />
+            <Skeleton className="h-3 w-20 bg-[#505050]" />
           </div>
         </div>
         <div className="text-right">
-          <Skeleton className="h-4 w-16 mb-1 bg-[#2a2a2a]" />
-          <Skeleton className="h-3 w-12 bg-[#2a2a2a]" />
+          <Skeleton className="h-4 w-16 mb-1 bg-[#505050]" />
+          <Skeleton className="h-3 w-12 bg-[#505050]" />
         </div>
       </div>
     </div>
@@ -307,14 +307,14 @@ export const PositionsPage: React.FC = () => {
         <div className="flex items-center justify-between py-8 mb-2">
           <button
             onClick={handleBackClick}
-            className="h-10 w-10 rounded-full bg-[#071510] flex items-center justify-center"
+            className="h-10 w-10 rounded-full bg-[#2a2a2a] flex items-center justify-center"
           >
             <ArrowLeft className="text-white" size={22} />
           </button>
           <h1 className="text-lg font-medium text-white">My Vest</h1>
           <button
             onClick={() => setShowHelpDrawer(true)}
-            className="w-8 h-8 bg-[#2a2a2a] rounded-full flex items-center justify-center"
+            className="w-8 h-8 bg-[#505050] rounded-full flex items-center justify-center"
           >
             <CircleQuestionMark color="#86B3F7" size={16} />
           </button>
@@ -337,7 +337,7 @@ export const PositionsPage: React.FC = () => {
             <EmptyState
               icon={Info}
               iconColor="#86B3F7"
-              iconBgColor="#2a2a2a"
+              iconBgColor="#505050"
               title="No active positions"
               description="You don't have any active positions yet."
             />
@@ -397,7 +397,7 @@ export const PositionsPage: React.FC = () => {
               </div>
             </DrawerHeader>
             <div className="space-y-3">
-              <div className="bg-[#1a1a1a] rounded-lg p-4 border border-[#2a2a2a] space-y-3">
+              <div className="bg-[#1a1a1a] rounded-lg p-4 border border-[#505050] space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-white/70 text-sm">Vested Amount</span>
                   <span className="text-white/90 font-medium">

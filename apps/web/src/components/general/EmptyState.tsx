@@ -13,7 +13,7 @@ interface EmptyStateProps {
 export const EmptyState: React.FC<EmptyStateProps> = ({
   icon: Icon,
   iconColor = "#86B3F7",
-  iconBgColor = "#2a2a2a",
+  iconBgColor = "#505050",
   title,
   description,
   className = "",

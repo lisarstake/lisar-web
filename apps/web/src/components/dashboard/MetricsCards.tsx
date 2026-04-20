@@ -72,9 +72,9 @@ export const MetricsCards: React.FC<MetricsCardsProps> = ({
         value: hasError || !hasSummary || fiatValue === null
           ? emptyValue
           : fiatValue.toLocaleString(undefined, {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            }),
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          }),
         currency: hasError || !hasSummary || fiatValue === null ? undefined : "$",
       },
       {
@@ -91,10 +91,10 @@ export const MetricsCards: React.FC<MetricsCardsProps> = ({
         [1, 2, 3, 4].map((i) => (
           <div
             key={i}
-            className="bg-[#1a1a1a] rounded-xl p-6 border border-[#2a2a2a] animate-pulse"
+            className="bg-[#1a1a1a] rounded-xl p-6 border border-[#505050] animate-pulse"
           >
-            <div className="h-4 bg-[#2a2a2a] rounded mb-4 w-3/4"></div>
-            <div className="h-8 bg-[#2a2a2a] rounded w-1/2"></div>
+            <div className="h-4 bg-[#505050] rounded mb-4 w-3/4"></div>
+            <div className="h-8 bg-[#505050] rounded w-1/2"></div>
           </div>
         ))
       ) : (
@@ -102,7 +102,7 @@ export const MetricsCards: React.FC<MetricsCardsProps> = ({
         metrics.map((metric, index) => (
           <div
             key={index}
-            className="bg-[#1a1a1a] rounded-xl p-6 border border-[#2a2a2a]"
+            className="bg-[#1a1a1a] rounded-xl p-6 border border-[#505050]"
           >
             <h3 className="text-gray-400 text-sm font-medium mb-2">
               {metric.title}

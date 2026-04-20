@@ -91,7 +91,7 @@ export const YieldAssetPickerPage: React.FC = () => {
       <div className="flex-1 overflow-y-auto overscroll-contain px-6 pb-20 scrollbar-hide space-y-3">
 
 
-        <div className="rounded-xl bg-[#071510] px-4">
+        <div className="rounded-xl bg-[#2a2a2a] px-4">
           <YieldAssetRow
             title="USDC"
             subtitle="Earn daily, withdraw instantly"
@@ -100,7 +100,7 @@ export const YieldAssetPickerPage: React.FC = () => {
             onClick={() => navigate("/wallet/savings")}
           />
         </div>
-        <div className="rounded-xl bg-[#071510] px-4">
+        <div className="rounded-xl bg-[#2a2a2a] px-4">
           <YieldAssetRow
             title="Livepeer"
             subtitle="Earn daily, 7 days unlock period"
@@ -109,7 +109,7 @@ export const YieldAssetPickerPage: React.FC = () => {
             onClick={() => navigate("/wallet/staking")}
           />
         </div>
-        {/* <div className="rounded-xl bg-[#071510] px-4">
+        {/* <div className="rounded-xl bg-[#2a2a2a] px-4">
           <YieldAssetRow
             title="USDT"
             subtitle="Earn daily, withdraw anytime"
@@ -118,7 +118,7 @@ export const YieldAssetPickerPage: React.FC = () => {
             isComingSoon
           />
         </div> */}
-        <div className="rounded-xl bg-[#071510] px-4">
+        <div className="rounded-xl bg-[#2a2a2a] px-4">
           <YieldAssetRow
             title="Solana"
             subtitle="Earn daily, 3 days unlock period"
