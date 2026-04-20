@@ -85,7 +85,7 @@ export const TrustFaqSection = () => {
                     <span className="text-base text-black md:text-lg">
                       {item.question}
                     </span>
-                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[#d1d8d2] text-[#7f8781]">
+                    <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#d1d8d2] text-[#7f8781]">
                       <Plus
                         className={`h-4 w-4 transition-transform ${isOpen ? "rotate-45" : ""}`}
                       />
