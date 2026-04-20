@@ -43,7 +43,7 @@ export const AllBalancesDrawer: React.FC<AllBalancesDrawerProps> = ({
         <div className="pt-2 space-y-3 pb-2 px-1">
           <div>
             <div className="space-y-2">
-              <div className="flex items-center gap-3 px-3 py-3 rounded-lg bg-[#13170a]">
+              <div className="flex items-center gap-3 px-3 py-3 rounded-lg bg-[#071510]">
                 <img src="/usdc.svg" alt="USDC" className="w-8 h-8" />
                 <div className="flex-1">
                   <p className="text-white text-sm font-medium">USD Coin</p>
@@ -53,7 +53,7 @@ export const AllBalancesDrawer: React.FC<AllBalancesDrawerProps> = ({
                   {formatBalance(usdcBalance, 2, "$")}
                 </p>
               </div>
-              <div className="flex items-center gap-3 px-3 py-3 rounded-lg bg-[#13170a]">
+              <div className="flex items-center gap-3 px-3 py-3 rounded-lg bg-[#071510]">
                 <img src="/livepeer.webp" alt="LPT" className="w-8 h-8" />
                 <div className="flex-1">
                   <p className="text-white text-sm font-medium">Livepeer</p>
@@ -63,7 +63,7 @@ export const AllBalancesDrawer: React.FC<AllBalancesDrawerProps> = ({
                   {formatBalance(lptBalance, 2)}
                 </p>
               </div>
-              <div className="flex items-center gap-3 px-3 py-3 rounded-lg bg-[#13170a]">
+              <div className="flex items-center gap-3 px-3 py-3 rounded-lg bg-[#071510]">
                 <img
                   src="/ng_flag.png"
                   alt="NGN"

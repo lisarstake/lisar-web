@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { LisarLines } from "./lisar-lines";
+import { LisarLines } from "@/components/landing/lisar-lines";
 import { Clock, ArrowRight } from "lucide-react";
 import { useState, useEffect } from "react";
 import { blogService } from "@/services/blog";

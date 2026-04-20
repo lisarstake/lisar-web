@@ -177,7 +177,7 @@ export const ExportWalletDrawer: React.FC<ExportWalletDrawerProps> = ({
                     value={exportPassword}
                     onChange={(e) => setExportPassword(e.target.value)}
                     placeholder="Enter your account password"
-                    className="w-full pr-12 px-4 py-3 bg-[#13170a] border border-[#2a2a2a] rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:border-[#C7EF6B]"
+                    className="w-full pr-12 px-4 py-3 bg-[#071510] border border-[#2a2a2a] rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:border-[#C7EF6B]"
                   />
                   <button
                     type="button"
@@ -196,11 +196,10 @@ export const ExportWalletDrawer: React.FC<ExportWalletDrawerProps> = ({
                 </div>
                 {exportError && (
                   <p
-                    className={`text-sm mt-2 pl-1 ${
-                      exportErrorTone === "warning"
+                    className={`text-sm mt-2 pl-1 ${exportErrorTone === "warning"
                         ? "text-amber-300"
                         : "text-red-500"
-                    }`}
+                      }`}
                   >
                     {exportError}
                   </p>
@@ -221,7 +220,7 @@ export const ExportWalletDrawer: React.FC<ExportWalletDrawerProps> = ({
                     type="text"
                     readOnly
                     value={privateKey}
-                    className="flex-1 px-4 py-3 bg-[#13170a] border border-[#2a2a2a] rounded-lg text-gray-100"
+                    className="flex-1 px-4 py-3 bg-[#071510] border border-[#2a2a2a] rounded-lg text-gray-100"
                   />
                   <button
                     type="button"

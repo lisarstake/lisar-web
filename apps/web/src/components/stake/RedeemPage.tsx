@@ -324,7 +324,7 @@ export const RedeemPage: React.FC = () => {
       <div className="flex items-center justify-between px-6 pt-8 pb-4">
         <button
           onClick={handleBackClick}
-          className="h-10 w-10 rounded-full bg-[#13170a] flex items-center justify-center"
+          className="h-10 w-10 rounded-full bg-[#071510] flex items-center justify-center"
         >
           <ArrowLeft className="text-white" size={22} />
         </button>
@@ -337,7 +337,7 @@ export const RedeemPage: React.FC = () => {
       <div className="flex-1 overflow-y-auto px-6 pb-28 scrollbar-hide">
         {/* Amount Input Field */}
         <div className="pt-2 pb-4">
-          <div className="bg-[#13170a] rounded-lg p-3 flex items-center gap-3">
+          <div className="bg-[#071510] rounded-lg p-3 flex items-center gap-3">
             <input
               type="text"
               value={usdcAmount ? formatNumber(usdcAmount) : ""}
@@ -377,7 +377,7 @@ export const RedeemPage: React.FC = () => {
                   onClick={() => handleAmountSelect(amount)}
                   className={`flex-1 py-2.5 px-2 rounded-full text-sm font-medium transition-colors ${isActive
                     ? "bg-[#C7EF6B] text-black"
-                    : "bg-[#13170a] text-white/80 hover:bg-[#1a1f10]"
+                    : "bg-[#071510] text-white/80 hover:bg-[#1a1f10]"
                     }`}
                 >
                   {percent}%
@@ -388,11 +388,11 @@ export const RedeemPage: React.FC = () => {
         </div>
 
         {/* Balance */}
-        <div className="rounded-lg bg-[#13170a] p-4 mt-3">
+        <div className="rounded-lg bg-[#071510] p-4 mt-3">
           <h3 className="text-sm text-white/60 mb-0.5 flex items-center gap-1.5">
             <WalletCards size={16} /> Wallet balance
           </h3>
-          <div className="bg-[#13170a] rounded-lg border border-[#13170a]">
+          <div className="bg-[#071510] rounded-lg border border-[#071510]">
             <div className="flex items-center space-x-3">
 
               <div className="flex-1">
@@ -490,7 +490,7 @@ export const RedeemPage: React.FC = () => {
                     setConfirmError("");
                   }}
                   placeholder="Enter your password"
-                  className="w-full pr-12 px-4 py-3 bg-[#13170a] border border-[#2a2a2a] rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:border-[#C7EF6B]"
+                  className="w-full pr-12 px-4 py-3 bg-[#071510] border border-[#2a2a2a] rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:border-[#C7EF6B]"
                 />
                 <button
                   type="button"
@@ -511,16 +511,15 @@ export const RedeemPage: React.FC = () => {
             </div>
 
             <div className="flex gap-3 pt-1">
-             
+
               <button
                 type="button"
                 onClick={handleWithdraw}
                 disabled={isRedeeming || isVerifyingPassword}
-                className={`flex-1 h-12 rounded-full font-semibold transition-colors ${
-                  isRedeeming || isVerifyingPassword
+                className={`flex-1 h-12 rounded-full font-semibold transition-colors ${isRedeeming || isVerifyingPassword
                     ? "bg-[#636363] text-white cursor-not-allowed"
                     : "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
-                }`}
+                  }`}
               >
                 {isRedeeming || isVerifyingPassword ? (
                   <span className="flex items-center justify-center gap-2">
@@ -541,4 +540,4 @@ export const RedeemPage: React.FC = () => {
     </div>
   );
 };
-  const presetPercents = [25, 50, 75, 100] as const;
+const presetPercents = [25, 50, 75, 100] as const;

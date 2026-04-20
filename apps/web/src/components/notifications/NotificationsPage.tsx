@@ -145,7 +145,7 @@ export const NotificationsPage: React.FC = () => {
       <div className="flex items-center justify-between px-6 pt-8 pb-4">
         <button
           onClick={() => navigate(-1)}
-          className="h-10 w-10 rounded-full bg-[#13170a] flex items-center justify-center"
+          className="h-10 w-10 rounded-full bg-[#071510] flex items-center justify-center"
           aria-label="Back"
         >
           <ArrowLeft className="text-white" size={22} />
@@ -164,7 +164,7 @@ export const NotificationsPage: React.FC = () => {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`shrink-0 rounded-full px-4 py-1.5 text-sm transition-colors ${isActive
-                  ? "bg-[#13170a] text-white font-semibold"
+                  ? "bg-[#071510] text-white font-semibold"
                   : "text-white/90"
                   }`}
               >
@@ -181,7 +181,7 @@ export const NotificationsPage: React.FC = () => {
             {Array.from({ length: 3 }).map((_, index) => (
               <div
                 key={`notification-skeleton-${index}`}
-                className="h-24 rounded-[26px] bg-[#13170a] animate-pulse"
+                className="h-24 rounded-[26px] bg-[#071510] animate-pulse"
               />
             ))}
           </div>
@@ -195,7 +195,7 @@ export const NotificationsPage: React.FC = () => {
                     <button
                       key={notification.id}
                       onClick={() => handleNotificationSelect(notification)}
-                      className="w-full rounded-xl bg-[#13170a] px-5 py-4 text-left"
+                      className="w-full rounded-xl bg-[#071510] px-5 py-4 text-left"
                     >
                       <div className="relative flex items-center gap-3">
                         {!notification.is_read && (
@@ -228,7 +228,7 @@ export const NotificationsPage: React.FC = () => {
                     <button
                       key={notification.id}
                       onClick={() => handleNotificationSelect(notification)}
-                      className="w-full rounded-xl bg-[#13170a] px-5 py-4 text-left"
+                      className="w-full rounded-xl bg-[#071510] px-5 py-4 text-left"
                     >
                       <div className="relative flex items-center gap-3">
                         {!notification.is_read && (

@@ -108,7 +108,7 @@ export const EarningsBreakdownDrawer: React.FC<EarningsBreakdownDrawerProps> = (
                     </div>
 
                     {/* Bottom Breakdown Ranges */}
-                    <div className="grid grid-cols-3 gap-6 mt-4 w-full px-8 max-w-[400px] rounded-lg bg-[#13170a] py-4">
+                    <div className="grid grid-cols-3 gap-6 mt-4 w-full px-8 max-w-[400px] rounded-lg bg-[#071510] py-4">
                         <div className="flex flex-col">
                             <span className="text-gray-400 text-xs font-medium mb-1">Daily</span>
                             <span className="text-white text-[15px] font-semibold mb-2 truncate">

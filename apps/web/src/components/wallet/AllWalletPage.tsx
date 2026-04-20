@@ -19,7 +19,6 @@ import { useGuidedTour } from "@/hooks/useGuidedTour";
 import { usePrices } from "@/hooks/usePrices";
 import { ALL_WALLET_TOUR_ID } from "@/lib/tourConfig";
 import { priceService } from "@/lib/priceService";
-import { YIELD_ASSET_PICKER_PATH } from "@/lib/yieldPaths";
 import {
   Bell,
   Plus,
@@ -31,15 +30,7 @@ import {
   CircleDollarSign,
 } from "lucide-react";
 
-const QUICK_DEPOSIT_AMOUNTS = [50, 100, 200, 500, 1000];
-const YIELD_TREND_VALUES = [10, 12, 15, 19, 23, 28, 34, 45, 60];
-const YIELD_PRIMARY_COLOR = "#C7EF6B";
-const YIELD_AREA_COLOR = "rgba(199,239,107,0.18)";
-const YIELD_CHART_HEIGHT = 40;
-const YIELD_CHART_MIN_PERCENT = 0.8;
-const YIELD_CHART_MAX_PERCENT = 0.45;
-const YIELD_SHADOW_OFFSET = 100;
-const YIELD_MARKER_INDEXES = [1, 3, 5, 7];
+const ADD_CASH_AMOUNTS = [50000, 100000, 200000, 500000, 1000000];
 const NAIRA_OPTION_ENABLED = false;
 
 export const AllWalletPage: React.FC = () => {
@@ -95,7 +86,7 @@ export const AllWalletPage: React.FC = () => {
     return state.user?.is_onboarded === false && !state.isLoading;
   }, [state.user?.is_onboarded, state.isLoading]);
 
-  const {} = useGuidedTour({
+  const { } = useGuidedTour({
     tourId: ALL_WALLET_TOUR_ID,
     autoStart: shouldAutoStart,
   });
@@ -116,57 +107,6 @@ export const AllWalletPage: React.FC = () => {
     () => priceService.getCurrencySymbol(fiatCurrency),
     [fiatCurrency],
   );
-  const quickDepositSymbol = useMemo(
-    () => priceService.getCurrencySymbol("USD"),
-    [],
-  );
-
-  const yieldChartCoordinates = useMemo(() => {
-    if (YIELD_TREND_VALUES.length < 2) return [];
-    const max = Math.max(...YIELD_TREND_VALUES);
-    const min = Math.min(...YIELD_TREND_VALUES);
-    const range = max === min ? 1 : max - min;
-    return YIELD_TREND_VALUES.map((value, index) => {
-      const x = (index / (YIELD_TREND_VALUES.length - 1)) * 100;
-      const normalized = (value - min) / range;
-      const y =
-        YIELD_CHART_HEIGHT *
-        (YIELD_CHART_MIN_PERCENT -
-          normalized * (YIELD_CHART_MIN_PERCENT - YIELD_CHART_MAX_PERCENT));
-      return { x, y };
-    });
-  }, []);
-  const yieldLinePoints = yieldChartCoordinates
-    .map((point) => `${point.x},${point.y}`)
-    .join(" ");
-  const yieldShadowPath = yieldChartCoordinates.length
-    ? `${yieldChartCoordinates
-        .map(
-          (point, index) => `${index === 0 ? "M" : "L"}${point.x},${point.y}`,
-        )
-        .join(" ")} ${yieldChartCoordinates
-        .slice()
-        .reverse()
-        .map(
-          (point) =>
-            `L${point.x},${Math.min(point.y + YIELD_SHADOW_OFFSET, YIELD_CHART_HEIGHT)}`,
-        )
-        .join(" ")} Z`
-    : "";
-  const yieldMarkerPositions = useMemo(() => {
-    if (!yieldChartCoordinates.length) return [];
-    return YIELD_MARKER_INDEXES.map((index, markerIndex) => {
-      const point =
-        yieldChartCoordinates[
-          Math.min(index, yieldChartCoordinates.length - 1)
-        ];
-      return {
-        id: `yield-marker-${markerIndex}`,
-        x: point.x,
-        y: point.y,
-      };
-    });
-  }, [yieldChartCoordinates]);
 
   const handleNotificationClick = () => {
     navigate("/notifications");
@@ -271,7 +211,7 @@ export const AllWalletPage: React.FC = () => {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowBalance(!showBalance)}
-              className="w-9 h-9 rounded-full flex items-center justify-center bg-[#13170a] hover:bg-[#3a3a3a] transition-colors cursor-pointer"
+              className="w-9 h-9 rounded-full flex items-center justify-center bg-[#2a2a2a] hover:bg-[#3a3a3a] transition-colors cursor-pointer"
             >
               {showBalance ? (
                 <Eye size={22} color="#fff" />
@@ -282,7 +222,7 @@ export const AllWalletPage: React.FC = () => {
             <button
               onClick={handleNotificationClick}
               data-tour="all-wallet-notification-icon"
-              className="relative w-9 h-9 rounded-full flex items-center justify-center bg-[#13170a] hover:bg-[#3a3a3a] transition-colors cursor-pointer"
+              className="relative w-9 h-9 rounded-full flex items-center justify-center bg-[#2a2a2a] hover:bg-[#3a3a3a] transition-colors cursor-pointer"
             >
               <Bell size={22} color="#fff" />
               {unreadCount > 0 && (
@@ -295,7 +235,7 @@ export const AllWalletPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto overscroll-contain">
+      <div className="flex-1 overflow-y-auto overscroll-contain pb-20">
         <>
           {/* Total Balance Card */}
           <div className="px-6 pb-6">
@@ -308,11 +248,10 @@ export const AllWalletPage: React.FC = () => {
                         handleDepositClick(card.type);
                       }
                     }}
-                    className={`rounded-2xl py-5 min-h-[100px] relative overflow-hidden ${
-                      card.type !== "main"
+                    className={`rounded-2xl py-5 min-h-[100px] relative overflow-hidden ${card.type !== "main"
                         ? "cursor-pointer hover:opacity-95 transition-opacity"
                         : ""
-                    }`}
+                      }`}
                     data-tour={
                       card.id === "main" ? "all-wallet-balance-card" : undefined
                     }
@@ -326,9 +265,9 @@ export const AllWalletPage: React.FC = () => {
                       {/* Balance Display */}
                       <div>
                         {walletLoading ||
-                        delegationLoading ||
-                        stablesLoading ||
-                        highyieldLoading ? (
+                          delegationLoading ||
+                          stablesLoading ||
+                          highyieldLoading ? (
                           <div className="flex items-baseline justify-center gap-2 mb-1">
                             {renderLoadingStars("text-xl font-semibold")}
                           </div>
@@ -337,12 +276,12 @@ export const AllWalletPage: React.FC = () => {
                             <span className="text-xl font-bold text-white/90">
                               {showBalance
                                 ? `${card.currencySymbol}${card.balance.toLocaleString(
-                                    undefined,
-                                    {
-                                      minimumFractionDigits: 2,
-                                      maximumFractionDigits: 2,
-                                    },
-                                  )}`
+                                  undefined,
+                                  {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2,
+                                  },
+                                )}`
                                 : "★★★★"}
                             </span>
                           </div>
@@ -359,7 +298,7 @@ export const AllWalletPage: React.FC = () => {
                         onClick={() => setTransferDrawer("deposit")}
                         className="flex flex-col items-center gap-1.5"
                       >
-                        <div className="w-12 h-12 rounded-full bg-[#13170a] flex items-center justify-center">
+                        <div className="w-12 h-12 rounded-full bg-[#2a2a2a] flex items-center justify-center">
                           <ArrowDown size={24} color="#fff" />
                         </div>
                         <span className="text-white font-medium text-xs">
@@ -370,7 +309,7 @@ export const AllWalletPage: React.FC = () => {
                         onClick={() => setTransferDrawer("withdraw")}
                         className="flex flex-col items-center gap-1.5"
                       >
-                        <div className="w-12 h-12 rounded-full bg-[#13170a] flex items-center justify-center">
+                        <div className="w-12 h-12 rounded-full bg-[#2a2a2a] flex items-center justify-center">
                           <ArrowRight size={24} color="#fff" />
                         </div>
                         <span className="text-white font-medium text-xs">
@@ -383,7 +322,7 @@ export const AllWalletPage: React.FC = () => {
                           onClick={() => navigate("/accounts")}
                           className="flex flex-col items-center gap-1.5"
                         >
-                          <div className="w-12 h-12 rounded-full bg-[#13170a] flex items-center justify-center">
+                          <div className="w-12 h-12 rounded-full bg-[#2a2a2a] flex items-center justify-center">
                             <LayoutGrid size={24} color="#fff" />
                           </div>
                           <span className="text-white font-medium text-xs">
@@ -395,7 +334,7 @@ export const AllWalletPage: React.FC = () => {
                         onClick={() => setShowAllBalancesDrawer(true)}
                         className="flex flex-col items-center gap-1.5"
                       >
-                        <div className="w-12 h-12 rounded-full bg-[#13170a] flex items-center justify-center">
+                        <div className="w-12 h-12 rounded-full bg-[#2a2a2a] flex items-center justify-center">
                           <CircleDollarSign size={24} color="#fff" />
                         </div>
                         <span className="text-white font-medium text-xs">
@@ -418,7 +357,7 @@ export const AllWalletPage: React.FC = () => {
               <div className="relative" data-tour="all-wallet-message-card">
                 {activeSystemNotifications.length > 2 && (
                   <div
-                    className="absolute inset-0 bg-[#151515] rounded-2xl border border-[#13170a]"
+                    className="absolute inset-0 bg-[#151515] rounded-2xl border border-[#2a2a2a]"
                     style={{
                       transform: "translateY(8px) scale(0.96)",
                       opacity: 0.4,
@@ -427,7 +366,7 @@ export const AllWalletPage: React.FC = () => {
                 )}
                 {activeSystemNotifications.length > 1 && (
                   <div
-                    className="absolute inset-0 bg-[#121212] rounded-2xl border border-[#13170a]"
+                    className="absolute inset-0 bg-[#121212] rounded-2xl border border-[#2a2a2a]"
                     style={{
                       transform: "translateY(4px) scale(0.98)",
                       opacity: 0.6,
@@ -441,14 +380,13 @@ export const AllWalletPage: React.FC = () => {
                   return (
                     <div
                       key={notification.id}
-                      className={`relative bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-xl p-3 overflow-hidden ${
-                        notification.metadata?.severity === "warning"
+                      className={`relative bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-xl p-3 overflow-hidden ${notification.metadata?.severity === "warning"
                           ? "border-yellow-500/30"
                           : notification.metadata?.severity === "error" ||
-                              notification.metadata?.severity === "critical"
+                            notification.metadata?.severity === "critical"
                             ? "border-red-500/30"
                             : "border-[#86B3F7]/30"
-                      }`}
+                        }`}
                     >
                       {/* Close Button */}
                       <button
@@ -463,7 +401,7 @@ export const AllWalletPage: React.FC = () => {
 
                       <div className="flex items-start gap-3 pr-6">
                         <div
-                          className={`shrink-0 w-10 h-10 bg-[#13170a] rounded-full flex items-center justify-center `}
+                          className={`shrink-0 w-10 h-10 bg-[#2a2a2a] rounded-full flex items-center justify-center `}
                         >
                           <Bell
                             size={20}
@@ -471,8 +409,8 @@ export const AllWalletPage: React.FC = () => {
                               notification.metadata?.severity === "warning"
                                 ? "#eab308"
                                 : notification.metadata?.severity === "error" ||
-                                    notification.metadata?.severity ===
-                                      "critical"
+                                  notification.metadata?.severity ===
+                                  "critical"
                                   ? "#ef4444"
                                   : "#86B3F7"
                             }
@@ -507,7 +445,7 @@ export const AllWalletPage: React.FC = () => {
                   <div
                     data-tour="all-wallet-message-card"
                     onClick={() => navigate("/earn")}
-                    className={`mt-2 rounded-xl p-2 bg-[#13170a] relative overflow-hidden cursor-pointer hover:opacity-95 transition-opacity`}
+                    className={`mt-2 rounded-xl p-2 bg-[#2a2a2a] relative overflow-hidden cursor-pointer hover:opacity-95 transition-opacity`}
                   >
                     <div className="flex items-center gap-4">
                       <div className="shrink-0">
@@ -538,22 +476,18 @@ export const AllWalletPage: React.FC = () => {
             <div data-tour="all-wallet-quick-deposit">
               <div className="flex items-center justify-between my-2 mt-4">
                 <h2 className="text-white/70 text-xs font-medium">
-                  Quick deposit <span className="text-white">💸</span>
+                  Add Cash <span className="text-white">💸</span>
                 </h2>
               </div>
-              <div className="bg-[#13170a] rounded-xl p-3">
+              <div className="bg-[#2a2a2a] rounded-xl p-3">
                 <div className="grid grid-cols-3 gap-2">
-                  {QUICK_DEPOSIT_AMOUNTS.map((amount) => (
+                  {ADD_CASH_AMOUNTS.map((amount) => (
                     <button
                       key={amount}
                       onClick={() => navigate("/wallet/deposit/crypto")}
                       className="py-2.5 px-3 rounded-lg bg-white/10 text-white text-sm font-medium transition-colors"
                     >
-                      {quickDepositSymbol}
-                      {amount.toLocaleString(undefined, {
-                        minimumFractionDigits: 0,
-                        maximumFractionDigits: 0,
-                      })}
+                      ₦{(amount / 1000).toFixed(0)}K
                     </button>
                   ))}
                   <button
@@ -566,90 +500,75 @@ export const AllWalletPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Yields section */}
-            <div data-tour="all-wallet-yield-section">
-              <div className="my-2 mt-4">
+            {/* Earn on Lisar Section */}
+            <div data-tour="all-wallet-earn-section">
+              <div className="flex items-center justify-between mb-4 mt-6">
                 <h2 className="text-white/70 text-xs font-medium">
-                  Earn yields <span className="text-white"></span>
+                  Earn on Lisar
                 </h2>
               </div>
-              <div
-                onClick={() => navigate(YIELD_ASSET_PICKER_PATH)}
-                className="w-full bg-[#13170a] rounded-xl p-3 text-left mb-24 cursor-pointer"
-              >
-                <div className="rounded-lg border border-white/5 bg-white/10 overflow-hidden relative">
-                  <svg
-                    viewBox="0 0 100 40"
-                    className="w-full h-20"
-                    preserveAspectRatio="none"
-                  >
-                    {yieldShadowPath && (
-                      <path
-                        d={yieldShadowPath}
-                        fill={YIELD_AREA_COLOR}
-                        opacity={0.5}
-                      />
-                    )}
-                    {yieldLinePoints && (
-                      <polyline
-                        points={yieldLinePoints}
-                        fill="none"
-                        stroke={YIELD_PRIMARY_COLOR}
-                        strokeWidth={0.7}
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    )}
-                  </svg>
-                  {yieldMarkerPositions.length > 0 && (
-                    <div className="absolute inset-0">
-                      {yieldMarkerPositions.map((marker, index) => (
-                        <div
-                          key={marker.id}
-                          className="absolute"
-                          style={{
-                            left: `${marker.x}%`,
-                            top: `${(marker.y / YIELD_CHART_HEIGHT) * 100}%`,
-                            transform: "translate(-50%, -120%)",
-                          }}
-                        >
-                          <img
-                            src={
-                              index === 0
-                                ? "/usdc.svg"
-                                : index === 1
-                                  ? "/sol1.svg"
-                                  : index === 2
-                                    ? "/usdt.svg"
-                                    : "/livepeer.webp"
-                            }
-                            alt="Yield asset"
-                            className="w-6 h-6 animate-[yield-icon-drift_6s_ease-in-out_infinite]"
-                            style={{ animationDelay: `${-index * 0.6}s` }}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <div className="mt-2">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <div>
-                        <p className="text-white text-sm font-medium">
-                          Your assets. Working daily
-                        </p>
-                        <p className="text-white/50 text-xs font-medium mt-0.5">
-                          Daily returns on your assets. Withdraw anytime with no lock-up
-                        </p>
 
-                        <button className="mt-2.5 px-3 py-1.5 bg-[#C7EF6B] text-black rounded-full text-[13px] font-semibold hover:bg-[#B8E55A] transition-colors relative z-10">
-                          Deposit to yield
-                        </button>
-                      </div>
+              <div className="space-y-4">
+                {/* Savings Card */}
+                <div
+                  className="bg-[#6da7fd] rounded-2xl p-5 border-2 border-[#86B3F7]/30 hover:border-[#86B3F7]/50 transition-colors relative overflow-hidden"
+                  data-tour="all-wallet-stables-card"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 relative z-10">
+                      <h3 className="text-white text-base font-semibold mb-1">
+                        Savings
+                      </h3>
+                      <p className="text-white/90 text-sm">
+                        Earn steady returns on Lisar savings. Ideal for emergency funds that needs to be liquid.
+                      </p>
                     </div>
                   </div>
+
+                  <button
+                    onClick={() => navigate("/wallet/savings")}
+                    className="mt-4 px-6 py-2.5 bg-[#438af6] text-white rounded-full text-xs font-semibold hover:bg-[#96C3F7] transition-colors relative z-10"
+                  >
+                    Start Saving
+                  </button>
+
+                  <img
+                    src="/highyield-3.svg"
+                    alt="Stables"
+                    className="absolute bottom-[-20px] right-[-20px] w-28 h-28 object-contain opacity-80"
+                  />
                 </div>
+
+                {/* Growth Card */}
+                <div
+                  className="bg-transparent rounded-2xl p-5 border-2 border-[#C7EF6B]/30 hover:border-[#C7EF6B]/50 transition-colors relative overflow-hidden"
+                  data-tour="all-wallet-high-yield-card"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 relative z-10">
+                      <h3 className="text-white text-base font-semibold mb-1">
+                        Growth
+                      </h3>
+                      <p className="text-white/60 text-sm">
+                        Earn higher returns on Lisar growth. Better for longer-term investment goals.
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => navigate("/wallet/staking")}
+                    className="mt-4 px-6 py-2.5 bg-[#a3d039] text-black rounded-full text-xs font-semibold hover:bg-[#B8E55A] transition-colors relative z-10"
+                  >
+                    Start Earning
+                  </button>
+
+                  <img
+                    src="/highyield-1.svg"
+                    alt="High Yield"
+                    className="absolute bottom-[-5px] right-[-5px] w-20 h-20 object-contain opacity-80"
+                  />
+                </div>
+
               </div>
             </div>
           </div>
@@ -694,11 +613,10 @@ export const AllWalletPage: React.FC = () => {
             <button
               onClick={() => handleTransferOptionSelect("naira")}
               disabled={!NAIRA_OPTION_ENABLED}
-              className={`w-full rounded-xl px-4 py-4 text-left ${
-                NAIRA_OPTION_ENABLED
-                  ? "bg-[#13170a]"
-                  : "bg-[#13170a] opacity-50 cursor-not-allowed"
-              }`}
+              className={`w-full rounded-xl px-4 py-4 text-left ${NAIRA_OPTION_ENABLED
+                  ? "bg-[#2a2a2a]"
+                  : "bg-[#2a2a2a] opacity-50 cursor-not-allowed"
+                }`}
             >
               <div className="flex items-center gap-3">
                 <img src="/ng_flag.png" alt="Naira" className="w-10 h-10" />
@@ -719,7 +637,7 @@ export const AllWalletPage: React.FC = () => {
 
             <button
               onClick={() => handleTransferOptionSelect("crypto")}
-              className="w-full rounded-xl bg-[#13170a] px-4 py-4 text-left"
+              className="w-full rounded-xl bg-[#2a2a2a] px-4 py-4 text-left"
             >
               <div className="flex items-center gap-3">
                 <img src="/usdc.svg" alt="Crypto" className="w-10 h-10" />
