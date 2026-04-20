@@ -68,18 +68,8 @@ export const HowItWorksSection = () => {
           </p>
         </RevealOnScroll>
 
-        <div className="mt-12 grid items-center gap-12 md:grid-cols-[1.3fr_1fr] md:gap-16">
-          <div>
-            <RevealOnScroll>
-              <img
-                src="/how-to.png"
-                alt="How it works"
-                className="w-full rounded-2xl md:hidden"
-              />
-            </RevealOnScroll>
-          </div>
-
-          <div className="mt-8 space-y-6 md:space-y-8 md:mt-0">
+        <div className="mt-12 grid gap-12 md:grid-cols-[1fr_1fr] md:gap-16 lg:grid-cols-[1.3fr_1fr]">
+          <div className="space-y-6 md:space-y-8 md:mt-0">
             {steps.map((step, index) => (
               <RevealOnScroll key={step.marker} delay={index * 0.06}>
                 <article className="grid grid-cols-[54px_1fr] gap-4 md:grid-cols-[90px_1fr] md:gap-3">
@@ -108,7 +98,7 @@ export const HowItWorksSection = () => {
             ))}
           </div>
 
-          <div className="hidden md:block">
+          <div className="order-1 md:order-3">
             <RevealOnScroll>
               <img
                 src="/how-to.png"
