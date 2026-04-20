@@ -136,14 +136,14 @@ export const SummaryPage: React.FC = () => {
         <div className="flex items-center justify-between py-8 mb-2">
           <button
             onClick={handleBackClick}
-            className="h-10 w-10 rounded-full bg-[#071510] flex items-center justify-center"
+            className="h-10 w-10 rounded-full bg-[#2a2a2a] flex items-center justify-center"
           >
             <ArrowLeft className="text-white" size={22} />
           </button>
           <h1 className="text-lg font-medium text-white">Summary</h1>
           <button
             onClick={() => setShowHelpDrawer(true)}
-            className="w-8 h-8 bg-[#2a2a2a] rounded-full flex items-center justify-center"
+            className="w-8 h-8 bg-[#505050] rounded-full flex items-center justify-center"
           >
             <CircleQuestionMark color="#86B3F7" size={16} />
           </button>
@@ -175,7 +175,7 @@ export const SummaryPage: React.FC = () => {
 
             {/* Stats Grid - Stables */}
             <div className="grid grid-cols-1 gap-4 mb-6">
-              <div className="bg-[#0f0f0f] rounded-2xl p-5 border border-[#2a2a2a]">
+              <div className="bg-[#0f0f0f] rounded-2xl p-5 border border-[#505050]">
                 <p className="text-gray-400 text-sm font-medium tracking-wider mb-2">
                   Interest earned
                 </p>
@@ -187,7 +187,7 @@ export const SummaryPage: React.FC = () => {
             </div>
 
             {/* Info Card - Stables */}
-            <div className="bg-[#0f0f0f] rounded-lg p-3 border border-[#2a2a2a]">
+            <div className="bg-[#0f0f0f] rounded-lg p-3 border border-[#505050]">
               <p className="text-gray-400 text-xs leading-relaxed">
                 Your savings earn daily interest at up to{" "}
                 <span className="text-white/90 font-medium">
@@ -227,7 +227,7 @@ export const SummaryPage: React.FC = () => {
 
             {/* Stats Grid - High Yield */}
             <div className="grid grid-cols-1 gap-4 mb-6">
-              <div className="bg-[#0f0f0f] rounded-2xl p-5 border border-[#2a2a2a]">
+              <div className="bg-[#0f0f0f] rounded-2xl p-5 border border-[#505050]">
                 <p className="text-gray-400 text-sm font-medium tracking-wider mb-2">
                   Interest earned
                 </p>
@@ -273,7 +273,7 @@ export const SummaryPage: React.FC = () => {
 
         {/* Unbonding in Progress Section - Only for High Yield */}
         {!isSavings && pendingUnbondingData.count > 0 && (
-          <div className="bg-[#0f0f0f] rounded-2xl p-5 mb-4 border border-[#2a2a2a]">
+          <div className="bg-[#0f0f0f] rounded-2xl p-5 mb-4 border border-[#505050]">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 bg-amber-500/15 rounded-xl flex items-center justify-center">
                 <Clock size={20} color="#f59e0b" />
@@ -308,7 +308,7 @@ export const SummaryPage: React.FC = () => {
         {!isSavings &&
           completedUnbondingData.count === 0 &&
           pendingUnbondingData.count === 0 && (
-            <div className="bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-xl p-5 border border-[#2a2a2a] text-center">
+            <div className="bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-xl p-5 border border-[#505050] text-center">
               <p className="text-gray-400 text-sm">
                 No pending withdrawals at this time
               </p>

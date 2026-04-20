@@ -175,7 +175,7 @@ export const OTPVerificationDrawer: React.FC<OTPVerificationDrawerProps> = ({
   return (
     <>
       <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()}>
-        <DrawerContent className="bg-[#1a1a1a] border-[#2a2a2a]">
+        <DrawerContent className="bg-[#1a1a1a] border-[#505050]">
           <DrawerHeader className="relative">
             <DrawerTitle className="text-xl font-semibold text-white/90 text-left">
               {title}
@@ -197,8 +197,8 @@ export const OTPVerificationDrawer: React.FC<OTPVerificationDrawerProps> = ({
                   placeholder=""
                   disabled={isVerifying}
                   className={`w-full px-4 py-3 pr-20 rounded-lg text-white text-lg bg-[#1a1a1a] border transition-colors ${error
-                      ? "border-red-500 focus:border-red-500"
-                      : "border-[#2a2a2a] focus:border-[#C7EF6B]"
+                    ? "border-red-500 focus:border-red-500"
+                    : "border-[#505050] focus:border-[#C7EF6B]"
                     } focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed`}
                 />
                 <button
@@ -233,8 +233,8 @@ export const OTPVerificationDrawer: React.FC<OTPVerificationDrawerProps> = ({
               onClick={() => handleSubmit()}
               disabled={code.length !== 6 || isVerifying}
               className={`w-full py-3 rounded-xl font-semibold text-lg transition-colors ${code.length === 6 && !isVerifying
-                  ? "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
-                  : "bg-[#636363] text-white cursor-not-allowed"
+                ? "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
+                : "bg-[#636363] text-white cursor-not-allowed"
                 }`}
             >
               {isVerifying ? (

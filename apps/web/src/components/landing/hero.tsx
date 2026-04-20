@@ -81,7 +81,7 @@ const Hero = () => {
                   onClick={() => navigate("/login")}
                   className="rounded-full border-2 border-black bg-[#C7EF6B] px-4 py-3 md:px-8 text-lg font-medium text-black transition hover:bg-[#C7EF6B] cursor-pointer"
                 >
-                  Create a free account
+                  Create an account
                 </button>
                 <button
                   type="button"

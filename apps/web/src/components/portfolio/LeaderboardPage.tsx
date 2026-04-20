@@ -31,7 +31,7 @@ export const LeaderboardPage: React.FC = () => {
       <div className="flex items-center justify-between px-6 py-8">
         <button
           onClick={handleBackClick}
-          className="h-10 w-10 rounded-full bg-[#071510] flex items-center justify-center"
+          className="h-10 w-10 rounded-full bg-[#2a2a2a] flex items-center justify-center"
         >
           <ArrowLeft className="text-white" size={22} />
         </button>
@@ -75,14 +75,14 @@ export const LeaderboardPage: React.FC = () => {
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <Skeleton className="w-10 h-10 rounded-full bg-[#2a2a2a]" />
+                    <Skeleton className="w-10 h-10 rounded-full bg-[#505050]" />
                     <div className="space-y-2">
-                      <Skeleton className="h-4 w-32 bg-[#2a2a2a]" />
-                      <Skeleton className="h-3 w-20 bg-[#2a2a2a]" />
+                      <Skeleton className="h-4 w-32 bg-[#505050]" />
+                      <Skeleton className="h-3 w-20 bg-[#505050]" />
                     </div>
                   </div>
                   <div className="text-right space-y-2">
-                    <Skeleton className="h-4 w-24 bg-[#2a2a2a] ml-auto" />
+                    <Skeleton className="h-4 w-24 bg-[#505050] ml-auto" />
                   </div>
                 </div>
               </div>
@@ -123,7 +123,7 @@ export const LeaderboardPage: React.FC = () => {
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center bg-[#2a2a2a]">
+                      <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center bg-[#505050]">
                         <img
                           src={punkImage}
                           alt={`Punk ${punkIndex}`}

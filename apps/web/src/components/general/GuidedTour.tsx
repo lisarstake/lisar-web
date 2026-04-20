@@ -105,12 +105,12 @@ export const GuidedTour: React.FC = () => {
 
     const viewportHeight = getViewportHeight();
     const viewportWidth = getViewportWidth();
-    
-   
+
+
     const viewportOffsetTop = window.visualViewport?.offsetTop || 0;
     const viewportOffsetLeft = window.visualViewport?.offsetLeft || 0;
 
- 
+
     const spotlight: SpotlightPosition = {
       top: rect.top - padding - viewportOffsetTop,
       left: rect.left - padding - viewportOffsetLeft,
@@ -209,18 +209,18 @@ export const GuidedTour: React.FC = () => {
     const tryCalculate = () => {
       const element = getVisibleElement(step.target);
       if (element) {
-       
+
         const rect = element.getBoundingClientRect();
         const viewportHeight = getViewportHeight();
         const viewportWidth = getViewportWidth();
-        
+
         // Check if element is outside the visible viewport
-        const isOutOfView = 
-          rect.bottom < 0 || 
-          rect.top > viewportHeight || 
-          rect.right < 0 || 
+        const isOutOfView =
+          rect.bottom < 0 ||
+          rect.top > viewportHeight ||
+          rect.right < 0 ||
           rect.left > viewportWidth;
-        
+
         if (isOutOfView || isMobileDevice()) {
           // Scroll element into view with smooth behavior
           // Use 'nearest' to minimize scrolling - only scroll if necessary
@@ -229,7 +229,7 @@ export const GuidedTour: React.FC = () => {
             block: 'center',
             inline: 'nearest'
           });
-          
+
           // Wait for scroll to complete before calculating positions
           setTimeout(() => {
             calculatePositions(step);
@@ -270,11 +270,11 @@ export const GuidedTour: React.FC = () => {
     // Find all scrollable containers in the DOM that might contain tour targets
     const findScrollContainers = () => {
       const containers: Element[] = [];
-      
+
       // Add common scroll containers
       const appMain = document.querySelector('.app-main');
       if (appMain) containers.push(appMain);
-      
+
       // Mobile preview container (desktop view)
       const mobilePreview = document.getElementById('mobile-preview-container');
       if (mobilePreview) {
@@ -282,7 +282,7 @@ export const GuidedTour: React.FC = () => {
         const mainInPreview = mobilePreview.querySelector('main');
         if (mainInPreview) containers.push(mainInPreview);
       }
-      
+
       // Find the target element and traverse up to find scrollable parents
       const targetElement = getVisibleElement(currentStep.target);
       if (targetElement) {
@@ -291,8 +291,8 @@ export const GuidedTour: React.FC = () => {
           const style = window.getComputedStyle(parent);
           const overflowY = style.overflowY;
           const overflowX = style.overflowX;
-          if (overflowY === 'auto' || overflowY === 'scroll' || 
-              overflowX === 'auto' || overflowX === 'scroll') {
+          if (overflowY === 'auto' || overflowY === 'scroll' ||
+            overflowX === 'auto' || overflowX === 'scroll') {
             if (!containers.includes(parent)) {
               containers.push(parent);
             }
@@ -300,17 +300,17 @@ export const GuidedTour: React.FC = () => {
           parent = parent.parentElement;
         }
       }
-      
+
       return containers;
     };
 
     // Attach scroll listeners to all scroll containers
     scrollContainersRef.current = findScrollContainers();
-    
+
     // Window events
     window.addEventListener("resize", handleUpdate);
     window.addEventListener("scroll", handleUpdate, true);
-    
+
     // Add listeners to all found scroll containers
     scrollContainersRef.current.forEach(container => {
       container.addEventListener("scroll", handleUpdate, { passive: true });
@@ -328,7 +328,7 @@ export const GuidedTour: React.FC = () => {
     if (isMobileDevice()) {
       let lastTop = 0;
       let lastLeft = 0;
-      
+
       const checkPosition = () => {
         const element = getVisibleElement(currentStep.target);
         if (element) {
@@ -342,7 +342,7 @@ export const GuidedTour: React.FC = () => {
         }
         mobileRafId = requestAnimationFrame(checkPosition);
       };
-      
+
       mobileRafId = requestAnimationFrame(checkPosition);
     }
 
@@ -352,20 +352,20 @@ export const GuidedTour: React.FC = () => {
     return () => {
       window.removeEventListener("resize", handleUpdate);
       window.removeEventListener("scroll", handleUpdate, true);
-      
+
       scrollContainersRef.current.forEach(container => {
         container.removeEventListener("scroll", handleUpdate);
       });
-      
+
       if (window.visualViewport) {
         window.visualViewport.removeEventListener("resize", handleUpdate);
         window.visualViewport.removeEventListener("scroll", handleUpdate);
       }
-      
+
       if (rafIdRef.current) {
         cancelAnimationFrame(rafIdRef.current);
       }
-      
+
       if (mobileRafId) {
         cancelAnimationFrame(mobileRafId);
       }
@@ -399,7 +399,7 @@ export const GuidedTour: React.FC = () => {
     // Special handling for learn tour "Watch" button
     if (tourState.tourId === LEARN_TOUR_ID && currentStep?.id === "learn-onboarding") {
       await markUserOnboarded();
-      
+
       // Complete the tour and navigate to first video
       completeTour();
       const firstVideo = document.querySelector('[data-tour="learn-video-card"]');
@@ -480,7 +480,7 @@ export const GuidedTour: React.FC = () => {
 
       {/* Tooltip */}
       <div
-        className="fixed bg-[#050505] border border-[#2a2a2a] rounded-2xl p-5 shadow-2xl transition-all duration-300"
+        className="fixed bg-[#050505] border border-[#505050] rounded-2xl p-5 shadow-2xl transition-all duration-300"
         style={{
           zIndex: 10000,
           ...tooltipPosition,
@@ -489,8 +489,8 @@ export const GuidedTour: React.FC = () => {
             tooltipPosition.width !== undefined
               ? undefined
               : isMobileDevice()
-              ? "calc(100vw - 24px)"
-              : "300px",
+                ? "calc(100vw - 24px)"
+                : "300px",
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -535,7 +535,7 @@ export const GuidedTour: React.FC = () => {
                   previousStep();
                 }
               }}
-              className="px-3 py-1.5 text-gray-300 border border-[#2a2a2a] rounded-full hover:border-[#3a3a3a] transition-colors text-sm"
+              className="px-3 py-1.5 text-gray-300 border border-[#505050] rounded-full hover:border-[#3a3a3a] transition-colors text-sm"
             >
               {secondaryActionLabel}
             </button>

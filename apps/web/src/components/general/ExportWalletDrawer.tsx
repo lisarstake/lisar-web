@@ -147,7 +147,7 @@ export const ExportWalletDrawer: React.FC<ExportWalletDrawerProps> = ({
 
   return (
     <Drawer open={isOpen} onOpenChange={handleDrawerOpenChange}>
-      <DrawerContent className="bg-[#050505] border-[#2a2a2a] max-h-[90vh] overflow-y-auto">
+      <DrawerContent className="bg-[#050505] border-[#505050] max-h-[90vh] overflow-y-auto">
         <DrawerHeader>
           <DrawerTitle className="text-center text-xl font-semibold text-white">
             {exportStep === "intro" && "Export your wallet"}
@@ -177,7 +177,7 @@ export const ExportWalletDrawer: React.FC<ExportWalletDrawerProps> = ({
                     value={exportPassword}
                     onChange={(e) => setExportPassword(e.target.value)}
                     placeholder="Enter your account password"
-                    className="w-full pr-12 px-4 py-3 bg-[#071510] border border-[#2a2a2a] rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:border-[#C7EF6B]"
+                    className="w-full pr-12 px-4 py-3 bg-[#2a2a2a] border border-[#505050] rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:border-[#C7EF6B]"
                   />
                   <button
                     type="button"
@@ -197,8 +197,8 @@ export const ExportWalletDrawer: React.FC<ExportWalletDrawerProps> = ({
                 {exportError && (
                   <p
                     className={`text-sm mt-2 pl-1 ${exportErrorTone === "warning"
-                        ? "text-amber-300"
-                        : "text-red-500"
+                      ? "text-amber-300"
+                      : "text-red-500"
                       }`}
                   >
                     {exportError}
@@ -220,7 +220,7 @@ export const ExportWalletDrawer: React.FC<ExportWalletDrawerProps> = ({
                     type="text"
                     readOnly
                     value={privateKey}
-                    className="flex-1 px-4 py-3 bg-[#071510] border border-[#2a2a2a] rounded-lg text-gray-100"
+                    className="flex-1 px-4 py-3 bg-[#2a2a2a] border border-[#505050] rounded-lg text-gray-100"
                   />
                   <button
                     type="button"
@@ -229,7 +229,7 @@ export const ExportWalletDrawer: React.FC<ExportWalletDrawerProps> = ({
                       setCopied(true);
                       window.setTimeout(() => setCopied(false), 1200);
                     }}
-                    className={`px-3 py-3 bg-[#1f1f1f] border border-[#2a2a2a] rounded-lg hover:bg-[#2a2a2a] transition-all ${copied ? "scale-105 border-[#C7EF6B]" : ""
+                    className={`px-3 py-3 bg-[#1f1f1f] border border-[#505050] rounded-lg hover:bg-[#505050] transition-all ${copied ? "scale-105 border-[#C7EF6B]" : ""
                       }`}
                     aria-label={copied ? "Copied" : "Copy private key"}
                   >

@@ -51,13 +51,13 @@ export const LearnPage: React.FC = () => {
           <div>
             <h1 className="text-lg font-medium text-white">Lisar Academy</h1>
             <p className="text-xs text-gray-500">
-             Discover helpful guides and videos
+              Discover helpful guides and videos
             </p>
           </div>
           <button
             onClick={handleHelpClick}
             data-tour="learn-help-icon"
-            className="w-8 h-8 bg-[#2a2a2a] rounded-full flex items-center justify-center"
+            className="w-8 h-8 bg-[#505050] rounded-full flex items-center justify-center"
           >
             <CircleQuestionMark color="#86B3F7" size={16} />
           </button>
@@ -70,7 +70,7 @@ export const LearnPage: React.FC = () => {
               key={content.id}
               onClick={() => handleContentClick(content.slug)}
               data-tour={index === 0 ? "learn-video-card" : undefined}
-              className="bg-[#1a1a1a] rounded-xl overflow-hidden cursor-pointer hover:bg-[#2a2a2a] transition-colors"
+              className="bg-[#1a1a1a] rounded-xl overflow-hidden cursor-pointer hover:bg-[#505050] transition-colors"
             >
               {/* Video Thumbnail */}
               <div className="w-full h-44 bg-black relative overflow-hidden">
@@ -116,24 +116,22 @@ export const LearnPage: React.FC = () => {
       {/* Fixed Category Filter */}
       <div className="fixed bottom-24 left-0 right-0 px-6 z-10">
         <div className="flex items-center justify-center space-x-2">
-          <div className="bg-[#1a1a1a] rounded-full p-1 border border-[#2a2a2a]">
+          <div className="bg-[#1a1a1a] rounded-full p-1 border border-[#505050]">
             <button
               onClick={() => handleCategoryChange("how-to-guides")}
-              className={`px-3 py-2 rounded-full text-xs font-medium transition-colors ${
-                selectedCategory === "how-to-guides"
+              className={`px-3 py-2 rounded-full text-xs font-medium transition-colors ${selectedCategory === "how-to-guides"
                   ? "bg-[#C7EF6B] text-black"
                   : "text-white hover:text-[#C7EF6B]"
-              }`}
+                }`}
             >
-               Guides
+              Guides
             </button>
             <button
               onClick={() => handleCategoryChange("academy")}
-              className={`px-3 py-2 rounded-full text-xs font-medium transition-colors ${
-                selectedCategory === "academy"
+              className={`px-3 py-2 rounded-full text-xs font-medium transition-colors ${selectedCategory === "academy"
                   ? "bg-[#C7EF6B] text-black"
                   : "text-white hover:text-[#C7EF6B]"
-              }`}
+                }`}
             >
               Academy
             </button>

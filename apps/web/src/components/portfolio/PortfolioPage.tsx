@@ -52,7 +52,7 @@ const StakeEntryItem: React.FC<StakeEntryItemProps> = ({ entry, onClick }) => {
 
   return (
     <div
-      className="bg-[#1a1a1a] rounded-xl p-4 cursor-pointer hover:bg-[#2a2a2a] transition-colors"
+      className="bg-[#1a1a1a] rounded-xl p-4 cursor-pointer hover:bg-[#505050] transition-colors"
       onClick={onClick}
     >
       <div className="flex items-center justify-between">
@@ -186,14 +186,14 @@ export const PortfolioPage: React.FC = () => {
         <div className="flex items-center justify-between py-8 mb-2">
           <button
             onClick={handleBackClick}
-            className="h-10 w-10 rounded-full bg-[#071510] flex items-center justify-center"
+            className="h-10 w-10 rounded-full bg-[#2a2a2a] flex items-center justify-center"
           >
             <ArrowLeft className="text-white" size={22} />
           </button>
           <h1 className="text-lg font-medium text-white">Portfolio</h1>
           <button
             onClick={handleHelpClick}
-            className="w-8 h-8 bg-[#2a2a2a] rounded-full flex items-center justify-center"
+            className="w-8 h-8 bg-[#505050] rounded-full flex items-center justify-center"
           >
             <CircleQuestionMark color="#86B3F7" size={16} />
           </button>
@@ -357,7 +357,7 @@ export const PortfolioPage: React.FC = () => {
 
         <div className="grid grid-cols-2 gap-4 mb-6">
           {/* Summary Card */}
-          <div className="bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-2xl p-5 border border-[#2a2a2a] relative overflow-hidden">
+          <div className="bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-2xl p-5 border border-[#505050] relative overflow-hidden">
             <div className="flex items-start justify-between mb-3">
               <div className="flex-1 relative z-10">
                 <h3 className="text-white/90 text-base font-medium mb-2">
@@ -380,7 +380,7 @@ export const PortfolioPage: React.FC = () => {
           </div>
 
           {/* My Positions Card */}
-          <div className="bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-2xl p-5 border border-[#2a2a2a] relative overflow-hidden">
+          <div className="bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-2xl p-5 border border-[#505050] relative overflow-hidden">
             <div className="flex items-start justify-between mb-3">
               <div className="flex-1 relative z-10">
                 <h3 className="text-white/90 text-base font-medium mb-2">

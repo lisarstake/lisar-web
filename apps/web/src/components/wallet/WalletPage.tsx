@@ -502,7 +502,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
   const renderEarningsCard = () => {
     if (earningsCardState === "default" && activeWalletCard) {
       return (
-        <div className="mt-4 rounded-md p-3 bg-[#071510] relative overflow-hidden">
+        <div className="mt-4 rounded-md p-3 bg-[#2a2a2a] relative overflow-hidden">
           <div className="flex items-center gap-4">
             <div className="shrink-0">
               <img
@@ -542,7 +542,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
 
     if (earningsCardState === "withdraw-ready") {
       return (
-        <div className="mt-4 rounded-md p-3 bg-[#071510] relative">
+        <div className="mt-4 rounded-md p-3 bg-[#2a2a2a] relative">
           <div className="flex items-center gap-4">
             <div className="shrink-0">
               <img
@@ -571,7 +571,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
 
     if (earningsCardState === "unbonding") {
       return (
-        <div className="mt-4 rounded-md p-3 bg-[#071510] relative">
+        <div className="mt-4 rounded-md p-3 bg-[#2a2a2a] relative">
           <div className="flex items-center gap-4">
             <div className="shrink-0">
               <img
@@ -601,7 +601,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
       <div className="flex items-center justify-between px-6 pt-8 pb-0">
         <button
           onClick={handleBackClick}
-          className="h-10 w-10 rounded-full bg-[#071510] flex items-center justify-center"
+          className="h-10 w-10 rounded-full bg-[#2a2a2a] flex items-center justify-center"
         >
           <ArrowLeft className="text-white" size={22} />
         </button>
@@ -609,7 +609,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
         <div className="flex items-center gap-3">
           <button
             onClick={() => setShowTokenInfoDrawer(true)}
-            className="h-10 w-10 rounded-full bg-[#071510] flex items-center justify-center"
+            className="h-10 w-10 rounded-full bg-[#2a2a2a] flex items-center justify-center"
           >
             <CircleQuestionMark size={22} color="#fff" />
           </button>
@@ -625,7 +625,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
             <p className="text-sm text-white/50">Wallet balance</p>
             <button
               onClick={() => setShowBalance(!showBalance)}
-              className="h-5 w-5 rounded-full bg-[#071510] flex items-center justify-center"
+              className="h-5 w-5 rounded-full bg-[#2a2a2a] flex items-center justify-center"
             >
               {showBalance ? (
                 <Eye size={15} color="#fff" />
@@ -656,7 +656,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
               onClick={handleDepositClick}
               className="flex flex-col items-center gap-1.5"
             >
-              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#071510]">
+              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#2a2a2a]">
                 <ArrowDown size={22} className="text-[#e8ece9]" />
               </span>
               <span className="text-xs font-medium">Deposit</span>
@@ -666,7 +666,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
               onClick={handleWithdrawClick}
               className="flex flex-col items-center gap-1.5"
             >
-              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#071510]">
+              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#2a2a2a]">
                 <ArrowRight size={22} className="text-[#e8ece9]" />
               </span>
               <span className="text-xs font-medium">Withdraw</span>
@@ -676,7 +676,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
               onClick={() => setShowEarningsDrawer(true)}
               className="flex flex-col items-center gap-1.5"
             >
-              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#071510]">
+              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#2a2a2a]">
                 <DollarSign size={22} className="text-[#e8ece9]" />
               </span>
               <span className="text-xs font-medium">Earnings</span>
@@ -713,7 +713,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
       />
 
       <Drawer open={showEarningsDrawer} onOpenChange={setShowEarningsDrawer}>
-        <DrawerContent className="bg-[#050505] border-[#2a2a2a]">
+        <DrawerContent className="bg-[#050505] border-[#505050]">
           <DrawerHeader>
             <DrawerTitle className="text-base font-medium text-white text-left">
               Earned last 7 days
@@ -723,7 +723,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
             {sevenDayEarnings.map((item) => (
               <div
                 key={item.id}
-                className="rounded-xl bg-[#071510] px-4 py-3 flex justify-between items-center"
+                className="rounded-xl bg-[#2a2a2a] px-4 py-3 flex justify-between items-center"
               >
                 <div>
                   <p className="text-xs text-white/70">Date</p>
@@ -767,7 +767,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
           }
         }}
       >
-        <DrawerContent className="bg-[#050505] border-[#2a2a2a]">
+        <DrawerContent className="bg-[#050505] border-[#505050]">
           <DrawerHeader>
             <DrawerTitle className="text-base font-medium text-white text-left">
               {topUpDrawerView === "options"
@@ -787,7 +787,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
                   key={option.id}
                   onClick={() => handleFundingOptionSelect(option.id)}
                   disabled={!option.enabled}
-                  className={`w-full rounded-xl px-4 py-3 text-left ${option.enabled ? "bg-[#071510]" : "bg-[#071510] opacity-60"
+                  className={`w-full rounded-xl px-4 py-3 text-left ${option.enabled ? "bg-[#2a2a2a]" : "bg-[#2a2a2a] opacity-60"
                     }`}
                 >
                   <div className="flex items-center justify-between gap-3">
@@ -859,7 +859,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
         open={showWithdrawEmptyDrawer}
         onOpenChange={setShowWithdrawEmptyDrawer}
       >
-        <DrawerContent className="bg-[#050505] border border-[#2a2a2a]">
+        <DrawerContent className="bg-[#050505] border border-[#505050]">
           <DrawerHeader>
             <DrawerTitle className="text-base font-medium text-white text-left"></DrawerTitle>
           </DrawerHeader>
@@ -891,25 +891,25 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
       </Drawer>
 
       <Drawer open={showTokenInfoDrawer} onOpenChange={setShowTokenInfoDrawer}>
-        <DrawerContent className="bg-[#050505] border-[#2a2a2a]">
+        <DrawerContent className="bg-[#050505] border-[#505050]">
           <DrawerHeader>
             <DrawerTitle className="text-base font-medium text-white text-left">
               {walletVisual.coinName} token
             </DrawerTitle>
           </DrawerHeader>
           <div className="space-y-4 py-2 mt-1">
-            <div className="rounded-xl bg-[#071510] p-4">
+            <div className="rounded-xl bg-[#2a2a2a] p-4">
               <p className="text-sm text-white/85">{tokenInfoDescription}</p>
             </div>
             {isStakingWallet && (
-              <div className="rounded-xl bg-[#071510] p-4 flex items-center justify-between">
+              <div className="rounded-xl bg-[#2a2a2a] p-4 flex items-center justify-between">
                 <p className="text-sm text-white/60">Current orchestrator</p>
                 <p className="text-sm font-medium text-white max-w-[60%] text-right truncate">
                   {currentValidatorName || "--"}
                 </p>
               </div>
             )}
-            <div className="rounded-xl bg-[#071510] p-4 flex items-center justify-between">
+            <div className="rounded-xl bg-[#2a2a2a] p-4 flex items-center justify-between">
               <p className="text-sm text-white/60">Live APY</p>
               <p className="text-sm font-semibold text-[#C7EF6B]">
                 {apyLoading && tokenLiveApyPercent === null

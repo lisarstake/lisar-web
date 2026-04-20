@@ -106,11 +106,10 @@ export const ActionDrawer: React.FC<ActionDrawerProps> = ({
               <button
                 onClick={handleConfirm}
                 disabled={isProcessing}
-                className={`w-full py-2.5 rounded-lg font-semibold text-lg transition-colors ${
-                  isProcessing
+                className={`w-full py-2.5 rounded-lg font-semibold text-lg transition-colors ${isProcessing
                     ? "bg-[#A8CF5B] text-black cursor-not-allowed opacity-70"
                     : "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
-                }`}
+                  }`}
               >
                 {isProcessing ? (
                   <span className="flex items-center justify-center gap-2">
@@ -124,11 +123,10 @@ export const ActionDrawer: React.FC<ActionDrawerProps> = ({
               <button
                 onClick={handleCancel}
                 disabled={isProcessing}
-                className={`w-full py-2.5 rounded-lg font-semibold text-lg transition-colors ${
-                  isProcessing
+                className={`w-full py-2.5 rounded-lg font-semibold text-lg transition-colors ${isProcessing
                     ? "bg-[#1a1a1a] text-gray-500 cursor-not-allowed opacity-50"
-                    : "bg-[#2a2a2a] text-white hover:bg-[#3a3a3a]"
-                }`}
+                    : "bg-[#505050] text-white hover:bg-[#3a3a3a]"
+                  }`}
               >
                 {pendingAction.confirmation.cancelLabel || "Cancel"}
               </button>
@@ -143,13 +141,12 @@ export const ActionDrawer: React.FC<ActionDrawerProps> = ({
                   key={index}
                   onClick={() => handleActionClick(action)}
                   disabled={isProcessingThisAction}
-                  className={`w-full py-2.5 rounded-lg font-semibold text-lg transition-colors ${
-                    action.variant === "secondary"
-                      ? "bg-[#2a2a2a] text-white hover:bg-[#3a3a3a]"
+                  className={`w-full py-2.5 rounded-lg font-semibold text-lg transition-colors ${action.variant === "secondary"
+                      ? "bg-[#505050] text-white hover:bg-[#3a3a3a]"
                       : isProcessingThisAction
                         ? "bg-[#A8CF5B] text-black cursor-not-allowed opacity-70"
                         : "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
-                  }`}
+                    }`}
                 >
                   {isProcessingThisAction ? (
                     <span className="flex items-center justify-center gap-2">

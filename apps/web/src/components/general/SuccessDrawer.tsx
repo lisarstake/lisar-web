@@ -35,7 +35,7 @@ export const SuccessDrawer: React.FC<SuccessDrawerProps> = ({
 }) => {
   return (
     <Drawer open={isOpen} onOpenChange={onClose}>
-      <DrawerContent className="bg-[#050505] border-[#2a2a2a]">
+      <DrawerContent className="bg-[#050505] border-[#505050]">
         <DrawerHeader className="text-center">
           <div className="flex justify-center mb-0">
             <div className="w-20 h-20 bg-[#C7EF6B]/20 rounded-full my-3 flex items-center justify-center relative overflow-hidden">

@@ -219,7 +219,7 @@ export const CampaignHomePage: React.FC = () => {
         <div className="flex items-center justify-between px-6 py-8">
           <button
             onClick={handleBackClick}
-            className="h-10 w-10 rounded-full bg-[#071510] flex items-center justify-center"
+            className="h-10 w-10 rounded-full bg-[#2a2a2a] flex items-center justify-center"
           >
             <ArrowLeft className="text-white" size={22} />
           </button>
@@ -228,7 +228,7 @@ export const CampaignHomePage: React.FC = () => {
 
           <button
             onClick={handleHelpClick}
-            className="w-8 h-8 bg-[#2a2a2a] rounded-full flex items-center justify-center"
+            className="w-8 h-8 bg-[#505050] rounded-full flex items-center justify-center"
           >
             <CircleQuestionMark color="#86B3F7" size={16} />
           </button>
@@ -256,7 +256,7 @@ export const CampaignHomePage: React.FC = () => {
       <div className="flex items-center justify-between px-6 py-8">
         <button
           onClick={handleBackClick}
-          className="h-10 w-10 rounded-full bg-[#071510] flex items-center justify-center"
+          className="h-10 w-10 rounded-full bg-[#2a2a2a] flex items-center justify-center"
         >
           <ArrowLeft className="text-white" size={22} />
         </button>
@@ -265,7 +265,7 @@ export const CampaignHomePage: React.FC = () => {
 
         <button
           onClick={handleHelpClick}
-          className="w-8 h-8 bg-[#2a2a2a] rounded-full flex items-center justify-center"
+          className="w-8 h-8 bg-[#505050] rounded-full flex items-center justify-center"
         >
           <CircleQuestionMark color="#86B3F7" size={16} />
         </button>
@@ -308,13 +308,13 @@ export const CampaignHomePage: React.FC = () => {
                 </Badge>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div className="p-2 bg-[#2a2a2a] rounded-md">
+                <div className="p-2 bg-[#505050] rounded-md">
                   <p className="text-xs text-gray-400">Reward</p>
                   <p className="text-xs font-semibold text-white/90">
                     {tierInfo.reward}
                   </p>
                 </div>
-                <div className="p-2 bg-[#2a2a2a] rounded-md">
+                <div className="p-2 bg-[#505050] rounded-md">
                   <p className="text-xs text-gray-400">Timeline</p>
                   <p className="text-xs font-semibold text-white/90">
                     {tierInfo.timeline}
@@ -350,7 +350,7 @@ export const CampaignHomePage: React.FC = () => {
                         key={index}
                         className={`flex items-start gap-2 p-2 rounded-lg transition-colors mt-3 ${req.completed
                           ? "bg-[#C7EF6B]/10 hover:bg-[#C7EF6B]/20 border border-[#C7EF6B]/30"
-                          : "bg-[#2a2a2a] hover:bg-[#333333]"
+                          : "bg-[#505050] hover:bg-[#333333]"
                           }`}
                       >
                         <div className="flex-1">
@@ -422,7 +422,7 @@ export const CampaignHomePage: React.FC = () => {
               </div>
               {referralCode ? (
                 <div className="space-y-2">
-                  <div className="flex items-center gap-2 py-2 px-3.5 bg-[#2a2a2a] rounded-md">
+                  <div className="flex items-center gap-2 py-2 px-3.5 bg-[#505050] rounded-md">
                     <div className="flex-1">
                       <p className="text-xs font-medium text-[#C7EF6B] tracking-wider">
                         {referralCode}
@@ -446,7 +446,7 @@ export const CampaignHomePage: React.FC = () => {
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
-                  <div className="flex-1 py-2 px-3.5 bg-[#2a2a2a] rounded-md">
+                  <div className="flex-1 py-2 px-3.5 bg-[#505050] rounded-md">
                     <p className="text-xs font-medium text-gray-400">
                       No referral code yet
                     </p>

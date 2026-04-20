@@ -85,7 +85,7 @@ export default function EarningsBreakdownPage() {
       icon: (
         <div className="w-9 h-9 rounded-full bg-[#86B3F7]/15 flex items-center justify-center">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-[#86B3F7]">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" stroke="currentColor" strokeWidth="2"/>
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" stroke="currentColor" strokeWidth="2" />
           </svg>
         </div>
       ),
@@ -97,7 +97,7 @@ export default function EarningsBreakdownPage() {
       icon: (
         <div className="w-9 h-9 rounded-full bg-[#C7EF6B]/15 flex items-center justify-center">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-[#C7EF6B]">
-            <path d="M12 2L2 7l10 5 10-5-10-5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M12 2L2 7l10 5 10-5-10-5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </div>
       ),
@@ -108,7 +108,7 @@ export default function EarningsBreakdownPage() {
 
   return (
     <div className="min-h-screen bg-[#050505] text-white">
-      <div className="sticky top-0 z-10 bg-[#050505] border-b border-[#2a2a2a] px-6 py-4">
+      <div className="sticky top-0 z-10 bg-[#050505] border-b border-[#505050] px-6 py-4">
         <div className="flex items-center justify-between">
           <button
             onClick={() => navigate(-1)}
@@ -119,21 +119,19 @@ export default function EarningsBreakdownPage() {
           <div className="flex items-center gap-1">
             <button
               onClick={() => setCurrency("NGN")}
-              className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
-                currency === "NGN"
+              className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${currency === "NGN"
                   ? "text-white"
                   : "text-white/50 hover:text-white/70"
-              }`}
+                }`}
             >
               NGN
             </button>
             <button
               onClick={() => setCurrency("USD")}
-              className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
-                currency === "USD"
+              className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${currency === "USD"
                   ? "text-white"
                   : "text-white/50 hover:text-white/70"
-              }`}
+                }`}
             >
               USD
             </button>
@@ -146,7 +144,7 @@ export default function EarningsBreakdownPage() {
       </div>
 
       <div className="px-6 py-6">
-        <div className="rounded-2xl p-5 bg-[#0f0f0f] border border-[#2a2a2a] relative overflow-hidden">
+        <div className="rounded-2xl p-5 bg-[#0f0f0f] border border-[#505050] relative overflow-hidden">
           <div className="absolute top-0 right-0 w-24 h-24 bg-[#22c55e]/5 rounded-full blur-2xl" />
           <div className="relative text-center">
             <p className="text-xl font-semibold text-[#4ade80]">
@@ -170,7 +168,7 @@ export default function EarningsBreakdownPage() {
                 setMode(cat.id === "savings" ? "savings" : "staking");
                 navigate(cat.id === "savings" ? "/wallet/savings" : "/wallet/staking");
               }}
-              className="w-full flex items-center gap-3 py-3.5 border-b border-[#2a2a2a] last:border-0 hover:bg-[#0a0a0a] transition-colors"
+              className="w-full flex items-center gap-3 py-3.5 border-b border-[#505050] last:border-0 hover:bg-[#0a0a0a] transition-colors"
             >
               {cat.icon}
               <span className="flex-1 text-left text-sm font-medium text-white/90">
@@ -188,7 +186,7 @@ export default function EarningsBreakdownPage() {
           ))}
         </div>
 
-        <div className="mt-8 p-4 rounded-xl bg-[#0f0f0f] border border-[#2a2a2a]">
+        <div className="mt-8 p-4 rounded-xl bg-[#0f0f0f] border border-[#505050]">
           <p className="text-xs text-white/60 mb-3">
             Earn even more by funding your plans
           </p>

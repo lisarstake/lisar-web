@@ -193,7 +193,7 @@ const Navbar = () => {
                   onClick={() => navigate("/signup")}
                   className="inline-flex cursor-pointer items-center rounded-full border-2 border-black bg-[#C7EF6B] px-7 py-2.5 text-base font-medium text-black transition-colors hover:bg-[#C7EF6B]"
                 >
-                  Create a free account
+                  Create an account
                 </button>
 
                 <button
