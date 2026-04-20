@@ -68,14 +68,14 @@ export const TransactionDetailsDrawer: React.FC<TransactionDetailsDrawerProps> =
 
   return (
     <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DrawerContent className="bg-[#050505] border-[#2a2a2a]">
+      <DrawerContent className="bg-[#050505] border-[#505050]">
         <DrawerHeader className="">
           <DrawerTitle className="text-lg font-medium text-white text-center">
             {getTransactionLabel(transaction.transaction_type)}
           </DrawerTitle>
         </DrawerHeader>
 
-        <div className="rounded-xl bg-[#071510] p-4 space-y-3 mt-3">
+        <div className="rounded-xl bg-[#2a2a2a] p-4 space-y-3 mt-3">
           <div className="flex items-center justify-between gap-4">
             <span className="text-base text-white/60">Amount</span>
             <span className="text-sm text-white"> {amountPrefix}

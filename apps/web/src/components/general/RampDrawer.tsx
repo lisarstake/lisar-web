@@ -530,14 +530,14 @@ export const RampDrawer: React.FC<RampDrawerProps> = ({
     <Drawer.Root open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 bg-black/60 z-50 backdrop-blur-sm" />
-        <Drawer.Content className="bg-[#050505] border-t border-[#2a2a2a] flex flex-col rounded-t-4xl h-auto max-h-[90vh] fixed bottom-0 left-0 right-0 z-50">
+        <Drawer.Content className="bg-[#050505] border-t border-[#505050] flex flex-col rounded-t-4xl h-auto max-h-[90vh] fixed bottom-0 left-0 right-0 z-50">
           <div className="p-4 bg-[#050505] rounded-t-4xl flex-1 overflow-y-auto scrollbar-hide">
             {!showSuccess ? (
               <>
                 <div className="flex justify-end pt-2">
                   <button
                     onClick={onClose}
-                    className="w-10 h-10 bg-[#071510] rounded-full flex items-center justify-center text-white transition-colors hover:bg-[#1a1f10]"
+                    className="w-10 h-10 bg-[#2a2a2a] rounded-full flex items-center justify-center text-white transition-colors hover:bg-[#1a1f10]"
                   >
                     <X size={20} />
                   </button>
@@ -600,7 +600,7 @@ export const RampDrawer: React.FC<RampDrawerProps> = ({
                       </h2>
                     </div>
 
-                    <div className="bg-[#071510] rounded-2xl p-4 mb-5 space-y-3">
+                    <div className="bg-[#2a2a2a] rounded-2xl p-4 mb-5 space-y-3">
                       <div className="flex justify-between items-center">
                         <p className="text-sm text-white/60">
                           {isBuy ? "You are spending" : "You are receiving"}

@@ -480,7 +480,7 @@ export const WalletTransferFormPage: React.FC = () => {
         <div className="flex items-center justify-between px-6 pt-8 pb-4">
           <button
             onClick={() => navigate(-1)}
-            className="h-10 w-10 rounded-full bg-[#071510] flex items-center justify-center"
+            className="h-10 w-10 rounded-full bg-[#2a2a2a] flex items-center justify-center"
           >
             <ArrowLeft className="text-white" size={22} />
           </button>
@@ -500,7 +500,7 @@ export const WalletTransferFormPage: React.FC = () => {
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder={safeAsset === "naira" ? "0" : "0"}
-                  className="w-full rounded-lg bg-[#071510] px-4 py-3.5 text-base text-white outline-none"
+                  className="w-full rounded-lg bg-[#2a2a2a] px-4 py-3.5 text-base text-white outline-none"
                 />
                 {amountWarning ? (
                   <p className="mt-2 text-xs text-amber-300 ml-1">{amountWarning}</p>
@@ -514,10 +514,10 @@ export const WalletTransferFormPage: React.FC = () => {
                       Bank
                     </label>
                     <Select value={bankCode} onValueChange={setBankCode}>
-                      <SelectTrigger className="w-full bg-[#071510] text-white border-none py-6">
+                      <SelectTrigger className="w-full bg-[#2a2a2a] text-white border-none py-6">
                         <SelectValue placeholder="Select bank" />
                       </SelectTrigger>
-                      <SelectContent className="bg-[#071510] text-white border-none">
+                      <SelectContent className="bg-[#2a2a2a] text-white border-none">
                         {banks.map((bank) => (
                           <SelectItem
                             key={bank.code}
@@ -543,7 +543,7 @@ export const WalletTransferFormPage: React.FC = () => {
                         )
                       }
                       placeholder="Enter account number"
-                      className="w-full rounded-lg bg-[#071510] px-4 py-3.5 text-base text-white outline-none"
+                      className="w-full rounded-lg bg-[#2a2a2a] px-4 py-3.5 text-base text-white outline-none"
                     />
                   </div>
                   <div>
@@ -560,7 +560,7 @@ export const WalletTransferFormPage: React.FC = () => {
                           : "Account name"
                       }
                       readOnly
-                      className="w-full rounded-lg bg-[#071510] px-4 py-3.5 text-base text-white outline-none"
+                      className="w-full rounded-lg bg-[#2a2a2a] px-4 py-3.5 text-base text-white outline-none"
                     />
                     {lookupError ? (
                       <p className="mt-2 text-xs text-amber-300 ml-1">{lookupError}</p>
@@ -578,7 +578,7 @@ export const WalletTransferFormPage: React.FC = () => {
                       value={walletAddress}
                       onChange={(e) => setWalletAddress(e.target.value)}
                       placeholder="Paste wallet address"
-                      className="w-full rounded-lg bg-[#071510] pr-12 pl-4 py-3.5 text-base text-white outline-none"
+                      className="w-full rounded-lg bg-[#2a2a2a] pr-12 pl-4 py-3.5 text-base text-white outline-none"
                     />
                     <button
                       type="button"
@@ -600,14 +600,14 @@ export const WalletTransferFormPage: React.FC = () => {
             </div>
           ) : safeAsset === "naira" ? (
             <div className="pt-4 space-y-5">
-              <div className="rounded-lg bg-[#071510] p-3">
+              <div className="rounded-lg bg-[#2a2a2a] p-3">
                 <img
                   src="/deposit-naira.png"
                   alt="Deposit Naira"
                   className="w-full rounded-lg object-cover"
                 />
               </div>
-              <div className="rounded-lg bg-[#071510] p-4 space-y-3">
+              <div className="rounded-lg bg-[#2a2a2a] p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <p className="text-sm text-white/60">Bank name</p>
                   {showVirtualAccountLoadingState ? (
@@ -696,7 +696,7 @@ export const WalletTransferFormPage: React.FC = () => {
             </div>
           ) : (
             <div className="pt-4 space-y-5">
-              <div className="rounded-lg bg-[#071510] p-3">
+              <div className="rounded-lg bg-[#2a2a2a] p-3">
                 <p className="text-sm text-white/60">Cryptocurrency</p>
                 <Select
                   value={selectedToken}
@@ -705,7 +705,7 @@ export const WalletTransferFormPage: React.FC = () => {
                   <SelectTrigger className="bg-transparent text-white border-none w-full px-1">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-[#071510] text-white w-full">
+                  <SelectContent className="bg-[#2a2a2a] text-white w-full">
                     <SelectItem
                       value="USDC"
                       className="focus:bg-white/10 focus:text-white"
@@ -728,7 +728,7 @@ export const WalletTransferFormPage: React.FC = () => {
                 </Select>
               </div>
 
-              <div className="rounded-lg bg-[#071510] p-3">
+              <div className="rounded-lg bg-[#2a2a2a] p-3">
                 <p className="text-sm text-white/60">Network</p>
                 <Select
                   value={selectedNetwork}
@@ -739,7 +739,7 @@ export const WalletTransferFormPage: React.FC = () => {
                   <SelectTrigger className="bg-transparent text-white border-none w-full px-1">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-[#071510] text-white w-full">
+                  <SelectContent className="bg-[#2a2a2a] text-white w-full">
                     {availableNetworks.map((network) => (
                       <SelectItem
                         key={network}
@@ -754,7 +754,7 @@ export const WalletTransferFormPage: React.FC = () => {
               </div>
 
               {/*
-            <div className="rounded-lg bg-[#071510] p-4 space-y-2">
+            <div className="rounded-lg bg-[#2a2a2a] p-4 space-y-2">
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
                   <p className="text-sm text-white">Instant Offramp</p>
@@ -798,7 +798,7 @@ export const WalletTransferFormPage: React.FC = () => {
 
               <div className="space-y-2">
                 <p className="text-sm text-white/60">Wallet address</p>
-                <div className="rounded-lg bg-[#071510] p-4">
+                <div className="rounded-lg bg-[#2a2a2a] p-4">
                   <div className="flex items-center justify-between gap-3">
                     <p className="text-base text-white/80 break-all">
                       {truncatedCryptoAddress}
@@ -823,7 +823,7 @@ export const WalletTransferFormPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="rounded-lg bg-[#071510] p-4 mb-10">
+              <div className="rounded-lg bg-[#2a2a2a] p-4 mb-10">
                 <p className="text-sm text-[#c7ef6b] font-medium mb-2">
                   Important
                 </p>
@@ -849,7 +849,7 @@ export const WalletTransferFormPage: React.FC = () => {
             onClick={handleConfirm}
             disabled={isDisabled}
             className={`h-12 w-full rounded-full text-base font-semibold transition-colors ${isDisabled
-              ? "bg-[#2a2a2a] text-white/40"
+              ? "bg-[#505050] text-white/40"
               : "bg-[#c7ef6b] text-black"
               }`}
           >

@@ -344,7 +344,7 @@ export const ValidatorDetailsPage: React.FC = () => {
       <div className="flex items-center justify-between px-6 py-8">
         <button
           onClick={handleBackClick}
-          className="h-10 w-10 rounded-full bg-[#071510] flex items-center justify-center"
+          className="h-10 w-10 rounded-full bg-[#2a2a2a] flex items-center justify-center"
         >
           <ArrowLeft className="text-white" size={22} />
         </button>
@@ -363,7 +363,7 @@ export const ValidatorDetailsPage: React.FC = () => {
 
         <button
           onClick={handleHelpClick}
-          className="w-8 h-8 bg-[#2a2a2a] rounded-full flex items-center justify-center"
+          className="w-8 h-8 bg-[#505050] rounded-full flex items-center justify-center"
         >
           <CircleQuestionMark color="#86B3F7" size={16} />
         </button>

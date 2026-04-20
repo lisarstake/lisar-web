@@ -30,7 +30,7 @@ export const ValidatorActionButtons: React.FC<ValidatorActionButtonsProps> = ({
     <div className="flex items-center justify-around px-6 py-6">
       <button
         onClick={onStakeClick}
-        className="flex flex-col items-center justify-center space-y-2 w-20 h-20 rounded-xl transition-colors bg-[#2a2a2a] hover:bg-[#3a3a3a]"
+        className="flex flex-col items-center justify-center space-y-2 w-20 h-20 rounded-xl transition-colors bg-[#505050] hover:bg-[#3a3a3a]"
       >
         <PiggyBank size={24} color={"#C7EF6B"} />
         <span className="text-xs text-gray-300">Vest</span>
@@ -40,8 +40,8 @@ export const ValidatorActionButtons: React.FC<ValidatorActionButtonsProps> = ({
         onClick={onUnstakeClick}
         disabled={!hasStakeWithValidator}
         className={`flex flex-col items-center justify-center space-y-2 w-20 h-20 rounded-xl transition-colors ${hasStakeWithValidator
-            ? "bg-[#2a2a2a] hover:bg-[#3a3a3a]"
-            : "bg-[#1a1a1a] cursor-not-allowed"
+          ? "bg-[#505050] hover:bg-[#3a3a3a]"
+          : "bg-[#1a1a1a] cursor-not-allowed"
           }`}
       >
         <SquareMinus
@@ -59,8 +59,8 @@ export const ValidatorActionButtons: React.FC<ValidatorActionButtonsProps> = ({
         onClick={onWithdrawClick}
         disabled={!hasWithdrawableAmount}
         className={`flex flex-col items-center justify-center space-y-2 w-20 h-20 rounded-xl transition-colors ${hasWithdrawableAmount
-            ? "bg-[#2a2a2a] hover:bg-[#3a3a3a]"
-            : "bg-[#1a1a1a] cursor-not-allowed"
+          ? "bg-[#505050] hover:bg-[#3a3a3a]"
+          : "bg-[#1a1a1a] cursor-not-allowed"
           }`}
       >
         <ArrowUpRight
@@ -76,7 +76,7 @@ export const ValidatorActionButtons: React.FC<ValidatorActionButtonsProps> = ({
 
       <button
         onClick={onShareClick}
-        className="flex flex-col items-center justify-center space-y-2 w-20 h-20 rounded-xl transition-colors bg-[#2a2a2a] hover:bg-[#3a3a3a]"
+        className="flex flex-col items-center justify-center space-y-2 w-20 h-20 rounded-xl transition-colors bg-[#505050] hover:bg-[#3a3a3a]"
       >
         <Share size={20} color="#C7EF6B" />
         <span className="text-xs text-gray-300">Share</span>

@@ -147,8 +147,8 @@ export const ForecastPage: React.FC = () => {
             projectedReward:
               Number(
                 serverProjections[k]?.projectedReward ??
-                  serverProjections[k] ??
-                  0
+                serverProjections[k] ??
+                0
               ) + numericAmount,
             currency: serverProjections[k]?.currency ?? "USD",
           }));
@@ -178,7 +178,7 @@ export const ForecastPage: React.FC = () => {
           </div>
           <button
             onClick={handleHelpClick}
-            className="w-8 h-8 bg-[#2a2a2a] rounded-full flex items-center justify-center"
+            className="w-8 h-8 bg-[#505050] rounded-full flex items-center justify-center"
           >
             <CircleQuestionMark color="#86B3F7" size={16} />
           </button>
@@ -196,7 +196,7 @@ export const ForecastPage: React.FC = () => {
                 const selected = accountPlans.find((p) => p.id === e.target.value);
                 if (selected) handlePlanSelect(selected);
               }}
-              className="w-full p-4 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg text-white appearance-none focus:border-[#C7EF6B] focus:outline-none"
+              className="w-full p-4 bg-[#1a1a1a] border border-[#505050] rounded-lg text-white appearance-none focus:border-[#C7EF6B] focus:outline-none"
             >
               {accountPlans.map((plan) => (
                 <option className="font-medium" key={plan.id} value={plan.id}>
@@ -226,13 +226,12 @@ export const ForecastPage: React.FC = () => {
                 <span>({selectedCurrency})</span>
                 <ChevronDown
                   size={16}
-                  className={`transition-transform ${
-                    showCurrencyDropdown ? "rotate-180" : ""
-                  }`}
+                  className={`transition-transform ${showCurrencyDropdown ? "rotate-180" : ""
+                    }`}
                 />
               </button>
               {showCurrencyDropdown && (
-                <div className="absolute right-0 mt-2 w-32 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg shadow-lg z-10 overflow-hidden">
+                <div className="absolute right-0 mt-2 w-32 bg-[#1a1a1a] border border-[#505050] rounded-lg shadow-lg z-10 overflow-hidden">
                   {currencies.map((currency) => (
                     <button
                       key={currency}
@@ -240,11 +239,10 @@ export const ForecastPage: React.FC = () => {
                         setSelectedCurrency(currency);
                         setShowCurrencyDropdown(false);
                       }}
-                      className={`w-full text-left px-4 py-2 text-sm hover:bg-[#2a2a2a] transition-colors ${
-                        selectedCurrency === currency
-                          ? "text-[#C7EF6B] bg-[#2a2a2a]"
+                      className={`w-full text-left px-4 py-2 text-sm hover:bg-[#505050] transition-colors ${selectedCurrency === currency
+                          ? "text-[#C7EF6B] bg-[#505050]"
                           : "text-white"
-                      }`}
+                        }`}
                     >
                       {currency}
                     </button>
@@ -257,7 +255,7 @@ export const ForecastPage: React.FC = () => {
             type="text"
             value={delegationAmount ? formatNumber(delegationAmount) : ""}
             onChange={handleAmountChange}
-            className="w-full p-4 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg text-white focus:border-[#C7EF6B] focus:outline-none"
+            className="w-full p-4 bg-[#1a1a1a] border border-[#505050] rounded-lg text-white focus:border-[#C7EF6B] focus:outline-none"
             placeholder={`Enter amount in ${selectedCurrency}`}
           />
         </div>
@@ -270,7 +268,7 @@ export const ForecastPage: React.FC = () => {
             </h2>
             <div className="text-xl font-bold text-white/90 mb-1">
               {yieldLoading ? (
-                <Skeleton className="h-7 w-10 bg-[#2a2a2a] inline-block align-middle rounded-sm mb-2" />
+                <Skeleton className="h-7 w-10 bg-[#505050] inline-block align-middle rounded-sm mb-2" />
               ) : (
                 formatNumber(
                   projections.find((p) =>
@@ -293,13 +291,13 @@ export const ForecastPage: React.FC = () => {
               <span className="text-gray-400">Daily</span>
               <span className="text-white/90 font-medium">
                 {yieldLoading ? (
-                  <Skeleton className="h-5 w-8 bg-[#2a2a2a] inline-block align-middle rounded-sm mb-1" />
+                  <Skeleton className="h-5 w-8 bg-[#505050] inline-block align-middle rounded-sm mb-1" />
                 ) : (
                   formatNumber(
                     (projections.find((p) =>
                       p.period.toLowerCase().includes("day")
                     )?.projectedReward ?? numericAmount + fallbackDailyYield) -
-                      numericAmount,
+                    numericAmount,
                     2
                   )
                 )}{" "}
@@ -310,7 +308,7 @@ export const ForecastPage: React.FC = () => {
               <span className="text-gray-400">Monthly</span>
               <span className="text-white/90 font-medium">
                 {yieldLoading ? (
-                  <Skeleton className="h-5 w-8 bg-[#2a2a2a] inline-block align-middle rounded-sm mb-1" />
+                  <Skeleton className="h-5 w-8 bg-[#505050] inline-block align-middle rounded-sm mb-1" />
                 ) : (
                   formatNumber(
                     (projections.find((p) =>
@@ -327,7 +325,7 @@ export const ForecastPage: React.FC = () => {
               <span className="text-gray-400">Yearly Return</span>
               <span className="text-white/90 font-medium">
                 {yieldLoading ? (
-                  <Skeleton className="h-5 w-8 bg-[#2a2a2a] inline-block align-middle rounded-sm mb-1" />
+                  <Skeleton className="h-5 w-8 bg-[#505050] inline-block align-middle rounded-sm mb-1" />
                 ) : (
                   formatNumber(
                     (projections.find((p) =>
@@ -339,13 +337,13 @@ export const ForecastPage: React.FC = () => {
                 {selectedCurrency}
               </span>
             </div>
-            <div className="flex justify-between items-center border-t border-[#2a2a2a] pt-3">
+            <div className="flex justify-between items-center border-t border-[#505050] pt-3">
               <span className="text-white font-medium">
                 Total Annual Earning
               </span>
               <span className="text-white/90 font-bold">
                 {yieldLoading ? (
-                  <Skeleton className="h-5 w-8 bg-[#2a2a2a] inline-block align-middle rounded-sm mb-1" />
+                  <Skeleton className="h-5 w-8 bg-[#505050] inline-block align-middle rounded-sm mb-1" />
                 ) : (
                   formatNumber(
                     projections.find((p) =>

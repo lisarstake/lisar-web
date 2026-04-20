@@ -81,21 +81,21 @@ export const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
 
   if (isLoading) {
     return (
-      <div className="bg-[#071510] rounded-lg overflow-hidden">
-        <div className="divide-y divide-[#2a2a2a]">
+      <div className="bg-[#2a2a2a] rounded-lg overflow-hidden">
+        <div className="divide-y divide-[#505050]">
           {Array.from({ length: skeletonCount }).map((_, index) => (
             <div
               key={`skeleton-${index}`}
               className="flex items-center justify-between p-4"
             >
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-[#2a2a2a] rounded-full animate-pulse"></div>
+                <div className="w-10 h-10 bg-[#505050] rounded-full animate-pulse"></div>
                 <div className="space-y-2">
-                  <div className="h-4 bg-[#2a2a2a] rounded-lg w-24 animate-pulse"></div>
-                  <div className="h-3 bg-[#2a2a2a] rounded-lg w-20 animate-pulse"></div>
+                  <div className="h-4 bg-[#505050] rounded-lg w-24 animate-pulse"></div>
+                  <div className="h-3 bg-[#505050] rounded-lg w-20 animate-pulse"></div>
                 </div>
               </div>
-              <div className="h-5 bg-[#2a2a2a] rounded-lg w-20 animate-pulse"></div>
+              <div className="h-5 bg-[#505050] rounded-lg w-20 animate-pulse"></div>
             </div>
           ))}
         </div>
@@ -109,7 +109,7 @@ export const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
         <EmptyState
           icon={Info}
           iconColor="#86B3F7"
-          iconBgColor="#2a2a2a"
+          iconBgColor="#505050"
           title="No recent transactions"
           description="Your most recent activity will appear here."
           className="py-20"
@@ -119,13 +119,13 @@ export const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
   }
 
   return (
-    <div className="bg-[#071510] rounded-lg overflow-hidden">
-      <div className="divide-y divide-[#2a2a2a]">
+    <div className="bg-[#2a2a2a] rounded-lg overflow-hidden">
+      <div className="divide-y divide-[#505050]">
         {transactions.map((transaction) => (
           <div
             key={transaction.id}
             onClick={() => onTransactionClick(transaction)}
-            className="flex items-center justify-between p-4 hover:bg-[#2a2a2a]/30 transition-colors cursor-pointer"
+            className="flex items-center justify-between p-4 hover:bg-[#505050]/30 transition-colors cursor-pointer"
           >
             <div className="flex items-center space-x-3 flex-1 min-w-0">
               <div className="w-10 h-10 flex items-center justify-center shrink-0">

@@ -56,7 +56,7 @@ export const ValidatorAboutSection: React.FC<ValidatorAboutSectionProps> = ({
 
       <div className="space-y-4">
         {/* Description */}
-        {/* <div className="bg-[#1a1a1a] rounded-xl p-4 border border-[#2a2a2a]">
+        {/* <div className="bg-[#1a1a1a] rounded-xl p-4 border border-[#505050]">
           <h4 className="text-white font-semibold text-sm mb-2">
             About
           </h4>
@@ -82,7 +82,7 @@ export const ValidatorAboutSection: React.FC<ValidatorAboutSectionProps> = ({
         <h4 className="text-white/90 font-medium text-base mb-4 ml-1">
           About validator
         </h4>
-        <div className="bg-[#1a1a1a] rounded-xl p-4 border border-[#2a2a2a]">
+        <div className="bg-[#1a1a1a] rounded-xl p-4 border border-[#505050]">
           <div className="space-y-4">
             {/* APY */}
             <div className="flex items-center justify-between">
@@ -160,7 +160,7 @@ export const ValidatorAboutSection: React.FC<ValidatorAboutSectionProps> = ({
         {(hasStakeWithValidator ||
           hasWithdrawableAmount ||
           hasPendingUnbonding) && (
-            <div className="bg-[#1a1a1a] rounded-xl p-4 border border-[#2a2a2a]">
+            <div className="bg-[#1a1a1a] rounded-xl p-4 border border-[#505050]">
               <h4 className="text-white/90 font-semibold text-sm mb-4">
                 My Vest
               </h4>

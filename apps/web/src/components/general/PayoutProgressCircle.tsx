@@ -31,7 +31,7 @@ export const PayoutProgressCircle: React.FC<PayoutProgressCircleProps> = ({
             cx="32"
             cy="32"
             r="26"
-            stroke={isSavings ? "#86B3F7" : "#2a2a2a"}
+            stroke={isSavings ? "#86B3F7" : "#505050"}
             strokeWidth="3"
             fill="none"
           />

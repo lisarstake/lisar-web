@@ -22,7 +22,7 @@ export const HelpDrawer: React.FC<HelpDrawerProps> = ({
 }) => {
   return (
     <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()}>
-     <DrawerContent className="bg-[#050505] border-[#2a2a2a]">
+      <DrawerContent className="bg-[#050505] border-[#505050]">
         <DrawerHeader>
           <DrawerTitle className="text-center text-xl font-semibold text-white">
             {title}

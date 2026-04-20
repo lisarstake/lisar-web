@@ -207,7 +207,7 @@ export const TimeIsMoneySection = () => {
                 </div>
               </div>
 
-              <p className="mt-2 text-center text-xs italic text-[#9aa19b]">
+              <p className="mt-2 text-center text-xs italic text-[#868686]">
                 Estimates are based on current rates. Actual returns may vary.{' '} Learn more about
                 <a href="/lisar-savings" className="underline text-[#235538] hover:text-[#235538] font-medium"> LISAR savings</a>
                 {' '}and{' '}
