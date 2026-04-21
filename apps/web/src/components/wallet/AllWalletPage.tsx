@@ -28,7 +28,9 @@ import {
   ArrowDown,
   ArrowRight,
   CircleDollarSign,
+  ChevronRight,
 } from "lucide-react";
+import { LisarLines } from "@/components/landing/lisar-lines";
 
 const ADD_CASH_AMOUNTS = [50000, 100000, 200000, 500000, 1000000];
 const NAIRA_OPTION_ENABLED = false;
@@ -45,6 +47,7 @@ export const AllWalletPage: React.FC = () => {
     const saved = localStorage.getItem("wallet_show_balance");
     return saved ? JSON.parse(saved) : false;
   });
+  const [displayCurrency, setDisplayCurrency] = useState<"USD" | "NGN">("USD");
 
   const {
     activeSystemNotifications,
@@ -102,11 +105,7 @@ export const AllWalletPage: React.FC = () => {
     return lptUsdValue + idleUsdValue;
   }, [highyieldBalance, solUsdcBalance, solUsdtBalance, prices]);
 
-  const fiatCurrency = (state.user?.fiat_type || "USD").toUpperCase();
-  const fiatSymbol = useMemo(
-    () => priceService.getCurrencySymbol(fiatCurrency),
-    [fiatCurrency],
-  );
+  const fiatSymbol = displayCurrency === "NGN" ? "₦" : "$";
 
   const handleNotificationClick = () => {
     navigate("/notifications");
@@ -132,22 +131,23 @@ export const AllWalletPage: React.FC = () => {
     const ngnRate = prices.ngn || 0;
     const safeNairaBalance = nairaBalance || 0;
 
-    if (fiatCurrency === "NGN") {
+    if (displayCurrency === "NGN") {
       return totalIdleUsdBalance * ngnRate + safeNairaBalance;
     }
 
     const nairaInUsd = ngnRate > 0 ? safeNairaBalance / ngnRate : 0;
     return totalIdleUsdBalance + nairaInUsd;
-  }, [fiatCurrency, totalIdleUsdBalance, prices.ngn, nairaBalance]);
+  }, [displayCurrency, totalIdleUsdBalance, prices.ngn, nairaBalance]);
 
   const walletCards = useMemo(
     () => [
       {
         id: "main",
-        title: "Total asset balance",
+        title: "Total Balance",
         balance: displayBalance,
         currencySymbol: fiatSymbol,
         type: "main",
+        gradient: "from-[#0f0f0f] to-[#151515]",
       },
     ],
     [displayBalance, fiatSymbol],
@@ -248,7 +248,7 @@ export const AllWalletPage: React.FC = () => {
                         handleDepositClick(card.type);
                       }
                     }}
-                    className={`rounded-2xl py-5 min-h-[100px] relative overflow-hidden ${card.type !== "main"
+                    className={`bg-linear-to-br ${card.gradient} rounded-2xl py-5 min-h-[100px] relative overflow-hidden border border-[#2a2a2a] ${card.type !== "main"
                         ? "cursor-pointer hover:opacity-95 transition-opacity"
                         : ""
                       }`}
@@ -256,10 +256,35 @@ export const AllWalletPage: React.FC = () => {
                       card.id === "main" ? "all-wallet-balance-card" : undefined
                     }
                   >
+                    {/* Lisar Lines Decoration */}
+                    <LisarLines
+                      position="top-right"
+                      className="opacity-100"
+                      width="185px"
+                      height="185px"
+                    />
+
+                    {/* Decorative elements */}
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-[#C7EF6B]/5 rounded-full blur-3xl"></div>
+                    <div className="absolute bottom-0 left-0 w-24 h-24 bg-[#86B3F7]/5 rounded-full blur-2xl"></div>
+
                     {/* Wallet Title */}
                     <div className="relative z-10 flex flex-col items-center text-center">
                       <div className="flex items-center justify-center gap-1 mb-2">
-                        <h3 className="text-white/70 text-xs">{card.title}</h3>
+                        <h3 className="text-white/70 text-sm">{card.title}</h3>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowBalance(!showBalance);
+                          }}
+                          className="shrink-0 cursor-pointer hover:opacity-70 transition-opacity"
+                        >
+                          {showBalance ? (
+                            <Eye size={16} color="rgba(255, 255, 255, 0.6)" />
+                          ) : (
+                            <EyeOff size={16} color="rgba(255, 255, 255, 0.6)" />
+                          )}
+                        </button>
                       </div>
 
                       {/* Balance Display */}
@@ -269,23 +294,38 @@ export const AllWalletPage: React.FC = () => {
                           stablesLoading ||
                           highyieldLoading ? (
                           <div className="flex items-baseline justify-center gap-2 mb-1">
-                            {renderLoadingStars("text-xl font-semibold")}
+                            <span className="text-2xl font-bold text-white">
+                              ••••
+                            </span>
                           </div>
                         ) : (
                           <div className="flex items-baseline justify-center gap-2 mb-1">
                             <span className="text-xl font-bold text-white/90">
                               {showBalance
-                                ? `${card.currencySymbol}${card.balance.toLocaleString(
-                                  undefined,
-                                  {
-                                    minimumFractionDigits: 2,
-                                    maximumFractionDigits: 2,
-                                  },
-                                )}`
-                                : "★★★★"}
+                                ? `${card.currencySymbol}${card.balance.toLocaleString(undefined, {
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2,
+                                })}`
+                                : "••••"}
                             </span>
                           </div>
                         )}
+                      </div>
+
+                      {/* View Portfolio */}
+                      <div className="flex items-center justify-center mt-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowPortfolioDrawer(true);
+                          }}
+                          className="flex items-center text-white/70 hover:text-white/90 transition-colors text-xs bg-white/10 rounded-full px-2.5 py-1.5"
+                        >
+                          View Portfolio
+                          <span>
+                            <ChevronRight size={14} color="#C7EF6B" />
+                          </span>
+                        </button>
                       </div>
                     </div>
 
@@ -316,20 +356,6 @@ export const AllWalletPage: React.FC = () => {
                           Withdraw
                         </span>
                       </button>
-                      {/*
-                        Accounts navigation temporarily paused while focus shifts
-                        <button
-                          onClick={() => navigate("/accounts")}
-                          className="flex flex-col items-center gap-1.5"
-                        >
-                          <div className="w-12 h-12 rounded-full bg-[#2a2a2a] flex items-center justify-center">
-                            <LayoutGrid size={24} color="#fff" />
-                          </div>
-                          <span className="text-white font-medium text-xs">
-                            Accounts
-                          </span>
-                        </button>
-                      */}
                       <button
                         onClick={() => setShowAllBalancesDrawer(true)}
                         className="flex flex-col items-center gap-1.5"
@@ -352,7 +378,7 @@ export const AllWalletPage: React.FC = () => {
               <div className="h-1 w-8 bg-white/20 rounded-full" />
             </div>
 
-            {/* System Notification Card */}
+            {/* System Notification Card - COMMENTED OUT
             {activeSystemNotifications.length > 0 ? (
               <div className="relative" data-tour="all-wallet-message-card">
                 {activeSystemNotifications.length > 2 && (
@@ -374,7 +400,6 @@ export const AllWalletPage: React.FC = () => {
                   />
                 )}
 
-                {/* Top card - the active notification */}
                 {(() => {
                   const notification = activeSystemNotifications[0];
                   return (
@@ -388,7 +413,6 @@ export const AllWalletPage: React.FC = () => {
                             : "border-[#86B3F7]/30"
                         }`}
                     >
-                      {/* Close Button */}
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -430,7 +454,6 @@ export const AllWalletPage: React.FC = () => {
                 })()}
               </div>
             ) : (
-              /* Early Savers Campaign Card */
               (() => {
                 const status = campaignStatus as {
                   current_tier?: number;
@@ -471,6 +494,7 @@ export const AllWalletPage: React.FC = () => {
                 );
               })()
             )}
+            */}
 
             {/* Add Cash Section */}
             <div data-tour="all-wallet-quick-deposit">
