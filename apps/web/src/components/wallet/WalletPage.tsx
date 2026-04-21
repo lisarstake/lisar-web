@@ -33,6 +33,7 @@ import {
   DollarSign,
   Eye,
   EyeOff,
+  PiggyBank,
 } from "lucide-react";
 
 interface WalletPageProps {
@@ -651,7 +652,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
               : "≈ ★★★★"}
           </p> */}
 
-          <div className="mt-7 flex items-center justify-center gap-6">
+          <div className="mt-7 flex items-center justify-center gap-5">
             <button
               onClick={handleDepositClick}
               className="flex flex-col items-center gap-1.5"
@@ -680,6 +681,22 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
                 <DollarSign size={22} className="text-[#e8ece9]" />
               </span>
               <span className="text-xs font-medium">Earnings</span>
+            </button>
+
+            <button
+              onClick={() => {
+                if (walletType === "savings") {
+                  navigate("/wallet/yields/create-flexible?mode=savings&source=usdc");
+                } else {
+                  navigate("/wallet/yields/create-flexible?mode=staking&source=lpt");
+                }
+              }}
+              className="flex flex-col items-center gap-1.5"
+            >
+              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#2a2a2a]">
+                <PiggyBank size={22} className="text-[#e8ece9]" />
+              </span>
+              <span className="text-xs font-medium">{walletType === "savings" ? "Save" : "Grow"}</span>
             </button>
           </div>
         </div>
@@ -713,7 +730,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
       />
 
       <Drawer open={showEarningsDrawer} onOpenChange={setShowEarningsDrawer}>
-        <DrawerContent className="bg-[#050505] border-[#505050]">
+        <DrawerContent className="bg-[#050505] border-t border-[#1b1b1b]">
           <DrawerHeader>
             <DrawerTitle className="text-base font-medium text-white text-left">
               Earned last 7 days
@@ -767,18 +784,20 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
           }
         }}
       >
-        <DrawerContent className="bg-[#050505] border-[#505050]">
-          <DrawerHeader>
-            <DrawerTitle className="text-base font-medium text-white text-left">
-              {topUpDrawerView === "options"
-                ? transferMode === "deposit"
-                  ? "Deposit From"
-                  : transferMode === "withdraw" ||
-                    transferMode === "withdraw-unlocked"
-                    ? "Withdraw To"
-                    : "Withdraw To"
-                : ""}
-            </DrawerTitle>
+        <DrawerContent className="bg-[#050505] border-t border-[#1b1b1b]">
+          <DrawerHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <DrawerTitle className="text-white text-base font-medium">
+                {topUpDrawerView === "options"
+                  ? transferMode === "deposit"
+                    ? "Deposit From"
+                    : transferMode === "withdraw" ||
+                      transferMode === "withdraw-unlocked"
+                      ? "Withdraw To"
+                      : "Withdraw To"
+                  : ""}
+              </DrawerTitle>
+            </div>
           </DrawerHeader>
           {topUpDrawerView === "options" ? (
             <div className="space-y-3 py-2">
@@ -859,7 +878,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
         open={showWithdrawEmptyDrawer}
         onOpenChange={setShowWithdrawEmptyDrawer}
       >
-        <DrawerContent className="bg-[#050505] border border-[#505050]">
+        <DrawerContent className="bg-[#050505] border-t border-[#1b1b1b]">
           <DrawerHeader>
             <DrawerTitle className="text-base font-medium text-white text-left"></DrawerTitle>
           </DrawerHeader>
@@ -891,7 +910,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
       </Drawer>
 
       <Drawer open={showTokenInfoDrawer} onOpenChange={setShowTokenInfoDrawer}>
-        <DrawerContent className="bg-[#050505] border-[#505050]">
+        <DrawerContent className="bg-[#050505] border-t border-[#1b1b1b]">
           <DrawerHeader>
             <DrawerTitle className="text-base font-medium text-white text-left">
               {walletVisual.coinName} token
