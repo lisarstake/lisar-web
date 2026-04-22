@@ -174,7 +174,7 @@ export const ProfilePage: React.FC = () => {
       <div className="flex items-center justify-between px-6 pt-8 pb-4">
         <button
           onClick={handleBackClick}
-          className="w-10 h-10 bg-[#2a2a2a] rounded-full flex items-center justify-center"
+          className="w-10 h-10 bg-[#151515] rounded-full flex items-center justify-center"
           aria-label="Close"
         >
           <ArrowLeft size={22} />
@@ -216,7 +216,7 @@ export const ProfilePage: React.FC = () => {
               {displayName}
             </p>
             {/* {hasUsername ? (
-              <button className="text-white text-xs bg-[#2a2a2a] px-4 py-1 rounded-full">
+              <button className="text-white text-xs bg-[#151515] px-4 py-1 rounded-full">
                 @{displayUsername}
               </button>
             ) : (
@@ -235,7 +235,7 @@ export const ProfilePage: React.FC = () => {
             href="https://t.me/+F0YXOMaiJMxkODVk"
             target="_blank"
             rel="noopener noreferrer"
-            className="h-38 rounded-2xl p-4 bg-[#6a6e6e] flex flex-col justify-between relative overflow-hidden"
+            className="h-38 rounded-2xl p-4 bg-[#181919] flex flex-col justify-between relative overflow-hidden"
           >
             <MessageCircleHeart size={30} />
 
@@ -255,7 +255,7 @@ export const ProfilePage: React.FC = () => {
         <div className="space-y-3">
           <div
             onClick={() => navigate("/settings/account")}
-            className="bg-[#2a2a2a] rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-[#171717] transition"
+            className="bg-[#151515] rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-[#171717] transition"
           >
             <div>
               <p className="text-white font-medium">Account</p>
@@ -266,7 +266,7 @@ export const ProfilePage: React.FC = () => {
             <ChevronLeft className="rotate-180 " size={18} />
           </div>
 
-          <div onClick={() => navigate("/settings/recipients")} className="bg-[#2a2a2a] rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-[#171717] transition">
+          <div onClick={() => navigate("/settings/recipients")} className="bg-[#151515] rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-[#171717] transition">
             <div >
               <p className="text-white font-medium">Linked Account</p>
               <p className="text-gray-400 text-sm">
@@ -278,7 +278,7 @@ export const ProfilePage: React.FC = () => {
 
           <div
             onClick={() => navigate("/settings/security")}
-            className="bg-[#2a2a2a] rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-[#171717] transition"
+            className="bg-[#151515] rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-[#171717] transition"
           >
             <div>
               <p className="text-white font-medium">Security</p>
@@ -291,7 +291,7 @@ export const ProfilePage: React.FC = () => {
 
           <div
             onClick={() => navigate("/settings/preferences")}
-            className="bg-[#2a2a2a] rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-[#171717] transition"
+            className="bg-[#151515] rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-[#171717] transition"
           >
             <div>
               <p className="text-white font-medium">Preferences</p>
@@ -306,7 +306,7 @@ export const ProfilePage: React.FC = () => {
         <div className="mt-6">
           <button
             onClick={handleSignOut}
-            className="w-full text-red-400 text-sm flex items-center justify-center space-x-2 hover:text-red-400 transition-colors py-2 pt-4 border-[#2a2a2a]"
+            className="w-full text-red-400 text-sm flex items-center justify-center space-x-2 hover:text-red-400 transition-colors py-2 pt-4 border-[#151515]"
           >
             <LogOut size={16} />
             <span>Sign Out</span>
@@ -339,7 +339,7 @@ export const ProfilePage: React.FC = () => {
               Your tag is unique. Other Lisar users can send you money directly using your tag.
             </p>
             <div>
-              <div className="flex items-center rounded-lg bg-[#2a2a2a] px-4 py-3">
+              <div className="flex items-center rounded-lg bg-[#151515] px-4 py-3">
                 <span className="text-white/60 text-base">@</span>
                 <input
                   value={usernameInput}

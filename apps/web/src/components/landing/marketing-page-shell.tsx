@@ -47,7 +47,7 @@ export const MarketingPageShell = ({
 
           {/* Bottom meta */}
           {updatedAt || notice ? (
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 px-6 text-center md:px-8">
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-center">
               {updatedAt ? (
                 <p className="text-xs uppercase tracking-[0.18em] text-[#6f7d74]">
                   Updated {updatedAt}

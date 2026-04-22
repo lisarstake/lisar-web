@@ -37,7 +37,7 @@ const AccountCard: React.FC<AccountCardProps> = ({
   };
 
   return (
-    <div className="flex flex-col items-center justify-center gap-4 p-5 bg-[#2a2a2a] rounded-xl">
+    <div className="flex flex-col items-center justify-center gap-4 p-5 bg-[#151515] rounded-xl">
       <div className="flex items-center gap-2">
         <img src={flag} className="w-7 h-7" />
         <p className="text-white text-lg font-medium">{title}</p>
@@ -92,7 +92,7 @@ export const AccountsPage: React.FC = () => {
       <div className="flex items-center justify-between px-6 pt-8 pb-4">
         <button
           onClick={handleBackClick}
-          className="h-10 w-10 rounded-full bg-[#2a2a2a] flex items-center justify-center"
+          className="h-10 w-10 rounded-full bg-[#151515] flex items-center justify-center"
         >
           <ArrowLeft className="text-white" size={22} />
         </button>

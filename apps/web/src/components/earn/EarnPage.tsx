@@ -98,7 +98,7 @@ export const EarnPage: React.FC = () => {
           {earnCards.map((card) => (
             <div
               key={card.id}
-              className={`bg-[#2a2a2a] rounded-xl overflow-hidden ${card.isSocialCard
+              className={`bg-[#151515] rounded-xl overflow-hidden ${card.isSocialCard
                 ? "cursor-pointer hover:bg-[#505050] transition-colors"
                 : ""
                 }`}

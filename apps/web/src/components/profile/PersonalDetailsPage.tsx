@@ -80,7 +80,7 @@ export const PersonalDetailsPage: React.FC = () => {
       <div className="flex items-center justify-between px-6 pt-8 pb-4">
         <button
           onClick={() => navigate(-1)}
-          className="h-10 w-10 rounded-full bg-[#2a2a2a] flex items-center justify-center"
+          className="h-10 w-10 rounded-full bg-[#151515] flex items-center justify-center"
           aria-label="Back"
         >
           <ArrowLeft className="text-white" size={22} />
@@ -96,7 +96,7 @@ export const PersonalDetailsPage: React.FC = () => {
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
             readOnly={hasLinkedAccount}
-            className={`w-full rounded-lg bg-[#2a2a2a] px-4 py-3 text-base outline-none ${hasLinkedAccount ? "text-white/70" : "text-white"
+            className={`w-full rounded-lg bg-[#151515] px-4 py-3 text-base outline-none ${hasLinkedAccount ? "text-white/70" : "text-white"
               }`}
             placeholder="Enter full name"
           />
@@ -107,7 +107,7 @@ export const PersonalDetailsPage: React.FC = () => {
           <input
             value={email}
             readOnly
-            className="w-full rounded-lg bg-[#2a2a2a] px-4 py-3 text-base text-white/70 outline-none"
+            className="w-full rounded-lg bg-[#151515] px-4 py-3 text-base text-white/70 outline-none"
             placeholder="Email"
           />
         </div>
@@ -119,7 +119,7 @@ export const PersonalDetailsPage: React.FC = () => {
           <input
             value={dob}
             onChange={(e) => setDob(e.target.value)}
-            className="w-full rounded-lg bg-[#2a2a2a] px-4 py-3 text-base text-white outline-none"
+            className="w-full rounded-lg bg-[#151515] px-4 py-3 text-base text-white outline-none"
             placeholder="YYYY-MM-DD"
           />
         </div>
@@ -127,10 +127,10 @@ export const PersonalDetailsPage: React.FC = () => {
         <div>
           <label className="mb-2 block text-sm text-white/70">Country</label>
           <Select value={country} onValueChange={setCountry}>
-            <SelectTrigger className="w-full rounded-lg bg-[#2a2a2a] border-none py-6 text-white">
+            <SelectTrigger className="w-full rounded-lg bg-[#151515] border-none py-6 text-white">
               <SelectValue placeholder="Select country" />
             </SelectTrigger>
-            <SelectContent className="bg-[#2a2a2a] text-white border-none max-h-80">
+            <SelectContent className="bg-[#151515] text-white border-none max-h-80">
               {COUNTRIES.map((c) => (
                 <SelectItem
                   key={c.code}
@@ -151,7 +151,7 @@ export const PersonalDetailsPage: React.FC = () => {
           <input
             value={region}
             onChange={(e) => setRegion(e.target.value)}
-            className="w-full rounded-lg bg-[#2a2a2a] px-4 py-3 text-base text-white outline-none"
+            className="w-full rounded-lg bg-[#151515] px-4 py-3 text-base text-white outline-none"
             placeholder="Enter state or region"
           />
         </div>

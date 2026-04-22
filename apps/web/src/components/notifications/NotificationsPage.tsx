@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, X } from "lucide-react";
+import { ArrowLeft, X, Trash2 } from "lucide-react";
 import {
   Drawer,
   DrawerContent,
@@ -11,6 +11,7 @@ import {
 import { useNotification } from "@/contexts/NotificationContext";
 import { Notification } from "@/services/notifications/types";
 import { getNotificationIcon } from "@/lib/notifications";
+import { ErrorDrawer } from "@/components/general/ErrorDrawer";
 
 type NotificationTab = "all" | "announcements" | "alerts" | "earnings";
 
@@ -72,8 +73,10 @@ export const NotificationsPage: React.FC = () => {
   const [selectedNotification, setSelectedNotification] =
     useState<Notification | null>(null);
 
-  const { notifications, isLoading, markAsRead, deleteNotification } =
+  const { notifications, isLoading, markAsRead, deleteNotification, clearAllNotifications } =
     useNotification();
+  const [showDeleteError, setShowDeleteError] = useState(false);
+  const [deleteErrorMessage, setDeleteErrorMessage] = useState("");
 
   const retentionThreshold = useMemo(
     () => Date.now() - 90 * 24 * 60 * 60 * 1000,
@@ -140,18 +143,42 @@ export const NotificationsPage: React.FC = () => {
     setSelectedNotification(notification);
   };
 
+  const handleDeleteAll = async () => {
+    try {
+      await clearAllNotifications();
+    } catch (err: any) {
+      setDeleteErrorMessage(err?.message || "Failed to delete all notifications");
+      setShowDeleteError(true);
+    }
+  };
+
+  const handleDeleteNotification = async (notificationId: string) => {
+    try {
+      await deleteNotification(notificationId);
+    } catch (err: any) {
+      setDeleteErrorMessage(err?.message || "Failed to delete notification");
+      setShowDeleteError(true);
+    }
+  };
+
   return (
     <div className="h-screen bg-[#050505] text-white flex flex-col">
       <div className="flex items-center justify-between px-6 pt-8 pb-4">
         <button
           onClick={() => navigate(-1)}
-          className="h-10 w-10 rounded-full bg-[#2a2a2a] flex items-center justify-center"
+          className="h-10 w-10 rounded-full bg-[#151515] flex items-center justify-center"
           aria-label="Back"
         >
           <ArrowLeft className="text-white" size={22} />
         </button>
-        {/* <h1 className="text-lg font-medium text-white">Notifications</h1> */}
-        <div className="h-12 w-12" />
+        <button
+          onClick={handleDeleteAll}
+          disabled={notifications.length === 0}
+          className="text-sm text-white/80"
+          aria-label="Delete all notifications"
+        >
+          Clear all
+        </button>
       </div>
 
       <div className="px-6">
@@ -164,7 +191,7 @@ export const NotificationsPage: React.FC = () => {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`shrink-0 rounded-full px-4 py-1.5 text-sm transition-colors ${isActive
-                  ? "bg-[#2a2a2a] text-white font-semibold"
+                  ? "bg-[#151515] text-white font-semibold"
                   : "text-white/90"
                   }`}
               >
@@ -181,7 +208,7 @@ export const NotificationsPage: React.FC = () => {
             {Array.from({ length: 3 }).map((_, index) => (
               <div
                 key={`notification-skeleton-${index}`}
-                className="h-24 rounded-[26px] bg-[#2a2a2a] animate-pulse"
+                className="h-24 rounded-[26px] bg-[#151515] animate-pulse"
               />
             ))}
           </div>
@@ -195,7 +222,7 @@ export const NotificationsPage: React.FC = () => {
                     <button
                       key={notification.id}
                       onClick={() => handleNotificationSelect(notification)}
-                      className="w-full rounded-xl bg-[#2a2a2a] px-5 py-4 text-left"
+                      className="w-full rounded-xl bg-[#151515] px-5 py-4 text-left"
                     >
                       <div className="relative flex items-center gap-3">
                         {!notification.is_read && (
@@ -228,7 +255,7 @@ export const NotificationsPage: React.FC = () => {
                     <button
                       key={notification.id}
                       onClick={() => handleNotificationSelect(notification)}
-                      className="w-full rounded-xl bg-[#2a2a2a] px-5 py-4 text-left"
+                      className="w-full rounded-xl bg-[#151515] px-5 py-4 text-left"
                     >
                       <div className="relative flex items-center gap-3">
                         {!notification.is_read && (
@@ -265,6 +292,14 @@ export const NotificationsPage: React.FC = () => {
         notification={selectedNotification}
         isOpen={selectedNotification !== null}
         onClose={() => setSelectedNotification(null)}
+        onDelete={handleDeleteNotification}
+      />
+
+      <ErrorDrawer
+        isOpen={showDeleteError}
+        onClose={() => setShowDeleteError(false)}
+        title="Delete failed"
+        message={deleteErrorMessage}
       />
     </div>
   );
@@ -274,14 +309,25 @@ interface NotificationDetailsDrawerProps {
   notification: Notification | null;
   isOpen: boolean;
   onClose: () => void;
+  onDelete: (id: string) => Promise<void>;
 }
 
 const NotificationDetailsDrawer: React.FC<NotificationDetailsDrawerProps> = ({
   notification,
   isOpen,
   onClose,
+  onDelete,
 }) => {
   if (!notification) return null;
+
+  const handleDelete = async () => {
+    try {
+      await onDelete(notification.id);
+      onClose();
+    } catch (err: any) {
+      // Error will be handled by parent
+    }
+  };
 
   return (
     <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -291,9 +337,19 @@ const NotificationDetailsDrawer: React.FC<NotificationDetailsDrawerProps> = ({
             <DrawerTitle className="text-base font-medium text-white text-left">
               {notification.title}
             </DrawerTitle>
+            <div className="flex items-center gap-2">
             <DrawerClose className="h-8 w-8 rounded-full bg-[#1a1a1a] flex items-center justify-center">
-              <X className="text-white" size={18} />
-            </DrawerClose>
+                <X className="text-white" size={18} />
+              </DrawerClose>
+              <button
+                onClick={handleDelete}
+                className="h-8 w-8 rounded-full bg-[#1a1a1a] flex items-center justify-center"
+                aria-label="Delete notification"
+              >
+                <Trash2 className="text-red-400" size={16} />
+              </button>
+             
+            </div>
           </div>
         </DrawerHeader>
 

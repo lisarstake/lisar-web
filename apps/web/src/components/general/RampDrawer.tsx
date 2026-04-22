@@ -537,7 +537,7 @@ export const RampDrawer: React.FC<RampDrawerProps> = ({
                 <div className="flex justify-end pt-2">
                   <button
                     onClick={onClose}
-                    className="w-10 h-10 bg-[#2a2a2a] rounded-full flex items-center justify-center text-white transition-colors hover:bg-[#1a1f10]"
+                    className="w-10 h-10 bg-[#151515] rounded-full flex items-center justify-center text-white transition-colors hover:bg-[#1a1f10]"
                   >
                     <X size={20} />
                   </button>
@@ -600,7 +600,7 @@ export const RampDrawer: React.FC<RampDrawerProps> = ({
                       </h2>
                     </div>
 
-                    <div className="bg-[#2a2a2a] rounded-2xl p-4 mb-5 space-y-3">
+                    <div className="bg-[#151515] rounded-2xl p-4 mb-5 space-y-3">
                       <div className="flex justify-between items-center">
                         <p className="text-sm text-white/60">
                           {isBuy ? "You are spending" : "You are receiving"}

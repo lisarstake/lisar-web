@@ -31,7 +31,7 @@ export const HighlightShowcaseSection = () => {
               </div>
 
               <div>
-                <h3 className="text-[#2a2a2a] text-xl md:text-3xl leading-[1.02] font-semibold tracking-tight">
+                <h3 className="text-[#151515] text-xl md:text-3xl leading-[1.02] font-semibold tracking-tight">
                   LISAR OpenBuild
                 </h3>
                 <p className="mt-4 text-[#4a6256] text-base md:text-lg leading-relaxed">

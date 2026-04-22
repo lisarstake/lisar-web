@@ -123,7 +123,7 @@ export const UnstakePage: React.FC = () => {
       <div className="flex items-center justify-between px-6 pt-8 pb-4">
         <button
           onClick={handleBackClick}
-          className="h-10 w-10 rounded-full bg-[#2a2a2a] flex items-center justify-center"
+          className="h-10 w-10 rounded-full bg-[#151515] flex items-center justify-center"
         >
           <ArrowLeft className="text-white" size={22} />
         </button>
@@ -136,7 +136,7 @@ export const UnstakePage: React.FC = () => {
       <div className="flex-1 overflow-y-auto px-6 pb-28 scrollbar-hide">
         {/* Amount Input Field */}
         <div className="pt-2 pb-4">
-          <div className="bg-[#2a2a2a] rounded-lg p-3 flex items-center gap-3">
+          <div className="bg-[#151515] rounded-lg p-3 flex items-center gap-3">
             <input
               type="text"
               value={lptAmount ? formatNumber(lptAmount) : ""}
@@ -175,7 +175,7 @@ export const UnstakePage: React.FC = () => {
                   onClick={() => handleAmountSelect(amount)}
                   className={`flex-1 py-2.5 px-2 rounded-full text-sm font-medium transition-colors ${isActive
                     ? "bg-[#C7EF6B] text-black"
-                    : "bg-[#2a2a2a] text-white/80 hover:bg-[#1a1f10]"
+                    : "bg-[#151515] text-white/80 hover:bg-[#1a1f10]"
                     }`}
                 >
                   {percent}%
@@ -187,11 +187,11 @@ export const UnstakePage: React.FC = () => {
 
         {/* Balance */}
         {hasStakeWithValidator && (
-          <div className="rounded-lg bg-[#2a2a2a] p-4 mt-3">
+          <div className="rounded-lg bg-[#151515] p-4 mt-3">
             <h3 className="text-sm text-white/60 mb-0.5 flex items-center gap-1.5">
               <WalletCards size={16} /> Wallet balance
             </h3>
-            <div className="bg-[#2a2a2a] rounded-lg border border-[#2a2a2a]">
+            <div className="bg-[#151515] rounded-lg border border-[#151515]">
               <div className="flex items-center space-x-3">
 
                 <div className="flex-1">

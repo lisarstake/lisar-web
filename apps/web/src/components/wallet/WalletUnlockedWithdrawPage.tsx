@@ -136,7 +136,7 @@ export const WalletUnlockedWithdrawPage: React.FC = () => {
       <div className="flex items-center justify-between px-6 pt-8 pb-2">
         <button
           onClick={() => navigate(-1)}
-          className="h-10 w-10 rounded-full bg-[#2a2a2a] flex items-center justify-center"
+          className="h-10 w-10 rounded-full bg-[#151515] flex items-center justify-center"
         >
           <ArrowLeft className="text-white" size={22} />
         </button>
@@ -146,7 +146,7 @@ export const WalletUnlockedWithdrawPage: React.FC = () => {
 
       <div className="flex-1 overflow-y-auto px-6 pb-28 scrollbar-hide">
         <div className="pt-2 pb-4">
-          <div className="bg-[#2a2a2a] rounded-lg p-3 flex items-center gap-3 mt-2">
+          <div className="bg-[#151515] rounded-lg p-3 flex items-center gap-3 mt-2">
             <input
               type="text"
               value={formatNumber(fixedAmount)}
@@ -163,11 +163,11 @@ export const WalletUnlockedWithdrawPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="rounded-lg bg-[#2a2a2a] p-4 mt-3">
+        <div className="rounded-lg bg-[#151515] p-4 mt-3">
           <h3 className="text-sm text-white/60 mb-0.5 flex items-center gap-1.5">
             <WalletCards size={16} /> LPT staked balance
           </h3>
-          <div className="bg-[#2a2a2a] rounded-lg border border-[#2a2a2a]">
+          <div className="bg-[#151515] rounded-lg border border-[#151515]">
             <div className="flex items-center space-x-3">
               <div className="flex-1">
                 <span className="text-gray-100 text-sm font-medium">

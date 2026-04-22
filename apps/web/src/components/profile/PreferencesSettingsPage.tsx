@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/drawer";
 
 const rowClass =
-  "flex w-full items-center rounded-xl bg-[#2a2a2a] px-4 py-4 text-left";
+  "flex w-full items-center rounded-xl bg-[#151515] px-4 py-4 text-left";
 
 export const PreferencesSettingsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -95,7 +95,7 @@ export const PreferencesSettingsPage: React.FC = () => {
       <div className="flex items-center justify-between px-6 pt-8 pb-4">
         <button
           onClick={() => navigate(-1)}
-          className="h-10 w-10 rounded-full bg-[#2a2a2a] flex items-center justify-center"
+          className="h-10 w-10 rounded-full bg-[#151515] flex items-center justify-center"
           aria-label="Back"
         >
           <ArrowLeft className="text-white" size={22} />
@@ -132,7 +132,7 @@ export const PreferencesSettingsPage: React.FC = () => {
             <button
               onClick={() => handleCurrencyUpdate("NGN")}
               disabled={saving}
-              className="flex w-full items-center justify-between rounded-xl bg-[#2a2a2a] px-4 py-3 text-left disabled:opacity-60"
+              className="flex w-full items-center justify-between rounded-xl bg-[#151515] px-4 py-3 text-left disabled:opacity-60"
             >
               <div className="flex items-center gap-3">
                 <img src="/ng_flag.png" alt="NGN flag" className="h-5 w-5 rounded-full" />
@@ -149,7 +149,7 @@ export const PreferencesSettingsPage: React.FC = () => {
             <button
               onClick={() => handleCurrencyUpdate("USD")}
               disabled={saving}
-              className="flex w-full items-center justify-between rounded-xl bg-[#2a2a2a] px-4 py-3 text-left disabled:opacity-60"
+              className="flex w-full items-center justify-between rounded-xl bg-[#151515] px-4 py-3 text-left disabled:opacity-60"
             >
               <div className="flex items-center gap-3">
                 <img src="/us_flag.png" alt="USD flag" className="h-5 w-5 rounded-full" />

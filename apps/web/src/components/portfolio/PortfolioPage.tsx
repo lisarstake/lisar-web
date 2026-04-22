@@ -186,7 +186,7 @@ export const PortfolioPage: React.FC = () => {
         <div className="flex items-center justify-between py-8 mb-2">
           <button
             onClick={handleBackClick}
-            className="h-10 w-10 rounded-full bg-[#2a2a2a] flex items-center justify-center"
+            className="h-10 w-10 rounded-full bg-[#151515] flex items-center justify-center"
           >
             <ArrowLeft className="text-white" size={22} />
           </button>

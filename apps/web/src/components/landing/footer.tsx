@@ -25,7 +25,7 @@ export const Footer = () => {
   return (
     <footer className="w-full bg-white pb-8">
       <div className="mx-auto w-full max-w-7xl px-6 md:px-8">
-        <div className="px-6 py-4">
+        <div className="md:px-6 py-4">
           <div className="grid gap-8 pt-8 md:grid-cols-[1.2fr_1fr]">
             <div>
               <div>
@@ -103,7 +103,7 @@ export const Footer = () => {
           </div>
         </div>
 
-        <div className="px-6 pb-4 pt-6 mt-6 border-t ">
+        <div className="md:px-6 pb-4 pt-6 mt-6 border-t ">
           <div className="mb-3 flex flex-wrap gap-3 md:gap-4 text-xs font-medium text-[#5d685f]">
             <a href="/lisar-savings" className="underline text-blue-500 hover:text-blue-600">
               Lisar Savings
