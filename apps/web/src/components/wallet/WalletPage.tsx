@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { RecentTransactionsCard } from "../transactions/RecentTransactionsCard";
 import { TransactionDetailsDrawer } from "../transactions/TransactionDetailsDrawer";
@@ -21,6 +21,7 @@ import { useTransactions } from "@/contexts/TransactionContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useStablesApy } from "@/hooks/useStablesApy";
 import { usePerenaWeeklyYield } from "@/hooks/usePerenaWeeklyYield";
+import { usePrices } from "@/hooks/usePrices";
 import { getEarliestUnbondingTime } from "@/lib/unbondingTime";
 import { getOrchestratorDisplayName } from "@/lib/orchestrators";
 import { TransactionData } from "@/services/transactions/types";
@@ -77,6 +78,12 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
   const [selectedTransaction, setSelectedTransaction] =
     useState<TransactionData | null>(null);
 
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const [carouselIndex, setCarouselIndex] = useState(
+    currentWalletType === "staking" ? 1 : 0
+  );
+  const scrollEndTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const {
     highyieldBalance,
     stablesBalance,
@@ -103,8 +110,48 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
   const { data: perenaWeeklyYieldData } = usePerenaWeeklyYield(
     solanaWalletAddress || null,
   );
+  const { prices } = usePrices();
 
   const isStakingWallet = walletType === "staking";
+
+  const CARD_WIDTH_RATIO = 0.92;
+
+  useEffect(() => {
+    const idx = currentWalletType === "staking" ? 1 : 0;
+    setCarouselIndex(idx);
+    const scrollToCard = () => {
+      if (carouselRef.current) {
+        const { offsetWidth } = carouselRef.current;
+        const cardWidth = offsetWidth * CARD_WIDTH_RATIO + 12;
+        carouselRef.current.scrollTo({
+          left: idx * cardWidth,
+          behavior: "smooth",
+        });
+      }
+    };
+    requestAnimationFrame(scrollToCard);
+  }, [currentWalletType]);
+
+  const handleCarouselScroll = useCallback(() => {
+    if (!carouselRef.current) return;
+    const { scrollLeft, offsetWidth } = carouselRef.current;
+    const cardWidth = offsetWidth * CARD_WIDTH_RATIO + 12;
+    const index = Math.round(scrollLeft / cardWidth);
+    const clamped = Math.min(Math.max(index, 0), 1);
+    setCarouselIndex(clamped);
+
+    if (scrollEndTimeoutRef.current) {
+      clearTimeout(scrollEndTimeoutRef.current);
+    }
+    scrollEndTimeoutRef.current = setTimeout(() => {
+      scrollEndTimeoutRef.current = null;
+      if (clamped === 0 && currentWalletType !== "savings") {
+        navigate("/wallet/savings", { replace: true });
+      } else if (clamped === 1 && currentWalletType !== "staking") {
+        navigate("/wallet/staking", { replace: true });
+      }
+    }, 150);
+  }, [currentWalletType, navigate]);
   const stakedBalance = parseFloat(delegatorStakeProfile?.currentStake || "0");
   const activeWalletCard = useMemo(() => {
     if (walletType === "staking") {
@@ -120,6 +167,20 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
     minimumFractionDigits: 2,
     maximumFractionDigits: 3,
   })} ${walletVisual.coinSymbol}`;
+
+  const displayBalance = useMemo(() => {
+    if (displayCurrency === "NGN") {
+      const ngnRate = prices.ngn || 0;
+      return `${displayFiatSymbol}${(assetBalance * ngnRate).toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })}`;
+    }
+    return `${displayFiatSymbol}${assetBalance.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
+  }, [displayCurrency, assetBalance, prices.ngn, displayFiatSymbol]);
   const tokenLiveApyPercent = useMemo(() => {
     if (isStakingWallet) {
       const delegateId = userDelegation?.delegate?.id;
@@ -239,6 +300,24 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
       ?.unbondingLockId;
   }, [delegatorTransactions]);
 
+  const availableWithdrawalDisplay = useMemo(() => {
+    const lptAmount = completedUnbondingData.totalAmount;
+    const lptPriceInUsd = prices.lpt || 0;
+    const usdValue = lptAmount * lptPriceInUsd;
+    const ngnRate = prices.ngn || 0;
+    
+    if (displayCurrency === "NGN") {
+      return `${displayFiatSymbol}${(usdValue * ngnRate).toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })}`;
+    }
+    return `${displayFiatSymbol}${usdValue.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
+  }, [completedUnbondingData.totalAmount, displayCurrency, prices.lpt, prices.ngn, displayFiatSymbol]);
+
   const totalStakingBalance = (highyieldBalance || 0) + stakedBalance;
   const withdrawableWalletBalance =
     walletType === "staking" ? stakedBalance : stablesBalance || 0;
@@ -316,105 +395,6 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
     setSelectedTransaction(transaction);
   };
 
-  const renderEarningsCard = () => {
-    if (earningsCardState === "default" && activeWalletCard) {
-      return (
-        <div className="mt-4 rounded-md p-3 bg-[#151515] relative overflow-hidden">
-          <div className="flex items-center gap-4">
-            <div className="shrink-0">
-              <img
-                src="/yield.png"
-                alt="Weekly earnings"
-                className="w-10 h-10 object-cover rounded-lg object-top"
-              />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-white text-[14px] font-medium">
-                You've earned{" "} <span className="text-green-400">
-                  {displayCurrency === "NGN"
-                    ? `${displayFiatSymbol}${(
-                      activeWalletCard.projectedInterestNgn ?? 0
-                    ).toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}`
-                    : `${displayFiatSymbol}${(
-                      activeWalletCard.projectedInterestUsd ?? 0
-                    ).toLocaleString(undefined, {
-                      minimumFractionDigits: 3,
-                      maximumFractionDigits: 3,
-                    })}`}{" "}
-                </span>
-                this week!
-              </h3>
-              <p className="text-white/60 text-[13px]">
-                Increase your holdings to earn more
-              </p>
-            </div>
-          </div>
-
-        </div>
-      );
-    }
-
-    if (earningsCardState === "withdraw-ready") {
-      return (
-        <div className="mt-4 rounded-md p-3 bg-[#151515] relative">
-          <div className="flex items-center gap-4">
-            <div className="shrink-0">
-              <img
-                src="/livepeer.webp"
-                alt="Stake unlocked"
-                className="w-9 h-9 object-cover rounded-full"
-              />
-            </div>
-            <div className="flex-1">
-
-              <p className="text-white/90 text-[13px]">
-                You have {completedUnbondingData.totalAmount.toFixed(2)} LPT available fro
-                withdrawal
-              </p>
-              <button onClick={() => {
-                const validatorId = userDelegation?.delegate?.id;
-                navigate(`/unstake/${validatorId}`, {
-                  state: { availableBalance: completedUnbondingData.totalAmount },
-                });
-              }} className="mt-3 px-4 py-2 bg-[#C7EF6B] text-black rounded-full text-xs font-semibold hover:bg-[#B8E55A] transition-colors relative z-10">
-                withdraw
-              </button>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    if (earningsCardState === "unbonding") {
-      return (
-        <div className="mt-4 rounded-md p-3 bg-[#151515] relative">
-          <div className="flex items-center gap-4">
-            <div className="shrink-0">
-              <img
-                src="/livepeer.webp"
-                alt="Unbonding in progress"
-                className="w-9 h-9 object-cover rounded-full"
-              />
-            </div>
-            <div className="flex-1">
-
-              <p className="text-white/90 text-[13px]">
-                {pendingUnbondingData.timeRemaining
-                  ? ` You have a withdrawal in process, ${pendingUnbondingData.timeRemaining}`
-                  : ""}
-              </p>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    return null;
-  };
-
   return (
     <div className="h-screen bg-[#050505] text-white flex flex-col">
       <div className="flex items-center justify-between px-6 pt-8 pb-0">
@@ -437,109 +417,156 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
       </div>
 
       <div className="flex-1 overflow-y-auto px-6 pb-24 scrollbar-hide">
+        {/* Wallet Card Carousel */}
         <div
-          className={`mt-5 text-center bg-linear-to-br from-[#0f0f0f] to-[#151515] rounded-2xl py-4 min-h-[100px] relative overflow-hidden border border-[#151515]`}
+          ref={carouselRef}
+          onScroll={handleCarouselScroll}
+          className="mt-5 flex gap-3 overflow-x-auto snap-x snap-mandatory scrollbar-hide"
+          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
-          <LisarLines
-            position="top-right"
-            className="opacity-100"
-            width="185px"
-            height="185px"
-          />
-          <div className="absolute top-0 right-0 w-32 h-32 bg-[#C7EF6B]/5 rounded-full blur-3xl pointer-events-none"></div>
-          <div className="absolute bottom-0 left-0 w-24 h-24 bg-[#86B3F7]/5 rounded-full blur-2xl pointer-events-none"></div>
-
-          <div className="relative z-10">
-            <div className="flex items-center justify-center gap-0.5">
-              <p className="text-sm text-white/50">{walletType === "savings" ? "Savings Balance" : "Growth Balance"}</p>
-              <button
-                onClick={() => setShowBalance(!showBalance)}
-                className="h-5 w-5 rounded-full bg-white/10 flex items-center justify-center"
+          {cardData.map((card) => {
+            const isSavings = card.type === "savings";
+            return (
+              <div
+                key={card.type}
+                className="flex-[0_0_calc(97%-6px)] shrink-0 snap-center min-w-0"
               >
-                {showBalance ? (
-                  <Eye size={15} color="#fff" />
-                ) : (
-                  <EyeOff size={15} color="#fff" />
-                )}
-              </button>
-            </div>
-            {activeWalletCard?.isLoading ? (
-              <div className="flex items-baseline justify-center gap-2 mt-2">
-                <span className="text-2xl font-bold text-white">
-                  ••••
-                </span>
+                <div
+                  className={`${isSavings
+                      ? "bg-transparent border border-[#6da7fd]/50 hover:border-[#86B3F7]/50"
+                      : "bg-transparent border border-[#C7EF6B]/30 hover:border-[#C7EF6B]/50"
+                    } rounded-2xl py-4 min-h-[100px] relative overflow-hidden transition-colors`}
+                >
+                 
+                  <div className={`absolute top-0 right-0 w-32 h-32 ${isSavings ? "bg-white/10" : "bg-[#C7EF6B]/5"} rounded-full blur-3xl pointer-events-none`}></div>
+                  <div className={`absolute bottom-0 left-0 w-24 h-24 ${isSavings ? "bg-[#86B3F7]/10" : "bg-white/5"} rounded-full blur-2xl pointer-events-none`}></div>
+
+                   {/* Lisar Lines Decoration */}
+                   <LisarLines
+                      position="top-right"
+                      className="opacity-100"
+                      width="100px"
+                      height="100px"
+                    />
+
+                   <LisarLines
+                      position="bottom-left"
+                      className="opacity-100"
+                      width="120px"
+                      height="120px"
+                    />
+
+                  <div className="relative z-10">
+                    <div className="flex items-center justify-center gap-0.5">
+                      <p className="text-sm text-white/90">{card.title} Balance</p>
+                      <button
+                        onClick={() => setShowBalance(!showBalance)}
+                        className="h-5 w-5 flex items-center justify-center"
+                      >
+                        {showBalance ? (
+                          <Eye size={15} color="#fff" />
+                        ) : (
+                          <EyeOff size={15} color="#fff" />
+                        )}
+                      </button>
+                    </div>
+                    {card.isLoading ? (
+                      <div className="flex items-baseline justify-center gap-2 mt-2">
+                        <span className="text-2xl font-bold text-white">
+                          ••••
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex items-baseline justify-center gap-2 mt-2">
+                        <span className="text-xl font-bold text-white/90">
+                          {showBalance
+                            ? displayBalance
+                            : "••••"}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="relative z-10 mt-6 flex items-center justify-center gap-4">
+                    <button
+                      onClick={handleDepositClick}
+                      className="flex flex-col items-center gap-1.5"
+                    >
+                      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10">
+                        <ArrowDown size={22} className="text-white" />
+                      </span>
+                      <span className="text-xs font-medium">Deposit</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        if (card.type === "savings") {
+                          navigate("/wallet/yields/create-flexible?mode=savings&source=usdc");
+                        } else {
+                          navigate("/wallet/yields/create-flexible?mode=staking&source=lpt");
+                        }
+                      }}
+                      className="flex flex-col items-center gap-1.5"
+                    >
+                      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10">
+                        {card.type === "savings" ? <PiggyBank size={22} className="text-white" /> : <Sprout size={22} className="text-white" />}
+                      </span>
+                      <span className="text-xs font-medium">{card.type === "savings" ? "Save" : "Grow"}</span>
+                    </button>
+
+                    <button
+                      onClick={() => setShowEarningsDrawer(true)}
+                      className="flex flex-col items-center gap-1.5"
+                    >
+                      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10">
+                        <CircleDollarSign size={22} className="text-white" />
+                      </span>
+                      <span className="text-xs font-medium">Interest</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        handleWithdrawClick();
+                      }}
+                      className="flex flex-col items-center gap-1.5"
+                    >
+                      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10">
+                        <ArrowRight size={22} className="text-white" />
+                      </span>
+                      <span className="text-xs font-medium">Withdraw</span>
+                    </button>
+                  </div>
+
+                  {isSavings ? (
+                    <img
+                      src="/highyield-3.svg"
+                      alt="Savings"
+                      className="absolute bottom-[-20px] right-[-20px] w-20 h-20 object-contain opacity-80"
+                    />
+                  ) : (
+                    <img
+                      src="/highyield-1.svg"
+                      alt="Growth"
+                      className="absolute bottom-[-5px] right-[-5px] w-14 h-14 object-contain opacity-80"
+                    />
+                  )}
+                </div>
               </div>
-            ) : (
-              <div className="flex items-baseline justify-center gap-2 mt-2">
-                <span className="text-xl font-bold text-white/90">
-                  {showBalance
-                    ? formattedAssetBalance
-                    : "••••"}
-                </span>
-              </div>
-            )}
+            );
+          })}
+        </div>
 
-            {/* <p className="mt-1 text-sm text-white/50">
-            {showBalance
-              ? `≈ ${displayFiatSymbol}${equivalentBalance.toLocaleString(undefined, {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}`
-              : "≈ ★★★★"}
-          </p> */}
-          </div>
-
-          <div className="relative z-10 mt-6 flex items-center justify-center gap-4">
-            <button
-              onClick={handleDepositClick}
-              className="flex flex-col items-center gap-1.5"
-            >
-              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10">
-                <ArrowDown size={22} className="text-white" />
-              </span>
-              <span className="text-xs font-medium">Deposit</span>
-            </button>
-
-            <button
-              onClick={() => {
-                if (walletType === "savings") {
-                  navigate("/wallet/yields/create-flexible?mode=savings&source=usdc");
-                } else {
-                  navigate("/wallet/yields/create-flexible?mode=staking&source=lpt");
-                }
-              }}
-              className="flex flex-col items-center gap-1.5"
-            >
-              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10">
-                {walletType === "savings" ? <PiggyBank size={22} className="text-white" /> : <Sprout size={22} className="text-white" />}
-
-              </span>
-              <span className="text-xs font-medium">{walletType === "savings" ? "Save" : "Grow"}</span>
-            </button>
-
-            <button
-              onClick={() => setShowEarningsDrawer(true)}
-              className="flex flex-col items-center gap-1.5"
-            >
-              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10">
-                <CircleDollarSign size={22} className="text-white" />
-              </span>
-              <span className="text-xs font-medium">Interest</span>
-            </button>
-
-            <button
-              onClick={() => {
-                handleWithdrawClick();
-              }}
-              className="flex flex-col items-center gap-1.5"
-            >
-              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10">
-                <ArrowRight size={22} className="text-white" />
-              </span>
-              <span className="text-xs font-medium">Withdraw</span>
-            </button>
-
-          </div>
+        {/* Carousel Indicators */}
+        <div className="flex justify-center gap-2 mt-2">
+          {cardData.map((_, i) => (
+            <div
+              key={i}
+              className={`h-1.5 rounded-full transition-all ${i === carouselIndex
+                  ? i === 0 ? "w-6 bg-[#86B3F7]" : "w-6 bg-[#C7EF6B]"
+                  : "w-1.5 bg-white/30"
+                }`}
+            />
+          ))}
         </div>
 
 
@@ -686,6 +713,12 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
             <div className="rounded-xl bg-[#151515] p-4">
               <p className="text-sm text-white/85">{tokenInfoDescription}</p>
             </div>
+            <div className="rounded-xl bg-[#151515] p-4 flex items-center justify-between">
+              <p className="text-sm text-white/60">Balance</p>
+              <p className="text-sm font-semibold text-white">
+                {showBalance ? displayBalance : "••••"}
+              </p>
+            </div>
             {isStakingWallet && (
               <div className="rounded-xl bg-[#151515] p-4 flex items-center justify-between">
                 <p className="text-sm text-white/60">Current orchestrator</p>
@@ -704,6 +737,35 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType }) => {
                     : "--"}
               </p>
             </div>
+            {earningsCardState === "unbonding" && (
+              <div className="rounded-xl bg-[#151515] p-4">
+                <p className="text-sm text-white/60">Unbonding in progress</p>
+                <p className="text-sm text-white/90 mt-1">
+                  {pendingUnbondingData.timeRemaining
+                    ? `Your withdrawal will be ready ${pendingUnbondingData.timeRemaining}`
+                    : "Your withdrawal is being processed"}
+                </p>
+              </div>
+            )}
+            {earningsCardState === "withdraw-ready" && (
+              <div className="rounded-xl bg-[#151515] p-4">
+                <p className="text-sm text-white/60">Withdrawal ready</p>
+                <p className="text-sm text-[#C7EF6B] mt-1 font-semibold">
+                  {availableWithdrawalDisplay}
+                </p>
+                <button
+                  onClick={() => {
+                    const validatorId = userDelegation?.delegate?.id;
+                    navigate(`/unstake/${validatorId}`, {
+                      state: { availableBalance: completedUnbondingData.totalAmount },
+                    });
+                  }}
+                  className="mt-3 px-4 py-2 bg-[#C7EF6B] text-black rounded-full text-xs font-semibold"
+                >
+                  Withdraw Now
+                </button>
+              </div>
+            )}
           </div>
         </DrawerContent>
       </Drawer>

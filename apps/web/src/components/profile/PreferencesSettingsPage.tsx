@@ -77,6 +77,7 @@ export const PreferencesSettingsPage: React.FC = () => {
       }
 
       setSelectedCurrency(currency);
+      localStorage.setItem("wallet_display_currency", currency);
       await refreshUser();
       setSuccessDrawer(true);
     } catch (error) {

@@ -13,6 +13,7 @@ import { useOrchestrators } from "@/contexts/OrchestratorContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWallet } from "@/contexts/WalletContext";
 import { useDelegation } from "@/contexts/DelegationContext";
+import { useWalletCard } from "@/contexts/WalletCardContext";
 import { useCampaign } from "@/contexts/CampaignContext";
 import { useNotification } from "@/contexts/NotificationContext";
 import { useGuidedTour } from "@/hooks/useGuidedTour";
@@ -43,11 +44,12 @@ export const AllWalletPage: React.FC = () => {
   const [transferDrawer, setTransferDrawer] = useState<
     "deposit" | "withdraw" | null
   >(null);
-  const [showBalance, setShowBalance] = useState(() => {
-    const saved = localStorage.getItem("wallet_show_balance");
-    return saved ? JSON.parse(saved) : false;
-  });
-  const [displayCurrency, setDisplayCurrency] = useState<"USD" | "NGN">("USD");
+  const {
+    showBalance,
+    setShowBalance,
+    displayCurrency,
+    displayFiatSymbol,
+  } = useWalletCard();
 
   useEffect(() => {
     localStorage.setItem("wallet_show_balance", JSON.stringify(showBalance));
@@ -99,8 +101,6 @@ export const AllWalletPage: React.FC = () => {
     return lptUsdValue + idleUsdValue;
   }, [highyieldBalance, solUsdcBalance, solUsdtBalance, prices]);
 
-  const fiatSymbol = displayCurrency === "NGN" ? "₦" : "$";
-
   const handleNotificationClick = () => {
     navigate("/notifications");
   };
@@ -139,12 +139,12 @@ export const AllWalletPage: React.FC = () => {
         id: "main",
         title: "Total Balance",
         balance: displayBalance,
-        currencySymbol: fiatSymbol,
+        currencySymbol: displayFiatSymbol,
         type: "main",
         gradient: "from-[#0f0f0f] to-[#151515]",
       },
     ],
-    [displayBalance, fiatSymbol],
+    [displayBalance, displayFiatSymbol],
   );
 
   const renderLoadingStars = (sizeClass: string) => (
