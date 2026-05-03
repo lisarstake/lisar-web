@@ -23,32 +23,48 @@ const YIELD_CONTENT: Record<string, YieldContent> = {
     rate: "15",
     rateSuffix: "% APY",
     description:
-      "Your naira is deployed into stablecoin yield strategies — dollar-pegged assets that generate consistent, predictable daily returns.",
+      "Save your money and earn daily interest. Your funds stay safe and you can withdraw anytime.",
     benefits: [
-      "Daily interest, compounding automatically",
-      "Dollar-backed yield",
-      "Withdraw when you need to",
+      "Earn daily interest",
+      "Withdraw anytime",
+      "Your money stays safe",
     ],
     cta: "Start saving",
     bgColor: "bg-[#438af6]",
     textColor: "text-white",
-    image: "/highyield-3.svg",
+    image: "/hero.svg",
   },
   growth: {
     title: "Lisar Growth",
     rate: "40",
     rateSuffix: "% APY",
     description:
-      "Pick a digital asset — like choosing a stock. Your naira is deployed into staking positions on that asset. Returns are tied to network staking yields.",
+      "Grow your money by investing in digital assets. Higher returns, but keep your money for longer.",
     benefits: [
-      "Up to 40% annual yield",
-      "Daily compounding returns",
-      "Returns tied to network yields",
+      "Higher returns up to 40%",
+      "Best for long-term goals",
+      "Daily earnings",
     ],
     cta: "Start growing",
     bgColor: "bg-[#C7EF6B]",
     textColor: "text-black",
-    image: "/highyield-1.svg",
+    image: "/hero.svg",
+  },
+  flex: {
+    title: "Lisar Flex",
+    rate: "15",
+    rateSuffix: "% APY",
+    description:
+      "Set a daily spend limit for yourself. The rest of your money earns interest while you spend.",
+    benefits: [
+      "Daily spend money sent to you",
+      "Rest of your money earns interest",
+      "Flexible spending with growth",
+    ],
+    cta: "Start flexing",
+    bgColor: "bg-[#a78bfa]",
+    textColor: "text-black",
+    image: "/hero.svg",
   },
 };
 
@@ -66,8 +82,9 @@ export const YieldIntroPage: React.FC = () => {
   const walletTypeFromState = (location.state as { walletType?: string } | null)?.walletType;
 
   const content = useMemo(() => {
-    const type = walletTypeFromState === "growth" ? "growth" : "savings";
-    return YIELD_CONTENT[type];
+    if (walletTypeFromState === "growth") return YIELD_CONTENT.growth;
+    if (walletTypeFromState === "flex") return YIELD_CONTENT.flex;
+    return YIELD_CONTENT.savings;
   }, [walletTypeFromState]);
 
   useEffect(() => {
@@ -86,6 +103,8 @@ export const YieldIntroPage: React.FC = () => {
       navigate("/wallet/savings", { replace: true });
     } else if (walletTypeFromState === "growth") {
       navigate("/wallet/staking", { replace: true });
+    } else if (walletTypeFromState === "flex") {
+      navigate("/wallet/flex", { replace: true });
     } else if (hasSavings) {
       navigate("/wallet/savings", { replace: true });
     } else if (hasStaking) {
@@ -111,7 +130,7 @@ export const YieldIntroPage: React.FC = () => {
       <div className="flex-1 overflow-y-auto px-6 pb-6 scrollbar-hide flex flex-col justify-center">
 
         <img
-          src="/hero.svg"
+          src={content.image}
           alt={content.title}
           className="rounded-xl h-[380px] mx-auto"
         />

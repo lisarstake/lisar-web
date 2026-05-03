@@ -2,14 +2,12 @@ import React, { useState, useMemo, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { PortfolioSelectionDrawer } from "@/components/general/PortfolioSelectionDrawer";
-import { AllBalancesDrawer } from "@/components/general/AllBalancesDrawer";
 import {
   Drawer,
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import { useOrchestrators } from "@/contexts/OrchestratorContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWallet } from "@/contexts/WalletContext";
 import { useDelegation } from "@/contexts/DelegationContext";
@@ -19,17 +17,14 @@ import { useNotification } from "@/contexts/NotificationContext";
 import { useGuidedTour } from "@/hooks/useGuidedTour";
 import { usePrices } from "@/hooks/usePrices";
 import { ALL_WALLET_TOUR_ID } from "@/lib/tourConfig";
-import { priceService } from "@/lib/priceService";
 import {
   Bell,
   Plus,
   Eye,
   EyeOff,
-  X,
-  ArrowDown,
-  ArrowRight,
-  CircleDollarSign,
   ChevronRight,
+  LayoutGrid,
+  List,
 } from "lucide-react";
 import { LisarLines } from "@/components/landing/lisar-lines";
 
@@ -41,6 +36,7 @@ export const AllWalletPage: React.FC = () => {
   const location = useLocation();
   const [showAllBalancesDrawer, setShowAllBalancesDrawer] = useState(false);
   const [showPortfolioDrawer, setShowPortfolioDrawer] = useState(false);
+  const [viewMode, setViewMode] = useState<"grid" | "column">("column");
   const [transferDrawer, setTransferDrawer] = useState<
     "deposit" | "withdraw" | null
   >(null);
@@ -137,7 +133,7 @@ export const AllWalletPage: React.FC = () => {
     () => [
       {
         id: "main",
-        title: "Total Balance",
+        title: "Total wealth balance",
         balance: displayBalance,
         currencySymbol: displayFiatSymbol,
         type: "main",
@@ -171,7 +167,7 @@ export const AllWalletPage: React.FC = () => {
   };
 
   return (
-    <div className="h-screen overflow-hidden bg-[#050505] text-white flex flex-col">
+    <div className="min-h-full bg-[#050505] text-white flex flex-col">
       {/* Header */}
       <div className="bg-[#050505] shrink-0">
         <div className="flex items-center justify-between px-6 py-6">
@@ -219,7 +215,7 @@ export const AllWalletPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto overscroll-contain pb-20">
+      <div className="flex-1 pb-20">
         <>
           {/* Total Balance Card */}
           <div className="px-6 pb-6">
@@ -233,8 +229,8 @@ export const AllWalletPage: React.FC = () => {
                       }
                     }}
                     className={`bg-linear-to-br ${card.gradient} rounded-2xl py-5 min-h-[100px] relative overflow-hidden border border-[#151515] ${card.type !== "main"
-                        ? "cursor-pointer hover:opacity-95 transition-opacity"
-                        : ""
+                      ? "cursor-pointer hover:opacity-95 transition-opacity"
+                      : ""
                       }`}
                     data-tour={
                       card.id === "main" ? "all-wallet-balance-card" : undefined
@@ -244,8 +240,8 @@ export const AllWalletPage: React.FC = () => {
                     <LisarLines
                       position="top-right"
                       className="opacity-100"
-                      width="185px"
-                      height="185px"
+                      width="130px"
+                      height="130px"
                     />
 
                     {/* Decorative elements */}
@@ -313,7 +309,7 @@ export const AllWalletPage: React.FC = () => {
                       </div>
                     </div>
 
-                 
+
                   </div>
                 </div>
               ))}
@@ -473,12 +469,28 @@ export const AllWalletPage: React.FC = () => {
             {/* Earn on Lisar Section */}
             <div data-tour="all-wallet-earn-section">
               <div className="flex items-center justify-between mb-4 mt-6">
-                <h2 className="text-white/70 text-xs font-medium">
-                  Earn on Lisar
+                <h2 className="text-white/70 text-sm font-medium">
+                  Grow on Lisar
                 </h2>
+                <div className="flex items-center gap-1 bg-white/5 rounded-lg p-0.5">
+                  <button
+                    onClick={() => setViewMode("column")}
+                    className={`p-1.5 rounded-md transition-colors ${viewMode === "column" ? "bg-white/10 text-white" : "text-white/40"
+                      }`}
+                  >
+                    <List size={14} />
+                  </button>
+                  <button
+                    onClick={() => setViewMode("grid")}
+                    className={`p-1.5 rounded-md transition-colors ${viewMode === "grid" ? "bg-white/10 text-white" : "text-white/40"
+                      }`}
+                  >
+                    <LayoutGrid size={14} />
+                  </button>
+                </div>
               </div>
 
-              <div className="space-y-4">
+              <div className={viewMode === "grid" ? "grid grid-cols-2 gap-3" : "space-y-4"}>
                 {/* Savings Card */}
                 <div
                   className="bg-[#6da7fd] rounded-2xl p-5 border-2 border-[#86B3F7]/30 hover:border-[#86B3F7]/50 transition-colors relative overflow-hidden"
@@ -505,7 +517,38 @@ export const AllWalletPage: React.FC = () => {
                   <img
                     src="/highyield-3.svg"
                     alt="Stables"
-                    className="absolute bottom-[-20px] right-[-20px] w-28 h-28 object-contain opacity-80"
+                    className="absolute bottom-[-20px] right-[-20px] w-20 h-20 object-contain opacity-80"
+                  />
+                </div>
+
+
+                {/* Flex Card */}
+                <div
+                  onClick={() => navigate("/wallet/yields/intro", { state: { walletType: "flex" } })}
+                  className="bg-transparent rounded-2xl p-5 border-2 border-[#a78bfa]/30 hover:border-[#a78bfa]/50 transition-colors relative overflow-hidden cursor-pointer"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 relative z-10">
+                      <h3 className="text-white text-base font-semibold mb-1">
+                        Lifestyle Flex
+                      </h3>
+                      <p className="text-white/60 text-sm">
+                        Set a daily spend limit that gets sent to your account daily, while the rest grows
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => navigate("/wallet/yields/intro", { state: { walletType: "flex" } })}
+                    className="mt-4 px-6 py-2.5 bg-[#a78bfa] text-black rounded-full text-xs font-semibold hover:bg-[#b79aff] transition-colors relative z-10"
+                  >
+                    Start flexing
+                  </button>
+
+                  <img
+                    src="/usdt.svg"
+                    alt="Flex"
+                    className="absolute bottom-[-12px] right-[-12px] w-14 h-14 object-contain opacity-80"
                   />
                 </div>
 
@@ -529,16 +572,15 @@ export const AllWalletPage: React.FC = () => {
                     onClick={() => navigate("/wallet/yields/intro", { state: { walletType: "growth" } })}
                     className="mt-4 px-6 py-2.5 bg-[#C7EF6B] text-black rounded-full text-xs font-semibold hover:bg-[#B8E55A] transition-colors relative z-10"
                   >
-                    Start growing 
+                    Start growing
                   </button>
 
                   <img
                     src="/highyield-1.svg"
                     alt="High Yield"
-                    className="absolute bottom-[-5px] right-[-5px] w-20 h-20 object-contain opacity-80"
+                    className="absolute bottom-[-5px] right-[-5px] w-14 h-14 object-contain opacity-80"
                   />
                 </div>
-
               </div>
             </div>
           </div>
@@ -553,11 +595,10 @@ export const AllWalletPage: React.FC = () => {
         onClose={() => setShowPortfolioDrawer(false)}
         onSelect={(portfolio) => {
           setShowPortfolioDrawer(false);
-          navigate("/portfolio", {
-            state: {
-              walletType: portfolio === "savings" ? "savings" : "staking",
-            },
-          });
+          // Navigate directly to wallet pages, skipping yield intro
+          const walletPath = portfolio === "savings" ? "/wallet/savings" :
+                           portfolio === "flex" ? "/wallet/flex" : "/wallet/staking";
+          navigate(walletPath);
         }}
       />
 
@@ -576,8 +617,8 @@ export const AllWalletPage: React.FC = () => {
               onClick={() => handleTransferOptionSelect("naira")}
               disabled={!NAIRA_OPTION_ENABLED}
               className={`w-full rounded-xl px-4 py-4 text-left ${NAIRA_OPTION_ENABLED
-                  ? "bg-[#151515]"
-                  : "bg-[#151515] opacity-50 cursor-not-allowed"
+                ? "bg-[#151515]"
+                : "bg-[#151515] opacity-50 cursor-not-allowed"
                 }`}
             >
               <div className="flex items-center gap-3">

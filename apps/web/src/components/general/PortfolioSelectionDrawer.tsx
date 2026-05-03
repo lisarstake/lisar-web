@@ -11,7 +11,7 @@ import { ChevronRight, WalletCards, Weight } from "lucide-react";
 interface PortfolioSelectionDrawerProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelect: (portfolio: "savings" | "growth") => void;
+  onSelect: (portfolio: "savings" | "growth" | "flex") => void;
 }
 
 export const PortfolioSelectionDrawer: React.FC<
@@ -21,8 +21,8 @@ export const PortfolioSelectionDrawer: React.FC<
     <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DrawerContent className="bg-[#050505]">
         <DrawerHeader className="mb-2">
-          <DrawerTitle className="font-medium text-base text-white text-start flex items-center gap-1">
-          <WalletCards size={16}/> Which portfolio? 
+          <DrawerTitle className="font-medium text-base text-white/70 text-start flex items-center gap-1">
+          <WalletCards size={16}/> Which balance? 
           </DrawerTitle>
         </DrawerHeader>
 
@@ -31,8 +31,17 @@ export const PortfolioSelectionDrawer: React.FC<
             onClick={() => onSelect("savings")}
             className="w-full flex items-center gap-3 px-3 py-3.5 rounded-lg bg-[#151515] hover:bg-[#151515] transition-colors text-left shadow-md shadow-black/20"
           >
-            <span className="flex-1 text-white text-base font-medium italic">
+            <span className="flex-1 text-white/90 text-base">
               LISAR savings
+            </span>
+            <ChevronRight size={18} className="text-white/50" />
+          </button>
+          <button
+            onClick={() => onSelect("flex")}
+            className="w-full flex items-center gap-3 px-3 py-3.5 rounded-lg bg-[#151515] hover:bg-[#151515] transition-colors text-left shadow-md shadow-black/20"
+          >
+            <span className="flex-1 text-white/90 text-base">
+              LISAR Flex
             </span>
             <ChevronRight size={18} className="text-white/50" />
           </button>
@@ -40,7 +49,7 @@ export const PortfolioSelectionDrawer: React.FC<
             onClick={() => onSelect("growth")}
             className="w-full flex items-center gap-3 px-3 py-3.5 rounded-lg bg-[#151515] hover:bg-[#151515] transition-colors text-left shadow-md shadow-black/20"
           >
-            <span className="flex-1 text-white text-base font-medium italic">
+            <span className="flex-1 text-white/90 text-base">
               LISAR growth
             </span>
             <ChevronRight size={18} className="text-white/50" />

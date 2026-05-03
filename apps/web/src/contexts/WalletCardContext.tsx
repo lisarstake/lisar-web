@@ -15,7 +15,7 @@ import { usePerenaPortfolio } from "@/hooks/usePerenaPortfolio";
 import { usePerenaWeeklyYield } from "@/hooks/usePerenaWeeklyYield";
 
 export interface WalletCardData {
-  type: "savings" | "staking";
+  type: "savings" | "staking" | "flex";
   title: string;
   balance: number;
   displayBalanceValue: number;
@@ -126,6 +126,11 @@ export const WalletCardProvider: React.FC<{ children: ReactNode }> = ({
     const stakingInterestUsd = stakingUsdValue * (growthApy ?? 0.6) * (7 / 365);
     const stakingInterestNgn = stakingInterestUsd * (prices.ngn || 0);
 
+    const flexBalance = savingsBalance; // Flex uses same balance as Savings
+    const flexDisplayValue = savingsDisplayValue; // Same display value
+    const flexInterestUsd = savingsInterestUsd; // Same interest calculation
+    const flexInterestNgn = savingsInterestNgn;
+
     return [
       {
         type: "savings",
@@ -134,6 +139,21 @@ export const WalletCardProvider: React.FC<{ children: ReactNode }> = ({
         displayBalanceValue: savingsDisplayValue,
         projectedInterestUsd: savingsInterestUsd,
         projectedInterestNgn: savingsInterestNgn,
+        apyPercent:
+          apyLoading && perenaApy === null
+            ? ".."
+            : perenaApy
+              ? (perenaApy * 100).toFixed(1)
+              : "14",
+        isLoading: stablesLoading,
+      },
+      {
+        type: "flex",
+        title: "Flex",
+        balance: flexBalance,
+        displayBalanceValue: flexDisplayValue,
+        projectedInterestUsd: flexInterestUsd,
+        projectedInterestNgn: flexInterestNgn,
         apyPercent:
           apyLoading && perenaApy === null
             ? ".."
