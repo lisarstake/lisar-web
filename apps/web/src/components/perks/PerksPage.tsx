@@ -11,6 +11,7 @@ import {
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "../ui/button";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
+import toast from "react-hot-toast";
 
 export const PerksPage: React.FC = () => {
   const navigate = useNavigate();
@@ -25,8 +26,12 @@ export const PerksPage: React.FC = () => {
   };
 
   const handleRedeemPoints = () => {
-    // TODO: Implement redeem points functionality
-    console.log("Redeem points clicked");
+    if (userPoints <= 0) {
+      toast.error("No points or low point balance. Start savings to accumulate points.");
+    } else {
+      // TODO: Implement actual redeem logic
+      toast.success("Redeeming points...");
+    }
   };
 
   return (
