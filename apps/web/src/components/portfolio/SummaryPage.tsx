@@ -12,7 +12,11 @@ import { useDelegation } from "@/contexts/DelegationContext";
 import { useWallet } from "@/contexts/WalletContext";
 import { usePortfolio } from "@/contexts/PortfolioContext";
 import { useStablesApy } from "@/hooks/useStablesApy";
-import { formatEarnings, formatLifetime, formatStables } from "@/lib/formatters";
+import {
+  formatEarnings,
+  formatLifetime,
+  formatStables,
+} from "@/lib/formatters";
 import { getEarliestUnbondingTime } from "@/lib/unbondingTime";
 import { IdleBalanceCard } from "./IdleBalanceCard";
 
@@ -34,7 +38,6 @@ export const SummaryPage: React.FC = () => {
     setMode(isSavings ? "savings" : "staking");
   }, [isSavings, setMode]);
 
-
   const lifetimeRewards = useMemo(() => {
     return summary?.lifetimeRewards || 0;
   }, [summary]);
@@ -52,13 +55,18 @@ export const SummaryPage: React.FC = () => {
     return summary?.currentStake || 0;
   }, [summary]);
 
-  // Total balance 
+  // Total balance
   const totalBalance = useMemo(() => {
     if (isSavings) return stablesBalance ?? 0;
     const unstaked = highyieldBalance ?? 0;
     const staked = parseFloat(delegatorStakeProfile?.currentStake || "0") || 0;
     return unstaked + staked;
-  }, [isSavings, stablesBalance, highyieldBalance, delegatorStakeProfile?.currentStake]);
+  }, [
+    isSavings,
+    stablesBalance,
+    highyieldBalance,
+    delegatorStakeProfile?.currentStake,
+  ]);
 
   // Idle balance = total - active stake
   const idleBalance = useMemo(() => {
@@ -79,7 +87,7 @@ export const SummaryPage: React.FC = () => {
     const count = pending.length;
     const totalAmount = pending.reduce(
       (sum, tx) => sum + parseFloat(tx.amount || "0"),
-      0
+      0,
     );
     const timeRemaining = getEarliestUnbondingTime(pending);
 
@@ -104,12 +112,10 @@ export const SummaryPage: React.FC = () => {
     const count = completed.length;
     const totalAmount = completed.reduce(
       (sum, tx) => sum + parseFloat(tx.amount || "0"),
-      0
+      0,
     );
     // Find the first completed transaction with a valid delegate
-    const firstValidTransaction = completed.find(
-      (tx) => tx?.delegate?.id
-    );
+    const firstValidTransaction = completed.find((tx) => tx?.delegate?.id);
     const validatorId = firstValidTransaction?.delegate?.id || null;
 
     return {
@@ -130,8 +136,8 @@ export const SummaryPage: React.FC = () => {
   };
 
   return (
-    <div className="h-screen bg-[#050505] text-white flex flex-col">
-      <div className="flex-1 overflow-y-auto px-6 pb-20 scrollbar-hide">
+    <div className="min-h-full bg-[#050505] text-white flex flex-col">
+      <div className="flex-1 px-6 pb-20 scrollbar-hide">
         {/* Header */}
         <div className="flex items-center justify-between py-8 mb-2">
           <button
@@ -323,15 +329,15 @@ export const SummaryPage: React.FC = () => {
         content={
           isSavings
             ? [
-              "View your stables portfolio performance.",
-              "Total Rewards displays your lifetime earnings from stable savings.",
-              "Withdrawals are instant with no waiting periods.",
-            ]
+                "View your stables portfolio performance.",
+                "Total Rewards displays your lifetime earnings from stable savings.",
+                "Withdrawals are instant with no waiting periods.",
+              ]
             : [
-              "Lifetime Rewards shows your total earnings from staking since you started.",
-              "Lifetime Withdrawn displays the total amount you've withdrawn from your portfolio.",
-              "Withdrawal in Progress indicates funds currently in the unbonding period.",
-            ]
+                "Lifetime Rewards shows your total earnings from staking since you started.",
+                "Lifetime Withdrawn displays the total amount you've withdrawn from your portfolio.",
+                "Withdrawal in Progress indicates funds currently in the unbonding period.",
+              ]
         }
       />
 

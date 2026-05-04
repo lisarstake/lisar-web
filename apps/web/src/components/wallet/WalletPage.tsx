@@ -69,7 +69,7 @@ const WALLET_VISUALS = {
     cardGradient:
       "bg-[linear-gradient(155deg,#006400_0%,#8DD4FF_180%)] border-[#006400]/65",
   },
-
+ 
 } as const;
 
 export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletType }) => {
@@ -90,8 +90,8 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
 
   const carouselRef = useRef<HTMLDivElement>(null);
   const getInitialCarouselIndex = () => {
-    if (currentWalletType === "staking") return 1;
-    return 0;
+    if (currentWalletType === "staking") return 1;  // Growth is now 2nd (index 1)
+    return 0;                                  // Savings is 1st (index 0)
   };
   const [carouselIndex, setCarouselIndex] = useState(getInitialCarouselIndex());
   const scrollEndTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -131,8 +131,8 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
 
   useEffect(() => {
     const getIdx = () => {
-      if (currentWalletType === "staking") return 1; 
-      return 0;                                   
+      if (currentWalletType === "staking") return 1;  // Growth is now 2nd (index 1)
+      return 0;                                     // Savings is 1st (index 0)
     };
     const idx = getIdx();
     setCarouselIndex(idx);
@@ -182,8 +182,8 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
   const walletVisual = isStakingWallet
     ? WALLET_VISUALS.staking
     : isFlexWallet
-      ? WALLET_VISUALS.flex
-      : WALLET_VISUALS.savings;
+    ? WALLET_VISUALS.flex
+    : WALLET_VISUALS.savings;
   const assetBalance = activeWalletCard?.balance ?? 0;
   const formattedAssetBalance = `${assetBalance.toLocaleString(undefined, {
     minimumFractionDigits: 2,
@@ -236,8 +236,8 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
   const tokenInfoDescription = isStakingWallet
     ? "Earn yields daily with 7 days unlock period for withdrawals."
     : isFlexWallet
-      ? "Set a daily spend limit that gets sent to your account daily, while the rest grows"
-      : "Earn yields daily with instant withdrawal.";
+    ? "Set a daily spend limit that gets sent to your account daily, while the rest grows"
+    : "Earn yields daily with instant withdrawal.";
 
   const currentValidatorName = useMemo(() => {
     if (!isStakingWallet) return null;
@@ -329,7 +329,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
     const lptPriceInUsd = prices.lpt || 0;
     const usdValue = lptAmount * lptPriceInUsd;
     const ngnRate = prices.ngn || 0;
-
+    
     if (displayCurrency === "NGN") {
       return `${displayFiatSymbol}${(usdValue * ngnRate).toLocaleString(undefined, {
         minimumFractionDigits: 2,
@@ -461,33 +461,36 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
                 className="flex-[0_0_calc(97%-6px)] shrink-0 snap-center min-w-0"
               >
                 <div
-                  className={`${isSavings
-                    ? "bg-transparent border border-[#6da7fd]/50 hover:border-[#86B3F7]/50"
-                    : isFlex
+                  className={`${
+                    isSavings
+                      ? "bg-transparent border border-[#6da7fd]/50 hover:border-[#86B3F7]/50"
+                      : isFlex
                       ? "bg-transparent border border-[#a78bfa]/30 hover:border-[#a78bfa]/50"
                       : "bg-transparent border border-[#C7EF6B]/30 hover:border-[#C7EF6B]/50"
-                    } rounded-2xl py-4 min-h-[100px] relative overflow-hidden transition-colors`}
+                  } rounded-2xl py-4 min-h-[100px] relative overflow-hidden transition-colors`}
                 >
+                 
+                  <div className={`absolute top-0 right-0 w-32 h-32 ${
+                    isSavings ? "bg-white/10" : isFlex ? "bg-[#a78bfa]/5" : "bg-[#C7EF6B]/5"
+                  } rounded-full blur-3xl pointer-events-none`}></div>
+                  <div className={`absolute bottom-0 left-0 w-24 h-24 ${
+                    isSavings ? "bg-[#86B3F7]/10" : isFlex ? "bg-[#a78bfa]/5" : "bg-white/5"
+                  } rounded-full blur-2xl pointer-events-none`}></div>
 
-                  <div className={`absolute top-0 right-0 w-32 h-32 ${isSavings ? "bg-white/10" : isFlex ? "bg-[#a78bfa]/5" : "bg-[#C7EF6B]/5"
-                    } rounded-full blur-3xl pointer-events-none`}></div>
-                  <div className={`absolute bottom-0 left-0 w-24 h-24 ${isSavings ? "bg-[#86B3F7]/10" : isFlex ? "bg-[#a78bfa]/5" : "bg-white/5"
-                    } rounded-full blur-2xl pointer-events-none`}></div>
+                   {/* Lisar Lines Decoration */}
+                   <LisarLines
+                      position="top-right"
+                      className="opacity-100"
+                      width="100px"
+                      height="100px"
+                    />
 
-                  {/* Lisar Lines Decoration */}
-                  <LisarLines
-                    position="top-right"
-                    className="opacity-100"
-                    width="100px"
-                    height="100px"
-                  />
-
-                  <LisarLines
-                    position="bottom-left"
-                    className="opacity-100"
-                    width="120px"
-                    height="120px"
-                  />
+                   <LisarLines
+                      position="bottom-left"
+                      className="opacity-100"
+                      width="120px"
+                      height="120px"
+                    />
 
                   <div className="relative z-10">
                     <div className="flex items-center justify-center gap-0.5">
@@ -603,8 +606,8 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
             <div
               key={i}
               className={`h-1.5 rounded-full transition-all ${i === carouselIndex
-                ? i === 0 ? "w-6 bg-[#86B3F7]" : "w-6 bg-[#C7EF6B]"
-                : "w-1.5 bg-white/30"
+                  ? i === 0 ? "w-6 bg-[#86B3F7]" : "w-6 bg-[#C7EF6B]"
+                  : "w-1.5 bg-white/30"
                 }`}
             />
           ))}

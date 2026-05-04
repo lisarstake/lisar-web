@@ -53,15 +53,29 @@ const matchesTab = (type: string, tab: NotificationTab) => {
   if (tab === "all") return true;
 
   if (tab === "announcements") {
-    return ["system", "announcement", "announcements", "promotion", "promotions"].includes(normalized);
+    return [
+      "system",
+      "announcement",
+      "announcements",
+      "promotion",
+      "promotions",
+    ].includes(normalized);
   }
 
   if (tab === "alerts") {
-    return ["alert", "alerts", "security", "security_alert", "security alerts"].includes(normalized);
+    return [
+      "alert",
+      "alerts",
+      "security",
+      "security_alert",
+      "security alerts",
+    ].includes(normalized);
   }
 
   if (tab === "earnings") {
-    return ["reward", "rewards", "earning", "earnings", "referral"].includes(normalized);
+    return ["reward", "rewards", "earning", "earnings", "referral"].includes(
+      normalized,
+    );
   }
 
   return true;
@@ -73,8 +87,13 @@ export const NotificationsPage: React.FC = () => {
   const [selectedNotification, setSelectedNotification] =
     useState<Notification | null>(null);
 
-  const { notifications, isLoading, markAsRead, deleteNotification, clearAllNotifications } =
-    useNotification();
+  const {
+    notifications,
+    isLoading,
+    markAsRead,
+    deleteNotification,
+    clearAllNotifications,
+  } = useNotification();
   const [showDeleteError, setShowDeleteError] = useState(false);
   const [deleteErrorMessage, setDeleteErrorMessage] = useState("");
 
@@ -147,7 +166,9 @@ export const NotificationsPage: React.FC = () => {
     try {
       await clearAllNotifications();
     } catch (err: any) {
-      setDeleteErrorMessage(err?.message || "Failed to delete all notifications");
+      setDeleteErrorMessage(
+        err?.message || "Failed to delete all notifications",
+      );
       setShowDeleteError(true);
     }
   };
@@ -162,7 +183,7 @@ export const NotificationsPage: React.FC = () => {
   };
 
   return (
-    <div className="h-screen bg-[#050505] text-white flex flex-col">
+    <div className="min-h-full bg-[#050505] text-white flex flex-col">
       <div className="flex items-center justify-between px-6 pt-8 pb-4">
         <button
           onClick={() => navigate(-1)}
@@ -190,10 +211,11 @@ export const NotificationsPage: React.FC = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`shrink-0 rounded-full px-4 py-1.5 text-sm transition-colors ${isActive
-                  ? "bg-[#151515] text-white font-semibold"
-                  : "text-white/90"
-                  }`}
+                className={`shrink-0 rounded-full px-4 py-1.5 text-sm transition-colors ${
+                  isActive
+                    ? "bg-[#151515] text-white font-semibold"
+                    : "text-white/90"
+                }`}
               >
                 {tab.label}
               </button>
@@ -202,7 +224,7 @@ export const NotificationsPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-6 pb-8 scrollbar-hide">
+      <div className="flex-1 px-6 pb-8 scrollbar-hide">
         {isLoading ? (
           <div className="space-y-3">
             {Array.from({ length: 3 }).map((_, index) => (
@@ -282,7 +304,9 @@ export const NotificationsPage: React.FC = () => {
 
             {filteredNotifications.length === 0 && (
               <div className="h-full flex items-center justify-center">
-                <p className="text-sm text-[#8f9893]">No notifications in this category</p>
+                <p className="text-sm text-[#8f9893]">
+                  No notifications in this category
+                </p>
               </div>
             )}
           </>
@@ -338,7 +362,7 @@ const NotificationDetailsDrawer: React.FC<NotificationDetailsDrawerProps> = ({
               {notification.title}
             </DrawerTitle>
             <div className="flex items-center gap-2">
-            <DrawerClose className="h-8 w-8 rounded-full bg-[#1a1a1a] flex items-center justify-center">
+              <DrawerClose className="h-8 w-8 rounded-full bg-[#1a1a1a] flex items-center justify-center">
                 <X className="text-white" size={18} />
               </DrawerClose>
               <button
@@ -348,12 +372,9 @@ const NotificationDetailsDrawer: React.FC<NotificationDetailsDrawerProps> = ({
               >
                 <Trash2 className="text-red-400" size={16} />
               </button>
-             
             </div>
           </div>
         </DrawerHeader>
-
-
 
         <div className="rounded-lg bg-white/10 py-2 px-2">
           <p className="text-sm leading-relaxed text-white">

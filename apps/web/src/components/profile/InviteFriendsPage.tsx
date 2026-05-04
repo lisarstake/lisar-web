@@ -42,7 +42,7 @@ export const InviteFriendsPage: React.FC = () => {
   };
 
   return (
-    <div className="h-screen bg-[#050505] text-white flex flex-col">
+    <div className="min-h-full bg-[#050505] text-white flex flex-col">
       <div className="flex items-center justify-between px-6 pt-8 pb-4">
         <button
           onClick={() => navigate(-1)}
@@ -69,7 +69,8 @@ export const InviteFriendsPage: React.FC = () => {
         </h2>
 
         <p className="mt-3 text-sm leading-relaxed text-[#c4cdc9] max-w-xs">
-          Spread the love ❤️ about Lisar and earn coins as rewards! Join the early savers campiagn to begin
+          Spread the love ❤️ about Lisar and earn coins as rewards! Join the
+          early savers campiagn to begin
         </p>
 
         <div className="mt-8 rounded-lg border border-white/10 p-3 w-full max-w-sm">

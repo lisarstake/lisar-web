@@ -46,7 +46,7 @@ export const UnstakePage: React.FC = () => {
       if (numericAmount > 0) {
         const fiatValue = await priceService.convertLptToFiat(
           numericAmount,
-          userCurrency
+          userCurrency,
         );
         setFiatEquivalent(fiatValue);
       } else {
@@ -55,7 +55,6 @@ export const UnstakePage: React.FC = () => {
     };
     calculateFiat();
   }, [lptAmount, userCurrency]);
-
 
   const handleBackClick = () => {
     navigate(-1);
@@ -93,11 +92,15 @@ export const UnstakePage: React.FC = () => {
         await refreshAllWalletData();
         setShowSuccessDrawer(true);
       } else {
-        setErrorMessage("Sorry an error occurred and withdrawal didn't complete, please try again.");
+        setErrorMessage(
+          "Sorry an error occurred and withdrawal didn't complete, please try again.",
+        );
         setShowErrorDrawer(true);
       }
     } catch (error) {
-      setErrorMessage("Sorry an error occurred and withdrawal didn't complete, please try again.");
+      setErrorMessage(
+        "Sorry an error occurred and withdrawal didn't complete, please try again.",
+      );
       setShowErrorDrawer(true);
     } finally {
       setIsProcessing(false);
@@ -105,7 +108,11 @@ export const UnstakePage: React.FC = () => {
   };
   const numericLptAmount = parseFloat(lptAmount || "0");
   const activePercent = (() => {
-    if (!currentStake || currentStake <= 0 || !Number.isFinite(numericLptAmount)) {
+    if (
+      !currentStake ||
+      currentStake <= 0 ||
+      !Number.isFinite(numericLptAmount)
+    ) {
       return null;
     }
     const ratio = (numericLptAmount / currentStake) * 100;
@@ -118,7 +125,7 @@ export const UnstakePage: React.FC = () => {
   })();
 
   return (
-    <div className="h-screen bg-[#050505] text-white flex flex-col">
+    <div className="min-h-full bg-[#050505] text-white flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between px-6 pt-8 pb-4">
         <button
@@ -133,7 +140,7 @@ export const UnstakePage: React.FC = () => {
       </div>
 
       {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto px-6 pb-28 scrollbar-hide">
+      <div className="flex-1 px-6 pb-28 scrollbar-hide">
         {/* Amount Input Field */}
         <div className="pt-2 pb-4">
           <div className="bg-[#151515] rounded-lg p-3 flex items-center gap-3">
@@ -152,7 +159,6 @@ export const UnstakePage: React.FC = () => {
               placeholder="LPT"
               className="flex-1 bg-transparent text-white text-lg font-medium focus:outline-none"
             />
-
           </div>
           <p className="text-gray-400 text-xs mt-2 pl-2">
             ≈ {currencySymbol}
@@ -168,15 +174,17 @@ export const UnstakePage: React.FC = () => {
           <div className="flex space-x-3">
             {presetPercents.map((percent) => {
               const amount = ((currentStake * percent) / 100).toFixed(6);
-              const isActive = activePercent === percent && numericLptAmount > 0;
+              const isActive =
+                activePercent === percent && numericLptAmount > 0;
               return (
                 <button
                   key={percent}
                   onClick={() => handleAmountSelect(amount)}
-                  className={`flex-1 py-2.5 px-2 rounded-full text-sm font-medium transition-colors ${isActive
-                    ? "bg-[#C7EF6B] text-black"
-                    : "bg-[#151515] text-white/80 hover:bg-[#1a1f10]"
-                    }`}
+                  className={`flex-1 py-2.5 px-2 rounded-full text-sm font-medium transition-colors ${
+                    isActive
+                      ? "bg-[#C7EF6B] text-black"
+                      : "bg-[#151515] text-white/80 hover:bg-[#1a1f10]"
+                  }`}
                 >
                   {percent}%
                 </button>
@@ -193,7 +201,6 @@ export const UnstakePage: React.FC = () => {
             </h3>
             <div className="bg-[#151515] rounded-lg border border-[#151515]">
               <div className="flex items-center space-x-3">
-
                 <div className="flex-1">
                   <span className="text-gray-100 text-sm font-medium">
                     {currentStake.toLocaleString()} LPT
@@ -215,13 +222,14 @@ export const UnstakePage: React.FC = () => {
             parseFloat(lptAmount) <= 0 ||
             isProcessing
           }
-          className={`w-full py-3.5 rounded-full font-semibold text-lg transition-colors ${lptAmount &&
+          className={`w-full py-3.5 rounded-full font-semibold text-lg transition-colors ${
+            lptAmount &&
             parseFloat(lptAmount) <= currentStake &&
             parseFloat(lptAmount) > 0 &&
             !isProcessing
-            ? "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
-            : "bg-[#636363] text-white cursor-not-allowed"
-            }`}
+              ? "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
+              : "bg-[#636363] text-white cursor-not-allowed"
+          }`}
         >
           {isProcessing ? "Processing.." : "Withdraw"}
         </button>

@@ -1,10 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  BadgeCheck,
-  ArrowLeft,
-  KeyRound,
-} from "lucide-react";
+import { BadgeCheck, ArrowLeft, KeyRound } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { LoadingSpinner } from "../general/LoadingSpinner";
 import { BottomNavigation } from "../general/BottomNavigation";
@@ -48,7 +44,13 @@ export const SecuritySettingsPage: React.FC = () => {
     };
 
     load();
-  }, [state.user, state.isLoading, state.isAuthenticated, refreshUser, navigate]);
+  }, [
+    state.user,
+    state.isLoading,
+    state.isAuthenticated,
+    refreshUser,
+    navigate,
+  ]);
 
   if (isLoading) {
     return <LoadingSpinner message="Loading security settings..." />;
@@ -81,7 +83,7 @@ export const SecuritySettingsPage: React.FC = () => {
   };
 
   return (
-    <div className="h-screen bg-[#050505] text-white flex flex-col">
+    <div className="min-h-full bg-[#050505] text-white flex flex-col">
       <div className="flex items-center justify-between px-6 pt-8 pb-4">
         <button
           onClick={() => navigate(-1)}
@@ -96,7 +98,7 @@ export const SecuritySettingsPage: React.FC = () => {
         <div className="w-8 h-8" />
       </div>
 
-      <div className="flex-1 overflow-y-auto px-6 pb-24 space-y-3 scrollbar-hide">
+      <div className="flex-1 px-6 pb-24 space-y-3 scrollbar-hide">
         <button className={rowClass} onClick={() => setShowTotpSetup(true)}>
           <BadgeCheck size={20} className="text-[#be860e]" strokeWidth={2.1} />
           <div className="ml-4">
@@ -127,7 +129,6 @@ export const SecuritySettingsPage: React.FC = () => {
             </p>
           </div>
         </button>
-
       </div>
 
       <BottomNavigation currentPath="/wallet" />

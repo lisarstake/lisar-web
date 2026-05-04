@@ -11,7 +11,7 @@ import { ChevronRight, WalletCards, Weight } from "lucide-react";
 interface PortfolioSelectionDrawerProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelect: (portfolio: "savings" | "growth" | "flex") => void;
+  onSelect: (portfolio: "savings" | "growth") => void;
 }
 
 export const PortfolioSelectionDrawer: React.FC<
@@ -32,25 +32,25 @@ export const PortfolioSelectionDrawer: React.FC<
             className="w-full flex items-center gap-3 px-3 py-3.5 rounded-lg bg-[#151515] hover:bg-[#151515] transition-colors text-left shadow-md shadow-black/20"
           >
             <span className="flex-1 text-white/90 text-base">
-              LISAR savings
+              Savings
             </span>
             <ChevronRight size={18} className="text-white/50" />
           </button>
-          <button
+          {/* <button
             onClick={() => onSelect("flex")}
             className="w-full flex items-center gap-3 px-3 py-3.5 rounded-lg bg-[#151515] hover:bg-[#151515] transition-colors text-left shadow-md shadow-black/20"
           >
             <span className="flex-1 text-white/90 text-base">
-              LISAR Flex
+              Flex
             </span>
             <ChevronRight size={18} className="text-white/50" />
-          </button>
+          </button> */}
           <button
             onClick={() => onSelect("growth")}
             className="w-full flex items-center gap-3 px-3 py-3.5 rounded-lg bg-[#151515] hover:bg-[#151515] transition-colors text-left shadow-md shadow-black/20"
           >
             <span className="flex-1 text-white/90 text-base">
-              LISAR growth
+              Growth
             </span>
             <ChevronRight size={18} className="text-white/50" />
           </button>

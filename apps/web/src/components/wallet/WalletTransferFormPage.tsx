@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
@@ -9,10 +15,10 @@ import {
 } from "lucide-react";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { ErrorDrawer } from "@/components/general/ErrorDrawer";
-import {
-  RampDrawer,
-  type RampTransactionDetails,
-} from "@/components/general/RampDrawer";
+// import {
+//   RampDrawer,
+//   type RampTransactionDetails,
+// } from "@/components/general/RampDrawer";
 import { SuccessDrawer } from "@/components/general/SuccessDrawer";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWallet } from "@/contexts/WalletContext";
@@ -25,9 +31,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import QRCode from "qrcode";
-import {
-  virtualAccountService,
-} from "@/services/virtual-account";
+import { OnrampWebSDK } from "@onramp.money/onramp-web-sdk";
+import { getFiatType } from "@/lib/onramp";
+import { priceService } from "@/lib/priceService";
+import { virtualAccountService } from "@/services/virtual-account";
 import { rampService } from "@/services/ramp";
 import type { BankInfo } from "@/services/ramp/types";
 import { perenaService, walletService } from "@/services";
@@ -73,7 +80,8 @@ export const WalletTransferFormPage: React.FC = () => {
 
   const safeMode: TransferMode = mode === "withdraw" ? "withdraw" : "deposit";
   const safeAsset: TransferAsset = asset === "crypto" ? "crypto" : "naira";
-  const safeWalletType = searchParams.get("walletType") === "staking" ? "staking" : "savings";
+  const safeWalletType =
+    searchParams.get("walletType") === "staking" ? "staking" : "savings";
   const preferredToken: SupportedToken =
     safeWalletType === "staking" ? "LPT" : "USDC";
   const isNairaWithdraw = safeMode === "withdraw" && safeAsset === "naira";
@@ -92,20 +100,23 @@ export const WalletTransferFormPage: React.FC = () => {
   const [showCryptoWithdrawSuccess, setShowCryptoWithdrawSuccess] =
     useState(false);
   const [showCryptoWithdrawError, setShowCryptoWithdrawError] = useState(false);
-  const [showDepositNairaRampDrawer, setShowDepositNairaRampDrawer] =
-    useState(false);
+  // RAMP DRAWER STATES - COMMENTED OUT TILL RAMP LIQUIDITY IS READY
+  // const [showDepositNairaRampDrawer, setShowDepositNairaRampDrawer] =
+  //   useState(false);
   const [depositNairaErrorMessage, setDepositNairaErrorMessage] = useState("");
-  const [depositNairaRampDetails, setDepositNairaRampDetails] =
-    useState<RampTransactionDetails | null>(null);
+  // const [depositNairaRampDetails, setDepositNairaRampDetails] =
+  //   useState<RampTransactionDetails | null>(null);
   const [cryptoWithdrawErrorMessage, setCryptoWithdrawErrorMessage] =
     useState("");
   const [walletAddress, setWalletAddress] = useState("");
   const [copied, setCopied] = useState(false);
-  const [selectedToken, setSelectedToken] = useState<SupportedToken>(
-    preferredToken,
-  );
+  const [selectedToken, setSelectedToken] =
+    useState<SupportedToken>(preferredToken);
   const [selectedNetwork, setSelectedNetwork] =
     useState<SupportedNetwork>("Solana");
+
+  const onrampInstanceRef = useRef<OnrampWebSDK | null>(null);
+  const userCurrency = state.user?.fiat_type || "NGN";
 
   useEffect(() => {
     setSelectedToken(preferredToken);
@@ -168,6 +179,19 @@ export const WalletTransferFormPage: React.FC = () => {
     setBankCode("");
   }, [isNairaWithdraw]);
 
+  // Clean up onramp instance when component unmounts
+  useEffect(() => {
+    return () => {
+      if (onrampInstanceRef.current) {
+        try {
+          onrampInstanceRef.current.close();
+          refreshAllWalletData();
+        } catch {}
+      }
+    };
+  }, [refreshAllWalletData]);
+
+  /* ORIGINAL RAMP FLOW - COMMENTED OUT TILL RAMP LIQUIDITY IS READY
   const handleDepositNairaContinue = useCallback(() => {
     const parsedAmount = Number(amount.replace(/,/g, "").trim());
     if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
@@ -175,7 +199,9 @@ export const WalletTransferFormPage: React.FC = () => {
       return;
     }
     if (!tokenRateInNgn) {
-      setDepositNairaErrorMessage("Rate unavailable right now. Please try again.");
+      setDepositNairaErrorMessage(
+        "Rate unavailable right now. Please try again.",
+      );
       return;
     }
 
@@ -184,7 +210,9 @@ export const WalletTransferFormPage: React.FC = () => {
         ? ethereumWalletAddress || state.user?.wallet_address || null
         : solanaWalletAddress || null;
     if (!cryptoAddress) {
-      setDepositNairaErrorMessage("Wallet address not available. Please try again.");
+      setDepositNairaErrorMessage(
+        "Wallet address not available. Please try again.",
+      );
       return;
     }
 
@@ -216,6 +244,81 @@ export const WalletTransferFormPage: React.FC = () => {
     tokenRateInNgn,
     tokenSymbol,
   ]);
+  */
+
+  const handleDepositNairaContinue = useCallback(async () => {
+    const parsedAmount = Number(amount.replace(/,/g, "").trim());
+    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+      setDepositNairaErrorMessage("Select a valid amount to continue.");
+      return;
+    }
+
+    const walletAddress =
+      tokenSymbol === "LPT"
+        ? ethereumWalletAddress || state.user?.wallet_address
+        : solanaWalletAddress;
+
+    if (!walletAddress) {
+      setDepositNairaErrorMessage(
+        "Wallet address not available. Please try again."
+      );
+      return;
+    }
+
+    const coinCode = tokenSymbol === "LPT" ? "lpt" : "usdc";
+    const network = tokenSymbol === "LPT" ? "arbitrum" : "spl";
+    const fiatType = getFiatType(userCurrency);
+
+    try {
+      const onramp = new OnrampWebSDK({
+        appId: import.meta.env.VITE_ONRAMP_APP_ID,
+        walletAddress,
+        flowType: 1,
+        fiatType,
+        paymentMethod: 2,
+        fiatAmount: parsedAmount,
+        coinCode,
+        network,
+        theme: {
+          lightMode: {
+            baseColor: "#C7EF6B",
+            inputRadius: "8px",
+            buttonRadius: "8px",
+          },
+          darkMode: {
+            baseColor: "#6A8F2A",
+            inputRadius: "8px",
+            buttonRadius: "8px",
+          },
+          default: "darkMode",
+        },
+        isRestricted: true,
+      });
+
+      onramp.on("WIDGET_EVENTS", async (event) => {
+        if (
+          event.type === "ONRAMP_WIDGET_CLOSE_REQUEST_CONFIRMED" ||
+          event.type === "ONRAMP_WIDGET_CLOSE"
+        ) {
+          await refreshAllWalletData();
+        }
+      });
+
+      onrampInstanceRef.current = onramp;
+      onramp.show();
+      setDepositNairaErrorMessage("");
+    } catch (error) {
+      setDepositNairaErrorMessage("Failed to initialize payment widget. Please try again.");
+    }
+  }, [
+    amount,
+    ethereumWalletAddress,
+    solanaWalletAddress,
+    state.user?.wallet_address,
+    tokenSymbol,
+    userCurrency,
+    refreshAllWalletData,
+  ]);
 
   const handleCryptoWithdraw = useCallback(async () => {
     const parsedAmount = Number(amount.replace(/,/g, "").trim());
@@ -238,12 +341,16 @@ export const WalletTransferFormPage: React.FC = () => {
       if (safeWalletType === "savings") {
         const availableStableBalance = stablesBalance || 0;
         if (parsedAmount > availableStableBalance) {
-          setCryptoWithdrawErrorMessage("Amount exceeds available USDC balance.");
+          setCryptoWithdrawErrorMessage(
+            "Amount exceeds available USDC balance.",
+          );
           setShowCryptoWithdrawError(true);
           return;
         }
         if (!solanaWalletAddress || !solanaWalletId) {
-          setCryptoWithdrawErrorMessage("Solana wallet is unavailable. Please try again.");
+          setCryptoWithdrawErrorMessage(
+            "Solana wallet is unavailable. Please try again.",
+          );
           setShowCryptoWithdrawError(true);
           return;
         }
@@ -278,12 +385,16 @@ export const WalletTransferFormPage: React.FC = () => {
       } else {
         const availableLptBalance = highyieldBalance || 0;
         if (parsedAmount > availableLptBalance) {
-          setCryptoWithdrawErrorMessage("Amount exceeds available LPT balance.");
+          setCryptoWithdrawErrorMessage(
+            "Amount exceeds available LPT balance.",
+          );
           setShowCryptoWithdrawError(true);
           return;
         }
         if (!state.user?.wallet_id || !state.user?.wallet_address) {
-          setCryptoWithdrawErrorMessage("Wallet details are unavailable. Please try again.");
+          setCryptoWithdrawErrorMessage(
+            "Wallet details are unavailable. Please try again.",
+          );
           setShowCryptoWithdrawError(true);
           return;
         }
@@ -373,58 +484,61 @@ export const WalletTransferFormPage: React.FC = () => {
     safeAsset,
   ]);
 
-  const confirmWithdrawal = useCallback(async (_pin: string) => {
-    if (!isNairaWithdraw) return { success: false, error: "Invalid state" };
-    const parsedAmount = Number(amount.replace(/,/g, "").trim());
-    if (
-      !parsedAmount ||
-      parsedAmount < MIN_WITHDRAWAL_NAIRA ||
-      parsedAmount > MAX_WITHDRAWAL_NAIRA
-    ) {
-      return { success: false, error: "Invalid amount" };
-    }
-
-    const withdrawalTotalAmount = Math.max(
-      parsedAmount + WITHDRAWAL_FEE_NAIRA,
-      0,
-    );
-    const idempotencyKey =
-      typeof crypto !== "undefined" && "randomUUID" in crypto
-        ? crypto.randomUUID()
-        : `wd-${Date.now()}-${Math.random().toString(36).slice(2)}-${accountNumber}`;
-
-    setIsSubmittingWithdraw(true);
-    try {
-      const response = await virtualAccountService.withdraw({
-        amount: withdrawalTotalAmount,
-        accountNumber,
-        accountName,
-        bankCode,
-        narration: "Lisar payout",
-        idempotencyKey,
-      });
-
-      if (!response.success) {
-        return {
-          success: false,
-          error: response.error?.message || "Withdrawal failed",
-        };
+  const confirmWithdrawal = useCallback(
+    async (_pin: string) => {
+      if (!isNairaWithdraw) return { success: false, error: "Invalid state" };
+      const parsedAmount = Number(amount.replace(/,/g, "").trim());
+      if (
+        !parsedAmount ||
+        parsedAmount < MIN_WITHDRAWAL_NAIRA ||
+        parsedAmount > MAX_WITHDRAWAL_NAIRA
+      ) {
+        return { success: false, error: "Invalid amount" };
       }
-      await refreshAllWalletData();
-      return { success: true };
-    } catch (error) {
-      return { success: false, error: "Withdrawal failed" };
-    } finally {
-      setIsSubmittingWithdraw(false);
-    }
-  }, [
-    accountName,
-    accountNumber,
-    amount,
-    bankCode,
-    isNairaWithdraw,
-    refreshAllWalletData,
-  ]);
+
+      const withdrawalTotalAmount = Math.max(
+        parsedAmount + WITHDRAWAL_FEE_NAIRA,
+        0,
+      );
+      const idempotencyKey =
+        typeof crypto !== "undefined" && "randomUUID" in crypto
+          ? crypto.randomUUID()
+          : `wd-${Date.now()}-${Math.random().toString(36).slice(2)}-${accountNumber}`;
+
+      setIsSubmittingWithdraw(true);
+      try {
+        const response = await virtualAccountService.withdraw({
+          amount: withdrawalTotalAmount,
+          accountNumber,
+          accountName,
+          bankCode,
+          narration: "Lisar payout",
+          idempotencyKey,
+        });
+
+        if (!response.success) {
+          return {
+            success: false,
+            error: response.error?.message || "Withdrawal failed",
+          };
+        }
+        await refreshAllWalletData();
+        return { success: true };
+      } catch (error) {
+        return { success: false, error: "Withdrawal failed" };
+      } finally {
+        setIsSubmittingWithdraw(false);
+      }
+    },
+    [
+      accountName,
+      accountNumber,
+      amount,
+      bankCode,
+      isNairaWithdraw,
+      refreshAllWalletData,
+    ],
+  );
 
   const currentTokenConfig = TOKEN_CONFIG[selectedToken];
   const availableNetworks = currentTokenConfig.networks;
@@ -439,7 +553,9 @@ export const WalletTransferFormPage: React.FC = () => {
     if (selectedNetwork === "Solana") {
       return solanaWalletAddress || "No wallet address";
     }
-    return ethereumWalletAddress || state.user?.wallet_address || "No wallet address";
+    return (
+      ethereumWalletAddress || state.user?.wallet_address || "No wallet address"
+    );
   }, [
     ethereumWalletAddress,
     selectedNetwork,
@@ -536,9 +652,7 @@ export const WalletTransferFormPage: React.FC = () => {
             setLookupError("");
           } else {
             setAccountName("");
-            setLookupError(
-              "Account not found",
-            );
+            setLookupError("Account not found");
           }
         }
       } catch (error) {
@@ -562,9 +676,7 @@ export const WalletTransferFormPage: React.FC = () => {
 
   const walletTokenLabel = safeWalletType === "staking" ? "LPT" : "USDC";
   const cryptoAvailableBalance =
-    safeWalletType === "staking"
-      ? highyieldBalance || 0
-      : stablesBalance || 0;
+    safeWalletType === "staking" ? highyieldBalance || 0 : stablesBalance || 0;
 
   const pageTitle = useMemo(() => {
     if (safeMode === "deposit" && safeAsset === "naira") return "Deposit Naira";
@@ -601,18 +713,18 @@ export const WalletTransferFormPage: React.FC = () => {
       : "";
   const isDisabled = isWithdraw
     ? !amount.trim() ||
-    (safeAsset === "crypto"
-      ? !walletAddress.trim() ||
-      !Number.isFinite(numericAmount) ||
-      numericAmount <= 0 ||
-      numericAmount > cryptoAvailableBalance ||
-      isSubmittingCryptoWithdraw
-      : !bankCode.trim() ||
-      accountNumber.length !== 10 ||
-      !accountName.trim() ||
-      !hasValidWithdrawalAmount ||
-      isLookingUpAccount ||
-      isSubmittingWithdraw)
+      (safeAsset === "crypto"
+        ? !walletAddress.trim() ||
+          !Number.isFinite(numericAmount) ||
+          numericAmount <= 0 ||
+          numericAmount > cryptoAvailableBalance ||
+          isSubmittingCryptoWithdraw
+        : !bankCode.trim() ||
+          accountNumber.length !== 10 ||
+          !accountName.trim() ||
+          !hasValidWithdrawalAmount ||
+          isLookingUpAccount ||
+          isSubmittingWithdraw)
     : false;
   const isDepositNairaFlow = safeMode === "deposit" && safeAsset === "naira";
   const isDepositNairaDisabled = numericAmount <= 0 || !tokenRateInNgn;
@@ -628,7 +740,7 @@ export const WalletTransferFormPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#050505] text-white flex flex-col">
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1">
         <div className="flex items-center justify-between px-6 pt-8 pb-4">
           <button
             onClick={() => navigate(-1)}
@@ -655,10 +767,14 @@ export const WalletTransferFormPage: React.FC = () => {
                   className="w-full rounded-lg bg-[#151515] px-4 py-3.5 text-base text-white outline-none"
                 />
                 {amountWarning ? (
-                  <p className="mt-2 text-xs text-amber-300 ml-1">{amountWarning}</p>
+                  <p className="mt-2 text-xs text-amber-300 ml-1">
+                    {amountWarning}
+                  </p>
                 ) : null}
                 {cryptoAmountWarning ? (
-                  <p className="mt-2 text-xs text-amber-300 ml-1">{cryptoAmountWarning}</p>
+                  <p className="mt-2 text-xs text-amber-300 ml-1">
+                    {cryptoAmountWarning}
+                  </p>
                 ) : null}
               </div>
 
@@ -718,7 +834,9 @@ export const WalletTransferFormPage: React.FC = () => {
                       className="w-full rounded-lg bg-[#151515] px-4 py-3.5 text-base text-white outline-none"
                     />
                     {lookupError ? (
-                      <p className="mt-2 text-xs text-amber-300 ml-1">{lookupError}</p>
+                      <p className="mt-2 text-xs text-amber-300 ml-1">
+                        {lookupError}
+                      </p>
                     ) : null}
                   </div>
                 </>
@@ -751,7 +869,8 @@ export const WalletTransferFormPage: React.FC = () => {
                     </button>
                   </div>
                   <p className="mt-2 text-xs text-white/60">
-                    Available: {cryptoAvailableBalance.toLocaleString(undefined, {
+                    Available:{" "}
+                    {cryptoAvailableBalance.toLocaleString(undefined, {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 4,
                     })}{" "}
@@ -782,10 +901,13 @@ export const WalletTransferFormPage: React.FC = () => {
               </div>
               <p className="text-gray-400 text-xs mt-2 pl-2">
                 {tokenRateInNgn && numericAmount > 0
-                  ? `≈ ${(numericAmount / tokenRateInNgn).toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 4,
-                    })} ${tokenSymbol}`
+                  ? `≈ ${(numericAmount / tokenRateInNgn).toLocaleString(
+                      undefined,
+                      {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 4,
+                      },
+                    )} ${tokenSymbol}`
                   : `≈ 0.00 ${tokenSymbol}`}
               </p>
 
@@ -814,7 +936,9 @@ export const WalletTransferFormPage: React.FC = () => {
               </div>
 
               {depositNairaErrorMessage ? (
-                <p className="mt-3 text-xs text-amber-300">{depositNairaErrorMessage}</p>
+                <p className="mt-3 text-xs text-amber-300">
+                  {depositNairaErrorMessage}
+                </p>
               ) : null}
             </div>
           ) : (
@@ -833,7 +957,9 @@ export const WalletTransferFormPage: React.FC = () => {
 
               <div className="rounded-lg bg-[#151515] p-3">
                 <p className="text-sm text-white/60">Network</p>
-                <p className="mt-2 px-1 text-base text-white">{selectedNetwork}</p>
+                <p className="mt-2 px-1 text-base text-white">
+                  {selectedNetwork}
+                </p>
               </div>
 
               {/*
@@ -912,8 +1038,8 @@ export const WalletTransferFormPage: React.FC = () => {
                 </p>
                 <ul className="space-y-2 text-xs text-white/75 list-disc pl-5">
                   <li>
-                    Send only {selectedToken} on the {selectedNetwork} network to
-                    this address.
+                    Send only {selectedToken} on the {selectedNetwork} network
+                    to this address.
                   </li>
                   <li>
                     Sending unsupported tokens or using the wrong network may
@@ -930,15 +1056,14 @@ export const WalletTransferFormPage: React.FC = () => {
         <div className="px-6 pb-24 pt-3 bg-[#050505] shrink-0">
           <button
             onClick={
-              isDepositNairaFlow
-                ? handleDepositNairaContinue
-                : handleConfirm
+              isDepositNairaFlow ? handleDepositNairaContinue : handleConfirm
             }
             disabled={isPrimaryActionDisabled}
-            className={`h-12 w-full rounded-full text-base font-semibold transition-colors ${isPrimaryActionDisabled
-              ? "bg-[#505050] text-white/40"
-              : "bg-[#c7ef6b] text-black"
-              }`}
+            className={`h-12 w-full rounded-full text-base font-semibold transition-colors ${
+              isPrimaryActionDisabled
+                ? "bg-[#505050] text-white/40"
+                : "bg-[#c7ef6b] text-black"
+            }`}
           >
             {isLookingUpAccount || isSubmittingCryptoWithdraw ? (
               <span className="inline-flex items-center gap-2">
@@ -963,6 +1088,7 @@ export const WalletTransferFormPage: React.FC = () => {
         onConfirmWithdrawal={confirmWithdrawal}
       />
 
+      {/* RampDrawer - COMMENTED OUT TILL RAMP LIQUIDITY IS READY
       {depositNairaRampDetails ? (
         <RampDrawer
           isOpen={showDepositNairaRampDrawer}
@@ -974,6 +1100,7 @@ export const WalletTransferFormPage: React.FC = () => {
           }}
         />
       ) : null}
+      */}
 
       <SuccessDrawer
         isOpen={showCryptoWithdrawSuccess}
@@ -997,4 +1124,6 @@ export const WalletTransferFormPage: React.FC = () => {
   );
 };
 
-const nairaDepositPresetAmounts = [50_000, 100_000, 500_000, 1_000_000] as const;
+const nairaDepositPresetAmounts = [
+  50_000, 100_000, 500_000, 1_000_000,
+] as const;

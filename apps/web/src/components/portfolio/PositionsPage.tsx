@@ -117,8 +117,19 @@ export const PositionsPage: React.FC = () => {
     (location.state as { walletType?: string })?.walletType || "staking";
   const isSavings = walletType === "savings";
 
-  const { setMode, stakeEntries, isLoading, refetch: refetchPortfolio } = usePortfolio();
-  const { ethereumWalletAddress, solanaWalletAddress, ethereumWalletId, solanaWalletId, refreshAllWalletData } = useWallet();
+  const {
+    setMode,
+    stakeEntries,
+    isLoading,
+    refetch: refetchPortfolio,
+  } = usePortfolio();
+  const {
+    ethereumWalletAddress,
+    solanaWalletAddress,
+    ethereumWalletId,
+    solanaWalletId,
+    refreshAllWalletData,
+  } = useWallet();
   const { refetch: refetchTransactions } = useTransactions();
 
   useEffect(() => {
@@ -167,7 +178,7 @@ export const PositionsPage: React.FC = () => {
         if (isMaple) {
           if (!ethereumWalletAddress) {
             setErrorMessage(
-              "Ethereum wallet not found. Please create a wallet first."
+              "Ethereum wallet not found. Please create a wallet first.",
             );
             setShowErrorDrawer(true);
             setIsProcessing(false);
@@ -177,7 +188,7 @@ export const PositionsPage: React.FC = () => {
           const maplePoolId = import.meta.env.VITE_MAPLE_USDC_POOL_ID;
           const positionsResp = await mapleService.getPositions(
             ethereumWalletAddress,
-            maplePoolId
+            maplePoolId,
           );
 
           if (
@@ -197,7 +208,7 @@ export const PositionsPage: React.FC = () => {
               const shares = parseFloat(position.redeemableSharesRaw || "0");
               return sum + (isNaN(shares) ? 0 : shares);
             },
-            0
+            0,
           );
 
           if (totalShares <= 0) {
@@ -208,9 +219,7 @@ export const PositionsPage: React.FC = () => {
           }
 
           if (!ethereumWalletId) {
-            setErrorMessage(
-              "Ethereum wallet ID not found. Please try again."
-            );
+            setErrorMessage("Ethereum wallet ID not found. Please try again.");
             setShowErrorDrawer(true);
             setIsProcessing(false);
             return response;
@@ -230,20 +239,20 @@ export const PositionsPage: React.FC = () => {
               refetchTransactions(),
             ]);
             setSuccessMessage(
-              "Withdrawal request submitted successfully. Your funds will be available after processing."
+              "Withdrawal request submitted successfully. Your funds will be available after processing.",
             );
             setShowSuccessDrawer(true);
           } else {
             setErrorMessage(
               redeemResp.error ||
-              "Failed to request withdrawal. Please try again."
+                "Failed to request withdrawal. Please try again.",
             );
             setShowErrorDrawer(true);
           }
         } else {
           if (!solanaWalletAddress) {
             setErrorMessage(
-              "Solana wallet not found. Please create a wallet first."
+              "Solana wallet not found. Please create a wallet first.",
             );
             setShowErrorDrawer(true);
             setIsProcessing(false);
@@ -251,9 +260,7 @@ export const PositionsPage: React.FC = () => {
           }
 
           if (!solanaWalletId) {
-            setErrorMessage(
-              "Solana wallet ID not found. Please try again."
-            );
+            setErrorMessage("Solana wallet ID not found. Please try again.");
             setShowErrorDrawer(true);
             setIsProcessing(false);
             return response;
@@ -272,12 +279,12 @@ export const PositionsPage: React.FC = () => {
               refetchTransactions(),
             ]);
             setSuccessMessage(
-              "Withdrawal successful! Your USDC will be available in your wallet shortly."
+              "Withdrawal successful! Your USDC will be available in your wallet shortly.",
             );
             setShowSuccessDrawer(true);
           } else {
             setErrorMessage(
-              burnResp.error || "Failed to withdraw. Please try again."
+              burnResp.error || "Failed to withdraw. Please try again.",
             );
             setShowErrorDrawer(true);
           }
@@ -301,8 +308,8 @@ export const PositionsPage: React.FC = () => {
   };
 
   return (
-    <div className="h-screen bg-[#050505] text-white flex flex-col">
-      <div className="flex-1 overflow-y-auto px-6 pb-20 scrollbar-hide">
+    <div className="min-h-full bg-[#050505] text-white flex flex-col">
+      <div className="flex-1 px-6 pb-20 scrollbar-hide">
         {/* Header */}
         <div className="flex items-center justify-between py-8 mb-2">
           <button
@@ -426,10 +433,11 @@ export const PositionsPage: React.FC = () => {
               <button
                 onClick={handleWithdrawClick}
                 disabled={isProcessing}
-                className={`w-full py-3 rounded-xl font-semibold text-lg transition-colors ${isProcessing
-                  ? "bg-[#636363] text-white cursor-not-allowed opacity-70"
-                  : "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
-                  }`}
+                className={`w-full py-3 rounded-xl font-semibold text-lg transition-colors ${
+                  isProcessing
+                    ? "bg-[#636363] text-white cursor-not-allowed opacity-70"
+                    : "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
+                }`}
               >
                 {isProcessing ? (
                   <span className="flex items-center justify-center gap-2">

@@ -76,7 +76,7 @@ export const PersonalDetailsPage: React.FC = () => {
   };
 
   return (
-    <div className="h-screen bg-[#050505] text-white flex flex-col">
+    <div className="min-h-full bg-[#050505] text-white flex flex-col">
       <div className="flex items-center justify-between px-6 pt-8 pb-4">
         <button
           onClick={() => navigate(-1)}
@@ -89,15 +89,16 @@ export const PersonalDetailsPage: React.FC = () => {
         <div className="w-8 h-8" />
       </div>
 
-      <div className="flex-1 overflow-y-auto px-6 pb-24 space-y-4 scrollbar-hide mt-3">
+      <div className="flex-1 px-6 pb-24 space-y-4 scrollbar-hide mt-3">
         <div>
           <label className="mb-2 block text-sm text-white/70">Full name</label>
           <input
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
             readOnly={hasLinkedAccount}
-            className={`w-full rounded-lg bg-[#151515] px-4 py-3 text-base outline-none ${hasLinkedAccount ? "text-white/70" : "text-white"
-              }`}
+            className={`w-full rounded-lg bg-[#151515] px-4 py-3 text-base outline-none ${
+              hasLinkedAccount ? "text-white/70" : "text-white"
+            }`}
             placeholder="Enter full name"
           />
         </div>

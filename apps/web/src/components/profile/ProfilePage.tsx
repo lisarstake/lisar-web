@@ -170,7 +170,7 @@ export const ProfilePage: React.FC = () => {
   const hasUsername = displayUsername.length > 0;
 
   return (
-    <div className="min-h-screen bg-[#050505] text-gray-100 flex flex-col">
+    <div className="min-h-full bg-[#050505] text-gray-100 flex flex-col">
       <div className="flex items-center justify-between px-6 pt-8 pb-4">
         <button
           onClick={handleBackClick}
@@ -181,7 +181,7 @@ export const ProfilePage: React.FC = () => {
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-6 pb-6 scrollbar-hide">
+      <div className="flex-1 px-6 pb-6 scrollbar-hide">
         <div className="flex flex-col items-center mb-8">
           <div
             onClick={handleUploadPhoto}
@@ -212,9 +212,7 @@ export const ProfilePage: React.FC = () => {
           </div>
 
           <div className="text-center space-y-2">
-            <p className="text-white text-lg font-medium">
-              {displayName}
-            </p>
+            <p className="text-white text-lg font-medium">{displayName}</p>
             {/* {hasUsername ? (
               <button className="text-white text-xs bg-[#151515] px-4 py-1 rounded-full">
                 @{displayUsername}
@@ -266,8 +264,11 @@ export const ProfilePage: React.FC = () => {
             <ChevronLeft className="rotate-180 " size={18} />
           </div>
 
-          <div onClick={() => navigate("/settings/recipients")} className="bg-[#151515] rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-[#171717] transition">
-            <div >
+          <div
+            onClick={() => navigate("/settings/recipients")}
+            className="bg-[#151515] rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-[#171717] transition"
+          >
+            <div>
               <p className="text-white font-medium">Linked Account</p>
               <p className="text-gray-400 text-sm">
                 linked bank account for withdrawal
@@ -317,7 +318,9 @@ export const ProfilePage: React.FC = () => {
       <ErrorDrawer
         isOpen={showErrorDrawer}
         onClose={() => setShowErrorDrawer(false)}
-        message={"Sorry something went wrong and couldn't claim tag, please try again"}
+        message={
+          "Sorry something went wrong and couldn't claim tag, please try again"
+        }
       />
 
       <SettingsSuccessDrawer
@@ -336,7 +339,8 @@ export const ProfilePage: React.FC = () => {
           </DrawerHeader>
           <div className="space-y-4 pb-4 mt-1">
             <p className="text-sm text-white/70">
-              Your tag is unique. Other Lisar users can send you money directly using your tag.
+              Your tag is unique. Other Lisar users can send you money directly
+              using your tag.
             </p>
             <div>
               <div className="flex items-center rounded-lg bg-[#151515] px-4 py-3">
@@ -345,14 +349,15 @@ export const ProfilePage: React.FC = () => {
                   value={usernameInput}
                   onChange={(e) =>
                     setUsernameInput(
-                      e.target.value.replace(/[^a-zA-Z0-9_]/g, "").toLowerCase(),
+                      e.target.value
+                        .replace(/[^a-zA-Z0-9_]/g, "")
+                        .toLowerCase(),
                     )
                   }
                   placeholder="yourtag"
                   className="ml-2 w-full bg-transparent text-base text-white outline-none"
                 />
               </div>
-
             </div>
             <button
               onClick={handleClaimUsername}

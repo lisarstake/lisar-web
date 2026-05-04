@@ -1,6 +1,12 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { ArrowLeft, CircleQuestionMark, Eye, EyeOff, RefreshCw } from "lucide-react";
+import {
+  ArrowLeft,
+  CircleQuestionMark,
+  Eye,
+  EyeOff,
+  RefreshCw,
+} from "lucide-react";
 import QRCode from "qrcode";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
@@ -46,7 +52,7 @@ const StakeEntryItem: React.FC<StakeEntryItemProps> = ({ entry, onClick }) => {
       },
       (error) => {
         // QR code generation failed - will not display QR
-      }
+      },
     );
   }, [entry.id, avatar, avatarError]);
 
@@ -142,8 +148,8 @@ export const PortfolioPage: React.FC = () => {
         ? transactions.filter((tx) => tx.token_symbol?.toUpperCase() === "LPT")
         : walletType === "savings"
           ? transactions.filter(
-            (tx) => tx.token_symbol?.toUpperCase() !== "LPT"
-          )
+              (tx) => tx.token_symbol?.toUpperCase() !== "LPT",
+            )
           : transactions;
 
     return filtered.slice(0, 5);
@@ -151,7 +157,7 @@ export const PortfolioPage: React.FC = () => {
 
   const card = useMemo(
     () => cardData.find((c) => c.type === (isSavings ? "savings" : "staking")),
-    [cardData, isSavings]
+    [cardData, isSavings],
   );
 
   const handleBackClick = () => {
@@ -181,8 +187,8 @@ export const PortfolioPage: React.FC = () => {
   }
 
   return (
-    <div className="h-screen bg-[#050505] text-white flex flex-col">
-      <div className="flex-1 overflow-y-auto px-6 pb-20 scrollbar-hide">
+    <div className="min-h-full bg-[#050505] text-white flex flex-col">
+      <div className="flex-1 px-6 pb-20 scrollbar-hide">
         <div className="flex items-center justify-between py-8 mb-2">
           <button
             onClick={handleBackClick}
@@ -203,20 +209,20 @@ export const PortfolioPage: React.FC = () => {
         {card && (
           <div className="mb-6">
             <div
-              className={`${isSavings
-                ? "bg-[#6da7fd] border-2 border-[#86B3F7]/30 hover:border-[#86B3F7]/50"
-                : "bg-transparent border-2 border-[#C7EF6B]/30 hover:border-[#C7EF6B]/50"
-                } rounded-2xl p-5 relative overflow-hidden transition-colors min-h-[160px]`}
+              className={`${
+                isSavings
+                  ? "bg-[#6da7fd] border-2 border-[#86B3F7]/30 hover:border-[#86B3F7]/50"
+                  : "bg-transparent border-2 border-[#C7EF6B]/30 hover:border-[#C7EF6B]/50"
+              } rounded-2xl p-5 relative overflow-hidden transition-colors min-h-[160px]`}
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1 relative z-10">
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-1">
                       <h3
-                        className={`text-sm font-medium ${isSavings
-                          ? "text-white/90"
-                          : "text-white/80"
-                          }`}
+                        className={`text-sm font-medium ${
+                          isSavings ? "text-white/90" : "text-white/80"
+                        }`}
                       >
                         {card.title}
                       </h3>
@@ -247,14 +253,19 @@ export const PortfolioPage: React.FC = () => {
                     </div>
                     <button
                       onClick={handleCurrencyToggle}
-                      className={`text-xs font-medium px-2 py-1 rounded-md flex items-center gap-1 transition-colors ${isSavings
-                        ? "bg-white/20 text-white hover:bg-white/30"
-                        : "bg-white/10 text-white/90 hover:bg-white/20"
-                        }`}
+                      className={`text-xs font-medium px-2 py-1 rounded-md flex items-center gap-1 transition-colors ${
+                        isSavings
+                          ? "bg-white/20 text-white hover:bg-white/30"
+                          : "bg-white/10 text-white/90 hover:bg-white/20"
+                      }`}
                     >
                       {displayCurrency}{" "}
                       <RefreshCw
-                        className={isCurrencyRotating ? "animate-[spin_0.6s_ease-in-out_1]" : ""}
+                        className={
+                          isCurrencyRotating
+                            ? "animate-[spin_0.6s_ease-in-out_1]"
+                            : ""
+                        }
                         size={12}
                       />
                     </button>
@@ -271,10 +282,9 @@ export const PortfolioPage: React.FC = () => {
                       <div className="flex items-baseline mb-1">
                         {showBalance && displayCurrency === "NGN" && (
                           <span
-                            className={`text-xl font-bold ${isSavings
-                              ? "text-white/90"
-                              : "text-white/70"
-                              }`}
+                            className={`text-xl font-bold ${
+                              isSavings ? "text-white/90" : "text-white/70"
+                            }`}
                           >
                             {displayFiatSymbol}
                           </span>
@@ -283,12 +293,12 @@ export const PortfolioPage: React.FC = () => {
                           {showBalance
                             ? displayCurrency === "NGN"
                               ? card.displayBalanceValue.toLocaleString(
-                                undefined,
-                                {
-                                  minimumFractionDigits: 2,
-                                  maximumFractionDigits: 2,
-                                }
-                              )
+                                  undefined,
+                                  {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2,
+                                  },
+                                )
                               : isSavings
                                 ? formatStables(card.balance)
                                 : formatEarnings(card.balance)
@@ -296,10 +306,9 @@ export const PortfolioPage: React.FC = () => {
                         </span>
                         {showBalance && displayCurrency !== "NGN" && (
                           <span
-                            className={`text-sm ml-[3px] ${isSavings
-                              ? "text-white/90"
-                              : "text-white/70"
-                              }`}
+                            className={`text-sm ml-[3px] ${
+                              isSavings ? "text-white/90" : "text-white/70"
+                            }`}
                           >
                             {isSavings ? "USD" : "LPT"}
                           </span>
@@ -312,10 +321,9 @@ export const PortfolioPage: React.FC = () => {
 
               <div className="absolute bottom-2 left-2 z-10 flex gap-2">
                 <div
-                  className={`w-fit rounded-xl px-3.5 py-1.5 ${isSavings
-                    ? "bg-white/20"
-                    : "bg-white/10"
-                    }`}
+                  className={`w-fit rounded-xl px-3.5 py-1.5 ${
+                    isSavings ? "bg-white/20" : "bg-white/10"
+                  }`}
                 >
                   <p className="text-white/80 text-[10px] mb-0.5">
                     Interest earned
@@ -326,10 +334,8 @@ export const PortfolioPage: React.FC = () => {
                       ? card.projectedInterestNgn
                       : card.projectedInterestUsd
                     ).toLocaleString(undefined, {
-                      minimumFractionDigits:
-                        displayCurrency === "NGN" ? 2 : 3,
-                      maximumFractionDigits:
-                        displayCurrency === "NGN" ? 2 : 3,
+                      minimumFractionDigits: displayCurrency === "NGN" ? 2 : 3,
+                      maximumFractionDigits: displayCurrency === "NGN" ? 2 : 3,
                     })}
                     <span className="text-white/70 text-xs font-normal ml-1">
                       at ({card.apyPercent}% p.a)

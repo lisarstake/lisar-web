@@ -570,11 +570,11 @@ export const RampDrawer: React.FC<RampDrawerProps> = ({
                   <>
                     <div className="flex flex-col items-center justify-center mb-6">
                       <div className="w-20 h-20 bg-[#C7EF6B]/20 rounded-full flex items-center justify-center mb-4 relative overflow-hidden">
-                        <img
-                          src="/ramp.png"
-                          alt="Ramp"
-                          className="w-full h-full object-cover"
-                        />
+                          <img
+                            src="/ramp.png"
+                            alt="Ramp"
+                            className="w-full h-full object-cover"
+                          />
                       </div>
                       <p className="text-gray-400 text-sm mb-1 text-center">
                         {isBuy

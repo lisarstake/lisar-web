@@ -23,10 +23,7 @@ import { perenaService, mapleService } from "@/services";
 import { authService } from "@/services/auth";
 import { priceService } from "@/lib/priceService";
 import { useWallet } from "@/contexts/WalletContext";
-import {
-  formatNumber,
-  parseFormattedNumber,
-} from "@/lib/formatters";
+import { formatNumber, parseFormattedNumber } from "@/lib/formatters";
 import { usePageTracking } from "@/hooks/usePageTracking";
 
 export const RedeemPage: React.FC = () => {
@@ -67,7 +64,7 @@ export const RedeemPage: React.FC = () => {
     solanaWalletId,
   } = useWallet();
   const { refetch: refetchTransactions } = useTransactions();
-  const { refetch: refetchPortfolio } = usePortfolio()
+  const { refetch: refetchPortfolio } = usePortfolio();
 
   const maxRedeemable = selectedEntry?.yourStake || 0;
 
@@ -129,8 +126,8 @@ export const RedeemPage: React.FC = () => {
     if (numericAmount > maxRedeemable) {
       setErrorMessage(
         `Maximum withdrawable amount is ${formatNumber(
-          maxRedeemable.toString()
-        )} USDC.`
+          maxRedeemable.toString(),
+        )} USDC.`,
       );
       setShowErrorDrawer(true);
       return;
@@ -159,8 +156,8 @@ export const RedeemPage: React.FC = () => {
     if (numericAmount > maxRedeemable) {
       setErrorMessage(
         `Maximum withdrawable amount is ${formatNumber(
-          maxRedeemable.toString()
-        )} USDC.`
+          maxRedeemable.toString(),
+        )} USDC.`,
       );
       setShowErrorDrawer(true);
       return;
@@ -168,7 +165,9 @@ export const RedeemPage: React.FC = () => {
 
     if (isMaple) {
       if (!ethereumWalletAddress || !ethereumWalletId) {
-        setErrorMessage("Ethereum wallet not found. Please create a wallet first.");
+        setErrorMessage(
+          "Ethereum wallet not found. Please create a wallet first.",
+        );
         setShowErrorDrawer(true);
         return;
       }
@@ -176,7 +175,7 @@ export const RedeemPage: React.FC = () => {
       const maplePoolId = import.meta.env.VITE_MAPLE_USDC_POOL_ID;
       const positionsResp = await mapleService.getPositions(
         ethereumWalletAddress,
-        maplePoolId
+        maplePoolId,
       );
 
       if (
@@ -195,7 +194,7 @@ export const RedeemPage: React.FC = () => {
           const shares = parseFloat(position.redeemableSharesRaw || "0");
           return sum + (isNaN(shares) ? 0 : shares);
         },
-        0
+        0,
       );
 
       if (totalShares <= 0) {
@@ -214,14 +213,16 @@ export const RedeemPage: React.FC = () => {
 
       if (!redeemResp.success) {
         setErrorMessage(
-          redeemResp.error || "Failed to request withdrawal. Please try again."
+          redeemResp.error || "Failed to request withdrawal. Please try again.",
         );
         setShowErrorDrawer(true);
         return;
       }
     } else if (isPerena) {
       if (!solanaWalletAddress || !solanaWalletId) {
-        setErrorMessage("Solana wallet not found. Please create a wallet first.");
+        setErrorMessage(
+          "Solana wallet not found. Please create a wallet first.",
+        );
         setShowErrorDrawer(true);
         return;
       }
@@ -233,7 +234,9 @@ export const RedeemPage: React.FC = () => {
       });
 
       if (!burnResp.success) {
-        setErrorMessage(burnResp.error || "Failed to withdraw. Please try again.");
+        setErrorMessage(
+          burnResp.error || "Failed to withdraw. Please try again.",
+        );
         setShowErrorDrawer(true);
         return;
       }
@@ -243,7 +246,9 @@ export const RedeemPage: React.FC = () => {
       return;
     }
 
-    setSuccessMessage("You've withdrawn successfully from your yield balance and your balance has been updated.");
+    setSuccessMessage(
+      "You've withdrawn successfully from your yield balance and your balance has been updated.",
+    );
     setShowSuccessDrawer(true);
     await Promise.all([
       refreshAllWalletData(),
@@ -292,7 +297,11 @@ export const RedeemPage: React.FC = () => {
   const numericAmount = parseFloat(usdcAmount.replace(/,/g, "")) || 0;
   const hasExceededMax = numericAmount > maxRedeemable;
   const activePercent = useMemo(() => {
-    if (!maxRedeemable || maxRedeemable <= 0 || !Number.isFinite(numericAmount)) {
+    if (
+      !maxRedeemable ||
+      maxRedeemable <= 0 ||
+      !Number.isFinite(numericAmount)
+    ) {
       return null;
     }
     const ratio = (numericAmount / maxRedeemable) * 100;
@@ -306,7 +315,7 @@ export const RedeemPage: React.FC = () => {
 
   if (!selectedEntry) {
     return (
-      <div className="h-screen bg-[#050505] text-white flex flex-col items-center justify-center">
+      <div className="min-h-full bg-[#050505] text-white flex flex-col items-center justify-center">
         <p className="text-white/70">No position selected</p>
         <button
           onClick={handleBackClick}
@@ -319,7 +328,7 @@ export const RedeemPage: React.FC = () => {
   }
 
   return (
-    <div className="h-screen bg-[#050505] text-white flex flex-col">
+    <div className="min-h-full bg-[#050505] text-white flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between px-6 pt-8 pb-4">
         <button
@@ -333,8 +342,7 @@ export const RedeemPage: React.FC = () => {
         <div className="w-8 h-8" />
       </div>
 
-
-      <div className="flex-1 overflow-y-auto px-6 pb-28 scrollbar-hide">
+      <div className="flex-1 px-6 pb-28 scrollbar-hide">
         {/* Amount Input Field */}
         <div className="pt-2 pb-4">
           <div className="bg-[#151515] rounded-lg p-3 flex items-center gap-3">
@@ -353,7 +361,6 @@ export const RedeemPage: React.FC = () => {
               placeholder="USDC"
               className="flex-1 bg-transparent text-white text-lg font-medium focus:outline-none"
             />
-
           </div>
           <p className="text-gray-400 text-xs mt-2 pl-2">
             ≈ {currencySymbol}
@@ -362,7 +369,6 @@ export const RedeemPage: React.FC = () => {
               maximumFractionDigits: 2,
             })}
           </p>
-
         </div>
 
         {/* Predefined USDC Amounts */}
@@ -375,10 +381,11 @@ export const RedeemPage: React.FC = () => {
                 <button
                   key={percent}
                   onClick={() => handleAmountSelect(amount)}
-                  className={`flex-1 py-2.5 px-2 rounded-full text-sm font-medium transition-colors ${isActive
-                    ? "bg-[#C7EF6B] text-black"
-                    : "bg-[#151515] text-white/80 hover:bg-[#1a1f10]"
-                    }`}
+                  className={`flex-1 py-2.5 px-2 rounded-full text-sm font-medium transition-colors ${
+                    isActive
+                      ? "bg-[#C7EF6B] text-black"
+                      : "bg-[#151515] text-white/80 hover:bg-[#1a1f10]"
+                  }`}
                 >
                   {percent}%
                 </button>
@@ -394,16 +401,13 @@ export const RedeemPage: React.FC = () => {
           </h3>
           <div className="bg-[#151515] rounded-lg border border-[#151515]">
             <div className="flex items-center space-x-3">
-
               <div className="flex-1">
                 <span className="text-gray-100 text-sm font-medium">
-                  {(maxRedeemable ?? 0).toLocaleString(
-                    undefined,
-                    {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    },
-                  )} USDC
+                  {(maxRedeemable ?? 0).toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}{" "}
+                  USDC
                 </span>
               </div>
             </div>
@@ -421,13 +425,14 @@ export const RedeemPage: React.FC = () => {
             isRedeeming ||
             hasExceededMax
           }
-          className={`w-full py-3 rounded-full font-semibold text-lg transition-colors ${usdcAmount &&
+          className={`w-full py-3 rounded-full font-semibold text-lg transition-colors ${
+            usdcAmount &&
             parseFloat(usdcAmount) > 0 &&
             !isRedeeming &&
             !hasExceededMax
-            ? "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
-            : "bg-[#636363] text-white cursor-not-allowed"
-            }`}
+              ? "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
+              : "bg-[#636363] text-white cursor-not-allowed"
+          }`}
         >
           {isRedeeming ? (
             <span className="flex items-center justify-center gap-2">
@@ -474,7 +479,12 @@ export const RedeemPage: React.FC = () => {
             <p className="text-sm text-white/80">
               You are about to withdraw{" "}
               {formatNumber(usdcAmount.replace(/,/g, ""))} USDC
-              {isMaple ? " from your yield balance. Please enter your password to confirm action" : isPerena ? " from your yield balance. Please enter your password to confirm action" : ""}.
+              {isMaple
+                ? " from your yield balance. Please enter your password to confirm action"
+                : isPerena
+                  ? " from your yield balance. Please enter your password to confirm action"
+                  : ""}
+              .
             </p>
             {/* <p className="text-sm text-white/60">
               Enter your account password to authorize this withdrawal.
@@ -511,15 +521,15 @@ export const RedeemPage: React.FC = () => {
             </div>
 
             <div className="flex gap-3 pt-1">
-
               <button
                 type="button"
                 onClick={handleWithdraw}
                 disabled={isRedeeming || isVerifyingPassword}
-                className={`flex-1 h-12 rounded-full font-semibold transition-colors ${isRedeeming || isVerifyingPassword
-                  ? "bg-[#636363] text-white cursor-not-allowed"
-                  : "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
-                  }`}
+                className={`flex-1 h-12 rounded-full font-semibold transition-colors ${
+                  isRedeeming || isVerifyingPassword
+                    ? "bg-[#636363] text-white cursor-not-allowed"
+                    : "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
+                }`}
               >
                 {isRedeeming || isVerifyingPassword ? (
                   <span className="flex items-center justify-center gap-2">

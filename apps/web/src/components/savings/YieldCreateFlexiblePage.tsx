@@ -33,11 +33,8 @@ export const YieldCreateFlexiblePage: React.FC = () => {
   const { orchestrators } = useOrchestrators();
   const { perena: perenaApy, isLoading: apyLoading } = useStablesApy();
   const { state } = useAuth();
-  const {
-    solanaWalletId,
-    solanaWalletAddress,
-    refreshAllWalletData,
-  } = useWallet();
+  const { solanaWalletId, solanaWalletAddress, refreshAllWalletData } =
+    useWallet();
   const { refetch: refetchDelegation } = useDelegation();
   const { refetch: refetchTransactions } = useTransactions();
   const [amount, setAmount] = useState("");
@@ -131,7 +128,9 @@ export const YieldCreateFlexiblePage: React.FC = () => {
   const hasOrchestrators = stakingOrchestratorOptions.length > 0;
   const isEnabled =
     Number(amount) > 0 &&
-    (mode === "savings" ? true : Boolean(currentOrchestrator && hasOrchestrators));
+    (mode === "savings"
+      ? true
+      : Boolean(currentOrchestrator && hasOrchestrators));
 
   const handleContinue = () => {
     if (!isEnabled) return;
@@ -170,7 +169,9 @@ export const YieldCreateFlexiblePage: React.FC = () => {
         });
 
         if (!response.success) {
-          setErrorMessage("Sorry an error occurred and top up didn't complete, please try again.");
+          setErrorMessage(
+            "Sorry an error occurred and top up didn't complete, please try again.",
+          );
           setShowErrorDrawer(true);
           return;
         }
@@ -194,7 +195,9 @@ export const YieldCreateFlexiblePage: React.FC = () => {
         });
 
         if (!response.success) {
-          setErrorMessage("Sorry an error occurred and top up didn't complete, please try again.");
+          setErrorMessage(
+            "Sorry an error occurred and top up didn't complete, please try again.",
+          );
           setShowErrorDrawer(true);
           return;
         }
@@ -204,7 +207,9 @@ export const YieldCreateFlexiblePage: React.FC = () => {
 
       setShowSuccessDrawer(true);
     } catch (_error) {
-      setErrorMessage("Unable to complete this operation now. Please try again.");
+      setErrorMessage(
+        "Unable to complete this operation now. Please try again.",
+      );
       setShowErrorDrawer(true);
     } finally {
       setIsSubmitting(false);
@@ -212,7 +217,7 @@ export const YieldCreateFlexiblePage: React.FC = () => {
   };
 
   return (
-    <div className="h-screen bg-[#050505] text-white flex flex-col">
+    <div className="min-h-full bg-[#050505] text-white flex flex-col">
       <div className="flex items-center justify-between px-6 pt-8 pb-4">
         <button
           onClick={() => navigate(-1)}
@@ -229,13 +234,15 @@ export const YieldCreateFlexiblePage: React.FC = () => {
         <div className="w-8 h-8" />
       </div>
 
-      <div className="flex-1 overflow-y-auto px-6 pb-6 scrollbar-hide">
+      <div className="flex-1 px-6 pb-6 scrollbar-hide">
         <div className="rounded-xl px-4 py-4 bg-[#151515]">
           <p className="text-sm text-white/60">Amount</p>
           <div className="mt-2 flex items-center justify-between gap-4">
             <input
               value={amount}
-              onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ""))}
+              onChange={(e) =>
+                setAmount(e.target.value.replace(/[^0-9.]/g, ""))
+              }
               placeholder="0"
               className="w-full bg-transparent text-lg font-semibold text-[#d6ddd9] outline-none placeholder:text-[#3f4f47]"
             />
@@ -291,10 +298,11 @@ export const YieldCreateFlexiblePage: React.FC = () => {
         <button
           onClick={handleContinue}
           disabled={!isEnabled || isSubmitting}
-          className={`py-3.5 w-full rounded-full text-base font-semibold transition-opacity flex items-center justify-center gap-2 ${isEnabled && !isSubmitting
-            ? "bg-[#C7EF6B] text-black"
-            : "bg-[#636363] text-white cursor-not-allowed"
-            }`}
+          className={`py-3.5 w-full rounded-full text-base font-semibold transition-opacity flex items-center justify-center gap-2 ${
+            isEnabled && !isSubmitting
+              ? "bg-[#C7EF6B] text-black"
+              : "bg-[#636363] text-white cursor-not-allowed"
+          }`}
         >
           {isSubmitting && (
             <span className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
@@ -333,8 +341,7 @@ export const YieldCreateFlexiblePage: React.FC = () => {
       >
         <DrawerContent className="bg-[#050505] border-t border-[#505050]">
           <DrawerHeader className="text-center">
-            <DrawerTitle className="text-base font-medium text-white text-center">
-            </DrawerTitle>
+            <DrawerTitle className="text-base font-medium text-white text-center"></DrawerTitle>
             <div className="flex justify-center mb-2">
               <div className="w-24 h-24 bg-[#C7EF6B]/20 rounded-full my-3 flex items-center justify-center relative overflow-hidden">
                 <img
@@ -345,11 +352,12 @@ export const YieldCreateFlexiblePage: React.FC = () => {
               </div>
             </div>
             <DrawerDescription className="text-sm text-white/60 px-4">
-              Deposit to your {" "}
-              {mode === "staking" ? "Livepeer" : "USDC"} wallet. Once confirmed you will start earning rewards at {" "}
+              Deposit to your {mode === "staking" ? "Livepeer" : "USDC"} wallet.
+              Once confirmed you will start earning rewards at{" "}
               {mode === "staking"
                 ? `${(selectedOrchestratorData?.apy || 0).toFixed(1)}%`
-                : `${apyLoading && perenaApy === null ? "..." : perenaApy ? (perenaApy * 100).toFixed(1) : "10"}%`} APY
+                : `${apyLoading && perenaApy === null ? "..." : perenaApy ? (perenaApy * 100).toFixed(1) : "10"}%`}{" "}
+              APY
             </DrawerDescription>
           </DrawerHeader>
           <DrawerFooter className="space-y-3">

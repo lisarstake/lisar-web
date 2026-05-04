@@ -31,7 +31,7 @@ export const Footer = () => {
               <div>
                 <img src="/Logo.svg" alt="Lisar Logo" className="h-3 w-auto" />
                 <p className="mt-2 max-w-md text-base leading-relaxed text-[#5e6660]">
-                  Lisar helps millions of customers achieve their financial goals by helping them save and invest with ease. Deposit with naira, earn dollar-backed yield daily on your savings.
+                  Lisar helps millions of customers achieve their financial goals by helping them save and invest with ease. Deposit with fiat, earn dollar-backed yield daily on your savings.
                 </p>
               </div>
 
@@ -70,7 +70,7 @@ export const Footer = () => {
                 <p className="text-[11px] font-medium uppercase text-[#235538]">
                   Stay informed
                 </p>
-                <p className="mt-2 text-lg font-serif font-medium">
+                <p className="mt-2 text-lg font-sans font-medium">
                   Get the LISAR Brief
                 </p>
                 <p className="mt-1 text-base text-[#5e6660]">

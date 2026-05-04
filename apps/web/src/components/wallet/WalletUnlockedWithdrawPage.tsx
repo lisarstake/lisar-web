@@ -116,7 +116,10 @@ export const WalletUnlockedWithdrawPage: React.FC = () => {
       processingTime: "1 minute",
       paymentMethodText: "To your Naira virtual account",
       cryptoAddress:
-        ethereumWalletAddress || state.user?.wallet_address || solanaWalletAddress || null,
+        ethereumWalletAddress ||
+        state.user?.wallet_address ||
+        solanaWalletAddress ||
+        null,
       bankCode,
       bankAccountNumber: virtualAccount.accountNumber,
       bankAccountName: virtualAccount.accountName,
@@ -132,7 +135,7 @@ export const WalletUnlockedWithdrawPage: React.FC = () => {
   const fiatEstimate = fixedAmount * tokenRateInNgn;
 
   return (
-    <div className="h-screen bg-[#050505] text-white flex flex-col">
+    <div className="min-h-full bg-[#050505] text-white flex flex-col">
       <div className="flex items-center justify-between px-6 pt-8 pb-2">
         <button
           onClick={() => navigate(-1)}
@@ -144,7 +147,7 @@ export const WalletUnlockedWithdrawPage: React.FC = () => {
         <div className="w-10" />
       </div>
 
-      <div className="flex-1 overflow-y-auto px-6 pb-28 scrollbar-hide">
+      <div className="flex-1 px-6 pb-28 scrollbar-hide">
         <div className="pt-2 pb-4">
           <div className="bg-[#151515] rounded-lg p-3 flex items-center gap-3 mt-2">
             <input
@@ -174,7 +177,8 @@ export const WalletUnlockedWithdrawPage: React.FC = () => {
                   {stakedLptBalance.toLocaleString(undefined, {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 4,
-                  })} LPT
+                  })}{" "}
+                  LPT
                 </span>
               </div>
             </div>
@@ -188,10 +192,11 @@ export const WalletUnlockedWithdrawPage: React.FC = () => {
         <button
           onClick={handleContinue}
           disabled={!fixedAmount || !unbondingLockId}
-          className={`h-12 w-full rounded-full text-base font-semibold transition-colors ${fixedAmount > 0 && unbondingLockId
-            ? "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
-            : "bg-[#636363] text-white cursor-not-allowed"
-            }`}
+          className={`h-12 w-full rounded-full text-base font-semibold transition-colors ${
+            fixedAmount > 0 && unbondingLockId
+              ? "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
+              : "bg-[#636363] text-white cursor-not-allowed"
+          }`}
         >
           Continue
         </button>

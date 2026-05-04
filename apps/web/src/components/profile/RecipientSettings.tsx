@@ -101,9 +101,9 @@ export const RecipientSettingsPage: React.FC = () => {
       banks.find((bank) => bank.code === selectedBankCode) ||
       (showReadOnly
         ? {
-          code: selectedBankCode,
-          name: state.user?.linked_account?.bank_name || "",
-        }
+            code: selectedBankCode,
+            name: state.user?.linked_account?.bank_name || "",
+          }
         : null),
     [banks, selectedBankCode, showReadOnly, state.user?.linked_account],
   );
@@ -211,7 +211,7 @@ export const RecipientSettingsPage: React.FC = () => {
   }
 
   return (
-    <div className="h-screen bg-[#050505] text-white flex flex-col">
+    <div className="min-h-full bg-[#050505] text-white flex flex-col">
       <div className="flex items-center justify-between px-6 pt-8 pb-4">
         <button
           onClick={() => navigate(-1)}
@@ -238,7 +238,7 @@ export const RecipientSettingsPage: React.FC = () => {
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto px-6 pb-24 space-y-4 scrollbar-hide">
+      <div className="flex-1 px-6 pb-24 space-y-4 scrollbar-hide">
         <div>
           <label className="mb-2 block text-sm text-white/70">
             Account number
@@ -275,11 +275,7 @@ export const RecipientSettingsPage: React.FC = () => {
               }}
             >
               <SelectTrigger className="w-full rounded-lg bg-[#151515] border-none py-6 text-white">
-                <SelectValue
-                  placeholder={
-                    "Select bank"
-                  }
-                />
+                <SelectValue placeholder={"Select bank"} />
               </SelectTrigger>
               <SelectContent className="bg-[#151515] text-white border-none">
                 {banks.map((bank) => (

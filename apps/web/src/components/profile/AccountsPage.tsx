@@ -82,9 +82,7 @@ export const AccountsPage: React.FC = () => {
     navigate(-1);
   };
 
-  const handleRequestAccount = () => {
-
-  };
+  const handleRequestAccount = () => {};
 
   return (
     <div className="min-h-screen bg-[#050505] text-gray-100 flex flex-col">
@@ -103,7 +101,7 @@ export const AccountsPage: React.FC = () => {
       </div>
 
       {/* Content - Scrollable */}
-      <div className="flex-1 overflow-y-auto px-6 py-6 space-y-5">
+      <div className="flex-1 px-6 py-6 space-y-5">
         <AccountCard
           flag="/ng_flag.png"
           title="Naira Account"

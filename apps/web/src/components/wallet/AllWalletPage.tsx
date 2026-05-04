@@ -522,7 +522,7 @@ export const AllWalletPage: React.FC = () => {
                 </div>
 
 
-                {/* Flex Card */}
+                {/* Flex Card - COMMENTED OUT UNTIL API INTEGRATION
                 <div
                   onClick={() => navigate("/wallet/yields/intro", { state: { walletType: "flex" } })}
                   className="bg-transparent rounded-2xl p-5 border-2 border-[#a78bfa]/30 hover:border-[#a78bfa]/50 transition-colors relative overflow-hidden cursor-pointer"
@@ -551,6 +551,7 @@ export const AllWalletPage: React.FC = () => {
                     className="absolute bottom-[-12px] right-[-12px] w-14 h-14 object-contain opacity-80"
                   />
                 </div>
+                */}
 
                 {/* Growth Card */}
                 <div
@@ -596,8 +597,7 @@ export const AllWalletPage: React.FC = () => {
         onSelect={(portfolio) => {
           setShowPortfolioDrawer(false);
           // Navigate directly to wallet pages, skipping yield intro
-          const walletPath = portfolio === "savings" ? "/wallet/savings" :
-                           portfolio === "flex" ? "/wallet/flex" : "/wallet/staking";
+          const walletPath = portfolio === "savings" ? "/wallet/savings" : "/wallet/staking";
           navigate(walletPath);
         }}
       />

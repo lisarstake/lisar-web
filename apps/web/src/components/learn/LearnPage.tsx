@@ -35,7 +35,7 @@ export const LearnPage: React.FC = () => {
   };
 
   const filteredContent = learnContent.filter(
-    (content) => content.category === selectedCategory
+    (content) => content.category === selectedCategory,
   );
 
   const handleHelpClick = () => {
@@ -43,9 +43,9 @@ export const LearnPage: React.FC = () => {
   };
 
   return (
-    <div className="h-screen bg-[#050505] text-white flex flex-col">
+    <div className="min-h-full bg-[#050505] text-white flex flex-col">
       {/* Content List - Scrollable */}
-      <div className="flex-1 overflow-y-auto px-6 pb-28 scrollbar-hide">
+      <div className="flex-1 px-6 pb-28 scrollbar-hide">
         {/* Header - Now scrollable */}
         <div className="flex items-start justify-between py-8">
           <div>
@@ -119,19 +119,21 @@ export const LearnPage: React.FC = () => {
           <div className="bg-[#1a1a1a] rounded-full p-1 border border-[#505050]">
             <button
               onClick={() => handleCategoryChange("how-to-guides")}
-              className={`px-3 py-2 rounded-full text-xs font-medium transition-colors ${selectedCategory === "how-to-guides"
+              className={`px-3 py-2 rounded-full text-xs font-medium transition-colors ${
+                selectedCategory === "how-to-guides"
                   ? "bg-[#C7EF6B] text-black"
                   : "text-white hover:text-[#C7EF6B]"
-                }`}
+              }`}
             >
               Guides
             </button>
             <button
               onClick={() => handleCategoryChange("academy")}
-              className={`px-3 py-2 rounded-full text-xs font-medium transition-colors ${selectedCategory === "academy"
+              className={`px-3 py-2 rounded-full text-xs font-medium transition-colors ${
+                selectedCategory === "academy"
                   ? "bg-[#C7EF6B] text-black"
                   : "text-white hover:text-[#C7EF6B]"
-                }`}
+              }`}
             >
               Academy
             </button>

@@ -8,6 +8,8 @@ type Product = {
   subtitle: string;
 };
 
+type Currency = "NGN" | "USD" | "GBP";
+
 const products: Product[] = [
   {
     key: "stable",
@@ -23,17 +25,23 @@ const products: Product[] = [
   },
 ];
 
-const MIN_DEPOSIT = 10_000;
-const MAX_DEPOSIT = 5_000_000;
-const DEPOSIT_STEP = 10_000;
-const MIN_MONTHS = 1;
-const MAX_MONTHS = 12;
-const MONTH_STEP = 1;
+const currencies: Record<Currency, {
+  label: string;
+  symbol: string;
+  min: number;
+  max: number;
+  step: number;
+  default: number;
+}> = {
+  NGN: { label: "Naira", symbol: "₦", min: 10_000, max: 5_000_000, step: 10_000, default: 100_000 },
+  USD: { label: "Dollar", symbol: "$", min: 5, max: 3_500, step: 10, default: 100 },
+  GBP: { label: "Pounds", symbol: "£", min: 5, max: 2_500, step: 10, default: 100 },
+};
 
-const clamp = (value: number, min: number, max: number) =>
-  Math.min(max, Math.max(min, value));
-
-const formatNaira = (value: number) => `₦${value.toLocaleString()}`;
+const formatCurrency = (value: number, currency: Currency) => {
+  const sym = currencies[currency].symbol;
+  return `${sym}${value.toLocaleString()}`;
+};
 
 const futureValueFromLumpSum = (
   principal: number,
@@ -45,9 +53,17 @@ const futureValueFromLumpSum = (
 };
 
 export const TimeIsMoneySection = () => {
+  const [currency, setCurrency] = useState<Currency>("NGN");
   const [deposit, setDeposit] = useState(100_000);
   const [months, setMonths] = useState(1);
   const [selectedProduct, setSelectedProduct] = useState<Product>(products[1]);
+
+  const cur = currencies[currency];
+
+  const handleCurrencyChange = (next: Currency) => {
+    setCurrency(next);
+    setDeposit(currencies[next].default);
+  };
 
   const estimate = useMemo(() => {
     const total = futureValueFromLumpSum(deposit, selectedProduct.apy, months);
@@ -64,18 +80,17 @@ export const TimeIsMoneySection = () => {
     <section id="yield-estimate" className="w-full px-6 py-16 md:px-8 md:py-20">
       <div className="mx-auto w-full max-w-7xl">
         <RevealOnScroll>
-          <div className="mx-auto max-w-3xl text-center">
-            <p className="inline-flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.22em] text-[#235538]">
-              <span className="h-px w-6 bg-[#235538]" />
-              Returns calculator
-            </p>
-            <h2 className="mt-5 text-[2.5rem] leading-[0.95] tracking-[-0.03em] text-[#111111] md:text-[3rem]">
-              <span className="block font-serif font-semibold">See what your</span>
-              <span className="block font-serif italic text-[#235538]">
+          <div className="text-center flex flex-col items-center mx-auto max-w-3xl">
+            <span className="inline-flex items-center rounded-full border border-black px-3 py-1 text-[10px] font-normal uppercase tracking-[0.22em] text-black">
+              Calculator
+            </span>
+            <h2 className="mt-5 text-[3rem] leading-[0.95] tracking-[-0.03em] text-[#111111] md:text-[4rem]">
+              <span className="block font-sans font-semibold">See what your</span>
+              <span className="block font-sans italic text-[#235538]">
                 money would earn.
               </span>
             </h2>
-            <p className="mt-4 text-lg leading-relaxed text-[#5e6660] md:text-[1.12rem]">
+            <p className="mt-4 text-base leading-relaxed text-[#5e6660] md:text-lg">
               Enter your deposit and duration. Get a real estimate before you
               commit to anything.
             </p>
@@ -83,29 +98,49 @@ export const TimeIsMoneySection = () => {
         </RevealOnScroll>
 
         <RevealOnScroll delay={0.06}>
-          <div className="mt-10 overflow-hidden rounded-2xl border border-[#e3e8e4] bg-white max-w-4xl mx-auto">
+          <div className="mt-10 overflow-hidden rounded-2xl border border-[#e3e8e4] bg-white sm:max-w-3xl mx-auto">
             <div className="border-t border-[#e7ece8] px-6 py-3 md:px-8 md:py-5">
+              <div className="flex gap-3 justify-center mb-6">
+                {(["NGN", "USD", "GBP"] as Currency[]).map((c) => {
+                  const isActive = currency === c;
+                  return (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => handleCurrencyChange(c)}
+                      className={`rounded-full border-2 border-black px-5 py-2 text-sm font-medium transition-colors cursor-pointer ${
+                        isActive
+                          ? "bg-[#C7EF6B] text-black"
+                          : "bg-transparent text-[#5e6660] hover:bg-[#f3f5f4]"
+                      }`}
+                    >
+                      {currencies[c].symbol} {currencies[c].label}
+                    </button>
+                  );
+                })}
+              </div>
+
               <div className="flex items-center justify-between">
                 <p className="text-base font-semibold text-[#252c27]">
                   Deposit amount
                 </p>
                 <p className="text-sm text-[#6d6d6d]">
-                  {formatNaira(deposit)}
+                  {formatCurrency(deposit, currency)}
                 </p>
               </div>
 
               <div className="mt-3 rounded-md border border-[#d2d8d3] bg-[#f3f5f4] px-4 py-3">
                 <label className="flex items-center gap-2 text-base text-[#202722]">
-                  <span className="text-[#93988f]">₦</span>
+                  <span className="text-[#93988f]">{cur.symbol}</span>
                   <input
                     type="text"
                     value={deposit.toLocaleString()}
                     inputMode="numeric"
                     onChange={(event) => {
                       const raw = event.target.value.replace(/[^\d]/g, "");
-                      const next = raw ? Number(raw) : MIN_DEPOSIT;
-                      const clamped = clamp(next, MIN_DEPOSIT, MAX_DEPOSIT);
-                      setDeposit(clamped - (clamped % DEPOSIT_STEP));
+                      if (raw) {
+                        setDeposit(Number(raw));
+                      }
                     }}
                     className="w-full bg-transparent text-inherit outline-none"
                     aria-label="Deposit amount"
@@ -115,9 +150,9 @@ export const TimeIsMoneySection = () => {
 
               <input
                 type="range"
-                min={MIN_DEPOSIT}
-                max={MAX_DEPOSIT}
-                step={DEPOSIT_STEP}
+                min={cur.min}
+                max={cur.max}
+                step={cur.step}
                 value={deposit}
                 onChange={(event) => setDeposit(Number(event.target.value))}
                 className="mt-3 h-2 w-full cursor-pointer appearance-none rounded-full bg-[#e7ebe7] accent-[#235538]"
@@ -134,18 +169,16 @@ export const TimeIsMoneySection = () => {
               </div>
 
               <div className="mt-3 flex items-center gap-2">
-
                 <input
                   type="range"
-                  min={MIN_MONTHS}
-                  max={MAX_MONTHS}
-                  step={MONTH_STEP}
+                  min={1}
+                  max={12}
+                  step={1}
                   value={months}
                   onChange={(event) => setMonths(Number(event.target.value))}
                   className="flex-1 h-2 cursor-pointer appearance-none rounded-full bg-[#e7ebe7] accent-[#235538]"
                   aria-label="Duration slider"
                 />
-
               </div>
 
               <div className="mt-8">
@@ -161,10 +194,11 @@ export const TimeIsMoneySection = () => {
                         key={product.key}
                         type="button"
                         onClick={() => setSelectedProduct(product)}
-                        className={`rounded-lg border px-4 py-3 text-center transition-colors ${isActive
+                        className={`rounded-lg border px-4 py-3 text-center transition-colors ${
+                          isActive
                             ? "border-[#235538] border-2 bg-[#f3f5f4]"
                             : "border-[#d2d8d3] bg-[#f3f5f4] hover:bg-[#f2f6f3]"
-                          }`}
+                        }`}
                       >
                         <p className="text-sm font-medium text-[#404840]">
                           {product.name}
@@ -184,24 +218,24 @@ export const TimeIsMoneySection = () => {
                     <p className="text-[10px] uppercase text-[#aac5b3]">
                       You deposit
                     </p>
-                    <p className="mt-1 text-base leading-none font-serif text-[#edf5ef] md:text-xl">
-                      {formatNaira(Math.round(estimate.deposit))}
+                    <p className="mt-1 text-base leading-none font-sans text-[#edf5ef] md:text-xl">
+                      {formatCurrency(Math.round(estimate.deposit), currency)}
                     </p>
                   </div>
                   <div>
                     <p className="text-[10px] uppercase text-[#aac5b3]">
                       Interest earned
                     </p>
-                    <p className="mt-1 text-base leading-none font-serif text-[#edf5ef] md:text-xl">
-                      {formatNaira(Math.round(estimate.interest))}
+                    <p className="mt-1 text-base leading-none font-sans text-[#edf5ef] md:text-xl">
+                      {formatCurrency(Math.round(estimate.interest), currency)}
                     </p>
                   </div>
                   <div>
                     <p className="text-[10px] uppercase text-[#aac5b3]">
                       Balance
                     </p>
-                    <p className="mt-1 text-base leading-none font-serif text-[#edf5ef] md:text-xl">
-                      {formatNaira(Math.round(estimate.total))}
+                    <p className="mt-1 text-base leading-none font-sans text-[#edf5ef] md:text-xl">
+                      {formatCurrency(Math.round(estimate.total), currency)}
                     </p>
                   </div>
                 </div>

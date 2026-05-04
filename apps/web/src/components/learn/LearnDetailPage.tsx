@@ -11,10 +11,10 @@ import { authService } from "@/services/auth";
 const learnContent = mockLearnContent;
 
 const findNextVideoInCategory = (
-  currentContent: LearnContent
+  currentContent: LearnContent,
 ): LearnContent | null => {
   const currentIndex = learnContent.findIndex(
-    (c) => c.id === currentContent.id
+    (c) => c.id === currentContent.id,
   );
   if (currentIndex === -1) return null;
 
@@ -51,7 +51,7 @@ export const LearnDetailPage: React.FC = () => {
         .map((c) => c.slug);
 
       const allCompleted = mandatoryVideos.every((slug) =>
-        completed.includes(slug)
+        completed.includes(slug),
       );
 
       return allCompleted;
@@ -63,7 +63,7 @@ export const LearnDetailPage: React.FC = () => {
       .map((c) => c.slug);
 
     const allCompleted = mandatoryVideos.every((slug) =>
-      completed.includes(slug)
+      completed.includes(slug),
     );
 
     return allCompleted;
@@ -75,7 +75,7 @@ export const LearnDetailPage: React.FC = () => {
 
       const response = await authService.updateOnboardingStatus(
         state.user.user_id,
-        { is_onboarded: true }
+        { is_onboarded: true },
       );
 
       if (response.success && response.data) {
@@ -121,7 +121,7 @@ export const LearnDetailPage: React.FC = () => {
 
   if (!content) {
     return (
-      <div className="h-screen bg-[#050505] text-white flex items-center justify-center">
+      <div className="min-h-full bg-[#050505] text-white flex items-center justify-center">
         <p>Content not found</p>
       </div>
     );
@@ -206,7 +206,7 @@ export const LearnDetailPage: React.FC = () => {
   };
 
   return (
-    <div className="h-screen bg-[#050505] text-white flex flex-col">
+    <div className="min-h-full bg-[#050505] text-white flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-8">
         <button
@@ -225,10 +225,14 @@ export const LearnDetailPage: React.FC = () => {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto px-6 scrollbar-hide pb-10">
+      <div className="flex-1 px-6 scrollbar-hide pb-10">
         <div className="relative w-full bg-black rounded-xl mb-6 overflow-hidden">
           {/* Dynamic aspect ratio - 4:3 for how-to-guides, 16:9 for academy */}
-          <div className={content.category === "how-to-guides" ? "pt-[75%]" : "pt-[56.25%]"} />
+          <div
+            className={
+              content.category === "how-to-guides" ? "pt-[75%]" : "pt-[56.25%]"
+            }
+          />
           {embedUrl ? (
             <iframe
               ref={iframeRef}
@@ -261,12 +265,13 @@ export const LearnDetailPage: React.FC = () => {
                 contentSentences.map((sentence, index) => (
                   <span
                     key={index}
-                    className={`text-sm leading-relaxed transition-all duration-500 ${index === currentHighlight
-                      ? "text-[#C7EF6B] bg-[#C7EF6B]/10 px-0.5 py-1 rounded"
-                      : index < currentHighlight
-                        ? "text-gray-400"
-                        : "text-gray-300"
-                      }`}
+                    className={`text-sm leading-relaxed transition-all duration-500 ${
+                      index === currentHighlight
+                        ? "text-[#C7EF6B] bg-[#C7EF6B]/10 px-0.5 py-1 rounded"
+                        : index < currentHighlight
+                          ? "text-gray-400"
+                          : "text-gray-300"
+                    }`}
                   >
                     {sentence}
                     {index < contentSentences.length - 1 ? " " : ""}

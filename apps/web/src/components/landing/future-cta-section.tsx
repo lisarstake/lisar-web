@@ -14,8 +14,8 @@ export const FutureCtaSection = () => {
 
 
             <h2 className="mt-5 space-y-2 text-[2rem] leading-[0.95] tracking-[-0.03em] text-[#111111] md:text-[3rem]">
-              <span className="block font-serif font-semibold">Your money has been</span>
-              <span className="block font-serif italic">Idle long enough.</span>
+              <span className="block font-sans font-semibold">Your money has been</span>
+              <span className="block font-sans italic">Idle long enough.</span>
               <button
                 type="button"
                 onClick={() => navigate("/signup")}

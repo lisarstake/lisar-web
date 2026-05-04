@@ -6,16 +6,20 @@ export const HighlightShowcaseSection = () => {
     <section id="community" className="w-full min-h-[90vh] py-14 md:py-18">
       <div className="mx-auto w-full max-w-7xl px-6 md:px-8">
         <RevealOnScroll>
-          <p className="inline-flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.2em] text-[#235538]">
-            <span className="h-px w-8 bg-[#235538]" />
-            Community
-          </p>
-          <h2 className="mt-5 text-[2.5rem] leading-[0.95] tracking-[-0.03em] text-[#111111] md:text-[3rem]">
-            <span className="block font-serif font-semibold">Come build</span>
-            <span className="block font-serif italic text-[#235538]">
-              with the team.
+          <div className="text-center flex flex-col items-center">
+            <span className="inline-flex items-center rounded-full border border-black px-3 py-1 text-[10px] font-normal uppercase tracking-[0.2em] text-black">
+              Community
             </span>
-          </h2>
+            <h2 className="mt-5 text-[3rem] leading-[0.95] tracking-[-0.03em] text-[#111111] md:text-[4rem]">
+              <span className="block font-sans font-semibold">Come build</span>
+              <span className="block font-sans italic text-[#235538]">
+                with the team.
+              </span>
+            </h2>
+            <p className="mt-4 text-base leading-relaxed text-[#5e6660] md:text-lg">
+              Join our community meetups and events around the world.
+            </p>
+          </div>
         </RevealOnScroll>
         <RevealOnScroll>
           <div className="rounded-xl border border-[#dbe4d7] bg-white p-6 md:p-10 mt-10">

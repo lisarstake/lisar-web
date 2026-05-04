@@ -36,7 +36,7 @@ export const MarketingPageShell = ({
 
           {/* Center content */}
           <div className="relative mx-auto w-full max-w-5xl text-center py-12">
-            <h1 className="font-serif text-[1.5rem] leading-[0.94] tracking-[-0.02em] text-[#111111] md:text-[3rem]">
+            <h1 className="font-sans text-[1.5rem] leading-[0.94] tracking-[-0.02em] text-[#111111] md:text-[3rem]">
               {title}
             </h1>
 
