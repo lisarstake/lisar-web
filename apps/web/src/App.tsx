@@ -30,6 +30,9 @@ export default function App() {
 
   const pagesWithBottomNav = [
     "/wallet",
+    "/wallet/savings",
+    "/wallet/staking",
+    "/wallet/flex",
     "/validator",
     "/portfolio",
     "/earn",
@@ -57,7 +60,7 @@ export default function App() {
       <AuthProvider>
         <PricesProvider>
         <GuidedTourProvider>
-          <Toaster position="top-right" />
+          <Toaster position="bottom-center" />
           <ErrorBoundary>
             <DashboardProvider>
               <ErrorBoundary>

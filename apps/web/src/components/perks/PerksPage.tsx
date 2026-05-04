@@ -80,7 +80,7 @@ export const PerksPage: React.FC = () => {
               </div>
               <Button
                 onClick={handleRedeemPoints}
-                className="bg-[#505050] hover:bg-[#333333] text-white text-xs px-3 py-1 rounded-full transition-colors"
+                className="bg-[#C7EF6B] hover:bg-[#B8E55A] text-black font-medium text-xs px-3 py-1 rounded-full transition-colors"
               >
                 Redeem Now
               </Button>
