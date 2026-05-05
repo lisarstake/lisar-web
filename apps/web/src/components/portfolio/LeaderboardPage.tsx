@@ -26,12 +26,12 @@ export const LeaderboardPage: React.FC = () => {
   };
 
   return (
-    <div className="h-screen bg-[#050505] text-white flex flex-col">
+    <div className="min-h-full bg-[#050505] text-white flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-8">
         <button
           onClick={handleBackClick}
-          className="h-10 w-10 rounded-full bg-[#2a2a2a] flex items-center justify-center"
+          className="h-10 w-10 rounded-full bg-[#151515] flex items-center justify-center"
         >
           <ArrowLeft className="text-white" size={22} />
         </button>
@@ -64,7 +64,7 @@ export const LeaderboardPage: React.FC = () => {
       </div>
 
       {/* Content - Scrollable */}
-      <div className="flex-1 overflow-y-auto px-6 pb-20 scrollbar-hide">
+      <div className="flex-1 px-6 pb-20 scrollbar-hide">
         {/* Loading / Error States */}
         {loading && (
           <div className="space-y-3">
@@ -110,8 +110,8 @@ export const LeaderboardPage: React.FC = () => {
 
               const addressHash = entry.address
                 ? entry.address
-                  .split("")
-                  .reduce((acc, char) => acc + char.charCodeAt(0), 0)
+                    .split("")
+                    .reduce((acc, char) => acc + char.charCodeAt(0), 0)
                 : entry.rank;
               const punkIndex = (addressHash % 6) + 1;
               const punkImage = `/punk${punkIndex}.jpeg`;

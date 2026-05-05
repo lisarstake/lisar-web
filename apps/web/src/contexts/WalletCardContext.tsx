@@ -8,13 +8,14 @@ import React, {
 } from "react";
 import { useWallet } from "./WalletContext";
 import { useDelegation } from "./DelegationContext";
+import { useAuth } from "./AuthContext";
 import { usePrices } from "@/hooks/usePrices";
 import { useStablesApy } from "@/hooks/useStablesApy";
 import { usePerenaPortfolio } from "@/hooks/usePerenaPortfolio";
 import { usePerenaWeeklyYield } from "@/hooks/usePerenaWeeklyYield";
 
 export interface WalletCardData {
-  type: "savings" | "staking";
+  type: "savings" | "staking" | "flex";
   title: string;
   balance: number;
   displayBalanceValue: number;
@@ -40,7 +41,10 @@ const WalletCardContext = createContext<WalletCardContextValue | undefined>(
 export const WalletCardProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  const [displayCurrency, setDisplayCurrency] = useState<"USD" | "NGN">("USD");
+  const [displayCurrency, setDisplayCurrency] = useState<"USD" | "NGN">(() => {
+    const saved = localStorage.getItem("wallet_display_currency");
+    return saved === "NGN" ? "NGN" : "USD";
+  });
   const [showBalance, setShowBalance] = useState(() => {
     const saved = localStorage.getItem("wallet_show_balance");
     return saved ? JSON.parse(saved) : false;
@@ -50,6 +54,9 @@ export const WalletCardProvider: React.FC<{ children: ReactNode }> = ({
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === "wallet_show_balance" && e.newValue) {
         setShowBalance(JSON.parse(e.newValue));
+      }
+      if (e.key === "wallet_display_currency" && e.newValue) {
+        setDisplayCurrency(e.newValue === "NGN" ? "NGN" : "USD");
       }
     };
     window.addEventListener("storage", handleStorageChange);
@@ -65,6 +72,7 @@ export const WalletCardProvider: React.FC<{ children: ReactNode }> = ({
   } = useWallet();
   const { delegatorStakeProfile, isLoading: delegationLoading } =
     useDelegation();
+  const { state: authState } = useAuth();
   const { prices } = usePrices();
   const {
     perena: perenaApy,
@@ -74,6 +82,15 @@ export const WalletCardProvider: React.FC<{ children: ReactNode }> = ({
   const { data: perenaPortfolio } = usePerenaPortfolio(solanaWalletAddress);
   const { data: perenaWeeklyYield, isLoading: weeklyYieldLoading } =
     usePerenaWeeklyYield(solanaWalletAddress);
+
+  useEffect(() => {
+    if (!authState.user) return;
+    const userFiatType = authState.user.fiat_type?.toUpperCase();
+    if (userFiatType === "NGN" || userFiatType === "USD") {
+      setDisplayCurrency(userFiatType);
+      localStorage.setItem("wallet_display_currency", userFiatType);
+    }
+  }, [authState.user?.fiat_type]);
 
   useEffect(() => {
     localStorage.setItem("wallet_display_currency", displayCurrency);
@@ -109,6 +126,11 @@ export const WalletCardProvider: React.FC<{ children: ReactNode }> = ({
     const stakingInterestUsd = stakingUsdValue * (growthApy ?? 0.6) * (7 / 365);
     const stakingInterestNgn = stakingInterestUsd * (prices.ngn || 0);
 
+    const flexBalance = savingsBalance; // Flex uses same balance as Savings
+    const flexDisplayValue = savingsDisplayValue; // Same display value
+    const flexInterestUsd = savingsInterestUsd; // Same interest calculation
+    const flexInterestNgn = savingsInterestNgn;
+
     return [
       {
         type: "savings",
@@ -117,6 +139,21 @@ export const WalletCardProvider: React.FC<{ children: ReactNode }> = ({
         displayBalanceValue: savingsDisplayValue,
         projectedInterestUsd: savingsInterestUsd,
         projectedInterestNgn: savingsInterestNgn,
+        apyPercent:
+          apyLoading && perenaApy === null
+            ? ".."
+            : perenaApy
+              ? (perenaApy * 100).toFixed(1)
+              : "14",
+        isLoading: stablesLoading,
+      },
+      {
+        type: "flex",
+        title: "Flex",
+        balance: flexBalance,
+        displayBalanceValue: flexDisplayValue,
+        projectedInterestUsd: flexInterestUsd,
+        projectedInterestNgn: flexInterestNgn,
         apyPercent:
           apyLoading && perenaApy === null
             ? ".."

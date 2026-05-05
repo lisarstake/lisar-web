@@ -26,7 +26,7 @@ export const SettingsSuccessDrawer: React.FC<SettingsSuccessDrawerProps> = ({
     <Drawer open={isOpen} onOpenChange={onClose}>
       <DrawerContent className="bg-[#050505] border-[#505050]">
         <DrawerHeader className="text-center">
-          <div className="bg-[#2a2a2a] mx-auto my-3 flex h-18 w-18 items-center justify-center rounded-full">
+          <div className="bg-[#151515] mx-auto my-3 flex h-18 w-18 items-center justify-center rounded-full">
             <CheckCheck className="text-[#C7EF6B]" size={34} />
           </div>
           <DrawerTitle className="text-base font-medium text-white">

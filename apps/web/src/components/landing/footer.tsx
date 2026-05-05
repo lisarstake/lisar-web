@@ -25,13 +25,13 @@ export const Footer = () => {
   return (
     <footer className="w-full bg-white pb-8">
       <div className="mx-auto w-full max-w-7xl px-6 md:px-8">
-        <div className="px-6 py-4">
+        <div className="md:px-6 py-4">
           <div className="grid gap-8 pt-8 md:grid-cols-[1.2fr_1fr]">
             <div>
               <div>
                 <img src="/Logo.svg" alt="Lisar Logo" className="h-3 w-auto" />
                 <p className="mt-2 max-w-md text-base leading-relaxed text-[#5e6660]">
-                  Lisar helps millions of customers achieve their financial goals by helping them save and invest with ease. Deposit with naira, earn dollar-backed yield daily on your savings.
+                  Lisar helps millions of customers achieve their financial goals by helping them save and invest with ease. Deposit with fiat, earn dollar-backed yield daily on your savings.
                 </p>
               </div>
 
@@ -70,7 +70,7 @@ export const Footer = () => {
                 <p className="text-[11px] font-medium uppercase text-[#235538]">
                   Stay informed
                 </p>
-                <p className="mt-2 text-lg font-serif font-medium">
+                <p className="mt-2 text-lg font-sans font-medium">
                   Get the LISAR Brief
                 </p>
                 <p className="mt-1 text-base text-[#5e6660]">
@@ -103,7 +103,7 @@ export const Footer = () => {
           </div>
         </div>
 
-        <div className="px-6 pb-4 pt-6 mt-6 border-t ">
+        <div className="md:px-6 pb-4 pt-6 mt-6 border-t ">
           <div className="mb-3 flex flex-wrap gap-3 md:gap-4 text-xs font-medium text-[#5d685f]">
             <a href="/lisar-savings" className="underline text-blue-500 hover:text-blue-600">
               Lisar Savings

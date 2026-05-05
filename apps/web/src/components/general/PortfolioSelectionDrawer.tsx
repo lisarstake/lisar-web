@@ -6,7 +6,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, WalletCards, Weight } from "lucide-react";
 
 interface PortfolioSelectionDrawerProps {
   isOpen: boolean;
@@ -21,29 +21,36 @@ export const PortfolioSelectionDrawer: React.FC<
     <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DrawerContent className="bg-[#050505]">
         <DrawerHeader className="mb-2">
-          <DrawerTitle className="font-medium text-lg text-white text-start">
-            My portfolios
+          <DrawerTitle className="font-medium text-base text-white/70 text-start flex items-center gap-1">
+          <WalletCards size={16}/> Which balance? 
           </DrawerTitle>
         </DrawerHeader>
 
         <div className="pt-2 space-y-3 pb-2">
           <button
             onClick={() => onSelect("savings")}
-            className="w-full flex items-center gap-3 px-3 py-3.5 rounded-lg bg-[#2a2a2a] hover:bg-[#151515] transition-colors text-left shadow-md shadow-black/20"
+            className="w-full flex items-center gap-3 px-3 py-3.5 rounded-lg bg-[#151515] hover:bg-[#151515] transition-colors text-left shadow-md shadow-black/20"
           >
-            <img src="/usdc.svg" alt="High Yield" className="w-8 h-8" />
-            <span className="flex-1 text-white text-base font-medium">
-              USD
+            <span className="flex-1 text-white/90 text-base">
+              Savings
             </span>
             <ChevronRight size={18} className="text-white/50" />
           </button>
+          {/* <button
+            onClick={() => onSelect("flex")}
+            className="w-full flex items-center gap-3 px-3 py-3.5 rounded-lg bg-[#151515] hover:bg-[#151515] transition-colors text-left shadow-md shadow-black/20"
+          >
+            <span className="flex-1 text-white/90 text-base">
+              Flex
+            </span>
+            <ChevronRight size={18} className="text-white/50" />
+          </button> */}
           <button
             onClick={() => onSelect("growth")}
-            className="w-full flex items-center gap-3 px-3 py-3.5 rounded-lg bg-[#2a2a2a] hover:bg-[#151515] transition-colors text-left shadow-md shadow-black/20"
+            className="w-full flex items-center gap-3 px-3 py-3.5 rounded-lg bg-[#151515] hover:bg-[#151515] transition-colors text-left shadow-md shadow-black/20"
           >
-            <img src="/livepeer.webp" alt="High Yield" className="w-8 h-8" />
-            <span className="flex-1 text-white text-base font-medium">
-              Crypto
+            <span className="flex-1 text-white/90 text-base">
+              Growth
             </span>
             <ChevronRight size={18} className="text-white/50" />
           </button>

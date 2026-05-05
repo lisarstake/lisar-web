@@ -75,12 +75,12 @@ export const ValidatorPage: React.FC = () => {
   };
 
   return (
-    <div className="h-screen bg-black text-white flex flex-col">
+    <div className="min-h-full bg-black text-white flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-8">
         <button
           onClick={handleBackClick}
-          className="h-10 w-10 rounded-full bg-[#2a2a2a] flex items-center justify-center"
+          className="h-10 w-10 rounded-full bg-[#151515] flex items-center justify-center"
         >
           <ArrowLeft className="text-white" size={22} />
         </button>
@@ -130,7 +130,7 @@ export const ValidatorPage: React.FC = () => {
       </div> */}
 
       {/* Orchestrator List - Scrollable */}
-      <div className="flex-1 overflow-y-auto px-6 pb-28 scrollbar-hide">
+      <div className="flex-1 px-6 pb-28 scrollbar-hide">
         <OrchestratorList
           orchestrators={sortedOrchestrators}
           isLoading={isLoading}

@@ -1,11 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Banknote,
-  ArrowLeft,
-  Check,
-  LoaderCircle,
-} from "lucide-react";
+import { Banknote, ArrowLeft, Check, LoaderCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { LoadingSpinner } from "../general/LoadingSpinner";
 import { BottomNavigation } from "../general/BottomNavigation";
@@ -19,7 +14,7 @@ import {
 } from "@/components/ui/drawer";
 
 const rowClass =
-  "flex w-full items-center rounded-xl bg-[#2a2a2a] px-4 py-4 text-left";
+  "flex w-full items-center rounded-xl bg-[#151515] px-4 py-4 text-left";
 
 export const PreferencesSettingsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -57,7 +52,13 @@ export const PreferencesSettingsPage: React.FC = () => {
     };
 
     loadUserData();
-  }, [state.user, state.isAuthenticated, state.isLoading, refreshUser, navigate]);
+  }, [
+    state.user,
+    state.isAuthenticated,
+    state.isLoading,
+    refreshUser,
+    navigate,
+  ]);
 
   if (isLoading) {
     return <LoadingSpinner message="Loading preferences..." />;
@@ -77,6 +78,7 @@ export const PreferencesSettingsPage: React.FC = () => {
       }
 
       setSelectedCurrency(currency);
+      localStorage.setItem("wallet_display_currency", currency);
       await refreshUser();
       setSuccessDrawer(true);
     } catch (error) {
@@ -91,11 +93,11 @@ export const PreferencesSettingsPage: React.FC = () => {
   };
 
   return (
-    <div className="h-screen bg-[#050505] text-white flex flex-col">
+    <div className="min-h-full bg-[#050505] text-white flex flex-col">
       <div className="flex items-center justify-between px-6 pt-8 pb-4">
         <button
           onClick={() => navigate(-1)}
-          className="h-10 w-10 rounded-full bg-[#2a2a2a] flex items-center justify-center"
+          className="h-10 w-10 rounded-full bg-[#151515] flex items-center justify-center"
           aria-label="Back"
         >
           <ArrowLeft className="text-white" size={22} />
@@ -106,8 +108,11 @@ export const PreferencesSettingsPage: React.FC = () => {
         <div className="w-8 h-8" />
       </div>
 
-      <div className="flex-1 overflow-y-auto px-6 pb-24 space-y-3 scrollbar-hide">
-        <button className={rowClass} onClick={() => setShowCurrencyDrawer(true)}>
+      <div className="flex-1 px-6 pb-24 space-y-3 scrollbar-hide">
+        <button
+          className={rowClass}
+          onClick={() => setShowCurrencyDrawer(true)}
+        >
           <Banknote size={20} className="text-[#27bde6]" strokeWidth={2.1} />
           <div className="ml-4">
             <p className="text-base font-medium">Display Currency</p>
@@ -132,13 +137,19 @@ export const PreferencesSettingsPage: React.FC = () => {
             <button
               onClick={() => handleCurrencyUpdate("NGN")}
               disabled={saving}
-              className="flex w-full items-center justify-between rounded-xl bg-[#2a2a2a] px-4 py-3 text-left disabled:opacity-60"
+              className="flex w-full items-center justify-between rounded-xl bg-[#151515] px-4 py-3 text-left disabled:opacity-60"
             >
               <div className="flex items-center gap-3">
-                <img src="/ng_flag.png" alt="NGN flag" className="h-5 w-5 rounded-full" />
+                <img
+                  src="/ng_flag.png"
+                  alt="NGN flag"
+                  className="h-5 w-5 rounded-full"
+                />
                 <div>
                   <p className="text-base font-medium text-white">NGN</p>
-                  <p className="text-sm text-white/60">Use Naira as display currency</p>
+                  <p className="text-sm text-white/60">
+                    Use Naira as display currency
+                  </p>
                 </div>
               </div>
               {selectedCurrency === "NGN" && (
@@ -149,13 +160,19 @@ export const PreferencesSettingsPage: React.FC = () => {
             <button
               onClick={() => handleCurrencyUpdate("USD")}
               disabled={saving}
-              className="flex w-full items-center justify-between rounded-xl bg-[#2a2a2a] px-4 py-3 text-left disabled:opacity-60"
+              className="flex w-full items-center justify-between rounded-xl bg-[#151515] px-4 py-3 text-left disabled:opacity-60"
             >
               <div className="flex items-center gap-3">
-                <img src="/us_flag.png" alt="USD flag" className="h-5 w-5 rounded-full" />
+                <img
+                  src="/us_flag.png"
+                  alt="USD flag"
+                  className="h-5 w-5 rounded-full"
+                />
                 <div>
                   <p className="text-base font-medium text-white">USD</p>
-                  <p className="text-sm text-white/60">Use Dollar as display currency</p>
+                  <p className="text-sm text-white/60">
+                    Use Dollar as display currency
+                  </p>
                 </div>
               </div>
               {selectedCurrency === "USD" ? (

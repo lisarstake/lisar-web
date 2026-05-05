@@ -51,7 +51,7 @@ export const ValidatorDetailsPage: React.FC = () => {
   const { refreshAllWalletData } = useWallet();
 
   const currentValidator = orchestrators.find(
-    (orch) => orch.address === validatorId
+    (orch) => orch.address === validatorId,
   );
 
   // Get the 4 latest rounds for the chart
@@ -74,21 +74,21 @@ export const ValidatorDetailsPage: React.FC = () => {
   // Filter transactions for this specific validator
   const validatorTransactions = delegatorTransactions
     ? {
-      pending: delegatorTransactions.pendingStakeTransactions.filter(
-        (tx) => tx.delegate.id === validatorId
-      ),
-      completed: delegatorTransactions.completedStakeTransactions.filter(
-        (tx) => tx.delegate.id === validatorId
-      ),
-      currentRound: parseInt(delegatorTransactions.currentRound),
-    }
+        pending: delegatorTransactions.pendingStakeTransactions.filter(
+          (tx) => tx.delegate.id === validatorId,
+        ),
+        completed: delegatorTransactions.completedStakeTransactions.filter(
+          (tx) => tx.delegate.id === validatorId,
+        ),
+        currentRound: parseInt(delegatorTransactions.currentRound),
+      }
     : { pending: [], completed: [], currentRound: 0 };
 
   // Check if user has a stake with validator
   const hasStakeWithValidator = Boolean(
     userDelegation &&
-    userDelegation.delegate?.id === validatorId &&
-    parseFloat(userDelegation.bondedAmount) > 0
+      userDelegation.delegate?.id === validatorId &&
+      parseFloat(userDelegation.bondedAmount) > 0,
   );
 
   // check if user has just staked
@@ -140,11 +140,11 @@ export const ValidatorDetailsPage: React.FC = () => {
     : 0;
   const totalWithdrawableAmount = withdrawableTransactions.reduce(
     (total, tx) => total + parseFloat(tx.amount),
-    0
+    0,
   );
   const totalPendingAmount = pendingUnbondingTransactions.reduce(
     (total, tx) => total + parseFloat(tx.amount),
-    0
+    0,
   );
 
   if (!isLoading && !currentValidator && !error) {
@@ -227,7 +227,7 @@ export const ValidatorDetailsPage: React.FC = () => {
 
       if (response.success) {
         setSuccessMessage(
-          "Your tokens have been restaked successfully and will start earning rewards again."
+          "Your tokens have been restaked successfully and will start earning rewards again.",
         );
         setShowSuccessDrawer(true);
         setShowWithdrawConfirmDrawer(false);
@@ -315,7 +315,7 @@ export const ValidatorDetailsPage: React.FC = () => {
 
       if (response.success) {
         setSuccessMessage(
-          "Your stake has been successfully moved to the new validator."
+          "Your stake has been successfully moved to the new validator.",
         );
         setShowSuccessDrawer(true);
         setShowMoveStakeDrawer(false);
@@ -339,12 +339,12 @@ export const ValidatorDetailsPage: React.FC = () => {
   };
 
   return (
-    <div className="h-screen bg-[#050505] text-white flex flex-col">
+    <div className="min-h-full bg-[#050505] text-white flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-8">
         <button
           onClick={handleBackClick}
-          className="h-10 w-10 rounded-full bg-[#2a2a2a] flex items-center justify-center"
+          className="h-10 w-10 rounded-full bg-[#151515] flex items-center justify-center"
         >
           <ArrowLeft className="text-white" size={22} />
         </button>
@@ -352,11 +352,11 @@ export const ValidatorDetailsPage: React.FC = () => {
         <h1 className="text-lg font-medium text-white">
           {currentValidator?.ensIdentity?.name || currentValidator?.ensName
             ? (currentValidator?.ensIdentity?.name || currentValidator?.ensName)
-              .length > 16
+                .length > 16
               ? (
-                currentValidator?.ensIdentity?.name ||
-                currentValidator?.ensName
-              ).slice(0, 16) + ".."
+                  currentValidator?.ensIdentity?.name ||
+                  currentValidator?.ensName
+                ).slice(0, 16) + ".."
               : currentValidator?.ensIdentity?.name || currentValidator?.ensName
             : "Unknown V.."}
         </h1>
@@ -375,8 +375,8 @@ export const ValidatorDetailsPage: React.FC = () => {
         <h2 className="text-2xl font-bold text-white">
           {currentValidator
             ? Math.round(
-              parseFloat(currentValidator.totalStake)
-            ).toLocaleString()
+                parseFloat(currentValidator.totalStake),
+              ).toLocaleString()
             : "0"}{" "}
           LPT
         </h2>

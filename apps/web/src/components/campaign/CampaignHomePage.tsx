@@ -53,7 +53,7 @@ export const CampaignHomePage: React.FC = () => {
 
   // Get tier information based on current tier
   const getTierInfo = (
-    tier: number = 1
+    tier: number = 1,
   ): {
     title: string;
     subtitle: string;
@@ -141,8 +141,7 @@ export const CampaignHomePage: React.FC = () => {
             },
             {
               label: "Storytelling",
-              description:
-                "Share a testimonial (60-90s video)",
+              description: "Share a testimonial (60-90s video)",
               completed: false,
             },
           ],
@@ -176,7 +175,9 @@ export const CampaignHomePage: React.FC = () => {
 
       if (response.success) {
         setShowActivityDrawer(false);
-        setSuccessMessage("Your activity selection has been saved successfully!");
+        setSuccessMessage(
+          "Your activity selection has been saved successfully!",
+        );
         setShowSuccessDrawer(true);
       } else {
         setShowActivityDrawer(false);
@@ -192,7 +193,7 @@ export const CampaignHomePage: React.FC = () => {
     }
   };
 
-  // Tier 2 activities 
+  // Tier 2 activities
   const tier2Activities = [
     {
       id: "consistent_saver",
@@ -207,19 +208,18 @@ export const CampaignHomePage: React.FC = () => {
     {
       id: "social_proof",
       label: "C: UGC / Social",
-      description:
-        "Share earnings + story on social, tag @LISAR #LISARWins",
+      description: "Share earnings + story on social, tag @LISAR #LISARWins",
     },
   ];
 
   if (isLoading) {
     return (
-      <div className="h-screen bg-[#050505] text-white flex flex-col font-raleway">
+      <div className="min-h-full bg-[#050505] text-white flex flex-col font-raleway">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-8">
           <button
             onClick={handleBackClick}
-            className="h-10 w-10 rounded-full bg-[#2a2a2a] flex items-center justify-center"
+            className="h-10 w-10 rounded-full bg-[#151515] flex items-center justify-center"
           >
             <ArrowLeft className="text-white" size={22} />
           </button>
@@ -235,7 +235,7 @@ export const CampaignHomePage: React.FC = () => {
         </div>
 
         {/* Loading Content */}
-        <div className="flex-1 overflow-y-auto px-6 pb-20 scrollbar-hide">
+        <div className="flex-1 px-6 pb-20 scrollbar-hide">
           <Skeleton className="h-64 w-full bg-gray-600 mb-6" />
           <Skeleton className="h-48 w-full bg-gray-600" />
         </div>
@@ -246,17 +246,16 @@ export const CampaignHomePage: React.FC = () => {
     );
   }
 
-
   const currentTier: number = (campaignStatus as any)?.current_tier || 1;
   const tierInfo = getTierInfo(currentTier);
 
   return (
-    <div className="h-screen bg-[#050505] text-white flex flex-col font-raleway">
+    <div className="min-h-full bg-[#050505] text-white flex flex-col font-raleway">
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-8">
         <button
           onClick={handleBackClick}
-          className="h-10 w-10 rounded-full bg-[#2a2a2a] flex items-center justify-center"
+          className="h-10 w-10 rounded-full bg-[#151515] flex items-center justify-center"
         >
           <ArrowLeft className="text-white" size={22} />
         </button>
@@ -272,7 +271,7 @@ export const CampaignHomePage: React.FC = () => {
       </div>
 
       {/* Content - Scrollable */}
-      <div className="flex-1 overflow-y-auto px-6 pb-20 scrollbar-hide">
+      <div className="flex-1 px-6 pb-20 scrollbar-hide">
         {/* Campaign Title */}
         {/* <div className="mb-4">
           <h2 className="text-xs font-bold text-white mb-1">
@@ -298,7 +297,6 @@ export const CampaignHomePage: React.FC = () => {
             <CardContent className="px-4 py-4">
               <div className="flex items-center justify-between gap-2 mb-4">
                 <CardTitle className="flex items-center gap-2 text-white text-base">
-
                   {tierInfo.title}
                 </CardTitle>
                 <Badge
@@ -336,8 +334,9 @@ export const CampaignHomePage: React.FC = () => {
                   Unlock Requirements
                 </CardTitle>
                 <ChevronDown
-                  className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${requirementsExpanded ? "rotate-180" : ""
-                    }`}
+                  className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
+                    requirementsExpanded ? "rotate-180" : ""
+                  }`}
                 />
               </button>
 
@@ -348,10 +347,11 @@ export const CampaignHomePage: React.FC = () => {
                     {tierInfo.requirements.map((req, index) => (
                       <div
                         key={index}
-                        className={`flex items-start gap-2 p-2 rounded-lg transition-colors mt-3 ${req.completed
-                          ? "bg-[#C7EF6B]/10 hover:bg-[#C7EF6B]/20 border border-[#C7EF6B]/30"
-                          : "bg-[#505050] hover:bg-[#333333]"
-                          }`}
+                        className={`flex items-start gap-2 p-2 rounded-lg transition-colors mt-3 ${
+                          req.completed
+                            ? "bg-[#C7EF6B]/10 hover:bg-[#C7EF6B]/20 border border-[#C7EF6B]/30"
+                            : "bg-[#505050] hover:bg-[#333333]"
+                        }`}
                       >
                         <div className="flex-1">
                           <p
@@ -440,7 +440,8 @@ export const CampaignHomePage: React.FC = () => {
                     </button>
                   </div>
                   <p className="text-xs text-gray-400">
-                    You currently have {referralStats?.totalReferrals || 0} referral(s)
+                    You currently have {referralStats?.totalReferrals || 0}{" "}
+                    referral(s)
                     {referralStats && referralStats.totalReferrals > 0 && " 🎉"}
                   </p>
                 </div>
@@ -471,7 +472,6 @@ export const CampaignHomePage: React.FC = () => {
                       "Generate"
                     )}
                   </Button>
-
                 </div>
               )}
             </CardContent>
@@ -502,7 +502,8 @@ export const CampaignHomePage: React.FC = () => {
                 Choose Your Path
               </h3>
               <p className="text-xs text-gray-300 mb-3">
-                Select 2 out of 3 activities to complete in order to earn the Growth Bonus.
+                Select 2 out of 3 activities to complete in order to earn the
+                Growth Bonus.
               </p>
               <button
                 onClick={() => setShowActivityDrawer(true)}
@@ -519,7 +520,8 @@ export const CampaignHomePage: React.FC = () => {
                 Champion Level Challenge
               </h3>
               <p className="text-xs text-gray-300 mb-3">
-                Complete all activities to unlock premium perks and brand merchandise.
+                Complete all activities to unlock premium perks and brand
+                merchandise.
               </p>
               <button
                 onClick={() => navigate("/wallet?open=deposit")}

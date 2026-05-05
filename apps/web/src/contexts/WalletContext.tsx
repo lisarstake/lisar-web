@@ -141,7 +141,13 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
             const solUsdc = usdc ? parseFloat(usdc.balance || "0") : 0;
             const solUsdt = usdt ? parseFloat(usdt.balance || "0") : 0;
             const solUsdStar = usdStar ? parseFloat(usdStar.balance || "0") : 0;
-            solStableBalance = solUsdStar;
+
+            const usdStarPriceResp = await perenaService.getPrice();
+            const usdStarPrice = usdStarPriceResp.success && usdStarPriceResp.data?.price
+              ? usdStarPriceResp.data.price
+              : 1;
+            solStableBalance = solUsdStar * usdStarPrice;
+
             setSolanaUsdcBalance(solUsdc);
             setSolanaUsdtBalance(solUsdt);
           }

@@ -41,17 +41,15 @@ function HomePage() {
           </div>
         </div>
 
-
+        <div className={`${sectionFrame} min-h-[88svh] md:min-h-[95svh]`}>
+          <div className="w-full">
+            <GrowthOptionsSection />
+          </div>
+        </div>
 
         <div className="w-full border-b border-[#dce4d7] flex items-start justify-center">
           <div className="w-full">
             <HowItWorksSection />
-          </div>
-        </div>
-
-        <div className={`${sectionFrame} min-h-[88svh] md:min-h-[95svh]`}>
-          <div className="w-full">
-            <GrowthOptionsSection />
           </div>
         </div>
 

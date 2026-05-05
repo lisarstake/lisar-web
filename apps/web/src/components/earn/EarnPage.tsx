@@ -29,12 +29,20 @@ export const EarnPage: React.FC = () => {
   const campaignButtonText = isCampaignOngoing ? "Check progress" : "Join Campaign";
 
   const earnCards: EarnCard[] = [
+    // {
+    //   id: "1",
+    //   title: `Early Savers (${campaignStatusLabel})`,
+    //   description: "Join the early savers campaign to earn rewards and perks building healthy saving habits!  ",
+    //   image: "/campaign.jpg",
+    //   buttonText: campaignButtonText,
+    //   isComingSoon: false,
+    // },
     {
       id: "1",
-      title: `Early Savers (${campaignStatusLabel})`,
-      description: "Join the early savers campaign to earn rewards and perks building healthy saving habits!  ",
-      image: "/campaign.jpg",
-      buttonText: campaignButtonText,
+      title: `Perks & Points`,
+      description: "Save on Lisar, accumulate points redeemable as discounts at different partner services.",
+      image: "/cafeone.jpeg",
+      buttonText: 'Redeem points',
       isComingSoon: false,
     },
     // {
@@ -61,7 +69,7 @@ export const EarnPage: React.FC = () => {
 
   const handleCardClick = (card: EarnCard) => {
     if (card.id === "1") {
-      // navigate("/campaign");
+      navigate("/perks");
     } else if (card.isComingSoon) {
       window.open(
         "https://t.me/+F0YXOMaiJMxkODVk",
@@ -72,14 +80,14 @@ export const EarnPage: React.FC = () => {
   };
 
   return (
-    <div className="h-screen overflow-hidden bg-[#050505] text-white flex flex-col">
+    <div className="min-h-full bg-[#050505] text-white flex flex-col">
       {/* Header */}
       <div className="shrink-0 px-6 py-6 bg-[#050505]">
         <div className="flex items-start justify-between">
           <div>
             <h1 className="text-lg font-medium text-white">Explore</h1>
             <p className="text-xs text-gray-500">
-              Discover earning opportunities on Lisar
+              Discover opportunities on Lisar
             </p>
           </div>
           {/* <button
@@ -92,13 +100,13 @@ export const EarnPage: React.FC = () => {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto overscroll-contain px-6 pb-20 scrollbar-hide">
+      <div className="flex-1 px-6 pb-20 scrollbar-hide">
         {/* Earn Cards */}
         <div className="space-y-6">
           {earnCards.map((card) => (
             <div
               key={card.id}
-              className={`bg-[#2a2a2a] rounded-xl overflow-hidden ${card.isSocialCard
+              className={`bg-[#151515] rounded-xl overflow-hidden ${card.isSocialCard
                 ? "cursor-pointer hover:bg-[#505050] transition-colors"
                 : ""
                 }`}
@@ -106,7 +114,7 @@ export const EarnPage: React.FC = () => {
             >
               {/* Card Image */}
               {!card.isSocialCard && (
-                <div className="w-full h-48 relative">
+                <div className="w-full h-44 relative">
                   <img
                     src={card.image}
                     alt={card.title}
@@ -175,7 +183,7 @@ export const EarnPage: React.FC = () => {
                   </div>
                 )}
 
-                <p className="text-gray-400 text-sm leading-relaxed">
+                <p className="text-gray-300 text-sm leading-relaxed">
                   {card.description}
                 </p>
 
@@ -185,7 +193,7 @@ export const EarnPage: React.FC = () => {
                     onClick={() => handleCardClick(card)}
                     className={`mt-3 py-1.5 px-4 rounded-full font-medium text-sm transition-colors ${card.isComingSoon
                       ? "bg-blue-500 text-white cursor-not-allowed opacity-75"
-                      : "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
+                      : "rounded-full border-2 border-black bg-[#C7EF6B] text-black"
                       }`}
                   >
                     {card.buttonText}
