@@ -177,7 +177,7 @@ export const ExportWalletDrawer: React.FC<ExportWalletDrawerProps> = ({
                     value={exportPassword}
                     onChange={(e) => setExportPassword(e.target.value)}
                     placeholder="Enter your account password"
-                    className="w-full pr-12 px-4 py-3 bg-[#2a2a2a] border border-[#505050] rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:border-[#C7EF6B]"
+                    className="w-full pr-12 px-4 py-3 bg-[#151515] border border-[#505050] rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:border-[#C7EF6B]"
                   />
                   <button
                     type="button"
@@ -220,7 +220,7 @@ export const ExportWalletDrawer: React.FC<ExportWalletDrawerProps> = ({
                     type="text"
                     readOnly
                     value={privateKey}
-                    className="flex-1 px-4 py-3 bg-[#2a2a2a] border border-[#505050] rounded-lg text-gray-100"
+                    className="flex-1 px-4 py-3 bg-[#151515] border border-[#505050] rounded-lg text-gray-100"
                   />
                   <button
                     type="button"

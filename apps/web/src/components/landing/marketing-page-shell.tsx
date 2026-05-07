@@ -36,7 +36,7 @@ export const MarketingPageShell = ({
 
           {/* Center content */}
           <div className="relative mx-auto w-full max-w-5xl text-center py-12">
-            <h1 className="font-serif text-[1.5rem] leading-[0.94] tracking-[-0.02em] text-[#111111] md:text-[3rem]">
+            <h1 className="font-sans text-[1.5rem] leading-[0.94] tracking-[-0.02em] text-[#111111] md:text-[3rem]">
               {title}
             </h1>
 
@@ -47,7 +47,7 @@ export const MarketingPageShell = ({
 
           {/* Bottom meta */}
           {updatedAt || notice ? (
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 px-6 text-center md:px-8">
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-center">
               {updatedAt ? (
                 <p className="text-xs uppercase tracking-[0.18em] text-[#6f7d74]">
                   Updated {updatedAt}

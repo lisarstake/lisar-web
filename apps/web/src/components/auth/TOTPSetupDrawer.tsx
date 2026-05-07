@@ -147,7 +147,7 @@ export const TOTPSetupDrawer: React.FC<TOTPSetupDrawerProps> = ({
                       Can't scan? Enter this code manually:
                     </p>
 
-                    <div className="flex items-center gap-2 px-3 py-2 bg-[#2a2a2a] rounded-lg border border-[#505050]">
+                    <div className="flex items-center gap-2 px-3 py-2 bg-[#151515] rounded-lg border border-[#505050]">
                       <code className="flex-1 text-white/90 text-sm font-mono break-all">
                         {secret || ""}
                       </code>

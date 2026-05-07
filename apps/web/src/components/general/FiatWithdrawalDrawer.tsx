@@ -100,7 +100,7 @@ export const WithdrawalConfirmationDrawer: React.FC<
               </DrawerHeader>
 
               <div className="space-y-3">
-                <div className="rounded-lg bg-[#2a2a2a] p-4 space-y-3">
+                <div className="rounded-lg bg-[#151515] p-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <p className="text-sm text-white/60">Bank</p>
                     <p className="text-sm text-white">{bankName || "-"}</p>
@@ -115,7 +115,7 @@ export const WithdrawalConfirmationDrawer: React.FC<
                   </div>
                 </div>
 
-                <div className="rounded-lg bg-[#2a2a2a] p-4 space-y-3">
+                <div className="rounded-lg bg-[#151515] p-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <p className="text-sm text-white/60">Amount</p>
                     <p className="text-sm text-white">₦{amount.toLocaleString()}</p>
@@ -174,7 +174,7 @@ export const WithdrawalConfirmationDrawer: React.FC<
                     {Array.from({ length: 4 }).map((_, index) => (
                       <div
                         key={`withdraw-pin-${index}`}
-                        className="h-14 w-14 rounded-lg bg-[#2a2a2a] border border-white/10 flex items-center justify-center text-lg text-white font-medium"
+                        className="h-14 w-14 rounded-lg bg-[#151515] border border-white/10 flex items-center justify-center text-lg text-white font-medium"
                       >
                         {pin[index] || ""}
                       </div>

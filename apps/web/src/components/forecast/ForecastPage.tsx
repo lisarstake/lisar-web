@@ -20,7 +20,11 @@ type Currency = "USD" | "LPT" | "NGN" | "GBP";
 
 export const ForecastPage: React.FC = () => {
   const { state } = useAuth();
-  const { perena: perenaApy, growth: growthApy, isLoading: apyLoading } = useStablesApy();
+  const {
+    perena: perenaApy,
+    growth: growthApy,
+    isLoading: apyLoading,
+  } = useStablesApy();
   const { orchestrators } = useOrchestrators();
 
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
@@ -32,7 +36,7 @@ export const ForecastPage: React.FC = () => {
   });
   const [delegationAmount, setDelegationAmount] = useState("0");
   const [selectedCurrency, setSelectedCurrency] = useState<Currency>(
-    (state.user?.fiat_type as Currency) || "USD"
+    (state.user?.fiat_type as Currency) || "USD",
   );
   const [yieldLoading, setYieldLoading] = useState(false);
   const [yieldError, setYieldError] = useState<string | null>(null);
@@ -49,7 +53,12 @@ export const ForecastPage: React.FC = () => {
     if (orchestrators.length > 0) {
       const top = orchestrators[0];
       const apyVal = top?.apy;
-      const parsed = typeof apyVal === "string" ? parseFloat(apyVal.replace("%", "")) : typeof apyVal === "number" ? apyVal : 0;
+      const parsed =
+        typeof apyVal === "string"
+          ? parseFloat(apyVal.replace("%", ""))
+          : typeof apyVal === "number"
+            ? apyVal
+            : 0;
       return parsed || 68;
     }
     return 68;
@@ -60,10 +69,13 @@ export const ForecastPage: React.FC = () => {
       { id: "savings" as const, name: "Savings", apy: effectiveSavingsApy },
       { id: "growth" as const, name: "Growth", apy: effectiveGrowthApy },
     ],
-    [effectiveSavingsApy, effectiveGrowthApy]
+    [effectiveSavingsApy, effectiveGrowthApy],
   );
 
-  const apy = accountPlans.find((p) => p.id === selectedPlan.id)?.apy ?? selectedPlan.apy ?? 0;
+  const apy =
+    accountPlans.find((p) => p.id === selectedPlan.id)?.apy ??
+    selectedPlan.apy ??
+    0;
 
   const getCurrencySymbol = (currency: Currency): string => {
     if (currency === "LPT") return "LPT";
@@ -147,8 +159,8 @@ export const ForecastPage: React.FC = () => {
             projectedReward:
               Number(
                 serverProjections[k]?.projectedReward ??
-                serverProjections[k] ??
-                0
+                  serverProjections[k] ??
+                  0,
               ) + numericAmount,
             currency: serverProjections[k]?.currency ?? "USD",
           }));
@@ -165,13 +177,15 @@ export const ForecastPage: React.FC = () => {
   }, [numericAmount, apy, selectedPlan, selectedCurrency]);
 
   return (
-    <div className="h-screen bg-[#050505] text-white flex flex-col">
+    <div className="min-h-full bg-[#050505] text-white flex flex-col">
       {/* Content - Scrollable */}
-      <div className="flex-1 overflow-y-auto px-6 pb-20 scrollbar-hide">
+      <div className="flex-1 px-6 pb-20 scrollbar-hide">
         {/* Header - Scrollable */}
         <div className="flex items-start justify-between py-8">
           <div>
-            <h1 className="text-lg font-medium text-white">Interest Calculator</h1>
+            <h1 className="text-lg font-medium text-white">
+              Interest Calculator
+            </h1>
             <p className="text-xs text-gray-500">
               Calculate your potential earnings
             </p>
@@ -193,7 +207,9 @@ export const ForecastPage: React.FC = () => {
             <select
               value={selectedPlan?.id || ""}
               onChange={(e) => {
-                const selected = accountPlans.find((p) => p.id === e.target.value);
+                const selected = accountPlans.find(
+                  (p) => p.id === e.target.value,
+                );
                 if (selected) handlePlanSelect(selected);
               }}
               className="w-full p-4 bg-[#1a1a1a] border border-[#505050] rounded-lg text-white appearance-none focus:border-[#C7EF6B] focus:outline-none"
@@ -226,8 +242,9 @@ export const ForecastPage: React.FC = () => {
                 <span>({selectedCurrency})</span>
                 <ChevronDown
                   size={16}
-                  className={`transition-transform ${showCurrencyDropdown ? "rotate-180" : ""
-                    }`}
+                  className={`transition-transform ${
+                    showCurrencyDropdown ? "rotate-180" : ""
+                  }`}
                 />
               </button>
               {showCurrencyDropdown && (
@@ -239,10 +256,11 @@ export const ForecastPage: React.FC = () => {
                         setSelectedCurrency(currency);
                         setShowCurrencyDropdown(false);
                       }}
-                      className={`w-full text-left px-4 py-2 text-sm hover:bg-[#505050] transition-colors ${selectedCurrency === currency
+                      className={`w-full text-left px-4 py-2 text-sm hover:bg-[#505050] transition-colors ${
+                        selectedCurrency === currency
                           ? "text-[#C7EF6B] bg-[#505050]"
                           : "text-white"
-                        }`}
+                      }`}
                     >
                       {currency}
                     </button>
@@ -272,9 +290,9 @@ export const ForecastPage: React.FC = () => {
               ) : (
                 formatNumber(
                   projections.find((p) =>
-                    p.period.toLowerCase().includes("year")
+                    p.period.toLowerCase().includes("year"),
                   )?.projectedReward ?? fallbackYearlyTotal,
-                  2
+                  2,
                 )
               )}{" "}
               {selectedCurrency}
@@ -295,10 +313,10 @@ export const ForecastPage: React.FC = () => {
                 ) : (
                   formatNumber(
                     (projections.find((p) =>
-                      p.period.toLowerCase().includes("day")
+                      p.period.toLowerCase().includes("day"),
                     )?.projectedReward ?? numericAmount + fallbackDailyYield) -
-                    numericAmount,
-                    2
+                      numericAmount,
+                    2,
                   )
                 )}{" "}
                 {selectedCurrency}
@@ -312,10 +330,10 @@ export const ForecastPage: React.FC = () => {
                 ) : (
                   formatNumber(
                     (projections.find((p) =>
-                      p.period.toLowerCase().includes("month")
+                      p.period.toLowerCase().includes("month"),
                     )?.projectedReward ??
                       numericAmount + fallbackMonthlyYield) - numericAmount,
-                    2
+                    2,
                   )
                 )}{" "}
                 {selectedCurrency}
@@ -329,9 +347,9 @@ export const ForecastPage: React.FC = () => {
                 ) : (
                   formatNumber(
                     (projections.find((p) =>
-                      p.period.toLowerCase().includes("year")
+                      p.period.toLowerCase().includes("year"),
                     )?.projectedReward ?? fallbackYearlyTotal) - numericAmount,
-                    2
+                    2,
                   )
                 )}{" "}
                 {selectedCurrency}
@@ -347,9 +365,9 @@ export const ForecastPage: React.FC = () => {
                 ) : (
                   formatNumber(
                     projections.find((p) =>
-                      p.period.toLowerCase().includes("year")
+                      p.period.toLowerCase().includes("year"),
                     )?.projectedReward ?? fallbackYearlyTotal,
-                    2
+                    2,
                   )
                 )}{" "}
                 {selectedCurrency}

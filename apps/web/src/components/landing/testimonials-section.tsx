@@ -67,7 +67,7 @@ const TestimonialCard = ({ item }: { item: (typeof testimonials)[number] }) => (
         className="h-6 w-6 object-contain"
       />
     </div>
-    <p className="mt-4 text-sm md:text-base text-[#5e6660] italic">
+    <p className="mt-4 text-xs md:text-sm text-[#5e6660]">
       {item.text}
     </p>
     <p className="mt-4 text-xs md:text-sm text-[#8a938d]">
@@ -86,16 +86,20 @@ export const TestimonialsSection = () => {
       <div className="mx-auto w-full max-w-7xl">
         <div className="px-6 md:px-8">
           <RevealOnScroll>
-            <p className="inline-flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.2em] text-[#235538]">
-              <span className="h-px w-8 bg-[#235538]" />
-              Testimonials
-            </p>
-            <h2 className="mt-5 text-[2.5rem] leading-[0.95] tracking-[-0.03em] text-[#111111] md:text-[3rem]">
-              <span className="block font-serif font-semibold">What our users</span>
-              <span className="block font-serif italic text-[#235538]">
-                say about us.
+            <div className="text-center flex flex-col items-center">
+              <span className="inline-flex items-center rounded-full border border-black px-3 py-1 text-[10px] font-normal uppercase tracking-[0.2em] text-black">
+                Testimonials
               </span>
-            </h2>
+              <h2 className="mt-5 text-[3rem] leading-[0.95] tracking-[-0.03em] text-[#111111] md:text-[4rem]">
+                <span className="block font-sans font-semibold">What our users</span>
+                <span className="block font-sans italic text-[#235538]">
+                  say about us.
+                </span>
+              </h2>
+              <p className="mt-4 text-base leading-relaxed text-[#5e6660] md:text-lg">
+                Don't take our word for it. Hear it from real people.
+              </p>
+            </div>
           </RevealOnScroll>
         </div>
 

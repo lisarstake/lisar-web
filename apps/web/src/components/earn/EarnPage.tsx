@@ -31,20 +31,19 @@ export const EarnPage: React.FC = () => {
   const earnCards: EarnCard[] = [
     {
       id: "1",
-      title: `Early Savers (${campaignStatusLabel})`,
-      description: "Join the early savers campaign to earn rewards and perks building healthy saving habits!  ",
-      image: "/campaign.jpg",
-      buttonText: campaignButtonText,
+      title: `Perks & Points`,
+      description: "Save on Lisar, accumulate points redeemable as discounts at different partner services.",
+      image: "/cafeone.jpeg",
+      buttonText: 'Redeem points',
       isComingSoon: false,
     },
-    // {
-    //   id: "2",
-    //   title: "Creator Program",
-    //   description: "Get paid creating content for Lisar",
-    //   image: "/earn2.jpeg",
-    //   buttonText: "Get started",
-    //   isComingSoon: true,
-    // },
+    {
+      id: "flex-card",
+      title: "Lisar Flex Card",
+      description: "Pay for your favorite subscriptions with your savings yield. Over 1700+ providers supported.",
+      buttonText: "Get your card",
+      isComingSoon: false,
+    },
     {
       id: "3",
       title: "Connect with us",
@@ -61,7 +60,9 @@ export const EarnPage: React.FC = () => {
 
   const handleCardClick = (card: EarnCard) => {
     if (card.id === "1") {
-      // navigate("/campaign");
+      navigate("/perks");
+    } else if (card.id === "flex-card") {
+      navigate("/earn/flex-card");
     } else if (card.isComingSoon) {
       window.open(
         "https://t.me/+F0YXOMaiJMxkODVk",
@@ -72,52 +73,81 @@ export const EarnPage: React.FC = () => {
   };
 
   return (
-    <div className="h-screen overflow-hidden bg-[#050505] text-white flex flex-col">
+    <div className="min-h-full bg-[#050505] text-white flex flex-col">
       {/* Header */}
       <div className="shrink-0 px-6 py-6 bg-[#050505]">
         <div className="flex items-start justify-between">
           <div>
             <h1 className="text-lg font-medium text-white">Explore</h1>
             <p className="text-xs text-gray-500">
-              Discover earning opportunities on Lisar
+              Discover features on Lisar
             </p>
           </div>
-          {/* <button
-            onClick={handleHelpClick}
-            className="w-8 h-8 bg-[#505050] rounded-full flex items-center justify-center"
-          >
-            <CircleQuestionMark color="#86B3F7" size={16} />
-          </button> */}
         </div>
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto overscroll-contain px-6 pb-20 scrollbar-hide">
+      <div className="flex-1 px-6 pb-20 scrollbar-hide">
         {/* Earn Cards */}
         <div className="space-y-6">
           {earnCards.map((card) => (
             <div
               key={card.id}
-              className={`bg-[#2a2a2a] rounded-xl overflow-hidden ${card.isSocialCard
+              className={`bg-[#151515] rounded-xl overflow-hidden ${card.isSocialCard
                 ? "cursor-pointer hover:bg-[#505050] transition-colors"
-                : ""
+                : "cursor-pointer"
                 }`}
-              onClick={() => card.isSocialCard && handleCardClick(card)}
+              onClick={() => handleCardClick(card)}
             >
               {/* Card Image */}
               {!card.isSocialCard && (
-                <div className="w-full h-48 relative">
-                  <img
-                    src={card.image}
-                    alt={card.title}
-                    className="w-full h-full object-cover object-top"
-                  />
-                </div>
+                card.id === "flex-card" ? (
+                  <div className="w-full h-40 relative rounded-2xl overflow-hidden bg-[linear-gradient(145deg,#1a1a1a_0%,#2d2d2d_40%,#1a1a1a_100%)] border border-[#333]">
+                    <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "repeating-linear-gradient(45deg, transparent, transparent 20px, rgba(255,255,255,0.5) 20px, rgba(255,255,255,0.5) 21px)" }} />
+                    <div className="absolute top-0 right-0 w-40 h-40 bg-white/[0.02] rounded-full blur-3xl" />
+                    <div className="relative z-10 p-5 h-full flex flex-col justify-between">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <p className="text-xs tracking-widest text-white/40 font-medium uppercase">Lisar Flex</p>
+                        </div>
+                        <svg className="text-white/30" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M8.5 16.5a5 5 0 0 1 0-9" />
+                          <path d="M12 19a9 9 0 0 1 0-14" />
+                          <path d="M15.5 21.5a13 13 0 0 1 0-19" />
+                        </svg>
+                      </div>
+                      <div className="flex items-end justify-between">
+                        <div>
+                          <p className="text-[10px] uppercase mb-2 text-white/70">Supports</p>
+                          <div className="flex gap-2 items-center">
+                            <img src="/claude.svg" alt="Claude" className="w-5 h-5" />
+                            <img src="/lovable.png" alt="Lovable" className="w-5 h-5" />
+                            <img src="/spotify2.png" alt="Spotify" className="w-5 h-5" />
+                            <img src="/capcut.jpg" alt="CapCut" className="w-5 h-5 rounded-full" />
+                            <img src="/netflix.png" alt="Netflix" className="w-5 h-5" />
+                          </div>
+                        </div>
+                        <div className="flex items-center">
+                          <div className="w-7 h-7 rounded-full bg-[#EB001B]" />
+                          <div className="w-7 h-7 rounded-full bg-[#F79E1B] -ml-3" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="w-full h-36 relative">
+                    <img
+                      src={card.image}
+                      alt={card.title}
+                      className="w-full h-full object-cover object-top"
+                    />
+                  </div>
+                )
               )}
 
               {/* Card Content */}
               <div className="p-4">
-                <h3 className="text-white font-semibold text-large mb-3">
+                <h3 className="text-white font-medium text-lg mb-2">
                   {card.title}
                 </h3>
 
@@ -180,17 +210,20 @@ export const EarnPage: React.FC = () => {
                 </p>
 
                 {/* Action Button */}
-                {!card.isSocialCard && (
-                  <button
-                    onClick={() => handleCardClick(card)}
-                    className={`mt-3 py-1.5 px-4 rounded-full font-medium text-sm transition-colors ${card.isComingSoon
-                      ? "bg-blue-500 text-white cursor-not-allowed opacity-75"
-                      : "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
-                      }`}
-                  >
-                    {card.buttonText}
-                  </button>
-                )}
+                 {!card.isSocialCard && (
+                   <button
+                     onClick={(e) => {
+                       e.stopPropagation();
+                       handleCardClick(card);
+                     }}
+                     className={`mt-3 py-1.5 px-4 rounded-full font-medium text-sm transition-colors ${card.isComingSoon
+                       ? "bg-blue-500 text-white cursor-not-allowed opacity-75"
+                       : "rounded-full border-2 border-black bg-[#C7EF6B] text-black"
+                       }`}
+                   >
+                     {card.buttonText}
+                   </button>
+                 )}
               </div>
             </div>
           ))}

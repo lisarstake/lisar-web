@@ -107,7 +107,7 @@ const Navbar = () => {
       <header className="fixed top-0 inset-x-0 z-50 md:px-5">
         <div
           className={`w-full transition-all duration-300 ${isScrolled ? "bg-white border-b border-[#e5ebe8]" : "bg-white"
-            } mx-auto max-w-7xl md:mt-4 md:rounded-3xl md:border-0 ${isScrolled
+            } mx-auto max-w-7xl md:mt-4 md:rounded-full md:border-0 ${isScrolled
               ? "md:border md:border-[#dce4d7] md:bg-white/95 md:shadow-[0_10px_30px_rgba(6,14,10,0.08)] md:backdrop-blur"
               : "md:bg-white"
             } px-4 md:px-6`}

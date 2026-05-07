@@ -75,7 +75,7 @@ export const TransactionDetailsDrawer: React.FC<TransactionDetailsDrawerProps> =
           </DrawerTitle>
         </DrawerHeader>
 
-        <div className="rounded-xl bg-[#2a2a2a] p-4 space-y-3 mt-3">
+        <div className="rounded-xl bg-[#151515] p-4 space-y-3 mt-3">
           <div className="flex items-center justify-between gap-4">
             <span className="text-base text-white/60">Amount</span>
             <span className="text-sm text-white"> {amountPrefix}

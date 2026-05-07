@@ -46,7 +46,7 @@ export const HistoryPage: React.FC = () => {
   };
 
   return (
-    <div className="h-screen bg-[#050505] text-white flex flex-col">
+    <div className="min-h-full bg-[#050505] text-white flex flex-col">
       {/* Header */}
       <div className="flex items-start justify-between px-6 py-6">
         <div>
@@ -76,7 +76,7 @@ export const HistoryPage: React.FC = () => {
           />
         </div>
       ) : (
-        <div className="flex-1 overflow-y-auto overscroll-contain px-6 pb-20 scrollbar-hide">
+        <div className="flex-1 overscroll-contain px-6 pb-20 scrollbar-hide">
           <TransactionList
             transactions={filteredTransactions}
             isLoading={isLoading}

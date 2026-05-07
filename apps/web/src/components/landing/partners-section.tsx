@@ -18,16 +18,17 @@ export const PartnersSection = () => {
   }, []);
 
   return (
-    <section className="w-full pt-12 sm:pt-0 pb-5 md:pb-10 overflow-hidden">
+    <section className="w-full pt-14 sm:pt-0 pb-5 md:pb-10 overflow-hidden">
       <div className="mx-auto w-full max-w-7xl px-6 md:px-8">
         <RevealOnScroll>
-          <p className="inline-flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.2em] text-[#235538]">
-            <span className="h-px w-8 bg-[#235538]" />
-            Trusted by / Featured in
-          </p>
+          <div className="text-center flex flex-col items-center">
+            <span className="inline-flex items-center rounded-full border border-black px-3 py-1 text-[10px] font-normal uppercase tracking-[0.2em] text-black">
+              Trusted by / Featured in
+            </span>
+          </div>
         </RevealOnScroll>
 
-        <div className="mt-2">
+        <div className="">
           <div className="flex w-max gap-6 marquee-partners">
             {[...shuffledPartners, ...shuffledPartners].map((partner, idx) => {
               const links: Record<string, string> = {

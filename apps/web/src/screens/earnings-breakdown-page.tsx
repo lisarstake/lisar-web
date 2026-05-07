@@ -9,8 +9,18 @@ import { priceService } from "@/lib/priceService";
 import { X, Calendar, ChevronRight } from "lucide-react";
 
 const MONTHS = [
-  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
 ];
 
 export default function EarningsBreakdownPage() {
@@ -25,7 +35,7 @@ export default function EarningsBreakdownPage() {
   const { prices } = usePrices();
 
   const [currency, setCurrency] = useState<"NGN" | "USD">(
-    (state.user?.fiat_type || "USD").toUpperCase() === "NGN" ? "NGN" : "USD"
+    (state.user?.fiat_type || "USD").toUpperCase() === "NGN" ? "NGN" : "USD",
   );
   const [selectedDate] = useState(() => {
     const now = new Date();
@@ -34,7 +44,7 @@ export default function EarningsBreakdownPage() {
 
   const fiatSymbol = useMemo(
     () => priceService.getCurrencySymbol(currency),
-    [currency]
+    [currency],
   );
 
   const stablesBalance = contextStablesBalance || 0;
@@ -53,19 +63,19 @@ export default function EarningsBreakdownPage() {
     if (stakingSummary?.monthlyEarnings) {
       total += stakingSummary.monthlyEarnings;
     }
-    const savingsMonthly = stablesBalance * (14 / 100) / 12;
+    const savingsMonthly = (stablesBalance * (14 / 100)) / 12;
     total += savingsMonthly;
     return total;
   }, [stakingSummary?.monthlyEarnings, stablesBalance]);
 
   const monthlyReturnFiat = useMemo(
     () => convertToFiat(monthlyReturnUsd),
-    [monthlyReturnUsd, currency, prices]
+    [monthlyReturnUsd, currency, prices],
   );
 
   const savingsBalanceFiat = useMemo(
     () => convertToFiat(stablesBalance),
-    [stablesBalance, currency, prices]
+    [stablesBalance, currency, prices],
   );
 
   const growthBalanceUsd = useMemo(() => {
@@ -74,7 +84,7 @@ export default function EarningsBreakdownPage() {
   }, [highyieldBalance, stakedLpt, prices]);
   const growthBalanceFiat = useMemo(
     () => convertToFiat(growthBalanceUsd),
-    [growthBalanceUsd, currency, prices]
+    [growthBalanceUsd, currency, prices],
   );
 
   const categories = [
@@ -84,8 +94,18 @@ export default function EarningsBreakdownPage() {
       balance: savingsBalanceFiat,
       icon: (
         <div className="w-9 h-9 rounded-full bg-[#86B3F7]/15 flex items-center justify-center">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-[#86B3F7]">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" stroke="currentColor" strokeWidth="2" />
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            className="text-[#86B3F7]"
+          >
+            <path
+              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"
+              stroke="currentColor"
+              strokeWidth="2"
+            />
           </svg>
         </div>
       ),
@@ -96,8 +116,20 @@ export default function EarningsBreakdownPage() {
       balance: growthBalanceFiat,
       icon: (
         <div className="w-9 h-9 rounded-full bg-[#C7EF6B]/15 flex items-center justify-center">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-[#C7EF6B]">
-            <path d="M12 2L2 7l10 5 10-5-10-5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            className="text-[#C7EF6B]"
+          >
+            <path
+              d="M12 2L2 7l10 5 10-5-10-5z"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
         </div>
       ),
@@ -119,19 +151,21 @@ export default function EarningsBreakdownPage() {
           <div className="flex items-center gap-1">
             <button
               onClick={() => setCurrency("NGN")}
-              className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${currency === "NGN"
+              className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+                currency === "NGN"
                   ? "text-white"
                   : "text-white/50 hover:text-white/70"
-                }`}
+              }`}
             >
               NGN
             </button>
             <button
               onClick={() => setCurrency("USD")}
-              className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${currency === "USD"
+              className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+                currency === "USD"
                   ? "text-white"
                   : "text-white/50 hover:text-white/70"
-                }`}
+              }`}
             >
               USD
             </button>
@@ -166,7 +200,9 @@ export default function EarningsBreakdownPage() {
               key={cat.id}
               onClick={() => {
                 setMode(cat.id === "savings" ? "savings" : "staking");
-                navigate(cat.id === "savings" ? "/wallet/savings" : "/wallet/staking");
+                navigate(
+                  cat.id === "savings" ? "/wallet/savings" : "/wallet/staking",
+                );
               }}
               className="w-full flex items-center gap-3 py-3.5 border-b border-[#505050] last:border-0 hover:bg-[#0a0a0a] transition-colors"
             >

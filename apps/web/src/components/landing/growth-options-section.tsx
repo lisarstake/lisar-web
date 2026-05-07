@@ -4,7 +4,7 @@ import RevealOnScroll from "./reveal-on-scroll";
 
 type GrowthCard = {
   title: string;
-  rate?: string;
+  label?: string;
   description: string;
   benefits: string[];
   cta: string;
@@ -18,9 +18,9 @@ export const GrowthOptionsSection = () => {
   const cards: GrowthCard[] = [
     {
       title: "Lisar Savings",
-      rate: "15",
+      label: "Stable daily yield",
       description:
-        "Your naira is deployed into stablecoin yield strategies — dollar-pegged assets that generate consistent, predictable daily returns.",
+        "Your funds are deployed into stablecoin yield strategies — dollar-pegged assets that generate consistent, predictable daily returns up to 15% APY.",
       benefits: [
         "Daily interest, compounding automatically",
         "Dollar-backed yield",
@@ -32,9 +32,9 @@ export const GrowthOptionsSection = () => {
     },
     {
       title: "Lisar Growth",
-      rate: "40",
+      label: "Higher but variable",
       description:
-        "Pick a digital asset — like choosing a stock. Your naira is deployed into staking positions on that asset. Returns are tied to network staking yields.",
+        "Pick a digital asset — like choosing a stock. Your funds are deployed into staking positions on that asset. Returns are tied to network staking yields.",
       benefits: [
         "Up to 40% annual yield",
         "Daily compounding returns",
@@ -48,7 +48,7 @@ export const GrowthOptionsSection = () => {
     {
       title: "Not sure which to choose?",
       description:
-        "Most Lisar users split across both. Savings for stability, growth for upside. The calculator shows you exactly what each option returns on your specific amount and over a given timeline.",
+        "Most Lisar users split across both. Savings for stability, growth for upside. The calculator shows you exactly what each option returns.",
       benefits: [
         "Real yield estimates",
         "Compare both products side by side",
@@ -66,19 +66,20 @@ export const GrowthOptionsSection = () => {
     <section id="growth-options" className="w-full px-6 py-14 md:px-8 md:py-18">
       <div className="mx-auto w-full max-w-7xl">
         <RevealOnScroll>
-          <p className="inline-flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.2em] text-[#235538]">
-            <span className="h-px w-8 bg-[#235538]" />
-            Explore the paths
-          </p>
-          <h2 className="mt-5 text-[2.5rem] leading-[0.95] tracking-[-0.03em] text-[#111111] md:text-[3rem]">
-            <span className="block font-serif font-semibold">Two ways to</span>
-            <span className="block font-serif italic text-[#235538]">
-              grow your money.
+          <div className="text-center flex flex-col items-center">
+            <span className="inline-flex items-center rounded-full border border-black px-3 py-1 text-[10px] font-normal uppercase tracking-[0.2em] text-black">
+              Products
             </span>
-          </h2>
-          <p className="mt-6 max-w-3xl text-lg leading-relaxed text-[#5e6660] md:text-[1.12rem]">
-            Pick a one that fits how you think about risk and reward.
-          </p>
+            <h2 className="mt-5 text-[3rem] leading-[0.95] tracking-[-0.03em] text-[#111111] md:text-[4rem]">
+              <span className="block font-sans font-semibold">Two ways to</span>
+              <span className="block font-sans italic text-[#235538]">
+                grow your money.
+              </span>
+            </h2>
+            <p className="mt-6 text-base leading-relaxed text-[#5e6660] md:text-lg">
+              Pick one that fits how you think about risk and reward.
+            </p>
+          </div>
         </RevealOnScroll>
 
         <div className="mt-11 grid gap-6 lg:grid-cols-3">
@@ -94,34 +95,19 @@ export const GrowthOptionsSection = () => {
                   }`}
                 >
                   <h3
-                    className={`mt-4 font-serif text-[1rem] leading-[0.95] md:text-[1.5rem] ${
+                    className={`mt-4 font-sans text-[1rem] leading-[0.95] md:text-[1.5rem] ${
                       isFeatured ? "text-[#f2f7f2]" : "text-[#222a24]"
                     }`}
                   >
                     {card.title}
                   </h3>
-                  {card.rate ? (
-                    <div className="mt-3">
-                      <p
-                        className={`font-serif text-[3.5rem] leading-none md:text-[4.5rem] ${
-                          isFeatured ? "text-[#e6f2e7]" : "text-[#235538]"
-                        }`}
-                      >
-                        {card.rate}
-                        <span className="text-[0.48em]">% APY</span>
-                      </p>
-
-                    </div>
-                  ) : (
-                    <div className="mt-4">
-
-                      <p className={`mt-2 text-xs uppercase tracking-[0.2em] ${
-                        isFeatured ? "text-[#cfe2d3]" : "text-[#5e6660]"
-                      }`}>
-                        Use the calculator
-                      </p>
-                    </div>
-                  )}
+                  <div className="mt-4">
+                    <p className={`text-xs uppercase tracking-[0.2em] ${
+                      isFeatured ? "text-[#cfe2d3]" : "text-[#5e6660]"
+                    }`}>
+                      {card.label ?? "Use the calculator"}
+                    </p>
+                  </div>
 
                   <p
                     className={`mt-5 text-sm md:text-base leading-relaxed ${

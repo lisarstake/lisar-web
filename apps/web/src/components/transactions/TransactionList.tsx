@@ -4,6 +4,8 @@ import {
   Info,
   AlertCircle,
   RefreshCw,
+  ArrowDownLeft,
+  ArrowUpRight,
 } from "lucide-react";
 import { EmptyState } from "@/components/general/EmptyState";
 
@@ -24,26 +26,12 @@ export const TransactionList: React.FC<TransactionListProps> = ({
   onTransactionClick,
   skeletonCount = 5,
 }) => {
-  const getTransactionImage = (transaction: TransactionData) => {
-    const symbol = transaction.token_symbol?.toUpperCase();
+  const isDepositTransaction = (type: TransactionType) => {
+    return type === "deposit" || type === "delegation" || type === "mint";
+  };
 
-    if (symbol === "NGN") {
-      return "/ng_flag.png";
-    }
-
-    if (transaction.transaction_type === "deposit") {
-      return "/ng_flag.png";
-    }
-
-    if (symbol === "USDC") {
-      return "/usdc.svg";
-    }
-
-    if (symbol === "LPT") {
-      return "/livepeer.webp";
-    }
-
-    return "/usdc.svg";
+  const isWithdrawTransaction = (type: TransactionType) => {
+    return type === "withdrawal" || type === "undelegation" || type === "burn";
   };
 
   const getAmountColor = (type: TransactionType) => {
@@ -181,15 +169,17 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                 <div
                   key={transaction.id}
                   onClick={() => onTransactionClick(transaction)}
-                  className="flex items-center justify-between p-4 bg-[#2a2a2a] rounded-xl transition-colors cursor-pointer"
+                  className="flex items-center justify-between p-4 bg-[#151515] rounded-xl transition-colors cursor-pointer"
                 >
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 flex items-center justify-center">
-                      <img
-                        src={getTransactionImage(transaction)}
-                        alt={transaction.token_symbol || "transaction asset"}
-                        className="w-8 h-8 object-contain"
-                      />
+                    <div className="w-10 h-10 flex items-center justify-center bg-white/10 rounded-full">
+                      {isDepositTransaction(transaction.transaction_type) ? (
+                        <ArrowDownLeft size={20} className="text-green-400" />
+                      ) : isWithdrawTransaction(transaction.transaction_type) ? (
+                        <ArrowUpRight size={20} className="text-red-400" />
+                      ) : (
+                        <ArrowDownLeft size={20} className="text-white" />
+                      )}
                     </div>
                     <div>
                       <p className="text-white font-medium text-sm">

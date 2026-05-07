@@ -39,21 +39,7 @@ export const ValidatorAboutSection: React.FC<ValidatorAboutSectionProps> = ({
     "Livepeer transcoder";
 
   return (
-    <div
-      className="flex-1 overflow-y-auto px-6 pb-24 scrollbar-hide"
-      style={{
-        scrollbarWidth: "none",
-        msOverflowStyle: "none",
-      }}
-    >
-      <style>
-        {`
-          .scrollbar-hide::-webkit-scrollbar {
-            display: none;
-          }
-        `}
-      </style>
-
+    <div className="px-6 pb-24">
       <div className="space-y-4">
         {/* Description */}
         {/* <div className="bg-[#1a1a1a] rounded-xl p-4 border border-[#505050]">
@@ -128,7 +114,8 @@ export const ValidatorAboutSection: React.FC<ValidatorAboutSectionProps> = ({
                 </div>
               </div>
               <span className="text-white/90 font-medium text-sm">
-                {validator ? parseFloat(validator.totalStake).toFixed(0) : "0"} LPT
+                {validator ? parseFloat(validator.totalStake).toFixed(0) : "0"}{" "}
+                LPT
               </span>
             </div>
 
@@ -139,8 +126,9 @@ export const ValidatorAboutSection: React.FC<ValidatorAboutSectionProps> = ({
                   className={`w-7 h-7 ${validator?.active ? "bg-white/10" : "bg-white/10"} rounded-lg flex items-center justify-center`}
                 >
                   <div
-                    className={`w-2 h-2 rounded-full ${validator?.active ? "bg-green-400" : "bg-red-400"
-                      }`}
+                    className={`w-2 h-2 rounded-full ${
+                      validator?.active ? "bg-green-400" : "bg-red-400"
+                    }`}
                   ></div>
                 </div>
                 <div className="flex flex-col">
@@ -160,65 +148,65 @@ export const ValidatorAboutSection: React.FC<ValidatorAboutSectionProps> = ({
         {(hasStakeWithValidator ||
           hasWithdrawableAmount ||
           hasPendingUnbonding) && (
-            <div className="bg-[#1a1a1a] rounded-xl p-4 border border-[#505050]">
-              <h4 className="text-white/90 font-semibold text-sm mb-4">
-                My Vest
-              </h4>
-              <div className="space-y-3">
-                {hasStakeWithValidator && (
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-7 h-7 bg-[#C7EF6B]/20 rounded-lg flex items-center justify-center">
-                        <Lock size={14} color="#C7EF6B" />
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-gray-400 text-sm">
-                          Currently vested
-                        </span>
-                      </div>
+          <div className="bg-[#1a1a1a] rounded-xl p-4 border border-[#505050]">
+            <h4 className="text-white/90 font-semibold text-sm mb-4">
+              My Vest
+            </h4>
+            <div className="space-y-3">
+              {hasStakeWithValidator && (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-7 h-7 bg-[#C7EF6B]/20 rounded-lg flex items-center justify-center">
+                      <Lock size={14} color="#C7EF6B" />
                     </div>
-                    <span className="font-medium text-sm">
-                      {totalStakedAmount.toFixed(2)} LPT
-                    </span>
+                    <div className="flex flex-col">
+                      <span className="text-gray-400 text-sm">
+                        Currently vested
+                      </span>
+                    </div>
                   </div>
-                )}
+                  <span className="font-medium text-sm">
+                    {totalStakedAmount.toFixed(2)} LPT
+                  </span>
+                </div>
+              )}
 
-                {hasWithdrawableAmount && (
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-7 h-7 bg-green-500/20 rounded-lg flex items-center justify-center">
-                        <Coins size={14} color="#4ade80" />
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-gray-400 text-sm">
-                          Ready to Withdraw
-                        </span>
-                      </div>
+              {hasWithdrawableAmount && (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-7 h-7 bg-green-500/20 rounded-lg flex items-center justify-center">
+                      <Coins size={14} color="#4ade80" />
                     </div>
-                    <span className="font-medium text-sm">
-                      {totalWithdrawableAmount.toFixed(2)}
-                    </span>
+                    <div className="flex flex-col">
+                      <span className="text-gray-400 text-sm">
+                        Ready to Withdraw
+                      </span>
+                    </div>
                   </div>
-                )}
+                  <span className="font-medium text-sm">
+                    {totalWithdrawableAmount.toFixed(2)}
+                  </span>
+                </div>
+              )}
 
-                {hasPendingUnbonding && (
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-7 h-7 bg-yellow-500/20 rounded-lg flex items-center justify-center">
-                        <Clock size={14} color="#fbbf24" />
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-gray-400 text-sm">Withdrawing</span>
-                      </div>
+              {hasPendingUnbonding && (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-7 h-7 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                      <Clock size={14} color="#fbbf24" />
                     </div>
-                    <span className="font-medium text-sm">
-                      {totalPendingAmount.toFixed(2)}
-                    </span>
+                    <div className="flex flex-col">
+                      <span className="text-gray-400 text-sm">Withdrawing</span>
+                    </div>
                   </div>
-                )}
-              </div>
+                  <span className="font-medium text-sm">
+                    {totalPendingAmount.toFixed(2)}
+                  </span>
+                </div>
+              )}
             </div>
-          )}
+          </div>
+        )}
       </div>
     </div>
   );

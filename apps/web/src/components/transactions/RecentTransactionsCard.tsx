@@ -1,5 +1,5 @@
 import React from "react";
-import { Info } from "lucide-react";
+import { Info, ArrowDownLeft, ArrowUpRight } from "lucide-react";
 import { TransactionData } from "@/services/transactions/types";
 import { EmptyState } from "@/components/general/EmptyState";
 
@@ -18,22 +18,12 @@ export const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
   skeletonCount = 3,
   walletType,
 }) => {
-  const getTransactionImage = (transaction: TransactionData) => {
-    const symbol = transaction.token_symbol?.toUpperCase();
+  const isDepositTransaction = (type: TransactionData["transaction_type"]) => {
+    return type === "deposit" || type === "delegation" || type === "mint";
+  };
 
-    if (transaction.transaction_type === "deposit") {
-      return "/ng_flag.png";
-    }
-
-    if (symbol === "USDC") {
-      return "/usdc.svg";
-    }
-
-    if (symbol === "LPT") {
-      return "/livepeer.webp";
-    }
-
-    return "/usdc.svg";
+  const isWithdrawTransaction = (type: TransactionData["transaction_type"]) => {
+    return type === "withdrawal" || type === "undelegation" || type === "burn";
   };
 
   const getTransactionTitle = (
@@ -81,7 +71,7 @@ export const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
 
   if (isLoading) {
     return (
-      <div className="bg-[#2a2a2a] rounded-lg overflow-hidden">
+      <div className="bg-[#151515] rounded-lg overflow-hidden">
         <div className="divide-y divide-[#505050]">
           {Array.from({ length: skeletonCount }).map((_, index) => (
             <div
@@ -119,7 +109,7 @@ export const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
   }
 
   return (
-    <div className="bg-[#2a2a2a] rounded-lg overflow-hidden">
+    <div className="bg-[#151515] rounded-lg overflow-hidden">
       <div className="divide-y divide-[#505050]">
         {transactions.map((transaction) => (
           <div
@@ -128,12 +118,14 @@ export const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
             className="flex items-center justify-between p-4 hover:bg-[#505050]/30 transition-colors cursor-pointer"
           >
             <div className="flex items-center space-x-3 flex-1 min-w-0">
-              <div className="w-10 h-10 flex items-center justify-center shrink-0">
-                <img
-                  src={getTransactionImage(transaction)}
-                  alt={transaction.token_symbol || "transaction asset"}
-                  className="w-8 h-8 object-contain"
-                />
+              <div className="w-10 h-10 flex items-center justify-center shrink-0 bg-white/10 rounded-full">
+                {isDepositTransaction(transaction.transaction_type) ? (
+                  <ArrowDownLeft size={20} className="text-green-400" />
+                ) : isWithdrawTransaction(transaction.transaction_type) ? (
+                  <ArrowUpRight size={20} className="text-red-400" />
+                ) : (
+                  <ArrowDownLeft size={20} className="text-white" />
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-white text-sm font-medium truncate">

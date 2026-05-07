@@ -36,6 +36,7 @@ const LearnDetailPage = lazyRetry(() => import("@/screens/learn-detail-page"));
 const ForecastPage = lazyRetry(() => import("@/screens/forecast-page"));
 const EarnPage = lazyRetry(() => import("@/screens/earn-page"));
 const CampaignPage = lazyRetry(() => import("@/screens/campaign-page"));
+const PerksPage = lazyRetry(() => import("@/screens/perks-page"));
 const PortfolioPage = lazyRetry(() => import("@/screens/portfolio-page"));
 const PortfolioSummaryPage = lazyRetry(
   () => import("@/screens/portfolio-summary-page"),
@@ -296,6 +297,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             {withSuspenseAndErrorBoundary(<CampaignPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "perks",
+        element: (
+          <ProtectedRoute>
+            {withSuspenseAndErrorBoundary(<PerksPage />)}
           </ProtectedRoute>
         ),
       },
