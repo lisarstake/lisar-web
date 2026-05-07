@@ -3,6 +3,11 @@
 
 @custom-variant dark (&:is(.dark *));
 
+  html, body {
+    overscroll-behavior: none; /* Prevent bounce that reveals white space */
+    background-color: #050505; /* Match app background */
+  }
+
 :root {
   --radius: 0.625rem;
   --background: oklch(1 0 0);
@@ -200,15 +205,10 @@
     }
   }
 
-  /* Ensure overflow areas are white */
-  #root {
-    background-color: white;
-  }
-
   /* Fix for iOS Safari and other mobile browsers */
   @supports (-webkit-touch-callout: none) {
     body {
-      background-color: white !important;
+      background-color: #050505 !important;
     }
   }
 
@@ -219,16 +219,17 @@
     min-height: 0;
     overflow-x: hidden;
     overflow-y: auto;
+    overscroll-behavior-y: none; /* Prevent bounce that reveals white space */
   }
 
   /* Pages with bottom navigation */
   .app-main.with-bottom-nav {
-    padding-bottom: 65px; /* Space for fixed bottom navigation */
+    padding-bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px)); /* Space for fixed bottom navigation + iOS safe area */
   }
 
   @media (min-width: 768px) {
     .app-main.with-bottom-nav {
-      padding-bottom: 65px; /* Keep same padding on desktop */
+      padding-bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px)); /* Keep same padding on desktop */
     }
   }
 
