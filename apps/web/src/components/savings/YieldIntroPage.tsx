@@ -55,11 +55,11 @@ const YIELD_CONTENT: Record<string, YieldContent> = {
     rate: "15",
     rateSuffix: "% APY",
     description:
-      "Set a daily spend limit for yourself. The rest of your money earns interest while you spend.",
+      "Save on subscriptions you love — Claude, Spotify, Adobe, Canva, and more. Lisar Flex earns yield while covering your monthly bills.",
     benefits: [
-      "Daily spend money sent to you",
-      "Rest of your money earns interest",
-      "Flexible spending with growth",
+      "Covers your favorite subscriptions monthly",
+      "Your savings earn daily interest",
+      "Set it once, enjoy uninterrupted access",
     ],
     cta: "Start flexing",
     bgColor: "bg-[#a78bfa]",
@@ -156,7 +156,7 @@ export const YieldIntroPage: React.FC = () => {
       <div className="px-6 pb-8 pt-3 bg-[#050505] shrink-0">
         <button
           onClick={handleExploreClick}
-          className={`h-14 w-full rounded-full text-base font-semibold ${content.bgColor} ${content.textColor}`}
+          className={`h-12 w-full rounded-full text-base font-semibold ${content.bgColor} ${content.textColor}`}
         >
           {content.cta}
         </button>

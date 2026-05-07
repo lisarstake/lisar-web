@@ -406,6 +406,15 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [state.user]);
 
+  // Refresh when Solana wallet is created after login/signup
+  useEffect(() => {
+    const handleSolanaWalletCreated = () => {
+      refreshAllWalletData();
+    };
+    window.addEventListener("solana-wallet-created", handleSolanaWalletCreated);
+    return () => window.removeEventListener("solana-wallet-created", handleSolanaWalletCreated);
+  }, [refreshAllWalletData]);
+
   // Cleanup
   useEffect(() => {
     return () => {

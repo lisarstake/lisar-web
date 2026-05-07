@@ -87,10 +87,14 @@ const LisarGrowthPage = lazyRetry(() => import("@/screens/lisar-growth-page"));
 const LisarSavingsPage = lazyRetry(
   () => import("@/screens/lisar-savings-page"),
 );
+const LisarFlexPage = lazyRetry(
+  () => import("@/screens/lisar-flex-page"),
+);
 const PrivacyPolicyPage = lazyRetry(
   () => import("@/screens/privacy-policy-page"),
 );
 const TermsOfUsePage = lazyRetry(() => import("@/screens/terms-of-use-page"));
+const FlexCardPage = lazyRetry(() => import("@/screens/flex-card-page"));
 const NotFoundPage = lazyRetry(() => import("@/screens/NotFoundPage"));
 
 const withSuspense = (element: ReactNode) => (
@@ -145,6 +149,10 @@ export const router = createBrowserRouter([
       {
         path: "lisar-savings",
         element: withSuspenseAndErrorBoundary(<LisarSavingsPage />),
+      },
+      {
+        path: "lisar-flex",
+        element: withSuspenseAndErrorBoundary(<LisarFlexPage />),
       },
       {
         path: "privacy-policy",
@@ -305,6 +313,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             {withSuspenseAndErrorBoundary(<PerksPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "earn/flex-card",
+        element: (
+          <ProtectedRoute>
+            {withSuspenseAndErrorBoundary(<FlexCardPage />)}
           </ProtectedRoute>
         ),
       },
