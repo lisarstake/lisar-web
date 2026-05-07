@@ -1,6 +1,8 @@
 import { Outlet, useLocation } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { ErrorBoundary } from "@/components/general/ErrorBoundary";
+import { PwaRegister } from "@/components/general/PwaRegister";
+import { PwaInstallPrompt } from "@/components/general/PwaInstallPrompt";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { PricesProvider } from "@/contexts/PricesContext";
 import { OrchestratorProvider } from "@/contexts/OrchestratorContext";
@@ -23,6 +25,7 @@ export default function App() {
     location.pathname === "/" || 
     location.pathname === "/lisar-growth" || 
     location.pathname === "/lisar-savings" || 
+    location.pathname === "/lisar-flex" || 
     location.pathname === "/privacy-policy" || 
     location.pathname === "/terms-of-use" || 
     location.pathname === "/dashboard" ||
@@ -44,7 +47,7 @@ export default function App() {
     "/learn-detail",
   ];
 
-  const pagesWithoutBottomNavSpacing = ["/wallet/yields/intro"];
+  const pagesWithoutBottomNavSpacing = ["/wallet/yields/intro", "/earn/flex-card"];
 
   const hasBottomNav =
     !pagesWithoutBottomNavSpacing.some((path) =>
@@ -61,6 +64,7 @@ export default function App() {
         <PricesProvider>
         <GuidedTourProvider>
           <Toaster position="bottom-center" />
+          <PwaRegister />
           <ErrorBoundary>
             <DashboardProvider>
               <ErrorBoundary>
@@ -113,6 +117,7 @@ export default function App() {
                                         </>
                                       )}
                                       <GuidedTour />
+                                      <PwaInstallPrompt />
                                     </div>
                                             </NotificationProvider>
                                           </ErrorBoundary>

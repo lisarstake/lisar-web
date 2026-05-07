@@ -1,43 +1,41 @@
-const CACHE_NAME = "lisar-v1.0.0";
-const urlsToCache = [
-  "/",
-  "/index.html",
-  "/src/main.tsx",
-  "/src/index.css",
-  "/onyx.png",
-  "/lisar.png",
-];
+const CACHE_NAME = "lisar-v2.0.1";
+const SHELL_URLS = ["/", "/index.html"];
 
-// Install event - cache resources
 self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(urlsToCache);
-    })
-  );
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL_URLS)));
+  self.skipWaiting();
 });
 
-// Fetch event - serve from cache when offline
-self.addEventListener("fetch", (event) => {
-  event.respondWith(
-    caches.match(event.request).then((response) => {
-      // Return cached version or fetch from network
-      return response || fetch(event.request);
-    })
-  );
-});
-
-// Activate event - clean up old caches
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
+    caches.keys().then((cacheNames) =>
+      Promise.all(
+        cacheNames.filter((name) => name !== CACHE_NAME).map((name) => caches.delete(name))
+      )
+    )
+  );
+  self.clients.claim();
+});
+
+self.addEventListener("fetch", (event) => {
+  const { request } = event;
+
+  if (request.method !== "GET") return;
+
+  if (request.url.includes("/api/") || request.url.includes("/functions/")) {
+    event.respondWith(fetch(request).catch(() => new Response(null, { status: 503 })));
+    return;
+  }
+
+  event.respondWith(
+    caches.match(request).then((cached) => {
+      const networkFetch = fetch(request).then((response) => {
+        const responseToCache = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(request, responseToCache));
+        return response;
+      }).catch(() => null);
+
+      return cached || networkFetch;
     })
   );
 });

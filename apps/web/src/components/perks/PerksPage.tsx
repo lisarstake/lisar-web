@@ -107,13 +107,13 @@ export const PerksPage: React.FC = () => {
                         {/* Collapsible Content */}
                         {benefitsExpanded && (
                             <div className="space-y-3 mt-3">
-                                <div className="flex items-center gap-3 p-2 rounded-lg bg-[#505050]">
-                                    <Gift className="w-4 h-4 text-white/70" />
-                                    <p className="text-xs text-white/70">Discount on purchases (Coffee and pastries)</p>
+                                <div className="flex items-center gap-2 p-2 rounded-lg bg-[#505050]">
+                                    <Gift className="w-4 h-4 text-white/90" />
+                                    <p className="text-xs text-white/90">Discount on purchases (Coffee and pastries)</p>
                                 </div>
-                                <div className="flex items-center gap-3 p-2 rounded-lg bg-[#505050]">
-                                    <LampDesk className="w-4 h-4 text-white/70" />
-                                    <p className="text-xs text-white/70">Discount on co-working spaces</p>
+                                <div className="flex items-center gap-2 p-2 rounded-lg bg-[#505050]">
+                                    <LampDesk className="w-4 h-4 text-white/90" />
+                                    <p className="text-xs text-white/90">Discount on co-working spaces</p>
                                 </div>
                             </div>
                         )}

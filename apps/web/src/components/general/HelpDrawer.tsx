@@ -24,7 +24,7 @@ export const HelpDrawer: React.FC<HelpDrawerProps> = ({
     <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DrawerContent className="bg-[#050505] border-[#505050]">
         <DrawerHeader>
-          <DrawerTitle className="text-center text-xl font-semibold text-white">
+          <DrawerTitle className="text-left text-lg font-medium text-white">
             {title}
           </DrawerTitle>
         </DrawerHeader>
@@ -32,7 +32,7 @@ export const HelpDrawer: React.FC<HelpDrawerProps> = ({
         <div className="pt-4 space-y-1">
           {content.map((section, index) => (
             <div key={index}>
-              <p className="text-gray-300 text-sm leading-relaxed">{section}</p>
+              <p className="text-gray-400 text-sm leading-relaxed">{section}</p>
             </div>
           ))}
         </div>

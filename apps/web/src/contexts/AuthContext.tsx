@@ -15,13 +15,18 @@ import { authService } from "@/services/auth";
 import { walletService } from "@/services";
 import mixpanel from "mixpanel-browser";
 
-async function ensureSolanaWalletAfterSignup(): Promise<void> {
+async function ensureSolanaWalletAfterSignup(): Promise<boolean> {
   try {
     const r = await walletService.getWallets("solana");
     if (r.success && r.wallets.length === 0) {
-      await walletService.createSolanaWallet({ make_primary: true });
+      const created = await walletService.createSolanaWallet({ make_primary: true });
+      if (created.success) {
+        window.dispatchEvent(new Event("solana-wallet-created"));
+        return true;
+      }
     }
   } catch {}
+  return false;
 }
 
 // Auth State
@@ -433,7 +438,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             },
           });
 
-          ensureSolanaWalletAfterSignup();
+          await ensureSolanaWalletAfterSignup();
 
           // Identify user and track Sign In
           mixpanel.identify(userResponse.data.user_id);
@@ -507,7 +512,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               },
             });
 
-            ensureSolanaWalletAfterSignup();
+            await ensureSolanaWalletAfterSignup();
 
             // Identify user and track Sign In
             mixpanel.identify(userResponse.data.user_id);
@@ -630,7 +635,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           },
         });
 
-        ensureSolanaWalletAfterSignup();
+        await ensureSolanaWalletAfterSignup();
 
         // Check if this is a new user (sign up) or existing user (sign in)
         const isNewUser =

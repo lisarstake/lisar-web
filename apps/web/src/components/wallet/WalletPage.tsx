@@ -58,7 +58,7 @@ const WALLET_VISUALS = {
   flex: {
     coinName: "USDC",
     coinSymbol: "USD",
-    icon: "/usdt.svg",
+    icon: "/usdc.svg",
     cardGradient:
       "bg-[linear-gradient(155deg,#a78bfa_0%,#c4b5fd_50%,#ddd6fe_100%)] border-[#a78bfa]/65",
   },
@@ -90,8 +90,9 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
 
   const carouselRef = useRef<HTMLDivElement>(null);
   const getInitialCarouselIndex = () => {
-    if (currentWalletType === "staking") return 1;  // Growth is now 2nd (index 1)
-    return 0;                                  // Savings is 1st (index 0)
+    if (currentWalletType === "staking") return 2;
+    if (currentWalletType === "flex") return 1;
+    return 0;
   };
   const [carouselIndex, setCarouselIndex] = useState(getInitialCarouselIndex());
   const scrollEndTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -131,8 +132,9 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
 
   useEffect(() => {
     const getIdx = () => {
-      if (currentWalletType === "staking") return 1;  // Growth is now 2nd (index 1)
-      return 0;                                     // Savings is 1st (index 0)
+      if (currentWalletType === "staking") return 2;
+      if (currentWalletType === "flex") return 1;
+      return 0;
     };
     const idx = getIdx();
     setCarouselIndex(idx);
@@ -154,7 +156,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
     const { scrollLeft, offsetWidth } = carouselRef.current;
     const cardWidth = offsetWidth * CARD_WIDTH_RATIO + 12;
     const index = Math.round(scrollLeft / cardWidth);
-    const clamped = Math.min(Math.max(index, 0), 1);
+    const clamped = Math.min(Math.max(index, 0), 2);
     setCarouselIndex(clamped);
 
     if (scrollEndTimeoutRef.current) {
@@ -164,7 +166,9 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
       scrollEndTimeoutRef.current = null;
       if (clamped === 0 && currentWalletType !== "savings") {
         navigate("/wallet/savings", { replace: true });
-      } else if (clamped === 1 && currentWalletType !== "staking") {
+      } else if (clamped === 1 && currentWalletType !== "flex") {
+        navigate("/wallet/flex", { replace: true });
+      } else if (clamped === 2 && currentWalletType !== "staking") {
         navigate("/wallet/staking", { replace: true });
       }
     }, 150);
@@ -236,7 +240,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
   const tokenInfoDescription = isStakingWallet
     ? "Earn yields daily with 7 days unlock period for withdrawals."
     : isFlexWallet
-    ? "Set a daily spend limit that gets sent to your account daily, while the rest grows"
+    ? "Save on subscriptions you love — Claude, Adobe, Canva, and more. Lisar Flex earns yield while covering your monthly bills."
     : "Earn yields daily with instant withdrawal.";
 
   const currentValidatorName = useMemo(() => {
@@ -451,7 +455,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
           className="mt-5 flex gap-3 overflow-x-auto snap-x snap-mandatory scrollbar-hide"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
-          {cardData.filter(card => card.type !== "flex").map((card) => {
+          {cardData.map((card) => {
             const isSavings = card.type === "savings";
             const isFlex = card.type === "flex";
             const isStaking = card.type === "staking";
@@ -583,7 +587,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
                     />
                   ) : isFlex ? (
                     <img
-                      src="/usdt.svg"
+                      src="/lovable.png"
                       alt="Flex"
                       className="absolute bottom-[-12px] right-[-12px] w-14 h-14 object-contain opacity-80"
                     />
@@ -602,11 +606,11 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
 
         {/* Carousel Indicators */}
         <div className="flex justify-center gap-2 mt-2">
-          {cardData.filter(card => card.type !== "flex").map((card, i) => (
+          {cardData.map((card, i) => (
             <div
               key={i}
               className={`h-1.5 rounded-full transition-all ${i === carouselIndex
-                  ? i === 0 ? "w-6 bg-[#86B3F7]" : "w-6 bg-[#C7EF6B]"
+                  ? card.type === "savings" ? "w-6 bg-[#86B3F7]" : card.type === "flex" ? "w-6 bg-[#a78bfa]" : "w-6 bg-[#C7EF6B]"
                   : "w-1.5 bg-white/30"
                 }`}
             />

@@ -47,7 +47,7 @@ export const FlexCardRequestDrawer: React.FC<FlexCardRequestDrawerProps> = ({ is
 
             if (error) throw error;
 
-            toast.success("Flex Card request submitted! You'll receive it within 12-24 hours.");
+            toast.success("Flex Card request submitted! Your requested will be processed within 12-24 hours.");
             setNameOnCard("");
             setUnderstood(false);
             onClose();
@@ -77,7 +77,7 @@ export const FlexCardRequestDrawer: React.FC<FlexCardRequestDrawerProps> = ({ is
                             value={nameOnCard}
                             onChange={(e) => setNameOnCard(e.target.value)}
                             placeholder="Jnr Isamil"
-                            className="bg-[#1a1a1a] border-[#333] py-6 text-white placeholder:text-gray-500 focus:border-[#C7EF6B]"
+                            className="bg-[#1a1a1a] border-[#333] py-6 text-white placeholder:text-gray-500 focus:none"
                         />
                     </div>
 

@@ -470,7 +470,7 @@ export const AllWalletPage: React.FC = () => {
             <div data-tour="all-wallet-earn-section">
               <div className="flex items-center justify-between mb-4 mt-6">
                 <h2 className="text-white/70 text-sm font-medium">
-                  Grow on Lisar
+                  Explore different options
                 </h2>
                 <div className="flex items-center gap-1 bg-white/5 rounded-lg p-0.5">
                   <button
@@ -521,8 +521,6 @@ export const AllWalletPage: React.FC = () => {
                   />
                 </div>
 
-
-                {/* Flex Card - COMMENTED OUT UNTIL API INTEGRATION
                 <div
                   onClick={() => navigate("/wallet/yields/intro", { state: { walletType: "flex" } })}
                   className="bg-transparent rounded-2xl p-5 border-2 border-[#a78bfa]/30 hover:border-[#a78bfa]/50 transition-colors relative overflow-hidden cursor-pointer"
@@ -533,7 +531,7 @@ export const AllWalletPage: React.FC = () => {
                         Lifestyle Flex
                       </h3>
                       <p className="text-white/60 text-sm">
-                        Set a daily spend limit that gets sent to your account daily, while the rest grows
+                        Save on subscriptions and favorite tools you enjoy. Lisar flex covers you month over month.
                       </p>
                     </div>
                   </div>
@@ -546,12 +544,12 @@ export const AllWalletPage: React.FC = () => {
                   </button>
 
                   <img
-                    src="/usdt.svg"
+                    src="/lovable.png"
                     alt="Flex"
-                    className="absolute bottom-[-12px] right-[-12px] w-14 h-14 object-contain opacity-80"
+                    className="absolute bottom-[-10px] right-[-10px] w-14 h-14 object-contain opacity-80"
                   />
                 </div>
-                */}
+
 
                 {/* Growth Card */}
                 <div
