@@ -223,12 +223,12 @@
 
   /* Pages with bottom navigation */
   .app-main.with-bottom-nav {
-    padding-bottom: 65px; /* Space for fixed bottom navigation */
+    padding-bottom: 55px; /* Space for fixed bottom navigation */
   }
 
   @media (min-width: 768px) {
     .app-main.with-bottom-nav {
-      padding-bottom: 65px; /* Keep same padding on desktop */
+      padding-bottom: 55px; /* Keep same padding on desktop */
     }
   }
 
