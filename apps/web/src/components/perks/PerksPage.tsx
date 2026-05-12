@@ -64,12 +64,20 @@ function formatRedemptionTitle(record: PointsRedemptionRecord): string {
   return `Redeemed · ${record.coupon_code}`;
 }
 
+const CAFE_ONE_PARTNER: PointsPartner = {
+  id: "cafe-one",
+  name: "Cafe One",
+  display_name: "Café One",
+  referral_code: "",
+  is_active: true,
+};
+
 export const PerksPage: React.FC = () => {
   const navigate = useNavigate();
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
   const [benefitsExpanded, setBenefitsExpanded] = useState(false);
 
-  const { balance, partners, loading, refetch } = usePointsContext();
+  const { balance, loading, refetch } = usePointsContext();
   const [redeemingPartnerId, setRedeemingPartnerId] = useState<string | null>(
     null,
   );
@@ -205,54 +213,10 @@ export const PerksPage: React.FC = () => {
         {loading ? (
           <>
             <Skeleton className="w-full h-48 rounded-lg mb-6 bg-white/10" />
-
-            {[0].map((i) => (
-              <Card
-                key={`partner-skel-${i}`}
-                className="bg-[#1a1a1a] border-gray-800 py-0 mb-4"
-              >
-                <CardContent className="px-4 py-4">
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <Skeleton className="h-6 w-40 max-w-[60%] rounded-md bg-white/10" />
-                    <Skeleton className="h-4 w-24 shrink-0 rounded-md bg-white/10 mt-0.5" />
-                  </div>
-                  <Skeleton className="h-3 w-full max-w-[95%] mb-1.5 rounded-md bg-white/10" />
-                  <Skeleton className="h-3 w-full max-w-[75%] mb-4 rounded-md bg-white/10" />
-                  <div className="grid grid-cols-[2fr_1fr] gap-3">
-                    <div className="p-2 bg-[#505050] rounded-md">
-                    </div>
-                    <Skeleton className="h-9 self-center rounded-full bg-[#C7EF6B]/35" />
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-
-            <Card className="bg-[#1a1a1a] border-gray-800 py-0 mb-4">
-              <CardContent className="px-4 py-3">
-                <div className="flex items-center justify-between w-full mb-0">
-                  <Skeleton className="h-4 w-36 rounded-md bg-white/10" />
-                  <Skeleton className="h-4 w-4 shrink-0 rounded-sm bg-white/10" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-[#1a1a1a] border-gray-800 py-0 mb-4">
-              <CardContent className="px-4 py-4">
-                <Skeleton className="h-4 w-28 mb-3 rounded-md bg-white/10" />
-                <div className="space-y-2">
-                  <Skeleton className="h-3 w-full rounded-md bg-white/10" />
-                  <Skeleton className="h-3 w-[92%] rounded-md bg-white/10" />
-                  <Skeleton className="h-3 w-[88%] rounded-md bg-white/10" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <div className="p-4 bg-[#1a1a1a] border border-gray-800 rounded-lg mb-6">
-              <Skeleton className="h-4 w-36 mb-2 rounded-md bg-white/10" />
-              <Skeleton className="h-3 w-full mb-1.5 rounded-md bg-white/10" />
-              <Skeleton className="h-3 w-[85%] mb-3 rounded-md bg-white/10" />
-              <Skeleton className="h-10 w-full rounded-full bg-[#C7EF6B]/30" />
-            </div>
+            <Skeleton className="w-full h-32 rounded-lg mb-4 bg-white/10" />
+            <Skeleton className="w-full h-24 rounded-lg mb-4 bg-white/10" />
+            <Skeleton className="w-full h-32 rounded-lg mb-4 bg-white/10" />
+            <Skeleton className="w-full h-36 rounded-lg mb-6 bg-white/10" />
           </>
         ) : (
           <>
@@ -264,74 +228,45 @@ export const PerksPage: React.FC = () => {
               />
             </div>
 
-            {partners.length === 0 ? (
-              <Card className="bg-[#1a1a1a] border-gray-800 py-0 mb-4">
-                <CardContent className="px-4 py-4">
-                  <p className="text-sm text-white/80 mb-3">
-                    No partner offers available right now. Check back soon.
-                  </p>
+            <Card className="bg-[#1a1a1a] border-gray-800 py-0 mb-4">
+              <CardContent className="px-4 py-4">
+                <div className="flex items-start justify-between gap-3 mb-2">
+                  <CardTitle className="text-white text-lg mb-0 flex-1 min-w-0">
+                    {CAFE_ONE_PARTNER.display_name}
+                  </CardTitle>
                   <button
                     type="button"
                     onClick={() => setHistoryDrawerOpen(true)}
-                    className="text-xs font-medium text-[#86B3F7] hover:text-[#96C3F7] underline underline-offset-2"
+                    className="shrink-0 text-xs font-medium text-[#86B3F7] hover:text-[#96C3F7] underline underline-offset-2 pt-0.5"
                   >
                     Points history
                   </button>
-                </CardContent>
-              </Card>
-            ) : (
-              partners.map((partner) => {
-                const title =
-                  partner.display_name?.trim() || partner.name || "Partner";
-                const redeemDisabled = redeemingPartnerId !== null;
-
-                return (
-                  <Card
-                    key={partner.id}
-                    className="bg-[#1a1a1a] border-gray-800 py-0 mb-4"
-                  >
-                    <CardContent className="px-4 py-4">
-                      <div className="flex items-start justify-between gap-3 mb-2">
-                        <CardTitle className="text-white text-lg mb-0 flex-1 min-w-0">
-                          {title}
-                        </CardTitle>
-                        <button
-                          type="button"
-                          onClick={() => setHistoryDrawerOpen(true)}
-                          className="shrink-0 text-xs font-medium text-[#86B3F7] hover:text-[#96C3F7] underline underline-offset-2 pt-0.5"
-                        >
-                          Points history
-                        </button>
-                      </div>
-                      <p className="text-xs text-gray-400 mb-4">
-                        Save on Lisar and accumulate points redeemable on
-                        purchases at {title}.
+                </div>
+                <p className="text-xs text-gray-400 mb-4">
+                  Save on Lisar and accumulate points redeemable on
+                  purchases at {CAFE_ONE_PARTNER.display_name}.
+                </p>
+                <div className="grid grid-cols-[2fr_1fr] gap-3">
+                  <div className="p-2 bg-[#505050] rounded-md">
+                    <div className="flex items-center justify-between mt-1">
+                      <p className="text-xs font-semibold text-white/90">
+                        {`${totalPoints} points`}
                       </p>
-                      <div className="grid grid-cols-[2fr_1fr] gap-3">
-                        <div className="p-2 bg-[#505050] rounded-md">
-                          <div className="flex items-center justify-between mt-1">
-                            <p className="text-xs font-semibold text-white/90">
-                              {`${totalPoints} points`}
-                            </p>
-                          </div>
-
-                        </div>
-                        <Button
-                          type="button"
-                          disabled={redeemDisabled}
-                          onClick={() => handleRedeemPoints(partner)}
-                          className="bg-[#C7EF6B] hover:bg-[#B8E55A] disabled:opacity-40 disabled:pointer-events-none text-black font-medium text-xs px-2 py-1 rounded-full transition-colors"
-                        >
-                          {redeemingPartnerId === partner.id
-                            ? "…"
-                            : "Redeem Now"}
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })
-            )}
+                    </div>
+                  </div>
+                  <Button
+                    type="button"
+                    disabled={redeemingPartnerId !== null}
+                    onClick={() => handleRedeemPoints(CAFE_ONE_PARTNER)}
+                    className="bg-[#C7EF6B] hover:bg-[#B8E55A] disabled:opacity-40 disabled:pointer-events-none text-black font-medium text-xs px-2 py-1 rounded-full transition-colors"
+                  >
+                    {redeemingPartnerId === CAFE_ONE_PARTNER.id
+                      ? "…"
+                      : "Redeem Now"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Benefits Card - Collapsible */}
             <Card className="bg-[#1a1a1a] border-gray-800 py-0 mb-4">
