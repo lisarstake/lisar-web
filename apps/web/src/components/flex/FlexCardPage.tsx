@@ -15,6 +15,7 @@ import {
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
+import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { FlexCardRequestDrawer } from "@/components/flex/FlexCardRequestDrawer";
 import { useWalletCard } from "@/contexts/WalletCardContext";
 
@@ -219,6 +220,8 @@ export const FlexCardPage: React.FC = () => {
                     "Request processing takes 12-24 hours for card delivery.",
                 ]}
             />
+
+            <BottomNavigation currentPath="/earn" />
         </div>
     );
 };

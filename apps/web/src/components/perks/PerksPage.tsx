@@ -24,6 +24,7 @@ import {
 import { ErrorDrawer } from "@/components/general/ErrorDrawer";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { SuccessDrawer } from "@/components/general/SuccessDrawer";
+import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { EmptyState } from "@/components/general/EmptyState";
 import toast from "react-hot-toast";
 import { pointsService } from "@/services/points";
@@ -313,7 +314,7 @@ export const PerksPage: React.FC = () => {
                               {`${totalPoints} points`}
                             </p>
                           </div>
-                         
+
                         </div>
                         <Button
                           type="button"
@@ -409,15 +410,6 @@ export const PerksPage: React.FC = () => {
 
       <Drawer open={historyDrawerOpen} onOpenChange={setHistoryDrawerOpen}>
         <DrawerContent className="bg-[#050505] border-t border-[#1b1b1b] max-h-[90vh] flex flex-col gap-0 rounded-t-2xl p-0 md:max-w-[390px] md:left-1/2 md:-translate-x-1/2">
-          <DrawerHeader className="px-6 pt-5 pb-3 border-b border-[#1b1b1b] text-left space-y-0">
-            <DrawerTitle className="text-lg font-semibold text-white text-left">
-              Points activity
-            </DrawerTitle>
-            <p className="text-xs text-white/50 text-left font-normal mt-1">
-              Inflows are points earned; outflows are redemptions.
-            </p>
-          </DrawerHeader>
-
           <div className="flex-1 overflow-y-auto px-6 pb-8 pt-4 scrollbar-hide min-h-0">
             {historyDrawerLoading ? (
               <div className="space-y-6">
@@ -626,6 +618,8 @@ export const PerksPage: React.FC = () => {
           "Offers and discount types depend on each partner.",
         ]}
       />
+
+      <BottomNavigation currentPath="/perks" />
     </div>
   );
 };
