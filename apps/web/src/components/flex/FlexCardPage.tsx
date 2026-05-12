@@ -25,10 +25,11 @@ export const FlexCardPage: React.FC = () => {
     const [benefitsExpanded, setBenefitsExpanded] = useState(false);
     const { cardData, displayCurrency, displayFiatSymbol, showBalance } = useWalletCard();
 
-    const flexCard = cardData.find((c) => c.type === "flex");
-    const flexBalance = flexCard?.displayBalanceValue ?? 0;
-    const flexYield = flexCard?.projectedInterestUsd ?? 0;
-    const flexApy = flexCard?.apyPercent ?? "0";
+    // Flex wallet card hidden — show savings figures on Flex Card promo page
+    const savingsCard = cardData.find((c) => c.type === "savings");
+    const flexBalance = savingsCard?.displayBalanceValue ?? 0;
+    const flexYield = savingsCard?.projectedInterestUsd ?? 0;
+    const flexApy = savingsCard?.apyPercent ?? "0";
 
     const displayBalance = displayCurrency === "NGN"
         ? `${displayFiatSymbol}${flexBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -43,7 +44,7 @@ export const FlexCardPage: React.FC = () => {
     };
 
     const handleTopUp = () => {
-        navigate("/wallet/flex");
+        navigate("/wallet/savings");
     };
 
     const handleRequestCard = () => {

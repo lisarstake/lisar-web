@@ -14,7 +14,7 @@ const LisarGrowthPage = () => {
           <p className="mt-2 text-sm leading-relaxed md:text-base">
             Lisar Growth is designed for users aiming for higher returns than standard savings products. It uses managed strategy execution so you do not need to trade, rebalance, or monitor the market daily.
           </p>
-        </section>
+        </section>\vb
 
         <section>
           <h2 className="text-base font-semibold text-[#1f2621] md:text-lg">2. How Growth works</h2>
@@ -46,7 +46,7 @@ const LisarGrowthPage = () => {
         <section>
           <h2 className="text-base font-semibold text-[#1f2621] md:text-lg">5. Suitability</h2>
           <p className="mt-2 text-sm leading-relaxed md:text-base">
-            Growth is better for users with moderate-to-high risk tolerance, users with longer time horizons, and users who understand that higher expected return comes with higher uncertainty.
+            Growth is better for users with moderate-to-high risk tolerance, users with lon          ger time horizons, and users who understand that higher expected return comes with higher uncertainty.
           </p>
         </section>
 

@@ -50,6 +50,7 @@ const YIELD_CONTENT: Record<string, YieldContent> = {
     textColor: "text-black",
     image: "/hero.svg",
   },
+  /* Flex wallet hidden
   flex: {
     title: "Lisar Flex",
     rate: "15",
@@ -66,6 +67,7 @@ const YIELD_CONTENT: Record<string, YieldContent> = {
     textColor: "text-black",
     image: "/hero.svg",
   },
+  */
 };
 
 export const YieldIntroPage: React.FC = () => {
@@ -83,7 +85,8 @@ export const YieldIntroPage: React.FC = () => {
 
   const content = useMemo(() => {
     if (walletTypeFromState === "growth") return YIELD_CONTENT.growth;
-    if (walletTypeFromState === "flex") return YIELD_CONTENT.flex;
+    // Flex hidden — treat as savings
+    // if (walletTypeFromState === "flex") return YIELD_CONTENT.flex;
     return YIELD_CONTENT.savings;
   }, [walletTypeFromState]);
 
@@ -103,8 +106,6 @@ export const YieldIntroPage: React.FC = () => {
       navigate("/wallet/savings", { replace: true });
     } else if (walletTypeFromState === "growth") {
       navigate("/wallet/staking", { replace: true });
-    } else if (walletTypeFromState === "flex") {
-      navigate("/wallet/flex", { replace: true });
     } else if (hasSavings) {
       navigate("/wallet/savings", { replace: true });
     } else if (hasStaking) {

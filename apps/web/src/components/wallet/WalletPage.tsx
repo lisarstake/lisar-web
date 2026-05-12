@@ -55,6 +55,7 @@ const WALLET_VISUALS = {
     cardGradient:
       "bg-[linear-gradient(155deg,#0096FF_0%,#34AEFF_50%,#8DD4FF_100%)] border-[#8DD4FF]/65",
   },
+  /* Flex wallet hidden
   flex: {
     coinName: "USDC",
     coinSymbol: "USD",
@@ -62,6 +63,7 @@ const WALLET_VISUALS = {
     cardGradient:
       "bg-[linear-gradient(155deg,#a78bfa_0%,#c4b5fd_50%,#ddd6fe_100%)] border-[#a78bfa]/65",
   },
+  */
   staking: {
     coinName: "Livepeer",
     coinSymbol: "LPT",
@@ -76,7 +78,13 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
   const { walletType: paramWalletType } = useParams<{ walletType?: string }>();
   const walletType = propWalletType || paramWalletType;
   const navigate = useNavigate();
-  const currentWalletType = walletType === "staking" ? "staking" : walletType === "flex" ? "flex" : "savings";
+  const currentWalletType = walletType === "staking" ? "staking" : "savings";
+
+  useEffect(() => {
+    if (walletType === "flex") {
+      navigate("/wallet/savings", { replace: true });
+    }
+  }, [walletType, navigate]);
   const [showDepositDrawer, setShowDepositDrawer] = useState(false);
   const [showWithdrawDrawer, setShowWithdrawDrawer] = useState(false);
   const [showWithdrawEmptyDrawer, setShowWithdrawEmptyDrawer] = useState(false);
@@ -90,8 +98,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
 
   const carouselRef = useRef<HTMLDivElement>(null);
   const getInitialCarouselIndex = () => {
-    if (currentWalletType === "staking") return 2;
-    if (currentWalletType === "flex") return 1;
+    if (currentWalletType === "staking") return 1;
     return 0;
   };
   const [carouselIndex, setCarouselIndex] = useState(getInitialCarouselIndex());
@@ -126,14 +133,12 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
   const { prices } = usePrices();
 
   const isStakingWallet = walletType === "staking";
-  const isFlexWallet = walletType === "flex";
 
   const CARD_WIDTH_RATIO = 0.92;
 
   useEffect(() => {
     const getIdx = () => {
-      if (currentWalletType === "staking") return 2;
-      if (currentWalletType === "flex") return 1;
+      if (currentWalletType === "staking") return 1;
       return 0;
     };
     const idx = getIdx();
@@ -156,7 +161,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
     const { scrollLeft, offsetWidth } = carouselRef.current;
     const cardWidth = offsetWidth * CARD_WIDTH_RATIO + 12;
     const index = Math.round(scrollLeft / cardWidth);
-    const clamped = Math.min(Math.max(index, 0), 2);
+    const clamped = Math.min(Math.max(index, 0), 1);
     setCarouselIndex(clamped);
 
     if (scrollEndTimeoutRef.current) {
@@ -166,9 +171,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
       scrollEndTimeoutRef.current = null;
       if (clamped === 0 && currentWalletType !== "savings") {
         navigate("/wallet/savings", { replace: true });
-      } else if (clamped === 1 && currentWalletType !== "flex") {
-        navigate("/wallet/flex", { replace: true });
-      } else if (clamped === 2 && currentWalletType !== "staking") {
+      } else if (clamped === 1 && currentWalletType !== "staking") {
         navigate("/wallet/staking", { replace: true });
       }
     }, 150);
@@ -178,16 +181,9 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
     if (walletType === "staking") {
       return cardData.find((item) => item.type === "staking") ?? null;
     }
-    if (walletType === "flex") {
-      return cardData.find((item) => item.type === "flex") ?? null;
-    }
     return cardData.find((item) => item.type === "savings") ?? null;
   }, [cardData, walletType]);
-  const walletVisual = isStakingWallet
-    ? WALLET_VISUALS.staking
-    : isFlexWallet
-    ? WALLET_VISUALS.flex
-    : WALLET_VISUALS.savings;
+  const walletVisual = isStakingWallet ? WALLET_VISUALS.staking : WALLET_VISUALS.savings;
   const assetBalance = activeWalletCard?.balance ?? 0;
   const formattedAssetBalance = `${assetBalance.toLocaleString(undefined, {
     minimumFractionDigits: 2,
@@ -239,8 +235,6 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
   ]);
   const tokenInfoDescription = isStakingWallet
     ? "Earn yields daily with 7 days unlock period for withdrawals."
-    : isFlexWallet
-    ? "Save on subscriptions you love — Claude, Adobe, Canva, and more. Lisar Flex earns yield while covering your monthly bills."
     : "Earn yields daily with instant withdrawal.";
 
   const currentValidatorName = useMemo(() => {
@@ -373,7 +367,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
     return transactions
       .filter((tx) => {
         const isLpt = tx.token_symbol?.toUpperCase() === "LPT";
-        if (walletType === "savings" || walletType === "flex") {
+        if (walletType === "savings") {
           return savingsTxTypes.includes(tx.transaction_type) && !isLpt;
         }
         if (walletType === "staking") {
@@ -457,7 +451,6 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
         >
           {cardData.map((card) => {
             const isSavings = card.type === "savings";
-            const isFlex = card.type === "flex";
             const isStaking = card.type === "staking";
             return (
               <div
@@ -468,17 +461,15 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
                   className={`${
                     isSavings
                       ? "bg-transparent border border-[#6da7fd]/50 hover:border-[#86B3F7]/50"
-                      : isFlex
-                      ? "bg-transparent border border-[#a78bfa]/30 hover:border-[#a78bfa]/50"
                       : "bg-transparent border border-[#C7EF6B]/30 hover:border-[#C7EF6B]/50"
                   } rounded-2xl py-4 min-h-[100px] relative overflow-hidden transition-colors`}
                 >
                  
                   <div className={`absolute top-0 right-0 w-32 h-32 ${
-                    isSavings ? "bg-white/10" : isFlex ? "bg-[#a78bfa]/5" : "bg-[#C7EF6B]/5"
+                    isSavings ? "bg-white/10" : "bg-[#C7EF6B]/5"
                   } rounded-full blur-3xl pointer-events-none`}></div>
                   <div className={`absolute bottom-0 left-0 w-24 h-24 ${
-                    isSavings ? "bg-[#86B3F7]/10" : isFlex ? "bg-[#a78bfa]/5" : "bg-white/5"
+                    isSavings ? "bg-[#86B3F7]/10" : "bg-white/5"
                   } rounded-full blur-2xl pointer-events-none`}></div>
 
                    {/* Lisar Lines Decoration */}
@@ -542,8 +533,6 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
                       onClick={() => {
                         if (isSavings) {
                           navigate("/wallet/yields/create-flexible?mode=savings&source=usdc");
-                        } else if (isFlex) {
-                          navigate("/wallet/yields/create-flexible?mode=flex&source=usdc");
                         } else {
                           navigate("/wallet/yields/create-flexible?mode=staking&source=lpt");
                         }
@@ -551,9 +540,9 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
                       className="flex flex-col items-center gap-1.5"
                     >
                       <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10">
-                        {isSavings ? <PiggyBank size={22} className="text-white" /> : isFlex ? <PiggyBank size={22} className="text-white" /> : <Sprout size={22} className="text-white" />}
+                        {isSavings ? <PiggyBank size={22} className="text-white" /> : <Sprout size={22} className="text-white" />}
                       </span>
-                      <span className="text-xs font-medium">{isSavings ? "Save" : isFlex ? "Flex" : "Grow"}</span>
+                      <span className="text-xs font-medium">{isSavings ? "Save" : "Grow"}</span>
                     </button>
 
                     <button
@@ -585,12 +574,6 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
                       alt="Savings"
                       className="absolute bottom-[-20px] right-[-20px] w-20 h-20 object-contain opacity-80"
                     />
-                  ) : isFlex ? (
-                    <img
-                      src="/lovable.png"
-                      alt="Flex"
-                      className="absolute bottom-[-12px] right-[-12px] w-14 h-14 object-contain opacity-80"
-                    />
                   ) : (
                     <img
                       src="/highyield-1.svg"
@@ -610,7 +593,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
             <div
               key={i}
               className={`h-1.5 rounded-full transition-all ${i === carouselIndex
-                  ? card.type === "savings" ? "w-6 bg-[#86B3F7]" : card.type === "flex" ? "w-6 bg-[#a78bfa]" : "w-6 bg-[#C7EF6B]"
+                  ? card.type === "savings" ? "w-6 bg-[#86B3F7]" : "w-6 bg-[#C7EF6B]"
                   : "w-1.5 bg-white/30"
                 }`}
             />
@@ -744,11 +727,11 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
           <DrawerHeader>
             <div className="flex items-center justify-between w-full">
               <DrawerTitle className="text-base font-medium text-white/90 text-left">
-                {walletType === 'savings' ? 'LISAR Savings' : walletType === 'flex' ? 'LISAR Flex' : 'LISAR Growth'}
+                {walletType === 'savings' ? 'LISAR Savings' : 'LISAR Growth'}
               </DrawerTitle>
               <button
                 onClick={() => {
-                  const linkType = walletType === "savings" ? "savings" : walletType === "flex" ? "flex" : "growth";
+                  const linkType = walletType === "savings" ? "savings" : "growth";
                   window.open(`/lisar-${linkType}`, "_blank");
                 }}
                 className="h-8 w-8 rounded-full bg-white/10 flex items-center justify-center"

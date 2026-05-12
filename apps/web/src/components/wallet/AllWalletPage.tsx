@@ -521,7 +521,7 @@ export const AllWalletPage: React.FC = () => {
                   />
                 </div>
 
-                <div
+                {/* <div
                   onClick={() => navigate("/wallet/yields/intro", { state: { walletType: "flex" } })}
                   className="bg-transparent rounded-2xl p-5 border-2 border-[#a78bfa]/30 hover:border-[#a78bfa]/50 transition-colors relative overflow-hidden cursor-pointer"
                 >
@@ -548,7 +548,7 @@ export const AllWalletPage: React.FC = () => {
                     alt="Flex"
                     className="absolute bottom-[-10px] right-[-10px] w-14 h-14 object-contain opacity-80"
                   />
-                </div>
+                </div> */}
 
 
                 {/* Growth Card */}
