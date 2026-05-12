@@ -74,3 +74,6 @@ export * from "./campaign";
 export * from "./ramp";
 // Export virtual-account services
 export * from "./virtual-account";
+
+// Export points services
+export * from "./points";

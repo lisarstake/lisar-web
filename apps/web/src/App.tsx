@@ -16,6 +16,7 @@ import { GuidedTourProvider } from "@/contexts/GuidedTourContext";
 import { PortfolioProvider } from "@/contexts/PortfolioContext";
 import { WalletCardProvider } from "@/contexts/WalletCardContext";
 import { CampaignProvider } from "@/contexts/CampaignContext";
+import { PointsProvider } from "@/contexts/PointsContext";
 import { GuidedTour } from "@/components/general/GuidedTour";
 
 export default function App() {
@@ -25,7 +26,7 @@ export default function App() {
     location.pathname === "/" || 
     location.pathname === "/lisar-growth" || 
     location.pathname === "/lisar-savings" || 
-    location.pathname === "/lisar-flex" || 
+    /* location.pathname === "/lisar-flex" || */
     location.pathname === "/privacy-policy" || 
     location.pathname === "/terms-of-use" || 
     location.pathname === "/dashboard" ||
@@ -35,7 +36,7 @@ export default function App() {
     "/wallet",
     "/wallet/savings",
     "/wallet/staking",
-    "/wallet/flex",
+    /* "/wallet/flex", */
     "/validator",
     "/portfolio",
     "/earn",
@@ -44,10 +45,11 @@ export default function App() {
     "/history",
     "/unstake-amount",
     "/leaderboard",
+    "/leaderboard",
     "/learn-detail",
   ];
 
-  const pagesWithoutBottomNavSpacing = ["/wallet/yields/intro", "/earn/flex-card"];
+  const pagesWithoutBottomNavSpacing = ["/wallet/yields/intro", "/earn/flex-card", "/perks"];
 
   const hasBottomNav =
     !pagesWithoutBottomNavSpacing.some((path) =>
@@ -65,6 +67,7 @@ export default function App() {
         <GuidedTourProvider>
           <Toaster position="bottom-center" />
           <PwaRegister />
+          <PointsProvider>
           <ErrorBoundary>
             <DashboardProvider>
               <ErrorBoundary>
@@ -138,6 +141,7 @@ export default function App() {
               </ErrorBoundary>
             </DashboardProvider>
           </ErrorBoundary>
+          </PointsProvider>
         </GuidedTourProvider>
         </PricesProvider>
       </AuthProvider>

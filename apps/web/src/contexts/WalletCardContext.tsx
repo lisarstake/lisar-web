@@ -126,10 +126,10 @@ export const WalletCardProvider: React.FC<{ children: ReactNode }> = ({
     const stakingInterestUsd = stakingUsdValue * (growthApy ?? 0.6) * (7 / 365);
     const stakingInterestNgn = stakingInterestUsd * (prices.ngn || 0);
 
-    const flexBalance = savingsBalance; // Flex uses same balance as Savings
-    const flexDisplayValue = savingsDisplayValue; // Same display value
-    const flexInterestUsd = savingsInterestUsd; // Same interest calculation
-    const flexInterestNgn = savingsInterestNgn;
+    // const flexBalance = savingsBalance; // Flex uses same balance as Savings
+    // const flexDisplayValue = savingsDisplayValue;
+    // const flexInterestUsd = savingsInterestUsd;
+    // const flexInterestNgn = savingsInterestNgn;
 
     return [
       {
@@ -147,6 +147,7 @@ export const WalletCardProvider: React.FC<{ children: ReactNode }> = ({
               : "14",
         isLoading: stablesLoading,
       },
+      /* Flex wallet hidden — show Savings + Growth only
       {
         type: "flex",
         title: "Flex",
@@ -162,6 +163,7 @@ export const WalletCardProvider: React.FC<{ children: ReactNode }> = ({
               : "14",
         isLoading: stablesLoading,
       },
+      */
       {
         type: "staking",
         title: "Growth",

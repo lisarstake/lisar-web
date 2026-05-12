@@ -37,13 +37,13 @@ export const EarnPage: React.FC = () => {
       buttonText: 'Redeem points',
       isComingSoon: false,
     },
-    {
-      id: "flex-card",
-      title: "Lisar Flex Card",
-      description: "Pay for your favorite subscriptions with your savings yield. Over 1700+ providers supported.",
-      buttonText: "Get your card",
-      isComingSoon: false,
-    },
+    // {
+    //   id: "flex-card",
+    //   title: "Lisar Flex Card",
+    //   description: "Pay for your favorite subscriptions with your savings yield. Over 1700+ providers supported.",
+    //   buttonText: "Get your card",
+    //   isComingSoon: false,
+    // },
     {
       id: "3",
       title: "Connect with us",
