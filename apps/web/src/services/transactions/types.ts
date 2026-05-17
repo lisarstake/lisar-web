@@ -15,7 +15,7 @@ export interface TransactionApiResponse<T> {
 }
 
 // Transaction Types
-export type TransactionType = 'deposit' | 'withdrawal' | 'delegation' | 'undelegation' | 'mint' | 'burn';
+export type TransactionType = 'deposit' | 'withdrawal' | 'delegation' | 'undelegation' | 'mint' | 'burn' | 'on_ramp' | 'off_ramp';
 
 // Transaction Data
 export interface TransactionData {
@@ -32,6 +32,10 @@ export interface TransactionData {
   source: string;
   svix_id: string;
   created_at: string;
+  fiatAmount?: number;
+  rate?: number;
+  currency?: string;
+  rampStatus?: string;
 }
 
 // API Response for transaction list

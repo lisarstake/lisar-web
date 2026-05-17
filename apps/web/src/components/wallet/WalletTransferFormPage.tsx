@@ -12,16 +12,16 @@ import {
   Copy,
   ClipboardPaste,
   LoaderCircle,
+  WalletCards,
 } from "lucide-react";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { ErrorDrawer } from "@/components/general/ErrorDrawer";
-// import {
-//   RampDrawer,
-//   type RampTransactionDetails,
-// } from "@/components/general/RampDrawer";
+import { PajRampDrawer } from "@/components/general/PajRampDrawer";
+import type { PajRampTransactionDetails } from "@/components/general/PajRampDrawer";
 import { SuccessDrawer } from "@/components/general/SuccessDrawer";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWallet } from "@/contexts/WalletContext";
+import { useWalletCard } from "@/contexts/WalletCardContext";
 import { usePrices } from "@/hooks/usePrices";
 import {
   Select,
@@ -35,9 +35,8 @@ import { OnrampWebSDK } from "@onramp.money/onramp-web-sdk";
 import { getFiatType } from "@/lib/onramp";
 import { priceService } from "@/lib/priceService";
 import { virtualAccountService } from "@/services/virtual-account";
-import { rampService } from "@/services/ramp";
-import type { BankInfo } from "@/services/ramp/types";
-import { perenaService, walletService } from "@/services";
+import { pajRampService, perenaService, walletService } from "@/services";
+import type { RampBank } from "@/services/paj-ramp";
 import { WithdrawalConfirmationDrawer } from "@/components/general/FiatWithdrawalDrawer";
 import { formatNumber, parseFormattedNumber } from "@/lib/formatters";
 
@@ -59,6 +58,18 @@ const TOKEN_CONFIG: Record<
   LPT: { icon: "/livepeer.webp", networks: ["Arbitrum"] },
 };
 
+const TOKEN_MINT: Record<string, string> = {
+  USDC: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+  USDT: "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
+  LPT: "",
+};
+
+const TOKEN_CHAIN: Record<string, string> = {
+  USDC: "SOLANA",
+  USDT: "SOLANA",
+  LPT: "arbitrum",
+};
+
 export const WalletTransferFormPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -68,6 +79,7 @@ export const WalletTransferFormPage: React.FC = () => {
   }>();
   const { state } = useAuth();
   const { prices } = usePrices();
+  const { displayCurrency, displayFiatSymbol } = useWalletCard();
   const {
     solanaWalletAddress,
     solanaWalletId,
@@ -88,7 +100,7 @@ export const WalletTransferFormPage: React.FC = () => {
 
   const [amount, setAmount] = useState("");
   const [bankCode, setBankCode] = useState("");
-  const [banks, setBanks] = useState<BankInfo[]>([]);
+  const [banks, setBanks] = useState<RampBank[]>([]);
   const [accountNumber, setAccountNumber] = useState("");
   const [accountName, setAccountName] = useState("");
   const [lookupError, setLookupError] = useState("");
@@ -100,12 +112,11 @@ export const WalletTransferFormPage: React.FC = () => {
   const [showCryptoWithdrawSuccess, setShowCryptoWithdrawSuccess] =
     useState(false);
   const [showCryptoWithdrawError, setShowCryptoWithdrawError] = useState(false);
-  // RAMP DRAWER STATES - COMMENTED OUT TILL RAMP LIQUIDITY IS READY
-  // const [showDepositNairaRampDrawer, setShowDepositNairaRampDrawer] =
-  //   useState(false);
+  const [showDepositNairaRampDrawer, setShowDepositNairaRampDrawer] =
+    useState(false);
   const [depositNairaErrorMessage, setDepositNairaErrorMessage] = useState("");
-  // const [depositNairaRampDetails, setDepositNairaRampDetails] =
-  //   useState<RampTransactionDetails | null>(null);
+  const [depositNairaRampDetails, setDepositNairaRampDetails] =
+    useState<PajRampTransactionDetails | null>(null);
   const [cryptoWithdrawErrorMessage, setCryptoWithdrawErrorMessage] =
     useState("");
   const [walletAddress, setWalletAddress] = useState("");
@@ -168,7 +179,7 @@ export const WalletTransferFormPage: React.FC = () => {
   const loadBanks = useCallback(async () => {
     if (!isNairaWithdraw) return;
 
-    const response = await rampService.getBanks();
+    const response = await pajRampService.getBanks();
     if (response.success && response.data?.length) {
       setBanks(response.data);
       setBankCode((prev) => prev || response.data?.[0]?.code || "");
@@ -191,65 +202,50 @@ export const WalletTransferFormPage: React.FC = () => {
     };
   }, [refreshAllWalletData]);
 
-  /* ORIGINAL RAMP FLOW - COMMENTED OUT TILL RAMP LIQUIDITY IS READY
-  const handleDepositNairaContinue = useCallback(() => {
-    const parsedAmount = Number(amount.replace(/,/g, "").trim());
-    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
-      setDepositNairaErrorMessage("Select a valid amount to continue.");
-      return;
-    }
-    if (!tokenRateInNgn) {
-      setDepositNairaErrorMessage(
-        "Rate unavailable right now. Please try again.",
-      );
-      return;
-    }
-
-    const cryptoAddress =
-      tokenSymbol === "LPT"
-        ? ethereumWalletAddress || state.user?.wallet_address || null
-        : solanaWalletAddress || null;
-    if (!cryptoAddress) {
-      setDepositNairaErrorMessage(
-        "Wallet address not available. Please try again.",
-      );
-      return;
-    }
-
-    const tokenAmount = parsedAmount / tokenRateInNgn;
-    setDepositNairaRampDetails({
-      type: "buy",
-      tokenAmount,
-      tokenName: tokenSymbol,
-      fiatAmount: parsedAmount,
-      fiatSymbol: "₦",
-      fiatCurrency: "NGN",
-      exchangeRate: tokenRateInNgn,
-      fee: 0,
-      processingTime: "1 minute",
-      paymentMethodText: "Bank transfer",
-      cryptoAddress,
-      customerEmail: state.user?.email || "",
-      customerName: state.user?.full_name || "Lisar User",
-    });
-    setDepositNairaErrorMessage("");
-    setShowDepositNairaRampDrawer(true);
-  }, [
-    amount,
-    ethereumWalletAddress,
-    solanaWalletAddress,
-    state.user?.email,
-    state.user?.full_name,
-    state.user?.wallet_address,
-    tokenRateInNgn,
-    tokenSymbol,
-  ]);
-  */
-
   const handleDepositNairaContinue = useCallback(async () => {
     const parsedAmount = Number(amount.replace(/,/g, "").trim());
     if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
       setDepositNairaErrorMessage("Select a valid amount to continue.");
+      return;
+    }
+
+    if (safeWalletType === "savings") {
+      if (!tokenRateInNgn) {
+        setDepositNairaErrorMessage(
+          "Rate unavailable right now. Please try again.",
+        );
+        return;
+      }
+
+      const cryptoAddress =
+        tokenSymbol === "LPT"
+          ? ethereumWalletAddress || state.user?.wallet_address || null
+          : solanaWalletAddress || null;
+      if (!cryptoAddress) {
+        setDepositNairaErrorMessage(
+          "Wallet address not available. Please try again.",
+        );
+        return;
+      }
+
+      const tokenAmount = parsedAmount / tokenRateInNgn;
+      setDepositNairaRampDetails({
+        type: "buy",
+        tokenAmount,
+        tokenName: tokenSymbol,
+        fiatAmount: parsedAmount,
+        fiatSymbol: "₦",
+        fiatCurrency: "NGN",
+        exchangeRate: tokenRateInNgn,
+        fee: 0,
+        cryptoAddress,
+        customerEmail: state.user?.email || "",
+        customerName: state.user?.full_name || "Lisar User",
+        mint: "",
+        chain: TOKEN_CHAIN[tokenSymbol] || "solana",
+      });
+      setDepositNairaErrorMessage("");
+      setShowDepositNairaRampDrawer(true);
       return;
     }
 
@@ -314,9 +310,13 @@ export const WalletTransferFormPage: React.FC = () => {
     amount,
     ethereumWalletAddress,
     solanaWalletAddress,
+    state.user?.email,
+    state.user?.full_name,
     state.user?.wallet_address,
+    tokenRateInNgn,
     tokenSymbol,
     userCurrency,
+    safeWalletType,
     refreshAllWalletData,
   ]);
 
@@ -636,14 +636,21 @@ export const WalletTransferFormPage: React.FC = () => {
       return;
     }
 
+    const selectedBank = banks.find((b) => b.code === bankCode);
+    if (!selectedBank) {
+      setAccountName("");
+      setLookupError("Account not found");
+      return;
+    }
+
     let ignore = false;
     const runLookup = async () => {
       setIsLookingUpAccount(true);
       setLookupError("");
       try {
-        const response = await rampService.lookupAccount({
+        const response = await pajRampService.resolveBankAccount({
+          bankId: selectedBank.id,
           accountNumber,
-          bankCode,
         });
 
         if (!ignore) {
@@ -652,7 +659,9 @@ export const WalletTransferFormPage: React.FC = () => {
             setLookupError("");
           } else {
             setAccountName("");
-            setLookupError("Account not found");
+            setLookupError(
+              response.error?.message || "Account not found",
+            );
           }
         }
       } catch (error) {
@@ -672,7 +681,7 @@ export const WalletTransferFormPage: React.FC = () => {
     return () => {
       ignore = true;
     };
-  }, [accountNumber, bankCode, isNairaWithdraw]);
+  }, [accountNumber, bankCode, banks, isNairaWithdraw]);
 
   const walletTokenLabel = safeWalletType === "staking" ? "LPT" : "USDC";
   const cryptoAvailableBalance =
@@ -868,14 +877,26 @@ export const WalletTransferFormPage: React.FC = () => {
                       <ClipboardPaste size={18} className="text-white/60" />
                     </button>
                   </div>
-                  <p className="mt-2 text-xs text-white/60">
-                    Available:{" "}
-                    {cryptoAvailableBalance.toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 4,
-                    })}{" "}
-                    {walletTokenLabel}
-                  </p>
+                  {cryptoAvailableBalance > 0 && (
+                    <div className="rounded-lg bg-[#151515] p-4 mt-4">
+                      <h3 className="text-sm text-white/60 mb-0.5 flex items-center gap-1.5">
+                        <WalletCards size={16} /> Available balance
+                      </h3>
+                      <div className="bg-[#151515] rounded-lg border border-[#151515]">
+                        <div className="flex items-center space-x-3">
+                          <div className="flex-1">
+                            <span className="text-gray-100 text-sm font-medium">
+                              {cryptoAvailableBalance.toLocaleString(undefined, {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 4,
+                              })}{" "}
+                              {walletTokenLabel}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -899,18 +920,6 @@ export const WalletTransferFormPage: React.FC = () => {
                   className="flex-1 bg-transparent text-white text-lg font-medium focus:outline-none"
                 />
               </div>
-              <p className="text-gray-400 text-xs mt-2 pl-2">
-                {tokenRateInNgn && numericAmount > 0
-                  ? `≈ ${(numericAmount / tokenRateInNgn).toLocaleString(
-                      undefined,
-                      {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 4,
-                      },
-                    )} ${tokenSymbol}`
-                  : `≈ 0.00 ${tokenSymbol}`}
-              </p>
-
               <div className="pt-4">
                 <div className="flex space-x-3">
                   {nairaDepositPresetAmounts.map((preset) => {
@@ -1088,9 +1097,8 @@ export const WalletTransferFormPage: React.FC = () => {
         onConfirmWithdrawal={confirmWithdrawal}
       />
 
-      {/* RampDrawer - COMMENTED OUT TILL RAMP LIQUIDITY IS READY
       {depositNairaRampDetails ? (
-        <RampDrawer
+        <PajRampDrawer
           isOpen={showDepositNairaRampDrawer}
           onClose={() => setShowDepositNairaRampDrawer(false)}
           details={depositNairaRampDetails}
@@ -1100,7 +1108,6 @@ export const WalletTransferFormPage: React.FC = () => {
           }}
         />
       ) : null}
-      */}
 
       <SuccessDrawer
         isOpen={showCryptoWithdrawSuccess}

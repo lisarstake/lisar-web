@@ -16,7 +16,7 @@ interface TransactionDetailsDrawerProps {
 }
 
 const isPositiveTransaction = (type: TransactionType) =>
-  type === "deposit" || type === "delegation" || type === "mint";
+  type === "deposit" || type === "delegation" || type === "mint" || type === "on_ramp";
 
 const getTransactionLabel = (type: TransactionType) => {
   switch (type) {
@@ -32,6 +32,10 @@ const getTransactionLabel = (type: TransactionType) => {
       return "Deposit";
     case "burn":
       return "Withdraw";
+    case "on_ramp":
+      return "Deposit";
+    case "off_ramp":
+      return "Withdrawal";
     default:
       return "Transaction";
   }
@@ -121,6 +125,24 @@ export const TransactionDetailsDrawer: React.FC<TransactionDetailsDrawerProps> =
               {truncateMiddle(transaction.wallet_address)}
             </span>
           </div>}
+
+          {transaction.source === "ramp" && transaction.fiatAmount !== undefined && (
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-base text-white/60">Fiat value</span>
+              <span className="text-sm text-white">
+                {transaction.currency || "NGN"} {transaction.fiatAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </span>
+            </div>
+          )}
+
+          {transaction.source === "ramp" && transaction.rate !== undefined && (
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-base text-white/60">Rate</span>
+              <span className="text-sm text-white">
+                1 {transaction.token_symbol} = {transaction.currency || "NGN"} {transaction.rate.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </span>
+            </div>
+          )}
         </div>
       </DrawerContent>
     </Drawer>

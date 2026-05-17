@@ -6,7 +6,7 @@ export const http = axios.create({
   withCredentials: true,
 })
 
-const getStoredToken = (): string | null => {
+export const getStoredToken = (): string | null => {
   if (isRefreshing) {
     return localStorage.getItem("auth_token") || sessionStorage.getItem("auth_token");
   }
@@ -31,14 +31,14 @@ const getStoredToken = (): string | null => {
   return token;
 };
 
-const getStoredRefreshToken = (): string | null => {
+export const getStoredRefreshToken = (): string | null => {
   return (
     localStorage.getItem("refresh_token") ||
     sessionStorage.getItem("refresh_token")
   );
 };
 
-const removeStoredTokens = (): void => {
+export const removeStoredTokens = (): void => {
   localStorage.removeItem("auth_token");
   localStorage.removeItem("refresh_token");
   localStorage.removeItem("auth_expiry");
@@ -47,7 +47,7 @@ const removeStoredTokens = (): void => {
   sessionStorage.removeItem("auth_expiry");
 };
 
-const setStoredTokens = (
+export const setStoredTokens = (
   accessToken: string,
   refreshToken: string,
   expiresAt?: number

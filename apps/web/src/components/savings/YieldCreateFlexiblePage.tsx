@@ -1,11 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, PiggyBank, Sprout, WalletCards } from "lucide-react";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { useOrchestrators } from "@/contexts/OrchestratorContext";
 import { useStablesApy } from "@/hooks/useStablesApy";
 import { useWallet } from "@/contexts/WalletContext";
+import { useWalletCard } from "@/contexts/WalletCardContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePrices } from "@/hooks/usePrices";
 import { useDelegation } from "@/contexts/DelegationContext";
 import { useTransactions } from "@/contexts/TransactionContext";
 import { delegationService, perenaService } from "@/services";
@@ -33,8 +35,15 @@ export const YieldCreateFlexiblePage: React.FC = () => {
   const { orchestrators } = useOrchestrators();
   const { perena: perenaApy, isLoading: apyLoading } = useStablesApy();
   const { state } = useAuth();
-  const { solanaWalletId, solanaWalletAddress, refreshAllWalletData } =
-    useWallet();
+  const {
+    solanaWalletId,
+    solanaWalletAddress,
+    solanaUsdcBalance,
+    highyieldBalance,
+    refreshAllWalletData,
+  } = useWallet();
+  const { displayCurrency, displayFiatSymbol } = useWalletCard();
+  const { prices } = usePrices();
   const { refetch: refetchDelegation } = useDelegation();
   const { refetch: refetchTransactions } = useTransactions();
   const [amount, setAmount] = useState("");
@@ -81,6 +90,31 @@ export const YieldCreateFlexiblePage: React.FC = () => {
     if (source === "lpt") return { label: "LPT", icon: "/livepeer.webp" };
     return { label: "USDC", icon: "/usdc.svg" };
   }, [source]);
+
+  const stashBalance = mode === "savings" ? (solanaUsdcBalance ?? 0) : (highyieldBalance ?? 0);
+
+  const stashFiatValue = useMemo(() => {
+    if (stashBalance <= 0) return 0;
+    if (mode === "savings") {
+      if (displayCurrency === "NGN") return stashBalance * (prices.ngn || 0);
+      return stashBalance;
+    }
+    const usdValue = stashBalance * (prices.lpt || 0);
+    if (displayCurrency === "NGN") return usdValue * (prices.ngn || 0);
+    return usdValue;
+  }, [stashBalance, mode, displayCurrency, prices.ngn, prices.lpt]);
+
+  const fiatEquivalent = useMemo(() => {
+    const numericAmount = Number(amount) || 0;
+    if (numericAmount <= 0) return 0;
+    if (mode === "savings") {
+      if (displayCurrency === "NGN") return numericAmount * (prices.ngn || 0);
+      return numericAmount;
+    }
+    const usdValue = numericAmount * (prices.lpt || 0);
+    if (displayCurrency === "NGN") return usdValue * (prices.ngn || 0);
+    return usdValue;
+  }, [amount, mode, displayCurrency, prices.ngn, prices.lpt]);
 
   const currentOrchestrator = selectedOrchestrator || "";
   const selectedOrchestratorData = stakingOrchestratorOptions.find(
@@ -255,6 +289,15 @@ export const YieldCreateFlexiblePage: React.FC = () => {
               {/* <span className="text-base text-white">{sourceMeta.label}</span> */}
             </div>
           </div>
+          {Number(amount) > 0 && (
+            <p className="text-gray-400 text-xs mt-2 pl-1">
+              ≈ {displayFiatSymbol}
+              {fiatEquivalent.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </p>
+          )}
         </div>
 
         {mode === "staking" && (
@@ -292,17 +335,36 @@ export const YieldCreateFlexiblePage: React.FC = () => {
               : `${apyLoading && perenaApy === null ? "..." : perenaApy ? (perenaApy * 100).toFixed(1) : "14"}% p.a.`}
           </p>
         </div>
+
+        {stashBalance > 0 && (
+          <div className="rounded-lg bg-[#151515] p-4 mt-4">
+            <h3 className="text-sm text-white/60 mb-0.5 flex items-center gap-1.5">
+              <WalletCards size={16} /> Stash balance
+            </h3>
+            <div className="bg-[#151515] rounded-lg border border-[#151515]">
+              <div className="flex items-center space-x-3">
+                <div className="flex-1">
+                  <span className="text-gray-100 text-sm font-medium">
+                    {displayFiatSymbol}{stashFiatValue.toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="px-6 pb-24 pt-3 bg-[#050505] shrink-0">
         <button
           onClick={handleContinue}
           disabled={!isEnabled || isSubmitting}
-          className={`py-3.5 w-full rounded-full text-base font-semibold transition-opacity flex items-center justify-center gap-2 ${
-            isEnabled && !isSubmitting
-              ? "bg-[#C7EF6B] text-black"
-              : "bg-[#636363] text-white cursor-not-allowed"
-          }`}
+          className={`py-3.5 w-full rounded-full text-base font-semibold transition-opacity flex items-center justify-center gap-2 ${isEnabled && !isSubmitting
+            ? "bg-[#C7EF6B] text-black"
+            : "bg-[#636363] text-white cursor-not-allowed"
+            }`}
         >
           {isSubmitting && (
             <span className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />

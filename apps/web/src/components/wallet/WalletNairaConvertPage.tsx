@@ -1,19 +1,27 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, WalletCards } from "lucide-react";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import {
-  RampDrawer,
-  type RampTransactionDetails,
-} from "@/components/general/RampDrawer";
+  PajRampDrawer,
+  type PajRampTransactionDetails,
+} from "@/components/general/PajRampDrawer";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDelegation } from "@/contexts/DelegationContext";
 import { useWallet } from "@/contexts/WalletContext";
+import { useWalletCard } from "@/contexts/WalletCardContext";
 import { usePrices } from "@/hooks/usePrices";
-import { rampService } from "@/services/ramp";
+import { OnrampWebSDK } from "@onramp.money/onramp-web-sdk";
+import { getFiatType } from "@/lib/onramp";
 import { formatNumber, parseFormattedNumber } from "@/lib/formatters";
 
 type ConvertMode = "deposit" | "withdraw";
+
+const TOKEN_CHAIN: Record<string, string> = {
+  USDC: "SOLANA",
+  USDT: "SOLANA",
+  LPT: "arbitrum",
+};
 
 export const WalletNairaConvertPage: React.FC = () => {
   const navigate = useNavigate();
@@ -27,6 +35,7 @@ export const WalletNairaConvertPage: React.FC = () => {
 
   const { state } = useAuth();
   const { userDelegation } = useDelegation();
+  const { displayCurrency, displayFiatSymbol } = useWalletCard();
   const { prices } = usePrices();
   const {
     stablesBalance,
@@ -40,9 +49,10 @@ export const WalletNairaConvertPage: React.FC = () => {
   const [amount, setAmount] = useState("");
   const [error, setError] = useState("");
   const [showRampDrawer, setShowRampDrawer] = useState(false);
-  const [rampDetails, setRampDetails] = useState<RampTransactionDetails | null>(
+  const [rampDetails, setRampDetails] = useState<PajRampTransactionDetails | null>(
     null,
   );
+  const onrampInstanceRef = useRef<OnrampWebSDK | null>(null);
 
   const nairaSourceBalance = nairaBalance || 0;
   const stakedLptBalance = useMemo(
@@ -57,7 +67,7 @@ export const WalletNairaConvertPage: React.FC = () => {
   const sourceBalance =
     safeMode === "deposit" ? nairaSourceBalance : availableTokenBalance;
   const sourceBalanceLabel =
-    safeMode === "deposit" ? "Naira balance" : `${tokenSymbol} balance`;
+    safeMode === "deposit" ? "Naira balance" : `${safeWalletType} balance`;
 
   const tokenRateInNgn = useMemo(() => {
     const ngnPerUsd = prices.ngn || 0;
@@ -66,24 +76,39 @@ export const WalletNairaConvertPage: React.FC = () => {
     return ngnPerUsd;
   }, [prices.lpt, prices.ngn, tokenSymbol]);
 
-  const resolveVirtualAccountBankCode = async (): Promise<string | null> => {
-    if (!virtualAccount?.bankName) return null;
-    const response = await rampService.getBanks();
-    if (!response.success || !response.data?.length) return null;
+  const sourceFiatBalance = useMemo(
+    () =>
+      safeMode === "deposit"
+        ? nairaSourceBalance
+        : availableTokenBalance * tokenRateInNgn,
+    [safeMode, nairaSourceBalance, availableTokenBalance, tokenRateInNgn],
+  );
 
-    const normalize = (value: string) =>
-      value.toLowerCase().replace(/[^a-z0-9]/g, "");
-    const target = normalize(virtualAccount.bankName);
+  const sourceDisplayValue = useMemo(() => {
+    if (safeMode === "deposit") {
+      if (displayCurrency === "USD") return (nairaSourceBalance || 0) / Math.max(prices.ngn || 1, 1);
+      return nairaSourceBalance || 0;
+    }
+    if (safeWalletType === "savings") {
+      const usdValue = stablesBalance || 0;
+      if (displayCurrency === "NGN") return usdValue * (prices.ngn || 0);
+      return usdValue;
+    }
+    const usdValue = stakedLptBalance * (prices.lpt || 0);
+    if (displayCurrency === "NGN") return usdValue * (prices.ngn || 0);
+    return usdValue;
+  }, [safeMode, safeWalletType, nairaSourceBalance, stablesBalance, stakedLptBalance, displayCurrency, prices.ngn, prices.lpt]);
 
-    const exact = response.data.find((bank) => normalize(bank.name) === target);
-    if (exact) return exact.code;
-
-    const fuzzy = response.data.find((bank) => {
-      const candidate = normalize(bank.name);
-      return candidate.includes(target) || target.includes(candidate);
-    });
-    return fuzzy?.code || null;
-  };
+  useEffect(() => {
+    return () => {
+      if (onrampInstanceRef.current) {
+        try {
+          onrampInstanceRef.current.close();
+          refreshAllWalletData();
+        } catch {}
+      }
+    };
+  }, [refreshAllWalletData]);
 
   const handleContinue = async () => {
     const parsedAmount = Number(parseFormattedNumber(amount).trim());
@@ -96,7 +121,8 @@ export const WalletNairaConvertPage: React.FC = () => {
       return;
     }
 
-    if (safeMode === "withdraw" && parsedAmount > availableTokenBalance) {
+    const tokenAmount = safeMode === "withdraw" ? parsedAmount / tokenRateInNgn : 0;
+    if (safeMode === "withdraw" && tokenAmount > availableTokenBalance) {
       setError(`Amount exceeds available ${tokenSymbol}`);
       return;
     }
@@ -107,32 +133,85 @@ export const WalletNairaConvertPage: React.FC = () => {
     if (safeMode === "deposit") {
       const fiatAmount = parsedAmount;
       const tokenAmount = fiatAmount / tokenRateInNgn;
-      const cryptoAddress =
-        tokenSymbol === "LPT"
-          ? ethereumWalletAddress || state.user?.wallet_address || null
-          : solanaWalletAddress || null;
 
-      if (!cryptoAddress) {
+      if (safeWalletType === "savings") {
+        const cryptoAddress = solanaWalletAddress || null;
+        if (!cryptoAddress) {
+          setError("Wallet address not available. Please try again.");
+          return;
+        }
+
+        setRampDetails({
+          type: "buy",
+          tokenAmount,
+          tokenName: tokenSymbol,
+          fiatAmount,
+          fiatSymbol: "₦",
+          fiatCurrency: "NGN",
+          exchangeRate: tokenRateInNgn,
+          fee: 0,
+          cryptoAddress,
+          customerEmail,
+          customerName,
+          mint: "",
+          chain: TOKEN_CHAIN[tokenSymbol] || "solana",
+        });
+        setShowRampDrawer(true);
+        return;
+      }
+
+      const walletAddress =
+        ethereumWalletAddress || state.user?.wallet_address;
+
+      if (!walletAddress) {
         setError("Wallet address not available. Please try again.");
         return;
       }
 
-      setRampDetails({
-        type: "buy",
-        tokenAmount,
-        tokenName: tokenSymbol,
-        fiatAmount,
-        fiatSymbol: "₦",
-        fiatCurrency: "NGN",
-        exchangeRate: tokenRateInNgn,
-        fee: 0,
-        processingTime: "1 minute",
-        paymentMethodText: "Bank transfer",
-        cryptoAddress,
-        customerEmail,
-        customerName,
-      });
-      setShowRampDrawer(true);
+      const coinCode = tokenSymbol === "LPT" ? "lpt" : "usdc";
+      const network = tokenSymbol === "LPT" ? "arbitrum" : "spl";
+      const fiatType = getFiatType("NGN");
+
+      try {
+        const onramp = new OnrampWebSDK({
+          appId: import.meta.env.VITE_ONRAMP_APP_ID,
+          walletAddress,
+          flowType: 1,
+          fiatType,
+          paymentMethod: 2,
+          fiatAmount: parsedAmount,
+          coinCode,
+          network,
+          theme: {
+            lightMode: {
+              baseColor: "#C7EF6B",
+              inputRadius: "8px",
+              buttonRadius: "8px",
+            },
+            darkMode: {
+              baseColor: "#6A8F2A",
+              inputRadius: "8px",
+              buttonRadius: "8px",
+            },
+            default: "darkMode",
+          },
+          isRestricted: true,
+        });
+
+        onramp.on("WIDGET_EVENTS", async (event) => {
+          if (
+            event.type === "ONRAMP_WIDGET_CLOSE_REQUEST_CONFIRMED" ||
+            event.type === "ONRAMP_WIDGET_CLOSE"
+          ) {
+            await refreshAllWalletData();
+          }
+        });
+
+        onrampInstanceRef.current = onramp;
+        onramp.show();
+      } catch {
+        setError("Failed to initialize payment widget. Please try again.");
+      }
       return;
     }
 
@@ -141,52 +220,89 @@ export const WalletNairaConvertPage: React.FC = () => {
       return;
     }
 
-    const bankCode = await resolveVirtualAccountBankCode();
-    if (!bankCode) {
-      setError("Could not resolve your Naira account bank code.");
+    if (safeWalletType === "savings") {
+      const fiatAmount = parsedAmount;
+
+      setRampDetails({
+        type: "sell",
+        tokenAmount,
+        tokenName: tokenSymbol,
+        fiatAmount,
+        fiatSymbol: "₦",
+        fiatCurrency: "NGN",
+        exchangeRate: tokenRateInNgn,
+        fee: 0,
+        cryptoAddress: solanaWalletAddress || null,
+        bankAccountNumber: virtualAccount.accountNumber,
+        bankAccountName: virtualAccount.accountName,
+        bankName: virtualAccount.bankName,
+        customerEmail,
+        customerName,
+        mint: "",
+        chain: TOKEN_CHAIN[tokenSymbol] || "solana",
+      });
+      setShowRampDrawer(true);
       return;
     }
 
-    const tokenAmount = parsedAmount;
-    const fiatAmount = tokenAmount * tokenRateInNgn;
-    setRampDetails({
-      type: "sell",
-      tokenAmount,
-      tokenName: tokenSymbol,
-      fiatAmount,
-      fiatSymbol: "₦",
-      fiatCurrency: "NGN",
-      exchangeRate: tokenRateInNgn,
-      fee: 0,
-      processingTime: "1 minute",
-      paymentMethodText: "To your Naira virtual account",
-      cryptoAddress:
-        tokenSymbol === "LPT"
-          ? ethereumWalletAddress || state.user?.wallet_address || null
-          : solanaWalletAddress || null,
-      bankCode,
-      bankAccountNumber: virtualAccount.accountNumber,
-      bankAccountName: virtualAccount.accountName,
-      bankName: virtualAccount.bankName,
-      customerEmail,
-      customerName,
-    });
-    setShowRampDrawer(true);
+    const walletAddress =
+      ethereumWalletAddress || state.user?.wallet_address;
+    const fiatAmount = parsedAmount;
+
+    try {
+      const onramp = new OnrampWebSDK({
+        appId: import.meta.env.VITE_ONRAMP_APP_ID,
+        walletAddress: walletAddress || "",
+        flowType: 2,
+        coinCode: "lpt",
+        network: "arbitrum",
+        fiatAmount,
+        fiatType: getFiatType("NGN"),
+        theme: {
+          lightMode: {
+            baseColor: "#C7EF6B",
+            inputRadius: "8px",
+            buttonRadius: "8px",
+          },
+          darkMode: {
+            baseColor: "#6A8F2A",
+            inputRadius: "8px",
+            buttonRadius: "8px",
+          },
+          default: "darkMode",
+        },
+        isRestricted: true,
+      });
+
+      onramp.on("WIDGET_EVENTS", async (event) => {
+        if (
+          event.type === "ONRAMP_WIDGET_CLOSE_REQUEST_CONFIRMED" ||
+          event.type === "ONRAMP_WIDGET_CLOSE"
+        ) {
+          await refreshAllWalletData();
+        }
+      });
+
+      onrampInstanceRef.current = onramp;
+      onramp.show();
+    } catch {
+      setError("Failed to initialize offramp widget. Please try again.");
+    }
   };
 
   const title =
     safeMode === "deposit" ? `Deposit with Naira` : `Withdraw to Naira`;
   const numericAmount = Number(parseFormattedNumber(amount).trim()) || 0;
-  const hasExceededBalance = numericAmount > sourceBalance;
+  const hasExceededBalance = numericAmount > sourceFiatBalance;
   const activePercent = useMemo(() => {
     if (
-      !sourceBalance ||
-      sourceBalance <= 0 ||
+      !sourceFiatBalance ||
+      sourceFiatBalance <= 0 ||
       !Number.isFinite(numericAmount)
     ) {
       return null;
     }
-    const ratio = (numericAmount / sourceBalance) * 100;
+    const ratio = (numericAmount / sourceFiatBalance) * 100;
     const clampedRatio = Math.min(100, Math.max(0, ratio));
     return presetPercents.reduce((closest, current) => {
       const currentDiff = Math.abs(current - clampedRatio);
@@ -196,7 +312,7 @@ export const WalletNairaConvertPage: React.FC = () => {
   }, [numericAmount, sourceBalance]);
 
   const handleAmountSelect = (percent: number) => {
-    const nextAmount = sourceBalance * (percent / 100);
+    const nextAmount = sourceFiatBalance * (percent / 100);
     setAmount(nextAmount.toFixed(2));
     setError("");
   };
@@ -216,13 +332,15 @@ export const WalletNairaConvertPage: React.FC = () => {
 
       <div className="flex-1 px-6 pb-28 scrollbar-hide">
         <div className="pt-2 pb-4">
-          <div className="bg-[#151515] rounded-lg p-3 flex items-center gap-3 mt-2">
+          <div className="bg-[#151515] rounded-lg p-3 flex items-center gap-1 mt-2">
+            <span className="text-white/50 text-lg font-medium">₦</span>
             <input
               type="text"
               value={amount ? formatNumber(amount) : ""}
               onChange={(e) => {
                 const rawValue = parseFormattedNumber(e.target.value);
-                let numericValue = rawValue.replace(/[^0-9.]/g, "");
+                let numericValue = rawValue.replace(/[^₦0-9.]/g, "");
+                numericValue = numericValue.replace(/₦/g, "");
                 const parts = numericValue.split(".");
                 if (parts.length > 2) {
                   numericValue = `${parts[0]}.${parts.slice(1).join("")}`;
@@ -234,28 +352,12 @@ export const WalletNairaConvertPage: React.FC = () => {
               className="flex-1 bg-transparent text-white text-lg font-medium focus:outline-none"
             />
           </div>
-          <p className="text-gray-400 text-xs mt-2 pl-2">
-            {safeMode === "deposit"
-              ? `≈ ${(
-                  numericAmount / Math.max(tokenRateInNgn, 1e-9)
-                ).toLocaleString(undefined, {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 4,
-                })} ${tokenSymbol}`
-              : `≈ ₦${(numericAmount * tokenRateInNgn).toLocaleString(
-                  undefined,
-                  {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  },
-                )}`}
-          </p>
         </div>
 
         <div className="pb-4">
           <div className="flex space-x-3">
             {presetPercents.map((percent) => {
-              const nextAmount = (sourceBalance * (percent / 100)).toFixed(2);
+              const nextAmount = (sourceFiatBalance * (percent / 100)).toFixed(2);
               const isActive = activePercent === percent && numericAmount > 0;
               return (
                 <button
@@ -282,15 +384,10 @@ export const WalletNairaConvertPage: React.FC = () => {
             <div className="flex items-center space-x-3">
               <div className="flex-1">
                 <span className="text-gray-100 text-sm font-medium">
-                  {safeMode === "deposit"
-                    ? `₦${sourceBalance.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}`
-                    : `${sourceBalance.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 4,
-                      })} ${tokenSymbol}`}
+                  {displayFiatSymbol}{sourceDisplayValue.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
                 </span>
               </div>
             </div>
@@ -322,7 +419,7 @@ export const WalletNairaConvertPage: React.FC = () => {
       </div>
 
       {rampDetails && (
-        <RampDrawer
+        <PajRampDrawer
           isOpen={showRampDrawer}
           onClose={() => setShowRampDrawer(false)}
           details={rampDetails}

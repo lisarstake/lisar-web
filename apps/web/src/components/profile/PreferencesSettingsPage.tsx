@@ -21,9 +21,10 @@ export const PreferencesSettingsPage: React.FC = () => {
   const { state, refreshUser, updateProfile } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [savingTarget, setSavingTarget] = useState<"NGN" | "USD" | null>(null);
   const [showCurrencyDrawer, setShowCurrencyDrawer] = useState(false);
   const [selectedCurrency, setSelectedCurrency] = useState<"NGN" | "USD">(
-    "NGN",
+    "USD",
   );
   const [errorDrawer, setErrorDrawer] = useState({
     isOpen: false,
@@ -37,7 +38,7 @@ export const PreferencesSettingsPage: React.FC = () => {
         if (state.isLoading) return;
 
         if (state.user) {
-          const userCurrency = (state.user.fiat_type || "NGN").toUpperCase();
+          const userCurrency = (state.user.fiat_type || "USD").toUpperCase();
           setSelectedCurrency(userCurrency === "USD" ? "USD" : "NGN");
           setIsLoading(false);
         } else if (state.isAuthenticated) {
@@ -69,6 +70,7 @@ export const PreferencesSettingsPage: React.FC = () => {
 
     try {
       setSaving(true);
+      setSavingTarget(currency);
       const response = await updateProfile({
         fiat_type: currency,
       });
@@ -89,6 +91,7 @@ export const PreferencesSettingsPage: React.FC = () => {
       });
     } finally {
       setSaving(false);
+      setSavingTarget(null);
     }
   };
 
@@ -152,9 +155,11 @@ export const PreferencesSettingsPage: React.FC = () => {
                   </p>
                 </div>
               </div>
-              {selectedCurrency === "NGN" && (
+              {saving && savingTarget === "NGN" ? (
+                <LoaderCircle size={18} className="text-[#C7EF6B] animate-spin" />
+              ) : selectedCurrency === "NGN" && !saving ? (
                 <Check size={18} className="text-[#C7EF6B]" />
-              )}
+              ) : null}
             </button>
 
             <button
@@ -175,17 +180,14 @@ export const PreferencesSettingsPage: React.FC = () => {
                   </p>
                 </div>
               </div>
-              {selectedCurrency === "USD" ? (
+              {saving && savingTarget === "USD" ? (
+                <LoaderCircle size={18} className="text-[#C7EF6B] animate-spin" />
+              ) : selectedCurrency === "USD" && !saving ? (
                 <Check size={18} className="text-[#C7EF6B]" />
               ) : null}
             </button>
 
-            {saving ? (
-              <div className="flex items-center gap-2 text-sm text-white/70">
-                <LoaderCircle size={15} className="animate-spin" />
-                Updating preferences...
-              </div>
-            ) : null}
+            
           </div>
         </DrawerContent>
       </Drawer>
@@ -197,7 +199,7 @@ export const PreferencesSettingsPage: React.FC = () => {
           setShowCurrencyDrawer(false);
         }}
         title="Preference updated"
-        message="Display currency updated."
+        message="Display currency updated successfully."
       />
 
       <ErrorDrawer

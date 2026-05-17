@@ -80,7 +80,7 @@ export class EnsService implements IEnsApiService {
       return {
         success: false,
         data: null as T,
-        message: error.response?.data?.message || "An error occurred",
+        message: error.response?.data?.message || error.response?.data?.error || "An error occurred",
         error: error.response?.data?.error || error.message || "Unknown error",
       };
     }

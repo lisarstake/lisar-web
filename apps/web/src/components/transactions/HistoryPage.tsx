@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { CircleQuestionMark } from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { TransactionList } from "@/components/transactions/TransactionList";
@@ -19,7 +18,7 @@ export const HistoryPage: React.FC = () => {
     ?.walletType;
 
   const filteredTransactions = useMemo(() => {
-    const fiatTxTypes = ["deposit", "withdrawal"];
+    const fiatTxTypes = ["deposit", "withdrawal", "on_ramp", "off_ramp"];
     if (walletTypeFromState === "staking") {
       return transactions.filter(
         (tx) => tx.token_symbol?.toUpperCase() === "LPT",
@@ -39,10 +38,6 @@ export const HistoryPage: React.FC = () => {
 
   const handleTransactionClick = (transaction: TransactionData) => {
     setSelectedTransaction(transaction);
-  };
-
-  const handleHelpClick = () => {
-    setShowHelpDrawer(true);
   };
 
   return (

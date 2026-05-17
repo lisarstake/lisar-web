@@ -72,6 +72,7 @@ export const GuidedTour: React.FC = () => {
   const [tooltipPosition, setTooltipPosition] = useState<TooltipPosition>({});
   const [currentStep, setCurrentStep] = useState<TourStep | null>(null);
   const [showSkipConfirmation, setShowSkipConfirmation] = useState(false);
+  const [isSkipping, setIsSkipping] = useState(false);
   const rafIdRef = useRef<number | null>(null);
   const scrollContainersRef = useRef<Element[]>([]);
 
@@ -378,6 +379,7 @@ export const GuidedTour: React.FC = () => {
   };
 
   const handleConfirmSkip = async () => {
+    setIsSkipping(true);
     if (tourState.tourId === ALL_WALLET_TOUR_ID) {
       await markUserOnboarded();
     }
@@ -435,9 +437,11 @@ export const GuidedTour: React.FC = () => {
   const isLastStep = tourState.currentStepIndex === totalSteps - 1;
 
   const canSkipCurrentStep = !currentStep.disableSkip;
-  const primaryActionLabel = showSkipConfirmation
-    ? "Yes, Skip"
-    : currentStep.primaryButtonLabel || (isLastStep ? "Next" : "Next");
+  const primaryActionLabel = isSkipping
+    ? "Skipping..."
+    : showSkipConfirmation
+      ? "Yes, Skip"
+      : currentStep.primaryButtonLabel || (isLastStep ? "Next" : "Next");
   const secondaryActionLabel = showSkipConfirmation
     ? "Continue"
     : currentStep.secondaryButtonLabel || "Prev";
@@ -542,6 +546,7 @@ export const GuidedTour: React.FC = () => {
           )}
           <button
             type="button"
+            disabled={isSkipping}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -551,7 +556,11 @@ export const GuidedTour: React.FC = () => {
                 handleNextStep();
               }
             }}
-            className="px-4 py-1.5 bg-[#C7EF6B] text-black rounded-full hover:bg-[#d4f57b] transition-colors text-sm font-semibold"
+            className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-colors ${
+              isSkipping
+                ? "bg-[#636363] text-white cursor-not-allowed"
+                : "bg-[#C7EF6B] text-black hover:bg-[#d4f57b]"
+            }`}
           >
             {primaryActionLabel}
           </button>

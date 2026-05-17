@@ -1,7 +1,7 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
-import { PortfolioSelectionDrawer } from "@/components/general/PortfolioSelectionDrawer";
+import { AllBalancesDrawer } from "@/components/general/AllBalancesDrawer";
 import {
   Drawer,
   DrawerContent,
@@ -19,27 +19,34 @@ import { usePrices } from "@/hooks/usePrices";
 import { ALL_WALLET_TOUR_ID } from "@/lib/tourConfig";
 import {
   Bell,
-  Plus,
   Eye,
   EyeOff,
   ChevronRight,
   LayoutGrid,
   List,
+  X,
 } from "lucide-react";
 import { LisarLines } from "@/components/landing/lisar-lines";
 
-const ADD_CASH_AMOUNTS = [50000, 100000, 200000, 500000, 1000000];
 const NAIRA_OPTION_ENABLED = false;
 
 export const AllWalletPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [showAllBalancesDrawer, setShowAllBalancesDrawer] = useState(false);
-  const [showPortfolioDrawer, setShowPortfolioDrawer] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "column">("column");
   const [transferDrawer, setTransferDrawer] = useState<
     "deposit" | "withdraw" | null
   >(null);
+  const [showPromoDrawer, setShowPromoDrawer] = useState(false);
+  const [activePromoIndex, setActivePromoIndex] = useState(0);
+  const promoCarouselRef = useRef<HTMLDivElement | null>(null);
+  const PROMO_DISMISSED_KEY = "wallet_promo_drawer_dismissed";
+
+  const handleDismissPromoDrawer = () => {
+    localStorage.setItem(PROMO_DISMISSED_KEY, "true");
+    setShowPromoDrawer(false);
+  };
   const {
     showBalance,
     setShowBalance,
@@ -58,18 +65,19 @@ export const AllWalletPage: React.FC = () => {
     navigate("/wallet", { replace: true });
   }, [location.search, navigate]);
 
+
+
   const { state } = useAuth();
   const {
     wallet,
     isLoading: walletLoading,
     highyieldBalance: contextHighyieldBalance,
     solanaUsdcBalance,
-    solanaUsdtBalance,
-    nairaBalance,
+    stablesBalance,
     stablesLoading,
     highyieldLoading,
   } = useWallet();
-  const { isLoading: delegationLoading } =
+  const { isLoading: delegationLoading, delegatorStakeProfile } =
     useDelegation();
   const { campaignStatus } = useCampaign();
   const { unreadCount } = useNotification();
@@ -81,21 +89,46 @@ export const AllWalletPage: React.FC = () => {
     return state.user?.is_onboarded === false && !state.isLoading;
   }, [state.user?.is_onboarded, state.isLoading]);
 
+  useEffect(() => {
+    if (state.isLoading) return;
+    if (!state.user?.is_onboarded) return;
+    if (localStorage.getItem(PROMO_DISMISSED_KEY) === "true") return;
+    const timer = setTimeout(() => {
+      setShowPromoDrawer(true);
+    }, 450);
+    return () => clearTimeout(timer);
+  }, [state.user?.is_onboarded, state.isLoading]);
+
   const { } = useGuidedTour({
     tourId: ALL_WALLET_TOUR_ID,
     autoStart: shouldAutoStart,
   });
 
   const highyieldBalance = contextHighyieldBalance || 0;
-  const solUsdcBalance = solanaUsdcBalance || 0;
-  const solUsdtBalance = solanaUsdtBalance || 0;
-  const totalIdleUsdBalance = useMemo(() => {
-    const lptPriceInUsd = prices.lpt || 0;
-    const unstakedLpt = highyieldBalance;
-    const lptUsdValue = unstakedLpt * lptPriceInUsd;
-    const idleUsdValue = solUsdcBalance + solUsdtBalance;
-    return lptUsdValue + idleUsdValue;
-  }, [highyieldBalance, solUsdcBalance, solUsdtBalance, prices]);
+
+  const stashUsdBalance = useMemo(() => {
+    const idleLptUsd = highyieldBalance * (prices.lpt || 0);
+    return (solanaUsdcBalance || 0) + idleLptUsd;
+  }, [highyieldBalance, solanaUsdcBalance, prices.lpt]);
+
+  const growthUsdBalance = useMemo(() => {
+    const stakedLpt = parseFloat(delegatorStakeProfile?.currentStake || "0");
+    return stakedLpt * (prices.lpt || 0);
+  }, [delegatorStakeProfile, prices.lpt]);
+
+  const totalWealthUsdBalance = useMemo(() => {
+    return stashUsdBalance + (stablesBalance || 0) + growthUsdBalance;
+  }, [stashUsdBalance, stablesBalance, growthUsdBalance]);
+
+  const stashDisplay = displayCurrency === "NGN"
+    ? stashUsdBalance * (prices.ngn || 0)
+    : stashUsdBalance;
+  const savingsDisplay = displayCurrency === "NGN"
+    ? (stablesBalance || 0) * (prices.ngn || 0)
+    : (stablesBalance || 0);
+  const growthDisplay = displayCurrency === "NGN"
+    ? growthUsdBalance * (prices.ngn || 0)
+    : growthUsdBalance;
 
   const handleNotificationClick = () => {
     navigate("/notifications");
@@ -118,16 +151,11 @@ export const AllWalletPage: React.FC = () => {
   };
 
   const displayBalance = useMemo(() => {
-    const ngnRate = prices.ngn || 0;
-    const safeNairaBalance = nairaBalance || 0;
-
     if (displayCurrency === "NGN") {
-      return totalIdleUsdBalance * ngnRate + safeNairaBalance;
+      return totalWealthUsdBalance * (prices.ngn || 0);
     }
-
-    const nairaInUsd = ngnRate > 0 ? safeNairaBalance / ngnRate : 0;
-    return totalIdleUsdBalance + nairaInUsd;
-  }, [displayCurrency, totalIdleUsdBalance, prices.ngn, nairaBalance]);
+    return totalWealthUsdBalance;
+  }, [displayCurrency, totalWealthUsdBalance, prices.ngn]);
 
   const walletCards = useMemo(
     () => [
@@ -164,6 +192,48 @@ export const AllWalletPage: React.FC = () => {
     const mode = transferDrawer;
     closeTransferDrawer();
     navigate(`/wallet/${mode}/${asset}`);
+  };
+
+  const promoCards = useMemo(
+    () => [
+      // {
+      //   id: "promo-card-1",
+      //   image: "/card1.png",
+      //   title: "Get 20% off on CafeOne Espresso drink!",
+      // },
+      {
+        id: "promo-card-2",
+        image: "/card2.png",
+        title: "Get up to 15% off on purchases at CafeOne!",
+      },
+    ],
+    [],
+  );
+
+  useEffect(() => {
+    const container = promoCarouselRef.current;
+    if (!container || promoCards.length <= 1) return;
+
+    const interval = setInterval(() => {
+      const next = (activePromoIndex + 1) % promoCards.length;
+      const slideWidth = container.clientWidth;
+      container.scrollTo({
+        left: next * slideWidth,
+        behavior: "smooth",
+      });
+      setActivePromoIndex(next);
+    }, 6500);
+
+    return () => clearInterval(interval);
+  }, [activePromoIndex, promoCards.length]);
+
+  const handlePromoScroll = () => {
+    const container = promoCarouselRef.current;
+    if (!container) return;
+    const slideWidth = container.clientWidth;
+    if (!slideWidth) return;
+    const index = Math.round(container.scrollLeft / slideWidth);
+    setActivePromoIndex(index);
   };
 
   return (
@@ -297,11 +367,11 @@ export const AllWalletPage: React.FC = () => {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            setShowPortfolioDrawer(true);
+                            setShowAllBalancesDrawer(true);
                           }}
                           className="flex items-center text-white/70 hover:text-white/90 transition-colors text-xs bg-white/10 rounded-full px-2.5 py-1.5"
                         >
-                          View Portfolio
+                          View breakdown
                           <span>
                             <ChevronRight size={14} color="#C7EF6B" />
                           </span>
@@ -438,31 +508,48 @@ export const AllWalletPage: React.FC = () => {
             )}
             */}
 
-            {/* Add Cash Section */}
-            <div data-tour="all-wallet-quick-deposit">
-              <div className="flex items-center justify-between my-2 mt-4">
-                <h2 className="text-white/70 text-xs font-medium">
-                  Add Cash <span className="text-white">💸</span>
-                </h2>
+            <div data-tour="all-wallet-quick-deposit" className="mt-4">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-white/70 text-sm font-medium">Featured perks</h2>
               </div>
-              <div className="bg-[#151515] rounded-xl p-3">
-                <div className="grid grid-cols-3 gap-2">
-                  {ADD_CASH_AMOUNTS.map((amount) => (
-                    <button
-                      key={amount}
-                      onClick={() => setShowPortfolioDrawer(true)}
-                      className="py-2.5 px-3 rounded-lg bg-white/10 text-white text-sm font-medium transition-colors"
-                    >
-                      ₦{amount >= 1000000 ? `${amount / 1000000}M` : `${(amount / 1000).toFixed(0)}K`}
-                    </button>
-                  ))}
-                  <button
-                    onClick={() => setShowPortfolioDrawer(true)}
-                    className="py-2.5 px-3 rounded-lg bg-white/10 flex items-center justify-center transition-colors"
+              <div
+                ref={promoCarouselRef}
+                onScroll={handlePromoScroll}
+                className="flex snap-x snap-mandatory overflow-x-auto scrollbar-hide gap-3"
+              >
+                {promoCards.map((card) => (
+                  <div
+                    key={card.id}
+                    className="min-w-full snap-start rounded-xl bg-[#d9e0fb] border border-[#7367f0]/30 overflow-hidden text-left relative"
                   >
-                    <Plus size={16} className="text-white" />
-                  </button>
-                </div>
+                    <div className="absolute inset-0">
+                      <div className="absolute -top-5 -left-6 w-40 h-40 rounded-full border border-[#C7EF6B]/25" />
+                      <div className="absolute top-6 left-28 w-28 h-28 rounded-full border border-[#86B3F7]/30" />
+                      <div className="absolute -bottom-10 right-8 w-40 h-40 rounded-full border border-[#86B3F7]/25" />
+                      <div className="absolute top-0 right-0 w-24 h-24 bg-[#1e1b4b] rounded-bl-[32px] opacity-90" />
+                    </div>
+                    <img
+                      src={card.image}
+                      alt={card.title}
+                      className="absolute inset-0 w-full h-full object-cover opacity-60"
+                    />
+                    <div className="relative z-10 px-5 py-4 flex items-center justify-between gap-3 min-h-[75px]">
+                      <p className="text-[#1e1b4b] text-base leading-tight font-semibold max-w-[60%]">
+                        {card.title}
+                      </p>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate("/perks");
+                        }}
+                        className="shrink-0 bg-[#5f53d6] hover:bg-[#4f43c6] text-white rounded-full px-5 py-2.5 text-xs font-medium transition-colors"
+                      >
+                        Unlock Now
+                      </button>
+                    </div>
+                  </div>
+
+                ))}
               </div>
             </div>
 
@@ -470,7 +557,7 @@ export const AllWalletPage: React.FC = () => {
             <div data-tour="all-wallet-earn-section">
               <div className="flex items-center justify-between mb-4 mt-6">
                 <h2 className="text-white/70 text-sm font-medium">
-                  Explore different options
+                  Grow your wealth
                 </h2>
                 <div className="flex items-center gap-1 bg-white/5 rounded-lg p-0.5">
                   <button
@@ -589,15 +676,14 @@ export const AllWalletPage: React.FC = () => {
       {/* Bottom Navigation */}
       <BottomNavigation currentPath="/wallet" />
 
-      <PortfolioSelectionDrawer
-        isOpen={showPortfolioDrawer}
-        onClose={() => setShowPortfolioDrawer(false)}
-        onSelect={(portfolio) => {
-          setShowPortfolioDrawer(false);
-          // Navigate directly to wallet pages, skipping yield intro
-          const walletPath = portfolio === "savings" ? "/wallet/savings" : "/wallet/staking";
-          navigate(walletPath);
-        }}
+      <AllBalancesDrawer
+        isOpen={showAllBalancesDrawer}
+        onClose={() => setShowAllBalancesDrawer(false)}
+        stashBalance={stashDisplay}
+        savingsBalance={savingsDisplay}
+        growthBalance={growthDisplay}
+        showBalance={showBalance}
+        currencySymbol={displayFiatSymbol}
       />
 
 
@@ -655,6 +741,47 @@ export const AllWalletPage: React.FC = () => {
                   </p>
                 </div>
               </div>
+            </button>
+          </div>
+        </DrawerContent>
+      </Drawer>
+
+      <Drawer
+        open={showPromoDrawer}
+        onOpenChange={(open) => {
+          if (!open) localStorage.setItem(PROMO_DISMISSED_KEY, "true");
+          setShowPromoDrawer(open);
+        }}
+      >
+        <DrawerContent className="bg-[#0b0b0b] border-t border-[#1f1f1f] rounded-t-[30px]">
+          <div className="px-5 pt-5 pb-4">
+            <div className="flex justify-end">
+              <button
+                onClick={handleDismissPromoDrawer}
+                className="w-9 h-9 rounded-full bg-[#151515] border border-[#2a2a2a] text-white flex items-center justify-center"
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <h3 className="text-[#C7EF6B] text-[20px] leading-[1.05] font-semibold mt-2">
+              Introducing Perks ⭐
+            </h3>
+            <p className="text-white/70 text-sm mt-2">
+              Unlock exclusive discounts across different services when you save, up to 20% OFF!
+            </p>
+            <img
+              src="/card1.png"
+              alt="SPAR promo"
+              className="w-full rounded-lg mt-8 object-cover border border-[#86B3F7]/30"
+            />
+            <button
+              onClick={() => {
+                handleDismissPromoDrawer();
+                navigate("/earn");
+              }}
+              className="w-full mt-8 bg-[#C7EF6B] text-black rounded-full py-3 text-lg font-medium hover:bg-[#96C3F7] transition-colors"
+            >
+              Explore perks
             </button>
           </div>
         </DrawerContent>

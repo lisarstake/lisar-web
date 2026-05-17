@@ -5,27 +5,30 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
+import { Wallet, TrendingUp, PiggyBank, Sprout, WalletCards } from "lucide-react";
 
 interface AllBalancesDrawerProps {
   isOpen: boolean;
   onClose: () => void;
-  ngnBalance: number;
-  lptBalance: number;
-  usdcBalance: number;
+  stashBalance: number;
+  savingsBalance: number;
+  growthBalance: number;
   showBalance: boolean;
+  currencySymbol: string;
 }
 
 export const AllBalancesDrawer: React.FC<AllBalancesDrawerProps> = ({
   isOpen,
   onClose,
-  ngnBalance,
-  lptBalance,
-  usdcBalance,
+  stashBalance,
+  savingsBalance,
+  growthBalance,
   showBalance,
+  currencySymbol,
 }) => {
-  const formatBalance = (value: number, decimals = 2, symbol = "") => {
+  const formatBalance = (value: number, decimals = 2) => {
     if (!showBalance) return "****";
-    return `${symbol}${value.toLocaleString(undefined, {
+    return `${currencySymbol}${value.toLocaleString(undefined, {
       minimumFractionDigits: decimals,
       maximumFractionDigits: decimals,
     })}`;
@@ -36,47 +39,46 @@ export const AllBalancesDrawer: React.FC<AllBalancesDrawerProps> = ({
       <DrawerContent className="bg-[#050505]">
         <DrawerHeader className="mb-2">
           <DrawerTitle className="font-medium text-base text-white text-start">
-            All balances
+            Your Balances
           </DrawerTitle>
         </DrawerHeader>
 
         <div className="pt-2 space-y-3 pb-2 px-1">
-          <div>
-            <div className="space-y-2">
-              <div className="flex items-center gap-3 px-3 py-3 rounded-lg bg-[#151515]">
-                <img src="/usdc.svg" alt="USDC" className="w-8 h-8" />
-                <div className="flex-1">
-                  <p className="text-white text-sm font-medium">USD Coin</p>
-                  <p className="text-white/50 text-xs">USDC</p>
-                </div>
-                <p className="text-white text-sm font-medium">
-                  {formatBalance(usdcBalance, 2, "$")}
-                </p>
+          <div className="space-y-2">
+            <div className="flex items-center gap-3 px-3 py-3 rounded-lg bg-[#151515]">
+              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
+                <WalletCards size={20} className="text-white/70" />
               </div>
-              <div className="flex items-center gap-3 px-3 py-3 rounded-lg bg-[#151515]">
-                <img src="/livepeer.webp" alt="LPT" className="w-8 h-8" />
-                <div className="flex-1">
-                  <p className="text-white text-sm font-medium">Livepeer</p>
-                  <p className="text-white/50 text-xs">LPT</p>
-                </div>
-                <p className="text-white text-sm font-medium">
-                  {formatBalance(lptBalance, 2)}
-                </p>
+              <div className="flex-1">
+                <p className="text-white/70 text-base font-medium">Stash</p>
               </div>
-              <div className="flex items-center gap-3 px-3 py-3 rounded-lg bg-[#151515]">
-                <img
-                  src="/ng_flag.png"
-                  alt="NGN"
-                  className="w-8 h-8 rounded-full"
-                />
-                <div className="flex-1">
-                  <p className="text-white text-sm font-medium">Naira</p>
-                  <p className="text-white/50 text-xs">NGN</p>
-                </div>
-                <p className="text-white text-sm font-medium">
-                  {formatBalance(ngnBalance, 2, "₦")}
-                </p>
+              <p className="text-white/80 text-sm font-medium">
+                {formatBalance(stashBalance)}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3 px-3 py-3 rounded-lg bg-[#151515]">
+              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
+                <PiggyBank size={20} className="text-white/70"  />
               </div>
+              <div className="flex-1">
+                <p className="text-white/70 text-base font-medium">Savings</p>
+              </div>
+              <p className="text-white/80 text-sm font-medium">
+                {formatBalance(savingsBalance)}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3 px-3 py-3 rounded-lg bg-[#151515]">
+              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
+                <Sprout size={20} className="text-white/70"  />
+              </div>
+              <div className="flex-1">
+                <p className="text-white/70 text-base font-medium">Growth</p>
+              </div>
+              <p className="text-white/80 text-sm font-medium">
+                {formatBalance(growthBalance)}
+              </p>
             </div>
           </div>
         </div>

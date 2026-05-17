@@ -224,7 +224,7 @@ export const NotificationsPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex-1 px-6 pb-8 scrollbar-hide">
+      <div className="flex-1 px-6 pb-8 scrollbar-hide flex flex-col">
         {isLoading ? (
           <div className="space-y-3">
             {Array.from({ length: 3 }).map((_, index) => (
@@ -303,7 +303,7 @@ export const NotificationsPage: React.FC = () => {
             )}
 
             {filteredNotifications.length === 0 && (
-              <div className="h-full flex items-center justify-center">
+              <div className="flex-1 flex items-center justify-center">
                 <p className="text-sm text-[#8f9893]">
                   No notifications in this category
                 </p>

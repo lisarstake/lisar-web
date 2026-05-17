@@ -27,21 +27,25 @@ export const TransactionList: React.FC<TransactionListProps> = ({
   skeletonCount = 5,
 }) => {
   const isDepositTransaction = (type: TransactionType) => {
-    return type === "deposit" || type === "delegation" || type === "mint";
+    return (
+      type === "deposit" ||
+      type === "delegation" ||
+      type === "mint" ||
+      type === "on_ramp"
+    );
   };
 
   const isWithdrawTransaction = (type: TransactionType) => {
-    return type === "withdrawal" || type === "undelegation" || type === "burn";
-  };
-
-  const getAmountColor = (type: TransactionType) => {
-    return type === "deposit" || type === "delegation" || type === "mint"
-      ? "text-[#C7EF6B]/90"
-      : "text-[#FF6B6B]/90";
+    return (
+      type === "withdrawal" ||
+      type === "undelegation" ||
+      type === "burn" ||
+      type === "off_ramp"
+    );
   };
 
   const getAmountPrefix = (type: TransactionType) => {
-    return type === "deposit" || type === "delegation" || type === "mint" ? "+" : "-";
+    return isDepositTransaction(type) ? "+" : "-";
   };
 
   const getTransactionTitle = (type: TransactionType) => {
@@ -58,16 +62,25 @@ export const TransactionList: React.FC<TransactionListProps> = ({
         return "Vest";
       case "burn":
         return "Redeem";
+      case "on_ramp":
+        return "Deposit";
+      case "off_ramp":
+        return "Withdrawal";
       default:
         return "Transaction";
     }
   };
 
+  const completedTransactions = React.useMemo(
+    () => transactions.filter((transaction) => transaction.status === "confirmed"),
+    [transactions],
+  );
+
   // Group transactions by date
   const transactionGroups = React.useMemo(() => {
     const groups: { [key: string]: TransactionData[] } = {};
 
-    transactions.forEach((transaction) => {
+    completedTransactions.forEach((transaction) => {
       const date = new Date(transaction.created_at).toLocaleDateString(
         "en-US",
         {
@@ -86,7 +99,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
       date,
       transactions,
     }));
-  }, [transactions]);
+  }, [completedTransactions]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -165,7 +178,8 @@ export const TransactionList: React.FC<TransactionListProps> = ({
               {group.date}
             </h2>
             <div className="space-y-3">
-              {group.transactions.map((transaction) => (
+              {group.transactions.map((transaction) => {
+                return (
                 <div
                   key={transaction.id}
                   onClick={() => onTransactionClick(transaction)}
@@ -200,7 +214,8 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                     </p>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         ))}

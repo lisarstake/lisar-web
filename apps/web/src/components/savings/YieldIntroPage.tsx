@@ -117,18 +117,17 @@ export const YieldIntroPage: React.FC = () => {
 
   return (
     <div className="h-screen bg-[#050505] text-white flex flex-col">
-      <div className="flex items-center justify-between px-6 pt-8 pb-4">
-        <button
-          onClick={() => navigate("/wallet", { replace: true })}
-          className="h-10 w-10 rounded-full bg-[#151515] flex items-center justify-center"
-          aria-label="Back"
-        >
-          <ArrowLeft className="text-white" size={22} />
-        </button>
-        <div className="w-8 h-8" />
-      </div>
-
-      <div className="flex-1 overflow-y-auto px-6 pb-6 scrollbar-hide flex flex-col justify-center">
+      <div className="flex-1 overflow-y-auto px-6 pb-8 scrollbar-hide">
+        <div className="flex items-center justify-between pt-8 pb-4">
+          <button
+            onClick={() => navigate("/wallet", { replace: true })}
+            className="h-10 w-10 rounded-full bg-[#151515] flex items-center justify-center"
+            aria-label="Back"
+          >
+            <ArrowLeft className="text-white" size={22} />
+          </button>
+          <div className="w-8 h-8" />
+        </div>
 
         <img
           src={content.image}
@@ -152,15 +151,15 @@ export const YieldIntroPage: React.FC = () => {
             </div>
           ))}
         </div>
-      </div>
 
-      <div className="px-6 pb-8 pt-3 bg-[#050505] shrink-0">
-        <button
-          onClick={handleExploreClick}
-          className={`h-12 w-full rounded-full text-base font-semibold ${content.bgColor} ${content.textColor}`}
-        >
-          {content.cta}
-        </button>
+        <div className="pt-12">
+          <button
+            onClick={handleExploreClick}
+            className={`h-12 w-full rounded-full text-base font-semibold ${content.bgColor} ${content.textColor}`}
+          >
+            {content.cta}
+          </button>
+        </div>
       </div>
     </div>
   );

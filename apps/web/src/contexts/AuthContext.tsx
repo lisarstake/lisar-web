@@ -13,6 +13,7 @@ import React, {
 import { User, Wallet, Session, AuthApiResponse } from "@/services/auth/types";
 import { authService } from "@/services/auth";
 import { walletService } from "@/services";
+import { env } from "@/lib/env";
 import mixpanel from "mixpanel-browser";
 
 async function ensureSolanaWalletAfterSignup(): Promise<boolean> {
@@ -164,6 +165,14 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
+  const clearAuthStorage = () => {
+    localStorage.removeItem("auth_token");
+    localStorage.removeItem("refresh_token");
+    localStorage.removeItem("auth_expiry");
+    sessionStorage.removeItem("auth_token");
+    sessionStorage.removeItem("refresh_token");
+    sessionStorage.removeItem("auth_expiry");
+  };
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -243,22 +252,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 payload: { user: response.data, wallet, session },
               });
             } else {
-              localStorage.removeItem("auth_token");
-              localStorage.removeItem("refresh_token");
-              localStorage.removeItem("auth_expiry");
-              sessionStorage.removeItem("auth_token");
-              sessionStorage.removeItem("refresh_token");
-              sessionStorage.removeItem("auth_expiry");
+              clearAuthStorage();
               dispatch({ type: "AUTH_LOGOUT" });
             }
           }
         } catch (error) {
-          localStorage.removeItem("auth_token");
-          localStorage.removeItem("refresh_token");
-          localStorage.removeItem("auth_expiry");
-          sessionStorage.removeItem("auth_token");
-          sessionStorage.removeItem("refresh_token");
-          sessionStorage.removeItem("auth_expiry");
+          clearAuthStorage();
           dispatch({ type: "AUTH_LOGOUT" });
         }
       } else {
@@ -394,6 +393,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (pendingTokens) {
         const tokens = JSON.parse(pendingTokens);
 
+        clearAuthStorage();
         // Choose storage based on rememberMe
         const storage = rememberMe ? localStorage : sessionStorage;
 
@@ -440,6 +440,36 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
           await ensureSolanaWalletAfterSignup();
 
+          // Apply pending referral code from signup (silent, never blocks)
+          const pendingCode = localStorage.getItem("pending_referral_code");
+          if (pendingCode) {
+            try {
+              const token =
+                localStorage.getItem("auth_token") ||
+                sessionStorage.getItem("auth_token");
+              const res = await fetch(`${env.VITE_API_BASE_URL}/referrals/apply`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                },
+                body: JSON.stringify({ code: pendingCode }),
+              });
+              const data = await res.json();
+              console.log(
+                "[Referral] Applied pending code:",
+                pendingCode,
+                "→",
+                res.ok ? "success" : "failed",
+                data,
+              );
+            } catch (err) {
+              console.error("[Referral] Error applying pending code:", pendingCode, err);
+            } finally {
+              localStorage.removeItem("pending_referral_code");
+            }
+          }
+
           // Identify user and track Sign In
           mixpanel.identify(userResponse.data.user_id);
           mixpanel.people.set({
@@ -477,6 +507,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // Normal login flow (no pending confirmation tokens)
         const response = await authService.signin({ email, password });
         if (response.success && response.data) {
+          clearAuthStorage();
           // Choose storage based on rememberMe
           const storage = rememberMe ? localStorage : sessionStorage;
 
@@ -579,6 +610,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (response.success && response.data) {
         const data = response.data as any;
 
+        clearAuthStorage();
         // Choose storage based on rememberMe
         const storage = rememberMe ? localStorage : sessionStorage;
 
@@ -636,6 +668,36 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         });
 
         await ensureSolanaWalletAfterSignup();
+
+        // Apply pending referral code from signup (silent, never blocks)
+        const pendingCode = localStorage.getItem("pending_referral_code");
+        if (pendingCode) {
+          try {
+            const token =
+              localStorage.getItem("auth_token") ||
+              sessionStorage.getItem("auth_token");
+            const res = await fetch(`${env.VITE_API_BASE_URL}/referrals/apply`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
+              },
+              body: JSON.stringify({ code: pendingCode }),
+            });
+            const data = await res.json();
+            console.log(
+              "[Referral] Applied pending code:",
+              pendingCode,
+              "→",
+              res.ok ? "success" : "failed",
+              data,
+            );
+          } catch (err) {
+            console.error("[Referral] Error applying pending code:", pendingCode, err);
+          } finally {
+            localStorage.removeItem("pending_referral_code");
+          }
+        }
 
         // Check if this is a new user (sign up) or existing user (sign in)
         const isNewUser =
@@ -739,8 +801,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       await authService.logout();
     } catch (error) {
     } finally {
-      localStorage.removeItem("auth_token");
-      localStorage.removeItem("refresh_token");
+      clearAuthStorage();
       dispatch({ type: "AUTH_LOGOUT" });
     }
   };

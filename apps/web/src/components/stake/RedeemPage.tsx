@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   ArrowLeft,
@@ -19,9 +19,10 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { useTransactions } from "@/contexts/TransactionContext";
 import { usePortfolio, type StakeEntry } from "@/contexts/PortfolioContext";
+import { useWalletCard } from "@/contexts/WalletCardContext";
+import { usePrices } from "@/hooks/usePrices";
 import { perenaService, mapleService } from "@/services";
 import { authService } from "@/services/auth";
-import { priceService } from "@/lib/priceService";
 import { useWallet } from "@/contexts/WalletContext";
 import { formatNumber, parseFormattedNumber } from "@/lib/formatters";
 import { usePageTracking } from "@/hooks/usePageTracking";
@@ -43,7 +44,7 @@ export const RedeemPage: React.FC = () => {
   const isMaple = selectedEntry?.name.toLowerCase().includes("maple");
   const isPerena = selectedEntry?.name.toLowerCase().includes("perena");
 
-  const [usdcAmount, setUsdcAmount] = useState("0");
+  const [fiatAmount, setFiatAmount] = useState("0");
   const [showConfirmDrawer, setShowConfirmDrawer] = useState(false);
   const [isRedeeming, setIsRedeeming] = useState(false);
   const [showErrorDrawer, setShowErrorDrawer] = useState(false);
@@ -65,41 +66,22 @@ export const RedeemPage: React.FC = () => {
   } = useWallet();
   const { refetch: refetchTransactions } = useTransactions();
   const { refetch: refetchPortfolio } = usePortfolio();
+  const { displayCurrency, displayFiatSymbol } = useWalletCard();
+  const { prices } = usePrices();
 
   const maxRedeemable = selectedEntry?.yourStake || 0;
 
-  const userCurrency = state.user?.fiat_type || "NGN";
-  const currencySymbol = priceService.getCurrencySymbol(userCurrency);
+  const balanceFiat = useMemo(() => {
+    if (displayCurrency === "NGN") return maxRedeemable * (prices.ngn || 0);
+    return maxRedeemable;
+  }, [maxRedeemable, displayCurrency, prices.ngn]);
 
-  const [fiatEquivalent, setFiatEquivalent] = useState(0);
-
-  useEffect(() => {
-    const calculateFiat = async () => {
-      const numericAmount = parseFloat(usdcAmount.replace(/,/g, "")) || 0;
-      if (numericAmount > 0) {
-        const prices = await priceService.getPrices();
-        let convertedValue = numericAmount;
-        switch (userCurrency.toUpperCase()) {
-          case "NGN":
-            convertedValue = numericAmount * prices.ngn;
-            break;
-          case "EUR":
-            convertedValue = numericAmount * prices.eur;
-            break;
-          case "GBP":
-            convertedValue = numericAmount * prices.gbp;
-            break;
-          case "USD":
-          default:
-            convertedValue = numericAmount;
-        }
-        setFiatEquivalent(convertedValue);
-      } else {
-        setFiatEquivalent(0);
-      }
-    };
-    calculateFiat();
-  }, [usdcAmount, userCurrency]);
+  const computedUsdcAmount = useMemo(() => {
+    const numericFiat = parseFloat(fiatAmount.replace(/,/g, "")) || 0;
+    if (numericFiat <= 0) return 0;
+    if (displayCurrency === "NGN") return numericFiat / (prices.ngn || 1);
+    return numericFiat;
+  }, [fiatAmount, displayCurrency, prices.ngn]);
 
   const handleBackClick = () => {
     navigate(-1);
@@ -107,27 +89,23 @@ export const RedeemPage: React.FC = () => {
 
   const handleAmountSelect = (amount: string) => {
     const numericAmount = parseFormattedNumber(amount);
-    setUsdcAmount(numericAmount);
+    setFiatAmount(numericAmount);
   };
 
   const handleMaxClick = () => {
-    setUsdcAmount(maxRedeemable.toString());
+    setFiatAmount(balanceFiat.toString());
   };
 
   const handleProceed = async () => {
-    const numericAmount = parseFloat(usdcAmount.replace(/,/g, "")) || 0;
-
-    if (numericAmount <= 0) {
+    if (computedUsdcAmount <= 0) {
       setErrorMessage("Please enter a valid amount to withdraw.");
       setShowErrorDrawer(true);
       return;
     }
 
-    if (numericAmount > maxRedeemable) {
+    if (computedUsdcAmount > maxRedeemable) {
       setErrorMessage(
-        `Maximum withdrawable amount is ${formatNumber(
-          maxRedeemable.toString(),
-        )} USDC.`,
+        `Maximum withdrawable amount is ${displayFiatSymbol}${balanceFiat.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.`,
       );
       setShowErrorDrawer(true);
       return;
@@ -145,19 +123,15 @@ export const RedeemPage: React.FC = () => {
       return;
     }
 
-    const numericAmount = parseFloat(usdcAmount.replace(/,/g, "")) || 0;
-
-    if (numericAmount <= 0) {
+    if (computedUsdcAmount <= 0) {
       setErrorMessage("Please enter a valid amount to withdraw.");
       setShowErrorDrawer(true);
       return;
     }
 
-    if (numericAmount > maxRedeemable) {
+    if (computedUsdcAmount > maxRedeemable) {
       setErrorMessage(
-        `Maximum withdrawable amount is ${formatNumber(
-          maxRedeemable.toString(),
-        )} USDC.`,
+        `Maximum withdrawable amount is ${displayFiatSymbol}${balanceFiat.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.`,
       );
       setShowErrorDrawer(true);
       return;
@@ -203,7 +177,7 @@ export const RedeemPage: React.FC = () => {
         return;
       }
 
-      const sharesToRedeem = numericAmount.toString();
+      const sharesToRedeem = computedUsdcAmount.toString();
       const redeemResp = await mapleService.requestRedeem({
         walletId: ethereumWalletId,
         walletAddress: ethereumWalletAddress,
@@ -228,10 +202,10 @@ export const RedeemPage: React.FC = () => {
       }
 
       const burnResp = await perenaService.burn({
-        walletId: solanaWalletId,
-        walletAddress: solanaWalletAddress,
-        usdStarAmount: numericAmount,
-      });
+          walletId: solanaWalletId,
+          walletAddress: solanaWalletAddress,
+          usdStarAmount: computedUsdcAmount,
+        });
 
       if (!burnResp.success) {
         setErrorMessage(
@@ -294,24 +268,24 @@ export const RedeemPage: React.FC = () => {
     }
   };
 
-  const numericAmount = parseFloat(usdcAmount.replace(/,/g, "")) || 0;
-  const hasExceededMax = numericAmount > maxRedeemable;
+  const numericFiatAmount = parseFloat(fiatAmount.replace(/,/g, "")) || 0;
+  const hasExceededMax = computedUsdcAmount > maxRedeemable;
   const activePercent = useMemo(() => {
     if (
-      !maxRedeemable ||
-      maxRedeemable <= 0 ||
-      !Number.isFinite(numericAmount)
+      !balanceFiat ||
+      balanceFiat <= 0 ||
+      !Number.isFinite(numericFiatAmount)
     ) {
       return null;
     }
-    const ratio = (numericAmount / maxRedeemable) * 100;
+    const ratio = (numericFiatAmount / balanceFiat) * 100;
     const clampedRatio = Math.min(100, Math.max(0, ratio));
     return presetPercents.reduce((closest, current) => {
       const currentDiff = Math.abs(current - clampedRatio);
       const closestDiff = Math.abs(closest - clampedRatio);
       return currentDiff < closestDiff ? current : closest;
     }, presetPercents[0]);
-  }, [maxRedeemable, numericAmount]);
+  }, [balanceFiat, numericFiatAmount]);
 
   if (!selectedEntry) {
     return (
@@ -330,25 +304,25 @@ export const RedeemPage: React.FC = () => {
   return (
     <div className="min-h-full bg-[#050505] text-white flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 pt-8 pb-4">
+      <div className="flex items-center justify-between px-6 pt-8 pb-2">
         <button
           onClick={handleBackClick}
           className="h-10 w-10 rounded-full bg-[#151515] flex items-center justify-center"
         >
           <ArrowLeft className="text-white" size={22} />
         </button>
-
-        <div className="w-8 h-8" />
-        <div className="w-8 h-8" />
+        <h1 className="text-lg font-medium">Redeem Balance</h1>
+        <div className="w-10" />
       </div>
 
       <div className="flex-1 px-6 pb-28 scrollbar-hide">
         {/* Amount Input Field */}
         <div className="pt-2 pb-4">
           <div className="bg-[#151515] rounded-lg p-3 flex items-center gap-3">
+            <span className="text-white/50 text-lg font-medium">{displayFiatSymbol}</span>
             <input
               type="text"
-              value={usdcAmount ? formatNumber(usdcAmount) : ""}
+              value={fiatAmount ? formatNumber(fiatAmount) : ""}
               onChange={(e) => {
                 const rawValue = parseFormattedNumber(e.target.value);
                 let numericValue = rawValue.replace(/[^0-9.]/g, "");
@@ -356,27 +330,20 @@ export const RedeemPage: React.FC = () => {
                 if (parts.length > 2) {
                   numericValue = parts[0] + "." + parts.slice(1).join("");
                 }
-                setUsdcAmount(numericValue);
+                setFiatAmount(numericValue);
               }}
-              placeholder="USDC"
+              placeholder={displayFiatSymbol}
               className="flex-1 bg-transparent text-white text-lg font-medium focus:outline-none"
             />
           </div>
-          <p className="text-gray-400 text-xs mt-2 pl-2">
-            ≈ {currencySymbol}
-            {fiatEquivalent.toLocaleString(undefined, {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
-          </p>
         </div>
 
         {/* Predefined USDC Amounts */}
         <div className="pb-4">
           <div className="flex space-x-3">
             {presetPercents.map((percent) => {
-              const amount = (maxRedeemable * (percent / 100)).toFixed(2);
-              const isActive = activePercent === percent && numericAmount > 0;
+              const amount = (balanceFiat * (percent / 100)).toFixed(2);
+              const isActive = activePercent === percent && numericFiatAmount > 0;
               return (
                 <button
                   key={percent}
@@ -399,18 +366,21 @@ export const RedeemPage: React.FC = () => {
           <h3 className="text-sm text-white/60 mb-0.5 flex items-center gap-1.5">
             <WalletCards size={16} /> Wallet balance
           </h3>
-          <div className="bg-[#151515] rounded-lg border border-[#151515]">
-            <div className="flex items-center space-x-3">
-              <div className="flex-1">
-                <span className="text-gray-100 text-sm font-medium">
-                  {(maxRedeemable ?? 0).toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}{" "}
-                  USDC
-                </span>
-              </div>
-            </div>
+          <div className="flex items-center justify-between">
+            <span className="text-gray-100 text-sm font-medium">
+              {displayFiatSymbol}
+              {balanceFiat.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </span>
+            <span className="text-gray-400 text-xs">
+              {(maxRedeemable ?? 0).toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}{" "}
+              USDC
+            </span>
           </div>
         </div>
       </div>
@@ -420,14 +390,14 @@ export const RedeemPage: React.FC = () => {
         <button
           onClick={handleProceed}
           disabled={
-            !usdcAmount ||
-            parseFloat(usdcAmount) <= 0 ||
+            !fiatAmount ||
+            computedUsdcAmount <= 0 ||
             isRedeeming ||
             hasExceededMax
           }
           className={`w-full py-3 rounded-full font-semibold text-lg transition-colors ${
-            usdcAmount &&
-            parseFloat(usdcAmount) > 0 &&
+            fiatAmount &&
+            computedUsdcAmount > 0 &&
             !isRedeeming &&
             !hasExceededMax
               ? "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
@@ -478,7 +448,11 @@ export const RedeemPage: React.FC = () => {
           <div className="space-y-4 py-1">
             <p className="text-sm text-white/80">
               You are about to withdraw{" "}
-              {formatNumber(usdcAmount.replace(/,/g, ""))} USDC
+              {displayFiatSymbol}
+              {parseFloat(fiatAmount.replace(/,/g, "") || "0").toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
               {isMaple
                 ? " from your yield balance. Please enter your password to confirm action"
                 : isPerena

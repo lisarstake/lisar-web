@@ -82,7 +82,7 @@ export class PointsService implements IPointsApiService {
       return {
         success: false,
         data: null as T,
-        message: err.response?.data?.message || "An error occurred",
+        message: err.response?.data?.message || err.response?.data?.error || "An error occurred",
         error:
           err.response?.data?.error ||
           err.message ||

@@ -19,11 +19,21 @@ export const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
   walletType,
 }) => {
   const isDepositTransaction = (type: TransactionData["transaction_type"]) => {
-    return type === "deposit" || type === "delegation" || type === "mint";
+    return (
+      type === "deposit" ||
+      type === "delegation" ||
+      type === "mint" ||
+      type === "on_ramp"
+    );
   };
 
   const isWithdrawTransaction = (type: TransactionData["transaction_type"]) => {
-    return type === "withdrawal" || type === "undelegation" || type === "burn";
+    return (
+      type === "withdrawal" ||
+      type === "undelegation" ||
+      type === "burn" ||
+      type === "off_ramp"
+    );
   };
 
   const getTransactionTitle = (
@@ -32,17 +42,21 @@ export const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
   ) => {
     switch (type) {
       case "deposit":
-        return "Deposit";
+        return "Save";
       case "withdrawal":
-        return "Send";
+        return "Withdraw";
       case "delegation":
-        return "Deposit";
+        return "Grow";
       case "undelegation":
         return "Withdraw";
       case "mint":
-        return walletType === "savings" ? "Deposit" : "Deposit";
+        return walletType === "savings" ? "Save" : "Save";
       case "burn":
         return walletType === "savings" ? "Withdraw" : "Withdraw";
+      case "on_ramp":
+        return "Deposit";
+      case "off_ramp":
+        return "Withdrawal";
       default:
         return "Transaction";
     }
@@ -53,9 +67,21 @@ export const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
   };
 
   const getAmountPrefix = (type: TransactionData["transaction_type"]) => {
-    return type === "deposit" || type === "delegation" || type === "mint"
-      ? "+"
-      : "-";
+    return isDepositTransaction(type) ? "+" : "-";
+  };
+
+  const getRampStatusLabel = (transaction: TransactionData) => {
+    if (transaction.source !== "ramp") return null;
+    if (transaction.rampStatus === "INIT") return "Canceled";
+
+    switch (transaction.status) {
+      case "confirmed":
+        return "Completed";
+      case "failed":
+        return "Failed";
+      default:
+        return "Pending";
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -111,7 +137,10 @@ export const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
   return (
     <div className="bg-[#151515] rounded-lg overflow-hidden">
       <div className="divide-y divide-[#505050]">
-        {transactions.map((transaction) => (
+        {transactions.map((transaction) => {
+          const rampStatusLabel = getRampStatusLabel(transaction);
+
+          return (
           <div
             key={transaction.id}
             onClick={() => onTransactionClick(transaction)}
@@ -149,9 +178,13 @@ export const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
                 {parseFloat(transaction.amount).toFixed(2)}{" "}
                 {transaction.token_symbol}
               </p>
+              {rampStatusLabel ? (
+                <p className="text-[11px] text-white/50 mt-1">{rampStatusLabel}</p>
+              ) : null}
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

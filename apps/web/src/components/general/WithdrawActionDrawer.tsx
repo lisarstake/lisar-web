@@ -12,6 +12,11 @@ interface WithdrawActionDrawerProps {
   onSelectNaira: () => void;
   onSelectCrypto: () => void;
   walletIcon: string;
+  walletType?: string;
+  onSelectRedeem?: () => void;
+  onSelectClaim?: () => void;
+  disableRedeem?: boolean;
+  disableClaim?: boolean;
 }
 
 export const WithdrawActionDrawer: React.FC<WithdrawActionDrawerProps> = ({
@@ -20,6 +25,11 @@ export const WithdrawActionDrawer: React.FC<WithdrawActionDrawerProps> = ({
   onSelectNaira,
   onSelectCrypto,
   walletIcon,
+  walletType,
+  onSelectRedeem,
+  onSelectClaim,
+  disableRedeem,
+  disableClaim,
 }) => {
   return (
     <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -31,6 +41,50 @@ export const WithdrawActionDrawer: React.FC<WithdrawActionDrawerProps> = ({
         </DrawerHeader>
 
         <div className="pb-2 space-y-3">
+          {walletType === "staking" && (
+            <>
+              <p className="text-xs font-medium text-white/40 px-1 pt-1">
+                Internal withdrawal
+              </p>
+
+              <button
+                onClick={onSelectRedeem}
+                disabled={disableRedeem}
+                className={`w-full rounded-xl bg-[#151515] px-4 py-4 text-left ${disableRedeem ? "opacity-50 cursor-not-allowed" : ""}`}
+              >
+                <div className="flex items-center gap-3">
+                  <img src="/redeem.jpeg" alt="" className="h-10 w-10 rounded-full object-cover" />
+                  <div>
+                    <p className="text-white text-sm font-medium">Unbond Balance</p>
+                    <p className="text-xs text-white/60">
+                      {disableRedeem ? "Not enough LPT to unbond" : "Unlock your LPT token"}
+                    </p>
+                  </div>
+                </div>
+              </button>
+
+              <button
+                onClick={onSelectClaim}
+                disabled={disableClaim}
+                className={`w-full rounded-xl bg-[#151515] px-4 py-4 text-left ${disableClaim ? "opacity-50 cursor-not-allowed" : ""}`}
+              >
+                <div className="flex items-center gap-3">
+                  <img src="/claim.jpeg" alt="" className="h-10 w-10 rounded-full object-cover" />
+                  <div>
+                    <p className="text-white text-sm font-medium">Withdraw Unbonded</p>
+                    <p className="text-xs text-white/60">
+                      {disableClaim ? "No unbonded LPT to claim" : "Claim your unlocked LPT token"}
+                    </p>
+                  </div>
+                </div>
+              </button>
+            </>
+          )}
+
+          {walletType === "staking" && <p className="text-xs font-medium text-white/40 px-1 pt-1">
+            External withdrawal
+          </p>}
+
           <button
             onClick={onSelectNaira}
             className="w-full rounded-xl bg-[#151515] px-4 py-4 text-left"

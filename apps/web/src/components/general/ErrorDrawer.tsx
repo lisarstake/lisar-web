@@ -42,7 +42,7 @@ export const ErrorDrawer: React.FC<ErrorDrawerProps> = ({
               <img
                 src="/error.png"
                 alt="Error"
-                className="w-13 h-13 object-cover"
+                className="w-11 h-11 object-cover"
               />
             </div>
           </div>
@@ -52,7 +52,6 @@ export const ErrorDrawer: React.FC<ErrorDrawerProps> = ({
           <DrawerDescription className="text-gray-400 text-sm">
             {message}
           </DrawerDescription>
-
         </DrawerHeader>
 
         <DrawerFooter className="space-y-3">

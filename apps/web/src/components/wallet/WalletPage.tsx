@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import toast from "react-hot-toast";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { RecentTransactionsCard } from "../transactions/RecentTransactionsCard";
 import { TransactionDetailsDrawer } from "../transactions/TransactionDetailsDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
@@ -38,6 +39,7 @@ import {
   Info,
   PiggyBank,
   Sprout,
+  X,
 } from "lucide-react";
 import { LisarLines } from "@/components/landing/lisar-lines";
 
@@ -78,6 +80,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
   const { walletType: paramWalletType } = useParams<{ walletType?: string }>();
   const walletType = propWalletType || paramWalletType;
   const navigate = useNavigate();
+  const location = useLocation();
   const currentWalletType = walletType === "staking" ? "staking" : "savings";
 
   useEffect(() => {
@@ -85,7 +88,16 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
       navigate("/wallet/savings", { replace: true });
     }
   }, [walletType, navigate]);
-  const [showDepositDrawer, setShowDepositDrawer] = useState(false);
+
+  useEffect(() => {
+    if (new URLSearchParams(location.search).get("open") === "deposit") {
+      window.history.replaceState(null, "", location.pathname);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const [showDepositDrawer, setShowDepositDrawer] = useState(
+    new URLSearchParams(location.search).get("open") === "deposit"
+  );
   const [showWithdrawDrawer, setShowWithdrawDrawer] = useState(false);
   const [showWithdrawEmptyDrawer, setShowWithdrawEmptyDrawer] = useState(false);
   const [showEarningsDrawer, setShowEarningsDrawer] = useState(false);
@@ -93,6 +105,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
   const [showUnlockSuccessDrawer, setShowUnlockSuccessDrawer] = useState(false);
   const [showUnlockErrorDrawer, setShowUnlockErrorDrawer] = useState(false);
   const [unlockErrorMessage, setUnlockErrorMessage] = useState("");
+  const [idleDismissed, setIdleDismissed] = useState(false);
   const [selectedTransaction, setSelectedTransaction] =
     useState<TransactionData | null>(null);
 
@@ -107,6 +120,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
   const {
     highyieldBalance,
     stablesBalance,
+    solanaUsdcBalance,
     solanaWalletAddress,
     refreshAllWalletData,
   } = useWallet();
@@ -191,18 +205,22 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
   })} ${walletVisual.coinSymbol}`;
 
   const displayBalance = useMemo(() => {
+    let amount = assetBalance;
+    if (isStakingWallet) {
+      amount = amount * (prices.lpt || 0);
+    }
     if (displayCurrency === "NGN") {
       const ngnRate = prices.ngn || 0;
-      return `${displayFiatSymbol}${(assetBalance * ngnRate).toLocaleString(undefined, {
+      return `${displayFiatSymbol}${(amount * ngnRate).toLocaleString(undefined, {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       })}`;
     }
-    return `${displayFiatSymbol}${assetBalance.toLocaleString(undefined, {
+    return `${displayFiatSymbol}${amount.toLocaleString(undefined, {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     })}`;
-  }, [displayCurrency, assetBalance, prices.ngn, displayFiatSymbol]);
+  }, [displayCurrency, assetBalance, isStakingWallet, prices.lpt, prices.ngn, displayFiatSymbol]);
   const tokenLiveApyPercent = useMemo(() => {
     if (isStakingWallet) {
       const delegateId = userDelegation?.delegate?.id;
@@ -295,6 +313,24 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
     tokenLiveApyPercent,
   ]);
 
+  const toFiat = useCallback((amount: number): string => {
+    let usdValue = amount;
+    if (isStakingWallet) {
+      usdValue = amount * (prices.lpt || 0);
+    }
+    if (displayCurrency === "NGN") {
+      const ngnRate = prices.ngn || 0;
+      return `${displayFiatSymbol}${(usdValue * ngnRate).toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })}`;
+    }
+    return `${displayFiatSymbol}${usdValue.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
+  }, [isStakingWallet, prices.lpt, prices.ngn, displayCurrency, displayFiatSymbol]);
+
   const pendingUnbondingData = useMemo(() => {
     const pending = delegatorTransactions?.pendingStakeTransactions ?? [];
     const count = pending.length;
@@ -318,8 +354,10 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
   }, [delegatorTransactions]);
   const unlockedUnbondingLockId = useMemo(() => {
     const completed = delegatorTransactions?.completedStakeTransactions ?? [];
-    return completed.find((tx) => typeof tx.unbondingLockId === "number")
-      ?.unbondingLockId;
+    const tx = completed.find(
+      (tx) => tx.unbondingLockId != null && !isNaN(Number(tx.unbondingLockId)),
+    );
+    return tx ? Number(tx.unbondingLockId) : undefined;
   }, [delegatorTransactions]);
 
   const availableWithdrawalDisplay = useMemo(() => {
@@ -347,6 +385,20 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
     walletType === "staking"
       ? totalStakingBalance <= 0
       : (stablesBalance || 0) <= 0;
+  const idleBalance = currentWalletType === "savings" ? (solanaUsdcBalance ?? 0) : (highyieldBalance ?? 0);
+  const idleTokenName = currentWalletType === "savings" ? "USDC" : "LPT";
+  const idleAction = currentWalletType === "savings" ? "sav" : "grow";
+
+  const idleFiatValue = useMemo(() => {
+    if (idleBalance <= 0) return 0;
+    if (currentWalletType === "savings") {
+      if (displayCurrency === "NGN") return idleBalance * (prices.ngn || 0);
+      return idleBalance;
+    }
+    const usdValue = idleBalance * (prices.lpt || 0);
+    if (displayCurrency === "NGN") return usdValue * (prices.ngn || 0);
+    return usdValue;
+  }, [idleBalance, currentWalletType, displayCurrency, prices.ngn, prices.lpt]);
   // Flex uses same balance as Savings
   const hasPendingUnbonding = pendingUnbondingData.count > 0;
   const hasCompletedUnbonding =
@@ -414,6 +466,26 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
   const handleWithdrawToCrypto = () => {
     setShowWithdrawDrawer(false);
     navigate(`/wallet/withdraw/crypto?walletType=${currentWalletType}`);
+  };
+
+  const handleRedeemBalance = () => {
+    setShowWithdrawDrawer(false);
+    const validatorId = userDelegation?.delegate?.id;
+    if (validatorId) {
+      navigate(`/unstake/${validatorId}`);
+    } else {
+      toast.error("Not enough funds in your growth balance to redeem.");
+    }
+  };
+
+  const handleClaimEarnings = () => {
+    setShowWithdrawDrawer(false);
+    navigate(`/wallet/unlocked-withdraw/${currentWalletType}`, {
+      state: {
+        unlockedAmount: completedUnbondingData.totalAmount,
+        unbondingLockId: unlockedUnbondingLockId,
+      },
+    });
   };
 
   const handleTransactionClick = (transaction: TransactionData) => {
@@ -600,9 +672,42 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
           ))}
         </div>
 
+        {idleBalance > 0 && !idleDismissed && (
+          <div className="relative mt-4 rounded-xl bg-[#151515] p-4">
+            <button
+              onClick={() => setIdleDismissed(true)}
+              className="absolute right-3 top-3 flex h-6 w-6 items-center justify-center rounded-full bg-white/10"
+            >
+              <X size={14} className="text-white/60" />
+            </button>
+            <div className="flex items-start gap-2 pr-6">
+              <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full`}>
+                {currentWalletType === "savings" ? (
+                  <img src="/highyield-3.svg" />
+                ) : (
+                  <img src="/highyield-1.svg" />
+                )}
+              </div>
+              <div>
+                <p className="text-sm font-medium text-white">
+                  You have{" "}
+                  <span>
+                    {displayFiatSymbol}{idleFiatValue.toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </span>{" "}
+                  in your stash
+                </p>
+                <p className="mt-1 text-xs text-white/60">
+                 Start {idleAction}ing to begin earning on it.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
-
-        <div className="flex items-center justify-center mt-6 mb-4">
+        <div className="flex items-center justify-center my-4">
           <div className="h-1 w-8 bg-white/20 rounded-full" />
         </div>
 
@@ -636,40 +741,37 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
             </DrawerTitle>
           </DrawerHeader>
           <div className="space-y-3 py-1 max-h-[40vh] overflow-y-auto pr-1 mt-3">
-            {sevenDayEarnings.map((item) => (
-              <div
-                key={item.id}
-                className="rounded-xl bg-[#151515] px-4 py-3 flex justify-between items-center"
-              >
-                <div>
-                  <p className="text-xs text-white/70">Date</p>
-                  <p className="text-sm font-semibold text-white">{item.date}</p>
+            {sevenDayEarnings.map((item) => {
+              const yieldFiat = toFiat(item.interest);
+              const balanceFiat = toFiat(item.balance);
+              return (
+                <div
+                  key={item.id}
+                  className="rounded-xl bg-[#151515] px-4 py-3 flex justify-between items-center"
+                >
+                  <div>
+                    <p className="text-xs text-white/70">Date</p>
+                    <p className="text-sm font-semibold text-white/80">{item.date}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-white/70">Yield</p>
+                    <p className="text-sm font-semibold text-[#2fc083]">
+                      {yieldFiat}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-white/70">Balance</p>
+                    <p className="text-sm font-semibold text-white/80">
+                      {balanceFiat}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xs text-white/70">Yield</p>
-                  <p className="text-sm font-semibold text-[#2fc083]">
-                    {item.interest.toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
-                    {` ${walletVisual.coinSymbol}`}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-white/70">Balance</p>
-                  <p className="text-sm font-semibold text-white">
-                    {item.balance.toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
-                    {` ${walletVisual.coinSymbol}`}
-                  </p>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </DrawerContent>
       </Drawer>
+
       <DepositActionDrawer
         isOpen={showDepositDrawer}
         onClose={() => setShowDepositDrawer(false)}
@@ -685,6 +787,11 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
         onSelectNaira={handleWithdrawToNaira}
         onSelectCrypto={handleWithdrawToCrypto}
         walletIcon={walletVisual.icon}
+        walletType={currentWalletType}
+        onSelectRedeem={handleRedeemBalance}
+        onSelectClaim={handleClaimEarnings}
+        disableRedeem={stakedBalance <= 0}
+        disableClaim={!hasCompletedUnbonding}
       />
 
       <Drawer
@@ -699,7 +806,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
             <div className="flex justify-center mb-4">
               <div className="w-24 h-24 bg-[#C7EF6B]/20 rounded-full my-3 flex items-center justify-center relative overflow-hidden">
                 <img
-                  src="/ramp.png"
+                  src="/stash.png"
                   alt="Error"
                   className="w-18 h-18 object-cover"
                 />
@@ -727,28 +834,22 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
           <DrawerHeader>
             <div className="flex items-center justify-between w-full">
               <DrawerTitle className="text-base font-medium text-white/90 text-left">
-                {walletType === 'savings' ? 'LISAR Savings' : 'LISAR Growth'}
+                {walletType === 'savings' ? 'Lisar Savings' : 'Lisar Growth'}
               </DrawerTitle>
               <button
                 onClick={() => {
                   const linkType = walletType === "savings" ? "savings" : "growth";
                   window.open(`/lisar-${linkType}`, "_blank");
                 }}
-                className="h-8 w-8 rounded-full bg-white/10 flex items-center justify-center"
+                className="h-7 w-7 rounded-full bg-white/10 flex items-center justify-center"
               >
-                <Info size={16} color="#fff" />
+                <Info size={14} color="#fff" />
               </button>
             </div>
           </DrawerHeader>
           <div className="space-y-4 py-2 mt-1">
             <div className="rounded-xl bg-[#151515] p-4">
               <p className="text-sm text-white/85">{tokenInfoDescription}</p>
-            </div>
-            <div className="rounded-xl bg-[#151515] p-4 flex items-center justify-between">
-              <p className="text-sm text-white/60">Balance</p>
-              <p className="text-sm font-semibold text-white">
-                {showBalance ? displayBalance : "••••"}
-              </p>
             </div>
             {isStakingWallet && (
               <div className="rounded-xl bg-[#151515] p-4 flex items-center justify-between">
@@ -779,21 +880,28 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
               </div>
             )}
             {earningsCardState === "withdraw-ready" && (
-              <div className="rounded-xl bg-[#151515] p-4">
+              <div className="rounded-xl bg-[#151515] p-4 flex justify-between items-start">
+                <div>
                 <p className="text-sm text-white/60">Withdrawal ready</p>
                 <p className="text-sm text-[#C7EF6B] mt-1 font-semibold">
                   {availableWithdrawalDisplay}
                 </p>
+                </div>
+               
                 <button
                   onClick={() => {
                     const validatorId = userDelegation?.delegate?.id;
+                    if (!validatorId) {
+                      toast.error("No delegation found.");
+                      return;
+                    }
                     navigate(`/unstake/${validatorId}`, {
                       state: { availableBalance: completedUnbondingData.totalAmount },
                     });
                   }}
                   className="mt-3 px-4 py-2 bg-[#C7EF6B] text-black rounded-full text-xs font-semibold"
                 >
-                  Withdraw Now
+                  Withdraw 
                 </button>
               </div>
             )}

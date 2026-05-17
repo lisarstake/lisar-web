@@ -94,7 +94,7 @@ export class AuthService implements IAuthApiService {
       if (!response.ok) {
         return {
           success: false,
-          message: data.message || "An error occurred",
+          message: data.message || data.error || "An error occurred",
           data: null as T,
           error: data.error || `HTTP ${response.status}`,
         };

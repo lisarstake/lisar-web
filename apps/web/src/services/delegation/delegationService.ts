@@ -98,7 +98,7 @@ export class DelegationService implements IDelegationApiService {
       return {
         success: false,
         data: null as T,
-        message: error.response?.data?.message || "An error occurred",
+        message: error.response?.data?.message || error.response?.data?.error || "An error occurred",
         error: error.response?.data?.error || error.message || "Unknown error",
       };
     }
@@ -251,7 +251,7 @@ export class DelegationService implements IDelegationApiService {
       return {
         success: false,
         error: error.response?.data?.error || error.message || "Unknown error",
-        message: error.response?.data?.message || "Failed to withdraw stake",
+        message: error.response?.data?.message || error.response?.data?.error || "Failed to withdraw stake",
       };
     }
   }
@@ -290,7 +290,7 @@ export class DelegationService implements IDelegationApiService {
       return {
         success: false,
         error: error.response?.data?.error || error.message || "Provide walletId and Authorization header",
-        message: error.response?.data?.message || "Failed to rebond",
+        message: error.response?.data?.message || error.response?.data?.error || "Failed to rebond",
       };
     }
   }
@@ -329,7 +329,7 @@ export class DelegationService implements IDelegationApiService {
       return {
         success: false,
         error: error.response?.data?.error || error.message || "Provide walletId and Authorization header",
-        message: error.response?.data?.message || "Failed to move stake",
+        message: error.response?.data?.message || error.response?.data?.error || "Failed to move stake",
       };
     }
   }

@@ -120,7 +120,7 @@ export class TotpService implements ITotpApiService {
       return {
         success: false,
         error: error.response?.data?.error || error.message || "Unknown error",
-        message: error.response?.data?.message || "Failed to verify OTP code",
+        message: error.response?.data?.message || error.response?.data?.error || "Failed to verify OTP code",
       };
     }
   }

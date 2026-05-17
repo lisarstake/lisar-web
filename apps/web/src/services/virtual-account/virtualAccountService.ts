@@ -3,7 +3,6 @@
  * Real implementation for virtual account operations
  */
 
-import { http } from "@/lib/http";
 import { env } from "@/lib/env";
 import { IVirtualAccountApiService } from "./api";
 import {
@@ -21,6 +20,11 @@ import {
   WithdrawRequest,
   WithdrawResponse,
 } from "./types";
+
+const STUBBED_ERROR: VirtualAccountApiResponse<never> = {
+  success: false,
+  error: { message: "Virtual account service is paused" },
+};
 
 export class VirtualAccountService implements IVirtualAccountApiService {
   private baseUrl: string;
@@ -139,21 +143,22 @@ export class VirtualAccountService implements IVirtualAccountApiService {
     }
 
     try {
-      const response = await http.request({
-        url: `${this.baseUrl}${config.url}`,
+      const response = await fetch(`${this.baseUrl}${config.url}`, {
         method: config.method,
         headers: this.getAuthHeaders(token),
-        data: config.data,
-        timeout: this.timeout,
+        body: config.data ? JSON.stringify(config.data) : undefined,
+        signal: AbortSignal.timeout(this.timeout),
       });
 
-      if (response.data?.success === false) {
+      const data = await response.json();
+
+      if (!response.ok || data?.success === false) {
         return {
           success: false,
           error: {
             message: this.getErrorMessage(
-              response.data?.error,
-              response.data?.message,
+              data?.error,
+              data?.message || response.statusText,
               config.errorMessage,
             ),
           },
@@ -162,49 +167,35 @@ export class VirtualAccountService implements IVirtualAccountApiService {
 
       return {
         success: true,
-        data: response.data.data ?? response.data,
+        data: data.data ?? data,
       };
     } catch (error: any) {
       return {
         success: false,
         error: {
-          message: this.getErrorMessage(
-            error.response?.data?.error,
-            error.response?.data?.message || error.message,
-            config.errorMessage,
-          ),
+          message: error.message || config.errorMessage,
         },
       };
     }
   }
 
+  // Stubbed — virtual account creation is paused
   async createVirtualAccount(
-    request: CreateVirtualAccountRequest,
+    _request: CreateVirtualAccountRequest,
   ): Promise<VirtualAccountApiResponse<VirtualAccountDetails>> {
-    return this.request<VirtualAccountDetails>({
-      url: "/account/virtual-account",
-      method: "POST",
-      data: request,
-      errorMessage: "Failed to create virtual account",
-    });
+    return Promise.resolve(STUBBED_ERROR);
   }
 
+  // Stubbed — virtual account fetching is paused
   async getVirtualAccount(): Promise<
     VirtualAccountApiResponse<VirtualAccountDetails>
   > {
-    return this.request<VirtualAccountDetails>({
-      url: "/account/virtual-account",
-      method: "GET",
-      errorMessage: "Failed to fetch virtual account",
-    });
+    return Promise.resolve(STUBBED_ERROR);
   }
 
+  // Stubbed — Naira balance fetching is paused
   async getBalance(): Promise<VirtualAccountApiResponse<NairaBalance>> {
-    return this.request<NairaBalance>({
-      url: "/account/balance",
-      method: "GET",
-      errorMessage: "Failed to fetch Naira balance",
-    });
+    return Promise.resolve(STUBBED_ERROR);
   }
 
   async getBanks(): Promise<VirtualAccountApiResponse<SupportedBank[]>> {
@@ -226,34 +217,24 @@ export class VirtualAccountService implements IVirtualAccountApiService {
     });
   }
 
+  // Stubbed — withdrawals are paused
   async withdraw(
-    request: WithdrawRequest,
+    _request: WithdrawRequest,
   ): Promise<VirtualAccountApiResponse<WithdrawResponse>> {
-    return this.request<WithdrawResponse>({
-      url: "/account/withdraw",
-      method: "POST",
-      data: request,
-      errorMessage: "Failed to initiate withdrawal",
-    });
+    return Promise.resolve(STUBBED_ERROR);
   }
 
+  // Stubbed — transaction history fetching is paused
   async getTransactions(
-    query?: TransactionHistoryQuery,
+    _query?: TransactionHistoryQuery,
   ): Promise<VirtualAccountApiResponse<TransactionHistoryResponse>> {
-    return this.request<TransactionHistoryResponse>({
-      url: `/account/transactions${this.buildQueryParams(query)}`,
-      method: "GET",
-      errorMessage: "Failed to fetch transaction history",
-    });
+    return Promise.resolve(STUBBED_ERROR);
   }
 
+  // Stubbed — single transaction fetching is paused
   async getTransactionByReference(
-    reference: string,
+    _reference: string,
   ): Promise<VirtualAccountApiResponse<TransactionDetails>> {
-    return this.request<TransactionDetails>({
-      url: `/account/transactions/${encodeURIComponent(reference)}`,
-      method: "GET",
-      errorMessage: "Failed to fetch transaction",
-    });
+    return Promise.resolve(STUBBED_ERROR);
   }
 }

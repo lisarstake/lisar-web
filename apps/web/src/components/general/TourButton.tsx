@@ -8,10 +8,6 @@ interface TourButtonProps {
   className?: string;
 }
 
-/**
- * A button component to start or restart the guided tour.
- * Can be used in settings, profile, or anywhere you want to give users access to the tour.
- */
 export const TourButton: React.FC<TourButtonProps> = ({
   variant = 'full',
   className = ''

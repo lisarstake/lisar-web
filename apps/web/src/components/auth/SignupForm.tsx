@@ -13,6 +13,7 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { campaignService } from "@/services";
+import toast from "react-hot-toast";
 
 interface SignupFormData {
   fullName: string;
@@ -118,25 +119,14 @@ export const SignupForm: React.FC = () => {
       );
 
       if (walletResponse.success && walletResponse.data) {
-        // Apply referral code if provided and valid
-        if (formData.referralCode && referralValidation.isValid) {
-          try {
-            const applyResponse = await campaignService.applyReferralCode({
-              code: formData.referralCode,
-            });
 
-            if (!applyResponse.success) {
-              // Don't block signup if referral code application fails
-            }
-          } catch (error) {
-            // Don't block signup if referral code application fails
-          }
+        if (formData.referralCode && referralValidation.isValid) {
+          localStorage.setItem("pending_referral_code", formData.referralCode);
         }
 
-        // Show email confirmation drawer
+
         setShowEmailConfirmation(true);
       } else {
-        // Show error in drawer
         setErrorDrawer({
           isOpen: true,
           title: "Something went wrong",
@@ -145,7 +135,6 @@ export const SignupForm: React.FC = () => {
         });
       }
     } catch (error) {
-      // Show error in drawer
       setErrorDrawer({
         isOpen: true,
         title: "Something went wrong",
@@ -159,7 +148,13 @@ export const SignupForm: React.FC = () => {
   };
 
   const handleGoogleSignup = () => {
-    signinWithGoogle();
+    if (formData.referralCode && referralValidation.isValid) {
+      localStorage.setItem("pending_referral_code", formData.referralCode);
+      signinWithGoogle();
+    } else {
+      setShowReferralCode(true);
+      toast("Do you have a referral code? Enter it to apply, otherwise click Continue with Google again.");
+    }
   };
 
   const handleEmailConfirmationClose = () => {
@@ -171,7 +166,7 @@ export const SignupForm: React.FC = () => {
     formData.fullName &&
     formData.email &&
     formData.password.length >= 8 &&
-    // If referral code is provided, it must be valid
+
     (!formData.referralCode || referralValidation.isValid === true);
 
   return (
@@ -332,8 +327,8 @@ export const SignupForm: React.FC = () => {
                   referralValidation.message && (
                     <div
                       className={`flex items-center text-sm ${referralValidation.isValid
-                          ? "text-[#C7EF6B]"
-                          : "text-red-400"
+                        ? "text-[#C7EF6B]"
+                        : "text-red-400"
                         }`}
                     >
                       {referralValidation.message}
@@ -348,8 +343,8 @@ export const SignupForm: React.FC = () => {
             type="submit"
             disabled={!isFormValid || isSubmitting}
             className={`w-full py-3 px-6 rounded-lg font-semibold text-lg transition-colors ${isFormValid && !isSubmitting
-                ? "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
-                : "bg-[#636363] text-white cursor-not-allowed"
+              ? "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
+              : "bg-[#636363] text-white cursor-not-allowed"
               }`}
           >
             {isSubmitting ? (

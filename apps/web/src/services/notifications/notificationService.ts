@@ -16,7 +16,7 @@ import {
   SystemNotification,
   NOTIFICATION_CONFIG,
 } from "./types";
-import { http } from "@/lib/http";
+import { getStoredToken, http } from "@/lib/http";
 
 export class NotificationService implements INotificationApiService {
   private baseUrl: string;
@@ -27,36 +27,6 @@ export class NotificationService implements INotificationApiService {
     this.timeout = NOTIFICATION_CONFIG.timeout;
   }
 
-  // Token management helpers
-  private getStoredToken(): string | null {
-    // Check localStorage first (remembered sessions)
-    let token = localStorage.getItem("auth_token");
-
-    // Check if token has expired (if rememberMe was used)
-    const expiry = localStorage.getItem("auth_expiry");
-    if (token && expiry) {
-      const expiryTime = parseInt(expiry) * 1000; 
-      if (Date.now() > expiryTime) {
-    
-        this.removeStoredTokens();
-        return null;
-      }
-    }
-
-    // If not in localStorage, check sessionStorage
-    if (!token) {
-      token = sessionStorage.getItem("auth_token");
-    }
-
-    return token;
-  }
-
-  private removeStoredTokens(): void {
-    localStorage.removeItem("auth_token");
-    localStorage.removeItem("auth_expiry");
-    sessionStorage.removeItem("auth_token");
-  }
-
   // Helper method for making HTTP requests
   private async makeRequest<T>(
     endpoint: string,
@@ -64,7 +34,7 @@ export class NotificationService implements INotificationApiService {
   ): Promise<NotificationApiResponse<T>> {
     try {
       // Add authorization header if token exists
-      const token = this.getStoredToken();
+      const token = getStoredToken();
       const headers = {
         "Content-Type": "application/json",
         ...(token && { Authorization: `Bearer ${token}` }),
@@ -87,7 +57,7 @@ export class NotificationService implements INotificationApiService {
       return {
         success: false,
         data: null as T,
-        message: error.response?.data?.message || "An error occurred",
+        message: error.response?.data?.message || error.response?.data?.error || "An error occurred",
         error: error.response?.data?.error || error.message || "Unknown error",
       };
     }
@@ -159,4 +129,3 @@ export class NotificationService implements INotificationApiService {
     });
   }
 }
-

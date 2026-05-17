@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
+import toast from "react-hot-toast";
 import { ArrowLeft, CircleQuestionMark } from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { ActionDrawer } from "@/components/general/ActionDrawer";
@@ -148,6 +149,7 @@ export const ValidatorDetailsPage: React.FC = () => {
   );
 
   if (!isLoading && !currentValidator && !error) {
+    toast.error("Validator not found.");
     navigate("/validator");
     return null;
   }
@@ -160,8 +162,12 @@ export const ValidatorDetailsPage: React.FC = () => {
     if (hasStakeWithDifferentValidator) {
       setShowMoveStakeDrawer(true);
     } else {
+      if (!currentValidator?.address) {
+        toast.error("Validator info not available.");
+        return;
+      }
       navigate(
-        `/wallet/yields/create-flexible?mode=staking&source=lpt&orchestrator=${currentValidator?.address || ""}`,
+        `/wallet/yields/create-flexible?mode=staking&source=lpt&orchestrator=${currentValidator.address}`,
       );
     }
   };
@@ -174,7 +180,11 @@ export const ValidatorDetailsPage: React.FC = () => {
     if (justStaked) {
       setShowUnstakeRestrictionDrawer(true);
     } else {
-      navigate(`/unstake-amount/${currentValidator?.address}`);
+      if (!currentValidator?.address) {
+        toast.error("Validator info not available.");
+        return;
+      }
+      navigate(`/unstake-amount/${currentValidator.address}`);
     }
   };
 
@@ -268,6 +278,8 @@ export const ValidatorDetailsPage: React.FC = () => {
         handleMoveStake();
       } else if (pendingAction === "rebond") {
         handleRebond();
+      } else {
+        toast.error("Something went wrong. Please try again.");
       }
     }
   };

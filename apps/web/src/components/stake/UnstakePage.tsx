@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { ArrowLeft, WalletCards } from "lucide-react";
+import toast from "react-hot-toast";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { useOrchestrators } from "@/contexts/OrchestratorContext";
 import { useDelegation } from "@/contexts/DelegationContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { priceService } from "@/lib/priceService";
+import { useWalletCard } from "@/contexts/WalletCardContext";
+import { usePrices } from "@/hooks/usePrices";
 import { formatNumber, parseFormattedNumber } from "@/lib/formatters";
 import { delegationService } from "@/services";
 import { useWallet } from "@/contexts/WalletContext";
@@ -17,8 +19,7 @@ export const UnstakePage: React.FC = () => {
   const location = useLocation();
   const { validatorId } = useParams<{ validatorId: string }>();
   const locationState = location.state as { availableBalance?: number } | null;
-  const [lptAmount, setLptAmount] = useState("0");
-  const [fiatEquivalent, setFiatEquivalent] = useState(0);
+  const [fiatAmount, setFiatAmount] = useState("0");
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSuccessDrawer, setShowSuccessDrawer] = useState(false);
   const [showErrorDrawer, setShowErrorDrawer] = useState(false);
@@ -26,6 +27,8 @@ export const UnstakePage: React.FC = () => {
   const { orchestrators } = useOrchestrators();
   const { userDelegation } = useDelegation();
   const { state } = useAuth();
+  const { displayCurrency, displayFiatSymbol } = useWalletCard();
+  const { prices } = usePrices();
   const { refreshAllWalletData } = useWallet();
 
   const delegatedStake =
@@ -37,24 +40,23 @@ export const UnstakePage: React.FC = () => {
       ? locationState.availableBalance
       : delegatedStake;
   const hasStakeWithValidator = currentStake > 0;
-  const userCurrency = state.user?.fiat_type || "NGN";
-  const currencySymbol = priceService.getCurrencySymbol(userCurrency);
 
-  useEffect(() => {
-    const calculateFiat = async () => {
-      const numericAmount = parseFloat(lptAmount.replace(/,/g, "")) || 0;
-      if (numericAmount > 0) {
-        const fiatValue = await priceService.convertLptToFiat(
-          numericAmount,
-          userCurrency,
-        );
-        setFiatEquivalent(fiatValue);
-      } else {
-        setFiatEquivalent(0);
-      }
-    };
-    calculateFiat();
-  }, [lptAmount, userCurrency]);
+  const balanceFiat = useMemo(() => {
+    const lptUsd = prices.lpt || 0;
+    const usdValue = currentStake * lptUsd;
+    if (displayCurrency === "NGN") return usdValue * (prices.ngn || 0);
+    return usdValue;
+  }, [currentStake, prices.lpt, prices.ngn, displayCurrency]);
+
+  const computedLptAmount = useMemo(() => {
+    const numericFiat = parseFloat(fiatAmount.replace(/,/g, "")) || 0;
+    if (numericFiat <= 0) return 0;
+    const lptUsd = prices.lpt || 0;
+    if (!lptUsd) return 0;
+    if (displayCurrency === "NGN")
+      return numericFiat / (lptUsd * (prices.ngn || 1));
+    return numericFiat / lptUsd;
+  }, [fiatAmount, displayCurrency, prices.lpt, prices.ngn]);
 
   const handleBackClick = () => {
     navigate(-1);
@@ -62,13 +64,11 @@ export const UnstakePage: React.FC = () => {
 
   const handleAmountSelect = (amount: string) => {
     const numericAmount = parseFormattedNumber(amount);
-    setLptAmount(numericAmount);
+    setFiatAmount(numericAmount);
   };
 
   const handleProceed = async () => {
-    const numericAmount = parseFloat(lptAmount.replace(/,/g, "")) || 0;
-
-    if (numericAmount <= 0 || numericAmount > currentStake) {
+    if (computedLptAmount <= 0 || computedLptAmount > currentStake) {
       setErrorMessage("Please enter a valid amount to withdraw.");
       setShowErrorDrawer(true);
       return;
@@ -85,11 +85,15 @@ export const UnstakePage: React.FC = () => {
       const response = await delegationService.unbond({
         walletId: state.user.wallet_id,
         walletAddress: state.user.wallet_address,
-        amount: lptAmount.replace(/,/g, ""),
+        amount: computedLptAmount.toString(),
       });
 
       if (response.success) {
         await refreshAllWalletData();
+        toast.success(
+          "Your unbonding is being processed. It will be available for withdrawal in ~7 days. Track progress via the info (i) icon on the staking wallet page.",
+          { duration: 6000 },
+        );
         setShowSuccessDrawer(true);
       } else {
         setErrorMessage(
@@ -106,16 +110,16 @@ export const UnstakePage: React.FC = () => {
       setIsProcessing(false);
     }
   };
-  const numericLptAmount = parseFloat(lptAmount || "0");
+  const numericFiatAmount = parseFloat(fiatAmount || "0");
   const activePercent = (() => {
     if (
-      !currentStake ||
-      currentStake <= 0 ||
-      !Number.isFinite(numericLptAmount)
+      !balanceFiat ||
+      balanceFiat <= 0 ||
+      !Number.isFinite(numericFiatAmount)
     ) {
       return null;
     }
-    const ratio = (numericLptAmount / currentStake) * 100;
+    const ratio = (numericFiatAmount / balanceFiat) * 100;
     const clampedRatio = Math.min(100, Math.max(0, ratio));
     return presetPercents.reduce((closest, current) => {
       const currentDiff = Math.abs(current - clampedRatio);
@@ -127,16 +131,15 @@ export const UnstakePage: React.FC = () => {
   return (
     <div className="min-h-full bg-[#050505] text-white flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 pt-8 pb-4">
+      <div className="flex items-center justify-between px-6 pt-8 pb-2">
         <button
           onClick={handleBackClick}
           className="h-10 w-10 rounded-full bg-[#151515] flex items-center justify-center"
         >
           <ArrowLeft className="text-white" size={22} />
         </button>
-
-        <div className="w-8 h-8" />
-        <div className="w-8 h-8" />
+        <h1 className="text-lg font-medium">Redeem</h1>
+        <div className="w-10" />
       </div>
 
       {/* Scrollable Content */}
@@ -144,9 +147,10 @@ export const UnstakePage: React.FC = () => {
         {/* Amount Input Field */}
         <div className="pt-2 pb-4">
           <div className="bg-[#151515] rounded-lg p-3 flex items-center gap-3">
+            <span className="text-white/50 text-lg font-medium">{displayFiatSymbol}</span>
             <input
               type="text"
-              value={lptAmount ? formatNumber(lptAmount) : ""}
+              value={fiatAmount ? formatNumber(fiatAmount) : ""}
               onChange={(e) => {
                 const rawValue = parseFormattedNumber(e.target.value);
                 let numericValue = rawValue.replace(/[^0-9.]/g, "");
@@ -154,28 +158,21 @@ export const UnstakePage: React.FC = () => {
                 if (parts.length > 2) {
                   numericValue = parts[0] + "." + parts.slice(1).join("");
                 }
-                setLptAmount(numericValue);
+                setFiatAmount(numericValue);
               }}
-              placeholder="LPT"
+              placeholder={displayFiatSymbol}
               className="flex-1 bg-transparent text-white text-lg font-medium focus:outline-none"
             />
           </div>
-          <p className="text-gray-400 text-xs mt-2 pl-2">
-            ≈ {currencySymbol}
-            {fiatEquivalent.toLocaleString(undefined, {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
-          </p>
         </div>
 
         {/* Predefined LPT Amounts */}
         <div className="pb-4">
           <div className="flex space-x-3">
             {presetPercents.map((percent) => {
-              const amount = ((currentStake * percent) / 100).toFixed(6);
+              const amount = ((balanceFiat * percent) / 100).toFixed(2);
               const isActive =
-                activePercent === percent && numericLptAmount > 0;
+                activePercent === percent && numericFiatAmount > 0;
               return (
                 <button
                   key={percent}
@@ -199,14 +196,21 @@ export const UnstakePage: React.FC = () => {
             <h3 className="text-sm text-white/60 mb-0.5 flex items-center gap-1.5">
               <WalletCards size={16} /> Wallet balance
             </h3>
-            <div className="bg-[#151515] rounded-lg border border-[#151515]">
-              <div className="flex items-center space-x-3">
-                <div className="flex-1">
-                  <span className="text-gray-100 text-sm font-medium">
-                    {currentStake.toLocaleString()} LPT
-                  </span>
-                </div>
-              </div>
+            <div className="flex items-center justify-between">
+              <span className="text-gray-100 text-sm font-medium">
+                {displayFiatSymbol}
+                {balanceFiat.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </span>
+              <span className="text-gray-400 text-xs">
+                {currentStake.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 4,
+                })}{" "}
+                LPT
+              </span>
             </div>
           </div>
         )}
@@ -217,15 +221,15 @@ export const UnstakePage: React.FC = () => {
         <button
           onClick={handleProceed}
           disabled={
-            !lptAmount ||
-            parseFloat(lptAmount) > currentStake ||
-            parseFloat(lptAmount) <= 0 ||
+            !fiatAmount ||
+            computedLptAmount > currentStake ||
+            computedLptAmount <= 0 ||
             isProcessing
           }
-          className={`w-full py-3.5 rounded-full font-semibold text-lg transition-colors ${
-            lptAmount &&
-            parseFloat(lptAmount) <= currentStake &&
-            parseFloat(lptAmount) > 0 &&
+          className={`w-full h-12 rounded-full font-medium text-lg transition-colors ${
+            fiatAmount &&
+            computedLptAmount <= currentStake &&
+            computedLptAmount > 0 &&
             !isProcessing
               ? "bg-[#C7EF6B] text-black hover:bg-[#B8E55A]"
               : "bg-[#636363] text-white cursor-not-allowed"
@@ -251,8 +255,8 @@ export const UnstakePage: React.FC = () => {
           setShowSuccessDrawer(false);
           navigate("/wallet/staking");
         }}
-        title="Your money is on the way!"
-        message="Your withdrawal request processed successfully and your money is on it's way."
+        title="Unbonding initiated"
+        message="Your request to unbond LPT is being processed. Your tokens will be available for withdrawal in approximately 7 days. You can track the progress by tapping the info (i) icon on the staking wallet page."
       />
     </div>
   );

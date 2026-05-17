@@ -28,7 +28,7 @@ import {
   GetSpendersResponse,
   WALLET_CONFIG,
 } from "./types";
-import { http } from "@/lib/http";
+import { getStoredToken, http } from "@/lib/http";
 
 export class WalletService implements IWalletApiService {
   private baseUrl: string;
@@ -39,36 +39,6 @@ export class WalletService implements IWalletApiService {
     this.timeout = WALLET_CONFIG.timeout;
   }
 
-  // Token management helpers
-  private getStoredToken(): string | null {
-    // Check localStorage first (remembered sessions)
-    let token = localStorage.getItem("auth_token");
-
-    // Check if token has expired (if rememberMe was used)
-    const expiry = localStorage.getItem("auth_expiry");
-    if (token && expiry) {
-      const expiryTime = parseInt(expiry) * 1000; // Convert to milliseconds
-      if (Date.now() > expiryTime) {
-        // Token expired, clear it
-        this.removeStoredTokens();
-        return null;
-      }
-    }
-
-    // If not in localStorage, check sessionStorage
-    if (!token) {
-      token = sessionStorage.getItem("auth_token");
-    }
-
-    return token;
-  }
-
-  private removeStoredTokens(): void {
-    localStorage.removeItem("auth_token");
-    localStorage.removeItem("auth_expiry");
-    sessionStorage.removeItem("auth_token");
-  }
-
   // Helper method for making HTTP requests
   private async makeRequest<T>(
     endpoint: string,
@@ -76,7 +46,7 @@ export class WalletService implements IWalletApiService {
   ): Promise<WalletApiResponse<T>> {
     try {
       // Add authorization header if token exists
-      const token = this.getStoredToken();
+      const token = getStoredToken();
       const headers = {
         "Content-Type": "application/json",
         ...(token && { Authorization: `Bearer ${token}` }),
@@ -99,7 +69,7 @@ export class WalletService implements IWalletApiService {
       return {
         success: false,
         data: null as T,
-        message: error.response?.data?.message || "An error occurred",
+        message: error.response?.data?.message || error.response?.data?.error || "An error occurred",
         error: error.response?.data?.error || error.message || "Unknown error",
       };
     }
@@ -107,7 +77,7 @@ export class WalletService implements IWalletApiService {
 
   // Get wallet by ID
   async getWallet(walletId: string): Promise<WalletApiResponse<WalletData>> {
-    const token = this.getStoredToken();
+    const token = getStoredToken();
     if (!token) {
       return {
         success: false,
@@ -128,7 +98,7 @@ export class WalletService implements IWalletApiService {
     token: "ETH" | "LPT" | "USDC" | "USDT",
     chainId?: 1 | 42161,
   ): Promise<BalanceResponse> {
-    const token_auth = this.getStoredToken();
+    const token_auth = getStoredToken();
     if (!token_auth) {
       return {
         success: false,
@@ -197,7 +167,7 @@ export class WalletService implements IWalletApiService {
   async getSolanaBalance(
     walletAddress: string,
   ): Promise<SolanaBalanceResponse> {
-    const token_auth = this.getStoredToken();
+    const token_auth = getStoredToken();
     if (!token_auth) {
       return {
         success: false,
@@ -237,7 +207,7 @@ export class WalletService implements IWalletApiService {
 
   // Export wallet private key
   async exportWallet(walletId: string): Promise<ExportResponse> {
-    const token = this.getStoredToken();
+    const token = getStoredToken();
     if (!token) {
       return {
         success: false,
@@ -272,7 +242,7 @@ export class WalletService implements IWalletApiService {
 
   // Send LPT from wallet to another address
   async sendLpt(request: SendLptRequest): Promise<SendLptResponse> {
-    const token = this.getStoredToken();
+    const token = getStoredToken();
     if (!token) {
       return {
         success: false,
@@ -304,14 +274,14 @@ export class WalletService implements IWalletApiService {
       return {
         success: false,
         error: error.response?.data?.error || error.message || "Unknown error",
-        message: error.response?.data?.message || "Failed to send LPT",
+        message: error.response?.data?.message || error.response?.data?.error || "Failed to send LPT",
       };
     }
   }
 
   // Approve LPT allowance for a spender
   async approveLpt(request: ApproveLptRequest): Promise<ApproveLptResponse> {
-    const token = this.getStoredToken();
+    const token = getStoredToken();
     if (!token) {
       return {
         success: false,
@@ -343,14 +313,14 @@ export class WalletService implements IWalletApiService {
       return {
         success: false,
         error: error.response?.data?.error || error.message || "Unknown error",
-        message: error.response?.data?.message || "Failed to approve LPT",
+        message: error.response?.data?.message || error.response?.data?.error || "Failed to approve LPT",
       };
     }
   }
 
   // Get all wallets for authenticated user
   async getWallets(chainType?: ChainType): Promise<GetWalletsResponse> {
-    const token = this.getStoredToken();
+    const token = getStoredToken();
     if (!token) {
       return {
         success: false,
@@ -428,7 +398,7 @@ export class WalletService implements IWalletApiService {
   async createSolanaWallet(
     request: CreateSolanaWalletRequest,
   ): Promise<CreateSolanaWalletResponse> {
-    const token = this.getStoredToken();
+    const token = getStoredToken();
     if (!token) {
       return {
         success: false,
@@ -467,7 +437,7 @@ export class WalletService implements IWalletApiService {
 
   // Send Solana tokens
   async sendSolana(request: SolanaSendRequest): Promise<SolanaSendResponse> {
-    const token = this.getStoredToken();
+    const token = getStoredToken();
     if (!token) {
       return {
         success: false,
@@ -511,7 +481,7 @@ export class WalletService implements IWalletApiService {
     request: ApproveTokenRequest,
     spender: string,
   ): Promise<ApproveTokenResponse> {
-    const token_auth = this.getStoredToken();
+    const token_auth = getStoredToken();
     if (!token_auth) {
       return {
         success: false,
@@ -559,7 +529,7 @@ export class WalletService implements IWalletApiService {
     token: "ETH" | "LPT" | "USDC" | "USDT",
     request: SendTokenRequest,
   ): Promise<SendTokenResponse> {
-    const token_auth = this.getStoredToken();
+    const token_auth = getStoredToken();
     if (!token_auth) {
       return {
         success: false,
@@ -606,7 +576,7 @@ export class WalletService implements IWalletApiService {
     chainId: 1 | 42161,
     token: "ETH" | "LPT" | "USDC" | "USDT" | "all",
   ): Promise<GetSpendersResponse> {
-    const token_auth = this.getStoredToken();
+    const token_auth = getStoredToken();
     if (!token_auth) {
       return {
         success: false,

@@ -72,6 +72,8 @@ export * from "./kyc";
 export * from "./campaign";
 // Export ramp services
 export * from "./ramp";
+// Export paj-ramp services
+export * from "./paj-ramp";
 // Export virtual-account services
 export * from "./virtual-account";
 
