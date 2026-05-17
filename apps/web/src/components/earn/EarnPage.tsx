@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { CircleQuestionMark } from "lucide-react";
+import { CircleQuestionMark, Info } from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
+import { PerksDrawer } from "@/components/general/PerksDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { useCampaign } from "@/contexts/CampaignContext";
 
@@ -18,6 +19,7 @@ interface EarnCard {
 export const EarnPage: React.FC = () => {
   const navigate = useNavigate();
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
+  const [showPerksPromoDrawer, setShowPerksPromoDrawer] = useState(false);
   const { campaignStatus } = useCampaign();
 
   const status = campaignStatus as { current_tier?: number; enrollment?: object } | null;
@@ -147,9 +149,20 @@ export const EarnPage: React.FC = () => {
 
               {/* Card Content */}
               <div className="p-4">
-                <h3 className="text-white font-medium text-lg mb-2">
-                  {card.title}
-                </h3>
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-white font-medium text-[17px]">
+                    {card.title}
+                  </h3>
+                  {card.id === "1" && (
+                    <span
+                      onClick={(e) => { e.stopPropagation(); setShowPerksPromoDrawer(true); }}
+                      className="text-[#86B3F7] text-xs inline-flex items-center gap-0.5 cursor-pointer shrink-0"
+                    >
+                      <Info size={12} />
+                      Learn more
+                    </span>
+                  )}
+                </div>
 
                 {/* Social Icons - Between Title and Description */}
                 {card.isSocialCard && (
@@ -239,6 +252,13 @@ export const EarnPage: React.FC = () => {
           "Earn money referring friends to Lisar or creating content for Lisar.",
           "Currently coming soon, stay tuned for updates.",
         ]}
+      />
+
+      {/* Perks Promo Drawer */}
+      <PerksDrawer
+        isOpen={showPerksPromoDrawer}
+        onClose={() => setShowPerksPromoDrawer(false)}
+        buttonText="Close"
       />
 
       {/* Bottom Navigation */}

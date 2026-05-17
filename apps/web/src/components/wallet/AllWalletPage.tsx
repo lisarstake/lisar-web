@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { AllBalancesDrawer } from "@/components/general/AllBalancesDrawer";
+import { PerksDrawer } from "@/components/general/PerksDrawer";
 import {
   Drawer,
   DrawerContent,
@@ -510,7 +511,7 @@ export const AllWalletPage: React.FC = () => {
 
             <div data-tour="all-wallet-quick-deposit" className="mt-4">
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-white/70 text-sm font-medium">Featured perks</h2>
+                <h2 className="text-white/70 text-sm font-medium">Live perks</h2>
               </div>
               <div
                 ref={promoCarouselRef}
@@ -746,46 +747,11 @@ export const AllWalletPage: React.FC = () => {
         </DrawerContent>
       </Drawer>
 
-      <Drawer
-        open={showPromoDrawer}
-        onOpenChange={(open) => {
-          if (!open) localStorage.setItem(PROMO_DISMISSED_KEY, "true");
-          setShowPromoDrawer(open);
-        }}
-      >
-        <DrawerContent className="bg-[#0b0b0b] border-t border-[#1f1f1f] rounded-t-[30px]">
-          <div className="px-5 pt-5 pb-4">
-            <div className="flex justify-end">
-              <button
-                onClick={handleDismissPromoDrawer}
-                className="w-9 h-9 rounded-full bg-[#151515] border border-[#2a2a2a] text-white flex items-center justify-center"
-              >
-                <X size={16} />
-              </button>
-            </div>
-            <h3 className="text-[#C7EF6B] text-[20px] leading-[1.05] font-semibold mt-2">
-              Introducing Perks ⭐
-            </h3>
-            <p className="text-white/70 text-sm mt-2">
-              Unlock exclusive discounts across different services when you save, up to 20% OFF!
-            </p>
-            <img
-              src="/card1.png"
-              alt="SPAR promo"
-              className="w-full rounded-lg mt-8 object-cover border border-[#86B3F7]/30"
-            />
-            <button
-              onClick={() => {
-                handleDismissPromoDrawer();
-                navigate("/earn");
-              }}
-              className="w-full mt-8 bg-[#C7EF6B] text-black rounded-full py-3 text-lg font-medium hover:bg-[#96C3F7] transition-colors"
-            >
-              Explore perks
-            </button>
-          </div>
-        </DrawerContent>
-      </Drawer>
+      <PerksDrawer
+        isOpen={showPromoDrawer}
+        onClose={handleDismissPromoDrawer}
+        onExplore={() => navigate("/earn")}
+      />
     </div>
   );
 };
