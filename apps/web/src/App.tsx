@@ -51,7 +51,7 @@ export default function App() {
     "/perks"
   ];
 
-  const pagesWithoutBottomNavSpacing = ["/wallet/yields/intro"];
+  const pagesWithoutBottomNavSpacing = ["/wallet/yields/intro", "/signup", "/login"];
 
   const hasBottomNav =
     !pagesWithoutBottomNavSpacing.some((path) =>

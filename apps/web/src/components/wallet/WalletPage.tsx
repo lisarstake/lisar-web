@@ -7,6 +7,7 @@ import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { DepositActionDrawer } from "@/components/general/DepositActionDrawer";
 import { SuccessDrawer } from "@/components/general/SuccessDrawer";
 import { WithdrawActionDrawer } from "@/components/general/WithdrawActionDrawer";
+import { GrowthActionDrawer } from "@/components/general/GrowthActionDrawer";
 import { ErrorDrawer } from "@/components/general/ErrorDrawer";
 import {
   Drawer,
@@ -99,6 +100,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
     new URLSearchParams(location.search).get("open") === "deposit"
   );
   const [showWithdrawDrawer, setShowWithdrawDrawer] = useState(false);
+  const [showGrowthDrawer, setShowGrowthDrawer] = useState(false);
   const [showWithdrawEmptyDrawer, setShowWithdrawEmptyDrawer] = useState(false);
   const [showEarningsDrawer, setShowEarningsDrawer] = useState(false);
   const [showTokenInfoDrawer, setShowTokenInfoDrawer] = useState(false);
@@ -251,6 +253,20 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
     perenaApy,
     userDelegation?.delegate?.id,
   ]);
+  const renderLoadingStars = (sizeClass: string) => (
+    <div className={`flex items-baseline justify-center gap-1 ${sizeClass}`}>
+      {Array.from({ length: 4 }).map((_, index) => (
+        <span
+          key={`wallet-star-${index}`}
+          className="inline-block text-white animate-[wallet-star-float_900ms_ease-in-out_infinite]"
+          style={{ animationDelay: `${index * 120}ms` }}
+        >
+          ★
+        </span>
+      ))}
+    </div>
+  );
+
   const tokenInfoDescription = isStakingWallet
     ? "Earn yields daily with 7 days unlock period for withdrawals."
     : "Earn yields daily with instant withdrawal.";
@@ -460,7 +476,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
 
   const handleWithdrawToNaira = () => {
     setShowWithdrawDrawer(false);
-    navigate(`/wallet/convert/withdraw/${currentWalletType}`);
+    navigate(`/wallet/withdraw/naira?walletType=${currentWalletType}`);
   };
 
   const handleWithdrawToCrypto = () => {
@@ -486,6 +502,16 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
         unbondingLockId: unlockedUnbondingLockId,
       },
     });
+  };
+
+  const handleStartGrowing = () => {
+    setShowGrowthDrawer(false);
+    navigate("/wallet/yields/create-flexible?mode=staking&source=lpt");
+  };
+
+  const handleMoveStake = () => {
+    setShowGrowthDrawer(false);
+    navigate("/move-stake");
   };
 
   const handleTransactionClick = (transaction: TransactionData) => {
@@ -532,11 +558,17 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
                 <div
                   className={`${
                     isSavings
-                      ? "bg-transparent border border-[#6da7fd]/50 hover:border-[#86B3F7]/50"
-                      : "bg-transparent border border-[#C7EF6B]/30 hover:border-[#C7EF6B]/50"
+                      ? "bg-[#0f0f0f] border border-[#6da7fd]/50 hover:border-[#86B3F7]/50"
+                      : "bg-[#0f0f0f] border border-[#C7EF6B]/30 hover:border-[#C7EF6B]/50"
                   } rounded-2xl py-4 min-h-[100px] relative overflow-hidden transition-colors`}
                 >
-                 
+                  {/* Background Image */}
+                  <img
+                    src={isSavings ? "/walletbg-1.jpeg" : "/walletbg-3.jpeg"}
+                    alt=""
+                    className="absolute inset-0 w-full h-full object-cover opacity-20 pointer-events-none"
+                  />
+
                   <div className={`absolute top-0 right-0 w-32 h-32 ${
                     isSavings ? "bg-white/10" : "bg-[#C7EF6B]/5"
                   } rounded-full blur-3xl pointer-events-none`}></div>
@@ -545,7 +577,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
                   } rounded-full blur-2xl pointer-events-none`}></div>
 
                    {/* Lisar Lines Decoration */}
-                   <LisarLines
+                   {/* <LisarLines
                       position="top-right"
                       className="opacity-100"
                       width="100px"
@@ -557,7 +589,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
                       className="opacity-100"
                       width="120px"
                       height="120px"
-                    />
+                    /> */}
 
                   <div className="relative z-10">
                     <div className="flex items-center justify-center gap-0.5">
@@ -574,11 +606,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
                       </button>
                     </div>
                     {card.isLoading ? (
-                      <div className="flex items-baseline justify-center gap-2 mt-2">
-                        <span className="text-2xl font-bold text-white">
-                          ••••
-                        </span>
-                      </div>
+                      renderLoadingStars("text-sm mt-2")
                     ) : (
                       <div className="flex items-baseline justify-center gap-2 mt-2">
                         <span className="text-xl font-bold text-white/90">
@@ -606,7 +634,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
                         if (isSavings) {
                           navigate("/wallet/yields/create-flexible?mode=savings&source=usdc");
                         } else {
-                          navigate("/wallet/yields/create-flexible?mode=staking&source=lpt");
+                          setShowGrowthDrawer(true);
                         }
                       }}
                       className="flex flex-col items-center gap-1.5"
@@ -644,13 +672,13 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
                     <img
                       src="/highyield-3.svg"
                       alt="Savings"
-                      className="absolute bottom-[-20px] right-[-20px] w-20 h-20 object-contain opacity-80"
+                      className="absolute bottom-[-20px] right-[-20px] w-18 h-18 object-contain opacity-80"
                     />
                   ) : (
                     <img
                       src="/highyield-1.svg"
                       alt="Growth"
-                      className="absolute bottom-[-5px] right-[-5px] w-14 h-14 object-contain opacity-80"
+                      className="absolute bottom-[-5px] right-[-5px] w-10 h-10 object-contain opacity-80"
                     />
                   )}
                 </div>
@@ -685,7 +713,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
                 {currentWalletType === "savings" ? (
                   <img src="/highyield-3.svg" />
                 ) : (
-                  <img src="/highyield-1.svg" />
+                  <img src="/highyield-1.svg" className="w-7 h-7" />
                 )}
               </div>
               <div>
@@ -792,6 +820,14 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
         onSelectClaim={handleClaimEarnings}
         disableRedeem={stakedBalance <= 0}
         disableClaim={!hasCompletedUnbonding}
+        claimAmount={completedUnbondingData.totalAmount}
+      />
+
+      <GrowthActionDrawer
+        isOpen={showGrowthDrawer}
+        onClose={() => setShowGrowthDrawer(false)}
+        onStartGrowing={handleStartGrowing}
+        onMoveStake={handleMoveStake}
       />
 
       <Drawer
@@ -808,18 +844,17 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
                 <img
                   src="/stash.png"
                   alt="Error"
-                  className="w-18 h-18 object-cover"
+                  className="w-24 h-24 object-cover rounded-full"
                 />
               </div>
             </div>
             <p className="text-sm text-white/80 px-4 text-center">
-              Sorry, your wallet balance is empty at the moment! Top up your balance
-              to start earning rewards.
+              Sorry, your wallet balance is empty at the moment! Please deposit first 
             </p>
             <button
               onClick={() => {
                 setShowWithdrawEmptyDrawer(false);
-                navigate(`/wallet/convert/deposit/${currentWalletType}`);
+                navigate(`/wallet/deposit/naira?walletType=${currentWalletType}`);
               }}
               className="w-full h-12 rounded-full bg-[#C7EF6B] text-black text-base font-semibold"
             >

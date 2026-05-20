@@ -1,105 +1,95 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   AlertCircle,
-  ArrowDownLeft,
   ArrowLeft,
-  ArrowUpRight,
+  CheckCircle2,
   CircleQuestionMark,
-  Gift,
-  ChevronDown,
+  Eye,
+  EyeOff,
   Info,
-  LampDesk,
-  RefreshCw,
+  LoaderCircle,
 } from "lucide-react";
-import { Card, CardContent, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "../ui/button";
-import {
-  Drawer,
-  DrawerContent,
-} from "@/components/ui/drawer";
-import { ErrorDrawer } from "@/components/general/ErrorDrawer";
-import { HelpDrawer } from "@/components/general/HelpDrawer";
-import { SuccessDrawer } from "@/components/general/SuccessDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
-import toast from "react-hot-toast";
-import { pointsService } from "@/services/points";
+import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { usePointsContext } from "@/contexts/PointsContext";
+import { pointsService } from "@/services/points";
 import type {
   PointsHistoryEntry,
   PointsPartner,
   PointsRedemptionRecord,
 } from "@/services/points/types";
+import toast from "react-hot-toast";
 
-const formatDrawerDate = (iso: string) =>
-  new Date(iso).toLocaleDateString("en-US", {
-    day: "numeric",
-    month: "short",
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  });
+const POINTS_TO_NGN_RATE = 10;
 
-function formatHistoryLineTitle(entry: PointsHistoryEntry): string {
-  if (entry.description?.trim()) return entry.description.trim();
-  const t = entry.type || "Points";
-  return t
-    .split(/[_\s]+/)
-    .filter(Boolean)
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-    .join(" ");
-}
+type FlowStep = "overview" | "convert" | "transfer" | "success";
 
-function formatRedemptionTitle(record: PointsRedemptionRecord): string {
-  return `Redeemed · ${record.coupon_code}`;
-}
+type RedemptionOption = {
+  id: string;
+  label: string;
+  description: string;
+  video: string;
+  comingSoon?: boolean;
+  location?: string;
+  partnerKeywords: string[];
+};
 
-const PARTNER_CARDS = [
+const REDEMPTION_OPTIONS: RedemptionOption[] = [
   {
-    partner: {
-      id: "cafe-one",
-      name: "Cafe One",
-      display_name: "Café One",
-      referral_code: "",
-      is_active: true,
-    } as PointsPartner,
+    id: "cafeone",
+    label: "CafeOne",
+    description: "Convert points to discounts on CafeOne purchases.",
     video: "/cafeone1.mp4",
-    description: "Save on Lisar and accumulate points redeemable as discounts on all purchases at Café One.",
-    benefits: [
-      { icon: Gift, text: "Enjoy discount on different select items" },
-      { icon: LampDesk, text: "Offers include snacks, drinks, and co-working space" },
-    ],
+    location: "Port Harcourt",
+    partnerKeywords: ["cafe", "cafeone"],
   },
   {
-    partner: {
-      id: "shuttlers",
-      name: "Shuttlers",
-      display_name: "Shuttlers",
-      referral_code: "",
-      is_active: true,
-    } as PointsPartner,
+    id: "shuttlers",
+    label: "Shuttlers",
+    description: "Convert points to ride passes with Shuttlers.",
     video: "/shuttlers.mp4",
-    description: "Save on Lisar and accumulate points redeemable as rides on Shuttlers.",
-    benefits: [
-      { icon: Gift, text: "Enjoy discount on booked rides" },
-      { icon: LampDesk, text: "Offers include both one way and return trips" },
-    ],
+    comingSoon: true,
+    partnerKeywords: ["shuttlers"],
   },
 ];
 
+const formatDate = (iso: string) =>
+  new Date(iso).toLocaleDateString("en-US", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+
+const formatHistoryTitle = (entry: PointsHistoryEntry): string => {
+  if (entry.description?.trim()) return entry.description.trim();
+  return "Perks Points Earned";
+};
+
+const formatRedemptionTitle = (record: PointsRedemptionRecord): string =>
+  `Points Redeemed (${record.coupon_code})`;
+
 export const PerksPage: React.FC = () => {
   const navigate = useNavigate();
+  const [step, setStep] = useState<FlowStep>("overview");
   const [showHelpDrawer, setShowHelpDrawer] = useState(false);
-  const [benefitsExpanded, setBenefitsExpanded] = useState(false);
-  const carouselRef = useRef<HTMLDivElement>(null);
-  const [carouselIndex, setCarouselIndex] = useState(0);
-  const CARD_WIDTH_RATIO = 0.92;
+  const [selectedRedemptionOption, setSelectedRedemptionOption] = useState<RedemptionOption | null>(null);
+  const [showBalance, setShowBalance] = useState(false);
+  const [pointsInput, setPointsInput] = useState("100");
+  const [itemCostInput, setItemCostInput] = useState("");
+  const [redeeming, setRedeeming] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [successRecord, setSuccessRecord] = useState<PointsRedemptionRecord | null>(null);
 
   const {
     balance,
     loading,
     refetch,
+    partners,
     pointsHistory,
     pointsRedemptions,
     historyLoading,
@@ -107,420 +97,549 @@ export const PerksPage: React.FC = () => {
     redemptionsLoadError,
     loadHistoryData,
   } = usePointsContext();
-  const [redeemingPartnerId, setRedeemingPartnerId] = useState<string | null>(
-    null,
-  );
-
-  const [historyDrawerOpen, setHistoryDrawerOpen] = useState(false);
-
-  const [showSuccessDrawer, setShowSuccessDrawer] = useState(false);
-  const [showErrorDrawer, setShowErrorDrawer] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
-  const [successData, setSuccessData] =
-    useState<PointsRedemptionRecord | null>(null);
-  const [errorMessage, setErrorMessage] = useState("");
-
-  useEffect(() => {
-    if (!historyDrawerOpen) return;
-    loadHistoryData();
-  }, [historyDrawerOpen, loadHistoryData]);
 
   const totalPoints = balance?.total_points ?? 0;
+  const pointsToRedeem = Number(pointsInput) || 0;
+  const itemCost = Number(itemCostInput) || 0;
 
-  const handleCarouselScroll = useCallback(() => {
-    if (!carouselRef.current) return;
-    const { scrollLeft, offsetWidth } = carouselRef.current;
-    const cardWidth = offsetWidth * CARD_WIDTH_RATIO + 12;
-    const index = Math.round(scrollLeft / cardWidth);
-    const clamped = Math.min(Math.max(index, 0), PARTNER_CARDS.length - 1);
-    setCarouselIndex(clamped);
-  }, []);
-
-  const scrollToPartner = useCallback((index: number) => {
-    if (!carouselRef.current) return;
-    const clamped = Math.min(Math.max(index, 0), PARTNER_CARDS.length - 1);
-    const { offsetWidth } = carouselRef.current;
-    const cardWidth = offsetWidth * CARD_WIDTH_RATIO + 12;
-    carouselRef.current.scrollTo({
-      left: clamped * cardWidth,
-      behavior: "smooth",
+  const activePartner = useMemo<PointsPartner | undefined>(() => {
+    if (!selectedRedemptionOption) return undefined;
+    return partners.find((partner) => {
+      const partnerFields = `${partner.display_name} ${partner.name}`.toLowerCase();
+      return selectedRedemptionOption.partnerKeywords.some((keyword) => partnerFields.includes(keyword));
     });
-    setCarouselIndex(clamped);
-  }, []);
+  }, [partners, selectedRedemptionOption]);
 
-  const handleBackClick = () => {
-    navigate("/earn");
+  const mergedHistory = useMemo(() => {
+    const earned = pointsHistory
+    .filter((item) => item.points > 0)
+    .map((item) => ({
+      id: `earned-${item.id}`,
+      createdAt: item.created_at,
+      points: `+${item.points}`,
+      subtitle: formatHistoryTitle(item),
+      title: "Perks Points Earned",
+      isEarned: true,
+    }));
+
+    const redeemed = pointsRedemptions.map((item) => ({
+      id: `redeemed-${item.id}`,
+      createdAt: item.created_at,
+      points: `-${item.points_spent}`,
+      subtitle: `₦${item.discount_value_ngn.toLocaleString()} off`,
+      title: formatRedemptionTitle(item),
+      isEarned: false,
+    }));
+
+    return [...earned, ...redeemed].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
+  }, [pointsHistory, pointsRedemptions]);
+
+  const pointsShortfall = Math.max(pointsToRedeem - totalPoints, 0);
+
+  const onRedeemStart = () => {
+    setError(null);
+    setStep("convert");
   };
 
-  const handleRedeemPoints = async (partner: PointsPartner) => {
-    if (redeemingPartnerId) return;
+  const onContinueToTransfer = () => {
+    if (!selectedRedemptionOption) {
+      toast.error("Select where to convert points");
+      return;
+    }
+    setError(null);
+    setStep("transfer");
+  };
 
-    if (totalPoints < 100) {
-      const needed = 100 - totalPoints;
-      toast.error(`Not enough points to redeem, you need ${needed} more points.`);
+  const onConfirmTransfer = async () => {
+    if (!selectedRedemptionOption) {
+      setError("Select where to convert points to continue.");
+      return;
+    }
+    if (!Number.isInteger(pointsToRedeem) || pointsToRedeem < 100) {
+      setError("Enter at least 100 points.");
+      return;
+    }
+    if (!activePartner) {
+      setError(`No active ${selectedRedemptionOption.label} partner is currently available. Please try again shortly.`);
       return;
     }
 
-    setRedeemingPartnerId(partner.id);
-    const res = await pointsService.redeem({ partner_id: partner.id });
-    setRedeemingPartnerId(null);
-
-    if (res.success && res.data) {
-      setSuccessData(res.data);
-      setSuccessMessage(
-        `Your coupon code is ${res.data.coupon_code} — and discount amount is ₦${res.data.discount_value_ngn.toLocaleString()} off on your purchase.`,
-      );
-      setShowSuccessDrawer(true);
-      await refetch();
-    } else {
-      setErrorMessage(
-        res.error ||
-        res.message ||
-        "Could not redeem points. Please try again later.",
-      );
-      setShowErrorDrawer(true);
+    if (itemCost <= 0) {
+      setError("Enter the amount you want to buy from the partner.");
+      return;
     }
+
+    if (totalPoints < pointsToRedeem) {
+      setError(`You need ${pointsShortfall} more points to continue.`);
+      return;
+    }
+
+    setRedeeming(true);
+    setError(null);
+
+    console.log("[Redeem] Calling redeem with:", { partner_id: activePartner.id, points: pointsToRedeem, item_cost: itemCost });
+    const response = await pointsService.redeem({ partner_id: activePartner.id, points: pointsToRedeem, item_cost: itemCost });
+    console.log("[Redeem] Response:", response);
+    setRedeeming(false);
+
+    if (!response.success || !response.data) {
+      setError(response.error || response.message || "Could not complete redemption.");
+      return;
+    }
+
+    setSuccessRecord(response.data);
+    await Promise.all([refetch(), loadHistoryData()]);
+    setStep("success");
   };
 
-  const showHistoryDrawerFatal =
-    !historyLoading &&
-    Boolean(historyLoadError) &&
-    Boolean(redemptionsLoadError);
-
-  type HistoryItem =
-    | { type: "earned"; data: PointsHistoryEntry }
-    | { type: "redeemed"; data: PointsRedemptionRecord };
-
-  const mergedHistory = useMemo<HistoryItem[]>(() => {
-    const items: HistoryItem[] = [
-      ...pointsHistory.map((h) => ({ type: "earned" as const, data: h })),
-      ...pointsRedemptions.map((r) => ({ type: "redeemed" as const, data: r })),
-    ];
-    items.sort(
-      (a, b) =>
-        new Date(b.data.created_at).getTime() - new Date(a.data.created_at).getTime(),
-    );
-    return items;
-  }, [pointsHistory, pointsRedemptions]);
+  const headerTitle =
+    step === "overview"
+      ? "Perks"
+      : step === "convert"
+        ? "Convert Points"
+        : step === "transfer"
+          ? "Convert Details"
+          : "Completed";
 
   return (
     <div className="min-h-full bg-[#050505] text-white flex flex-col">
-      {/* Header */}
-      <div className="flex items-center justify-between px-6 py-8">
+      <div className="flex items-center justify-between px-4 pt-6 pb-4">
         <button
-          onClick={handleBackClick}
+          type="button"
+          onClick={() => {
+            if (step === "overview") {
+              navigate("/earn");
+              return;
+            }
+            if (step === "convert") {
+              setStep("overview");
+              return;
+            }
+            if (step === "transfer") {
+              setStep("convert");
+              return;
+            }
+            setStep("overview");
+          }}
           className="h-10 w-10 rounded-full bg-[#151515] flex items-center justify-center"
         >
-          <ArrowLeft className="text-white" size={22} />
+          <ArrowLeft className="text-white/90" size={22} />
         </button>
-        <h1 className="text-base font-medium text-white">Perks</h1>
+
+        <h1 className="text-lg font-semibold tracking-tight">{headerTitle}</h1>
+
         <button
+          type="button"
           onClick={() => setShowHelpDrawer(true)}
-          className="w-8 h-8 bg-[#505050] rounded-full flex items-center justify-center"
+          className="h-10 w-10 rounded-full bg-[#151515] flex items-center justify-center"
         >
-          <CircleQuestionMark color="#fff" size={16} />
+          <CircleQuestionMark size={22} className="text-white/90" />
         </button>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 px-6 pb-20 scrollbar-hide">
+      <div className="flex-1 overflow-y-auto px-4 pb-40 pt-2">
         {loading ? (
-          <>
-            <Skeleton className="w-full h-48 rounded-lg mb-6 bg-white/10" />
-            <Skeleton className="w-full h-32 rounded-lg mb-4 bg-white/10" />
-            <Skeleton className="w-full h-24 rounded-lg mb-4 bg-white/10" />
-            <Skeleton className="w-full h-32 rounded-lg mb-4 bg-white/10" />
-            <Skeleton className="w-full h-36 rounded-lg mb-6 bg-white/10" />
-          </>
+          <div className="space-y-3">
+            <Skeleton className="h-32 w-full rounded-2xl bg-[#151515]" />
+            <Skeleton className="h-10 w-full rounded-xl bg-[#151515]" />
+            <Skeleton className="h-28 w-full rounded-2xl bg-[#151515]" />
+          </div>
         ) : (
           <>
-            <div className="w-full h-48 relative rounded-lg overflow-hidden mb-6">
-              <video
-                key={carouselIndex}
-                src={PARTNER_CARDS[carouselIndex].video}
-                autoPlay
-                muted
-                loop
-                playsInline
-                className="w-full h-full object-cover"
-              />
-            </div>
-
-            <div className="mb-2">
-              <div
-                ref={carouselRef}
-                onScroll={handleCarouselScroll}
-                className="flex gap-3 overflow-x-auto snap-x snap-mandatory scrollbar-hide"
-                style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-              >
-              {PARTNER_CARDS.map((pc, i) => (
-                <div
-                  key={pc.partner.id}
-                  className="flex-[0_0_100%] shrink-0 snap-center min-w-0"
-                >
-                  <Card className="bg-[#151515] border-[#2a2a2a] py-0 rounded-2xl">
-                    <CardContent className="px-4 py-4">
-                      <div className="flex items-start justify-between gap-3 mb-2">
-                        <CardTitle className="text-white/90 text-lg mb-0 flex-1 min-w-0">
-                          {pc.partner.display_name}
-                        </CardTitle>
-                        <button
-                          type="button"
-                          onClick={() => setHistoryDrawerOpen(true)}
-                          className="shrink-0 text-[13px] font-medium text-[#86B3F7] hover:text-[#96C3F7] underline underline-offset-2 pt-0.5"
-                        >
-                          Points history
-                        </button>
-                      </div>
-                      <p className="text-xs text-gray-400 mb-4">
-                        {pc.description}
-                      </p>
-                      <div className="grid grid-cols-[2.5fr_1fr] gap-3">
-                        <div className="p-2 bg-[#505050] rounded-md">
-                          <div className="flex items-center justify-between mt-1">
-                            <p className="text-xs font-semibold text-white/90">
-                             My Balance: {`${totalPoints} point(s)`}
-                            </p>
-                          </div>
-                        </div>
-                        {pc.partner.id === "shuttlers" ? (
-                          <span className="inline-flex text-nowrap items-center justify-center bg-[#505050] text-white/60 font-medium text-xs px-2 py-1 rounded-full cursor-not-allowed">
-                            Coming Soon
-                          </span>
-                        ) : (
-                          <Button
-                            type="button"
-                            disabled={redeemingPartnerId !== null}
-                            onClick={() => handleRedeemPoints(pc.partner)}
-                            className="bg-[#C7EF6B] hover:bg-[#B8E55A] disabled:opacity-40 disabled:pointer-events-none text-black font-medium text-xs px-2 py-1 rounded-full transition-colors"
-                          >
-                            {redeemingPartnerId === pc.partner.id
-                              ? "…"
-                              : "Redeem"}
-                          </Button>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              ))}
-            </div>
-            </div>
-
-            <div className="flex justify-center gap-1.5 mb-4">
-              {PARTNER_CARDS.map((_, i) => (
-                <div
-                  key={i}
-                  className={`h-1.5 rounded-full transition-all ${
-                    i === carouselIndex ? "w-2.5 bg-[#86B3F7]" : "w-1.5 bg-white/30"
-                  }`}
-                />
-              ))}
-            </div>
-
-            {/* Benefits Card - Collapsible */}
-            <Card className="bg-[#1a1a1a] border-gray-800 py-0 mb-4">
-              <CardContent className="px-4 py-3">
-                <button
-                  type="button"
-                  onClick={() => setBenefitsExpanded(!benefitsExpanded)}
-                  className="flex items-center justify-between w-full mb-0"
-                >
-                  <CardTitle className="text-white/90 text-sm">
-                    Discount Benefits
-                  </CardTitle>
-                  <ChevronDown
-                    className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${benefitsExpanded ? "rotate-180" : ""}`}
+            {step === "overview" && (
+              <>
+                <Card className="rounded-2xl border-[#151515] bg-[#0f0f0f] text-white py-0 relative overflow-hidden">
+                  <img
+                    src="/walletbg-2.jpeg"
+                    alt=""
+                    className="absolute inset-0 w-full h-full object-cover opacity-20 pointer-events-none"
                   />
-                </button>
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-[#C7EF6B]/5 rounded-full blur-3xl" />
+                  <div className="absolute bottom-0 left-0 w-24 h-24 bg-[#86B3F7]/5 rounded-full blur-2xl" />
+                  <CardContent className="p-4 relative z-10">
+                    <div className="inline-flex rounded-full bg-black/35 px-2 py-1 text-[12px] font-medium">
+                      1 point = ₦{POINTS_TO_NGN_RATE}
+                    </div>
+                    <p className="mt-4 text-[11px] text-white/80">Point Balance</p>
+                    <p className="text-[30px] leading-none font-semibold mt-1 flex items-center gap-3 ml-1">
+                      {showBalance ? totalPoints : "••••"}
+                      <button type="button" onClick={() => setShowBalance((v) => !v)} className="focus:outline-none">
+                        {showBalance ? <Eye size={20} className="text-white/60" /> : <EyeOff size={20} className="text-white/60" />}
+                      </button>
+                    </p>
 
-                {benefitsExpanded && (
-                  <div className="space-y-3 mt-3">
-                    {PARTNER_CARDS[carouselIndex].benefits.map((benefit, bi) => (
-                      <div
-                        key={bi}
-                        className="flex items-center gap-2 p-2 rounded-lg bg-[#505050]"
-                      >
-                        <benefit.icon className="w-4 h-4 text-white/90 shrink-0" />
-                        <p className="text-xs text-white/90">
-                          {benefit.text}
+                  </CardContent>
+                </Card>
+
+                <div className="mt-3 rounded-lg border border-[#2b2b2b] bg-[#151515] px-3 py-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <img src='/gift.png' className="w-7 h-7 mb-0.5" />
+                      <div>
+                        <p className="text-[12px] font-semibold text-white/90">Convert points to rewards</p>
+                        <p className="text-[12px] mt-0.5 text-white/65">
+                          Minimum redeemable: 100 points
                         </p>
                       </div>
-                    ))}
+
+                    </div>
+                    <span className="text-[11px] text-white/70">
+                      {totalPoints < 100 ? `${100 - totalPoints} left` : "Eligible"}
+                    </span>
                   </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* How It Works */}
-            <Card className="bg-[#1a1a1a] border-gray-800 py-0 mb-4">
-              <CardContent className="px-4 py-4">
-                <CardTitle className="text-white/90 text-sm mb-3">
-                  How Perks Works
-                </CardTitle>
-                <div className="space-y-2">
-                  <p className="text-xs text-gray-400">
-                    1. Save money on Lisar and earn points
-                  </p>
-                  <p className="text-xs text-gray-400">
-                    2. Earned points are automatically tracked
-                  </p>
-                  <p className="text-xs text-gray-400">
-                    3. Redeem points at different participating partners
-                  </p>
                 </div>
-              </CardContent>
-            </Card>
 
-            {/* CTA */}
-            <div className="p-4 bg-[#1a1a1a] border border-gray-800 rounded-lg mb-6">
-              <h3 className="text-white/90 font-semibold mb-1 text-sm">
-                Want points?
-              </h3>
-              <p className="text-xs text-gray-400 mb-3">
-                Save on Lisar and start accumulating points redeemable as discounts across different services!
-              </p>
-              <button
-                type="button"
-                onClick={() => navigate("/wallet")}
-                className="w-full py-2.5 bg-[#C7EF6B] hover:bg-[#B8E55A] text-black font-medium rounded-full transition-colors text-sm"
-              >
-                Start Saving
-              </button>
-            </div>
+                <Button
+                  type="button"
+                  onClick={onRedeemStart}
+                  disabled={totalPoints < 100}
+                  className="mt-5 h-12 w-full rounded-full bg-[#C7EF6B] text-black text-base font-medium hover:bg-[#B8E55A] disabled:opacity-60"
+                >
+                  Redeem Points
+                </Button>
+
+                <div className="mt-5">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-[12px] font-semibold text-white/90">History</h2>
+                    {historyLoading && <span className="text-[12px] text-white/50">Loading...</span>}
+                  </div>
+
+                  {(historyLoadError || redemptionsLoadError) && (
+                    <div className="mt-2 rounded-xl border border-[#5a2222] bg-[#2a1212] p-2.5 text-[12px] text-[#ffc4c4]">
+                      Could not fully load history. Showing available records.
+                    </div>
+                  )}
+
+                  <div className="mt-2 space-y-2">
+                    {mergedHistory.length === 0 ? (
+                      <div className="rounded-lg border border-[#2b2b2b] bg-[#151515] p-3 text-[12px] text-white/60">
+                        No activity yet.
+                      </div>
+                    ) : (
+                      mergedHistory.slice(0, 8).map((item) => (
+                        <div
+                          key={item.id}
+                          className="rounded-lg border border-[#2b2b2b] bg-[#151515] px-3 py-4 flex items-center justify-between"
+                        >
+                          <div>
+                            <p className="text-[11px] font-semibold text-white/90">{item.title}</p>
+                            <p className="text-[12px] text-white/55">
+                              {item.subtitle} • {formatDate(item.createdAt)}
+                            </p>
+                          </div>
+                          <p
+                            className={`text-[12px] font-semibold ${item.isEarned ? "text-[#20a472]" : "text-[#d24f4f]"
+                              }`}
+                          >
+                            {item.points}
+                          </p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
+
+            {step === "convert" && (
+              <div className="space-y-3">
+                <div className="rounded-2xl border border-[#2b2b2b] bg-[#151515] p-3">
+                  <p className="text-[14px] font-semibold text-white/95">Convert Points</p>
+                  <p className="mt-1 text-[13px] text-white/65 leading-[1.45]">
+                    Convert your accumulated points into partner rewards!
+                  </p>
+
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  {REDEMPTION_OPTIONS.map((option) => {
+                    const isSelected = selectedRedemptionOption?.id === option.id;
+                    return (
+                      <button
+                        key={option.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedRedemptionOption(option);
+                        }}
+                        className={`rounded-xl border p-3 text-left transition-colors overflow-hidden ${isSelected
+                          ? "border-gray-300 bg-[#151515]"
+                          : "border-[#2b2b2b] bg-[#151515]"
+                          }`}
+                      >
+                        <video
+                          src={option.video}
+                          autoPlay
+                          muted
+                          loop
+                          playsInline
+                          className="mb-2 h-24 w-full rounded-lg object-cover"
+                        />
+                        <div className="flex items-center gap-1 mt-1">
+                          <p className="text-[12px] font-semibold text-white/90">{option.label}{option.location ? ` (${option.location})` : ""}</p>
+                          {option.comingSoon && (
+                            <span className="text-[12px] font-semibold text-[#f2c46a]">Coming soon</span>
+                          )}
+                        </div>
+                        <p className="mt-1 text-[12px] text-white/60">{option.description}</p>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {step === "transfer" && (
+              <div className="space-y-3">
+                {/* <div className="rounded-2xl border border-[#2b2b2b] bg-[#151515] p-3 space-y-2">
+                  <h3 className="text-[12px] font-semibold text-white/90">Account details</h3>
+                  <div className="text-[12px] text-white/60 space-y-1">
+                    <p>Partner: {selectedRedemptionOption?.label ?? "-"}</p>
+                    <p>Points balance: {totalPoints}</p>
+                  </div>
+                </div> */}
+
+                <div className="space-y-2">
+                  <label className="text-[12px] font-medium text-white/70">Account Number</label>
+                  <Input
+                    value="8681187112"
+                    readOnly
+                    className="h-auto py-3.5 rounded-lg border-[#2b2b2b] bg-[#111111] text-[12px] text-white/80 outline-none focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:outline-none"
+                  />
+
+                  <label className="text-[12px] font-medium text-white/70">Bank</label>
+                  <Input
+                    value="Sterling Bank"
+                    readOnly
+                    className="h-auto py-3.5 rounded-lg border-[#2b2b2b] bg-[#111111] text-[12px] text-white/80 outline-none focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:outline-none"
+                  />
+
+                  <label className="text-[12px] font-medium text-white/70">Account Name</label>
+                  <Input
+                    value="Cafe One Coffee Port Harcourt"
+                    readOnly
+                    className="h-auto py-3.5 rounded-lg border-[#2b2b2b] bg-[#111111] text-[12px] text-white/80 outline-none focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:outline-none"
+                  />
+
+                  <label className="text-[12px] font-medium text-white/70">Points balance</label>
+                  <Input
+                    value={pointsInput}
+                    onChange={(e) => setPointsInput(e.target.value.replace(/[^\d]/g, ""))}
+                    inputMode="numeric"
+                    className="h-auto py-3.5 rounded-lg border-[#2b2b2b] bg-[#151515] text-[12px] text-white outline-none focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:outline-none"
+                  />
+
+                  <label className="text-[12px] font-medium text-white/70">Amount points converts to</label>
+                  <Input
+                    value={`₦${(pointsToRedeem * POINTS_TO_NGN_RATE).toLocaleString()}`}
+                    readOnly
+                    className="h-auto py-3.5 rounded-lg border-[#2b2b2b] bg-[#111111] text-[12px] text-white/80 outline-none focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:outline-none"
+                  />
+
+                  <label className="text-[12px] font-medium text-white/70">Total purchase from {selectedRedemptionOption?.label ?? "partner"} (₦)</label>
+                  <Input
+                    value={itemCostInput}
+                    onChange={(e) => setItemCostInput(e.target.value.replace(/[^\d]/g, ""))}
+                    inputMode="numeric"
+                    placeholder="e.g. 5000"
+                    className="h-auto py-3.5 rounded-lg border-[#2b2b2b] bg-[#151515] text-[12px] text-white outline-none focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:outline-none"
+                  />
+
+                </div>
+
+              </div>
+            )}
+
+            {step === "success" && (
+              <div className="min-h-[calc(100vh-260px)] flex items-center">
+                <div className="relative rounded-3xl border border-[#2b2b2b] bg-[#111111] text-white overflow-hidden w-full">
+                  <div className="absolute -top-14 -right-10 h-44 w-44 rounded-full bg-[#C7EF6B]/10 blur-3xl" />
+                  <div className="absolute -bottom-16 -left-10 h-40 w-40 rounded-full bg-[#86B3F7]/10 blur-3xl" />
+
+                  <div className="relative px-5 pt-6 pb-5">
+                    <div className="flex items-center justify-between">
+                      <p className="text-[11px] uppercase tracking-[0.2em] text-white/55">Conversion Receipt</p>
+                      <div className="inline-flex items-center gap-1 rounded-full border border-[#2f3d1f] bg-[#1a2212] px-2.5 py-1 text-[12px] text-[#C7EF6B]">
+                        <CheckCircle2 size={12} />
+                        Successful
+                      </div>
+                    </div>
+
+                    <div className="mt-4 rounded-2xl border border-[#2a2a2a] bg-[#171717] p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#2b2b2b]">
+                          <img src="/gift.png" alt="Gift" className="h-7 w-7 object-contain" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-white/60">Points converted successfully</p>
+                          <p className="text-lg font-semibold leading-tight">
+                            ₦{(pointsToRedeem * POINTS_TO_NGN_RATE).toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="my-4 border-t border-dashed border-white/15" />
+
+                      <div className="space-y-2 text-[12px]">
+                        <div className="flex items-center justify-between">
+                          <span className="text-white/60">Partner</span>
+                          <span className="font-medium text-white/90">{selectedRedemptionOption?.label ?? "CafeOne"}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-white/60">Points Used</span>
+                          <span className="font-medium text-white/90">{pointsToRedeem}</span>
+                        </div>
+                       
+                        <div className="flex items-center justify-between">
+                          <span className="text-white/60">Bank</span>
+                          <span className="font-medium text-white/90">Sterling Bank</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-white/60">Account Number</span>
+                          <span className="font-medium text-white/90">8681187112</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-white/60">Account Name</span>
+                          <span className="font-medium text-white/90 text-right">Cafe One Coffee Port Harcourt</span>
+                        </div>
+                        {successRecord?.coupon_code && (
+                          <div className="flex items-center justify-between">
+                            <span className="text-white/60">Coupon</span>
+                            <span className="font-medium text-white/90">{successRecord.coupon_code}</span>
+                          </div>
+                        )}
+                        <div className="flex items-center justify-between">
+                          <span className="text-white/60">Items purchased</span>
+                          <span className="font-medium text-white/90">₦{successRecord?.item_cost?.toLocaleString()}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-white/60">Discount</span>
+                          <span className="font-medium text-white/90">-₦{successRecord?.discount_value_ngn?.toLocaleString()}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-white/60">Amount to Pay</span>
+                          <span className="font-medium text-white/90">₦{successRecord?.amount_to_pay?.toLocaleString()}</span>
+                        </div>
+                       
+                        <div className="flex items-center justify-between">
+                          <span className="text-white/60">Date</span>
+                          <span className="font-medium text-white/90">
+                            {new Date().toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "2-digit",
+                              year: "numeric",
+                            })}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>
 
-      <Drawer open={historyDrawerOpen} onOpenChange={setHistoryDrawerOpen}>
-        <DrawerContent className="bg-[#050505] border-t border-[#1b1b1b] max-h-[90vh] flex flex-col gap-0 rounded-t-2xl p-0 md:max-w-[390px] md:left-1/2 md:-translate-x-1/2">
-          <div className="flex-1 overflow-y-auto px-6 pb-8 pt-4 scrollbar-hide min-h-0">
-            <h2 className="text-lg font-medium text-white mb-4">Activity</h2>
-            {historyLoading ? (
-              <div className="space-y-3">
-                {[0, 1, 2, 3].map((i) => (
-                  <div
-                    key={`skel-${i}`}
-                    className="flex items-center justify-between p-4 bg-[#151515] rounded-xl border border-[#505050] animate-pulse"
-                  >
-                    <div className="flex items-center space-x-3 flex-1">
-                      <div className="w-10 h-10 bg-gray-700 rounded-full shrink-0" />
-                      <div className="space-y-2 flex-1">
-                        <div className="h-4 bg-gray-700 rounded w-3/5" />
-                        <div className="h-3 bg-gray-700 rounded w-2/5" />
-                      </div>
-                    </div>
-                    <div className="h-4 bg-gray-700 rounded w-16 shrink-0 ml-2" />
-                  </div>
-                ))}
-              </div>
-            ) : showHistoryDrawerFatal ? (
-              <div className="flex flex-col items-center justify-center py-12 px-4">
-                <div className="w-16 h-16 bg-gray-100/10 rounded-full flex items-center justify-center mb-6">
-                  <AlertCircle className="w-8 h-8 text-gray-400" />
-                </div>
-                <h3 className="text-lg font-semibold text-white mb-2">
-                  Couldn&apos;t load activity
-                </h3>
-                <p className="text-gray-400 text-center text-sm mb-2 max-w-sm">
-                  {historyLoadError}
-                </p>
-                <p className="text-gray-500 text-center text-xs mb-6 max-w-sm">
-                  {redemptionsLoadError}
-                </p>
-                <button
-                  type="button"
-                  onClick={() => void loadHistoryData()}
-                  className="flex items-center text-sm space-x-2 px-4 py-2 bg-gray-300 text-black rounded-lg font-normal hover:bg-[#B8E55A] transition-colors"
-                >
-                  <RefreshCw className="w-4 h-4" />
-                  <span>Retry</span>
-                </button>
-              </div>
-            ) : mergedHistory.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 px-4">
-                <div className="w-16 h-16 bg-gray-100/10 rounded-full flex items-center justify-center mb-6">
-                  <Info className="w-8 h-8 text-gray-400" />
-                </div>
-                <h3 className="text-lg font-semibold text-white mb-2">
-                  No activity yet
-                </h3>
-                <p className="text-gray-400 text-center text-sm max-w-sm">
-                  Earn points by saving on Lisar. Redemptions will appear after you redeem.
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {mergedHistory.map((item) => (
-                  <div
-                    key={`${item.type}-${item.data.id}`}
-                    className="flex items-center justify-between p-4 bg-[#151515] rounded-xl border border-[#505050]"
-                  >
-                    <div className="flex items-center space-x-3 min-w-0 flex-1">
-                      <div className="w-10 h-10 flex items-center justify-center bg-white/10 rounded-full shrink-0">
-                        {item.type === "earned" ? (
-                          <ArrowDownLeft size={20} className="text-green-400" />
-                        ) : (
-                          <ArrowUpRight size={20} className="text-red-400" />
-                        )}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-white/80 text-sm truncate">
-                          {item.type === "earned"
-                            ? formatHistoryLineTitle(item.data)
-                            : formatRedemptionTitle(item.data)}
-                        </p>
-                        <p className="text-white/40 text-xs">
-                          {item.type === "earned"
-                            ? formatDrawerDate(item.data.created_at)
-                            : `₦${item.data.discount_value_ngn.toLocaleString()} off · ${formatDrawerDate(item.data.created_at)}`}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right shrink-0 pl-2">
-                      <p className={`font-semibold text-[13px] text-white/80`}>
-                        {item.type === "earned" ? `+${item.data.points} pts` : `-${item.data.points_spent} pts`}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </DrawerContent>
-      </Drawer>
+      {!loading && step !== "overview" && (
+        <div className="fixed left-4 right-4 bottom-24 z-20">
+          {step === "convert" && (
+            <Button
+              type="button"
+              onClick={onContinueToTransfer}
+              disabled={!selectedRedemptionOption || !!selectedRedemptionOption.comingSoon}
+              className="h-12 w-full rounded-full bg-[#C7EF6B] text-black text-base font-medium hover:bg-[#B8E55A] disabled:opacity-60"
+            >
+              Continue
+            </Button>
+          )}
 
-      {/* Error Drawer */}
-      <ErrorDrawer
-        isOpen={showErrorDrawer}
-        onClose={() => setShowErrorDrawer(false)}
-        title="Redemption Failed"
-        message={errorMessage}
-      />
+          {step === "transfer" && (
+            <Button
+              type="button"
+              onClick={onConfirmTransfer}
+              disabled={redeeming || totalPoints < pointsToRedeem || pointsToRedeem < 100 || itemCost <= 0}
+              className="h-12 w-full rounded-full bg-[#C7EF6B] text-black text-base font-medium hover:bg-[#B8E55A] disabled:opacity-60"
+            >
+              {redeeming ? (
+                <span className="inline-flex items-center gap-1.5">
+                  <LoaderCircle size={14} className="animate-spin" /> Processing
+                </span>
+              ) : (
+                "Convert"
+              )}
+            </Button>
+          )}
 
-      {/* Success Drawer */}
-      <SuccessDrawer
-        isOpen={showSuccessDrawer}
-        onClose={() => {
-          setShowSuccessDrawer(false);
-          setSuccessData(null);
-        }}
-        title="Redemption Successful!"
-        message={successMessage}
-      />
+          {step === "success" && (
+            <Button
+              type="button"
+              onClick={() => {
+                setStep("overview");
+                setSuccessRecord(null);
+                setPointsInput("100");
+                setItemCostInput("");
+                setSelectedRedemptionOption(null);
+              }}
+              className="h-12 w-full rounded-full bg-[#C7EF6B] text-black hover:bg-[#B8E55A] text-base font-medium"
+            >
+              Back to points
+            </Button>
+          )}
+        </div>
+      )}
 
       <HelpDrawer
         isOpen={showHelpDrawer}
         onClose={() => setShowHelpDrawer(false)}
         title="Perks Guide"
         content={[
-          "Save money on Lisar to earn points automatically.",
-          "Points can be redeemed for discounts at participating partners.",
-          "Offers and discount types depend on each partner.",
+          "Convert points to cash rewards. 1 point = ₦10 and minimum redeemable balance is 100 points.",
         ]}
       />
 
       <BottomNavigation currentPath="/perks" />
+
+      {step === "transfer" && pointsToRedeem > 0 && pointsToRedeem < 100 && (
+        <div className="fixed left-4 right-4 bottom-40 rounded-xl border border-[#ffd9d9] bg-[#fff5f5] px-3 py-2 text-[12px] text-[#9a3131] flex items-start gap-2 z-30">
+          <AlertCircle size={14} className="mt-0.5 shrink-0" />
+          <span>Minimum redeemable is 100 points.</span>
+        </div>
+      )}
+
+      {step === "transfer" && pointsToRedeem >= 100 && totalPoints < pointsToRedeem && (
+        <div className="fixed left-4 right-4 bottom-40 rounded-xl border border-[#ffd9d9] bg-[#fff5f5] px-3 py-2 text-[12px] text-[#9a3131] flex items-start gap-2 z-30">
+          <AlertCircle size={14} className="mt-0.5 shrink-0" />
+          <span>You need {pointsShortfall} more points to continue.</span>
+        </div>
+      )}
+
+      {step === "transfer" && error && (
+        <div className="fixed left-4 right-4 bottom-40 rounded-xl border border-[#ffd9d9] bg-[#fff5f5] px-3 py-2 text-[12px] text-[#9a3131] z-30">
+          {error}
+        </div>
+      )}
+
+      {error && step !== "transfer" && (
+        <div className="fixed left-4 right-4 bottom-40 rounded-xl border border-[#ffd9d9] bg-[#fff5f5] px-3 py-2 text-[12px] text-[#9a3131] z-30">
+          {error}
+        </div>
+      )}
+
+      {step === "convert" && selectedRedemptionOption?.id === "cafeone" && (
+        <div className="fixed left-4 right-4 bottom-40 rounded-xl border border-[#ffe7b8] bg-[#fff8e9] px-3 py-2 text-[12px] text-[#7a5b22] flex items-start gap-2 z-30">
+          <Info size={13} className="mt-0.5 shrink-0" />
+          <span>This service is currently available for CafeOne Port Harcourt. Other areas are coming soon.</span>
+        </div>
+      )}
+
+      {!activePartner && !!selectedRedemptionOption && !loading && (
+        <div className="fixed left-4 right-4 bottom-40 rounded-xl border border-[#ffe7b8] bg-[#fff8e9] px-3 py-2 text-[12px] text-[#7a5b22] flex items-start gap-2 z-30">
+          <Info size={13} className="mt-0.5 shrink-0" />
+          <span>This service is currently not available and is coming soon.</span>
+        </div>
+      )}
     </div>
   );
 };

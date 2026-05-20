@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
-import { X } from "lucide-react";
+import { X, LoaderCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useGuidedTourContext } from "@/contexts/GuidedTourContext";
 import { ALL_WALLET_TOUR_ID, getTourConfig, LEARN_TOUR_ID } from "@/lib/tourConfig";
@@ -437,11 +437,9 @@ export const GuidedTour: React.FC = () => {
   const isLastStep = tourState.currentStepIndex === totalSteps - 1;
 
   const canSkipCurrentStep = !currentStep.disableSkip;
-  const primaryActionLabel = isSkipping
-    ? "Skipping..."
-    : showSkipConfirmation
-      ? "Yes, Skip"
-      : currentStep.primaryButtonLabel || (isLastStep ? "Next" : "Next");
+  const primaryActionLabel = showSkipConfirmation
+    ? "Yes, Skip"
+    : currentStep.primaryButtonLabel || (isLastStep ? "Finish" : "Next");
   const secondaryActionLabel = showSkipConfirmation
     ? "Continue"
     : currentStep.secondaryButtonLabel || "Prev";
@@ -556,13 +554,14 @@ export const GuidedTour: React.FC = () => {
                 handleNextStep();
               }
             }}
-            className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-colors ${
+            className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-colors flex items-center gap-2 ${
               isSkipping
                 ? "bg-[#636363] text-white cursor-not-allowed"
                 : "bg-[#C7EF6B] text-black hover:bg-[#d4f57b]"
             }`}
           >
-            {primaryActionLabel}
+            {isSkipping && <LoaderCircle className="animate-spin h-4 w-4" />}
+            {isSkipping ? "Skip" : primaryActionLabel}
           </button>
         </div>
       </div>

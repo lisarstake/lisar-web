@@ -106,6 +106,15 @@ export const PointsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     void loadHistoryData();
   }, [authLoading, isAuthenticated, loadPointsData, loadHistoryData]);
 
+  // Refresh points data when referral code is applied
+  useEffect(() => {
+    const handleRefresh = () => {
+      loadPointsData();
+    };
+    window.addEventListener("points:refresh", handleRefresh);
+    return () => window.removeEventListener("points:refresh", handleRefresh);
+  }, [loadPointsData]);
+
   return (
     <PointsContext.Provider
       value={{

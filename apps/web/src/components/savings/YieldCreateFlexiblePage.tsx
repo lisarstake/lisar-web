@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ArrowLeft, PiggyBank, Sprout, WalletCards } from "lucide-react";
+import { ArrowLeft, PiggyBank, RefreshCw, Sprout, WalletCards } from "lucide-react";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { useOrchestrators } from "@/contexts/OrchestratorContext";
 import { useStablesApy } from "@/hooks/useStablesApy";
@@ -32,7 +32,7 @@ import {
 export const YieldCreateFlexiblePage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { orchestrators } = useOrchestrators();
+  const { orchestrators, isLoading, error, refetch } = useOrchestrators();
   const { perena: perenaApy, isLoading: apyLoading } = useStablesApy();
   const { state } = useAuth();
   const {
@@ -261,9 +261,9 @@ export const YieldCreateFlexiblePage: React.FC = () => {
           <ArrowLeft className="text-white" size={22} />
         </button>
 
-        {/* <h1 className="text-lg font-medium text-white">
-          {mode === "staking" ? "Top up " : "Create Savings Plan"}
-        </h1> */}
+        <h1 className="text-lg font-medium text-white">
+          {mode === "staking" ? "Grow " : "Save"}
+        </h1>
 
         <div className="w-8 h-8" />
       </div>
@@ -304,25 +304,37 @@ export const YieldCreateFlexiblePage: React.FC = () => {
           <div className="mt-4 rounded-xl bg-[#151515] px-4 py-4">
             <p className="text-sm text-white/60">Orchestrator</p>
             <div className="mt-0">
-              <Select
-                value={currentOrchestrator}
-                onValueChange={(value) => setSelectedOrchestrator(value)}
-              >
-                <SelectTrigger className="bg-transparent text-white/90 border-none w-full px-0">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-[#151515] text-white/90 w-full">
-                  {stakingOrchestratorOptions.map((item) => (
-                    <SelectItem
-                      key={item.id}
-                      value={item.id}
-                      className="focus:bg-white/10 focus:text-white/90"
-                    >
-                      {item.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {isLoading && !orchestrators.length ? (
+                <div className="flex justify-end py-3">
+                  <span className="h-3 w-3 border-[1.5px] border-current border-t-transparent rounded-full animate-spin text-white/50" />
+                </div>
+              ) : error && !orchestrators.length ? (
+                <div className="flex justify-end py-3">
+                  <button onClick={() => refetch()}>
+                    <RefreshCw size={12} className="text-white/50 hover:text-white transition-colors" />
+                  </button>
+                </div>
+              ) : (
+                <Select
+                  value={currentOrchestrator}
+                  onValueChange={(value) => setSelectedOrchestrator(value)}
+                >
+                  <SelectTrigger className="bg-transparent text-white/90 border-none w-full px-0">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#151515] text-white/90 w-full">
+                    {stakingOrchestratorOptions.map((item) => (
+                      <SelectItem
+                        key={item.id}
+                        value={item.id}
+                        className="focus:bg-white/10 focus:text-white/90"
+                      >
+                        {item.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
           </div>
         )}

@@ -18,16 +18,13 @@ import {
   ResolveBankAccountRequest,
   SavedBankAccount,
   SessionInitiateData,
-  SessionInitiateRequest,
   SessionStatusData,
   SessionVerifyData,
   SessionVerifyRequest,
 } from "./types";
 
 export interface IPajRampApiService {
-  initiateSession(
-    request: SessionInitiateRequest,
-  ): Promise<PajRampApiResponse<SessionInitiateData>>;
+  initiateSession(): Promise<PajRampApiResponse<SessionInitiateData>>;
 
   verifySession(
     request: SessionVerifyRequest,

@@ -1,12 +1,13 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Drawer } from "vaul";
 import { Check, Copy, LoaderCircle, X } from "lucide-react";
 import toast from "react-hot-toast";
 import { formatNumber } from "@/lib/formatters";
 import { pajRampService, perenaService, walletService } from "@/services";
 import { useWallet } from "@/contexts/WalletContext";
+import { useAuth } from "@/contexts/AuthContext";
 import type {
-  DeviceInfo,
   OffRampOrderData,
   OnRampOrderData,
   RampBank,
@@ -22,7 +23,6 @@ export interface PajRampTransactionDetails {
   exchangeRate: number;
   fee: number;
   cryptoAddress: string | null;
-  customerEmail?: string;
   customerName?: string;
   bankCode?: string;
   bankAccountNumber?: string;
@@ -30,6 +30,7 @@ export interface PajRampTransactionDetails {
   bankName?: string;
   mint: string;
   chain: string;
+  withdrawSource?: "savings" | "stash" | "combined";
 }
 
 interface PajRampDrawerProps {
@@ -42,23 +43,13 @@ interface PajRampDrawerProps {
 
 type Step =
   | "checking_session"
-  | "auth_email"
   | "auth_otp"
   | "creating_order"
   | "order_ready"
   | "processing"
   | "success"
-  | "error";
-
-const getDeviceInfo = (): DeviceInfo => ({
-  uuid:
-    typeof crypto !== "undefined" && "randomUUID" in crypto
-      ? crypto.randomUUID()
-      : `dev-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-  device: navigator.userAgent,
-  os: navigator.platform,
-  browser: navigator.userAgent,
-});
+  | "error"
+  | "no_bank";
 
 export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
   isOpen,
@@ -67,11 +58,12 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
   onConfirm,
   isLoading: externalLoading = false,
 }) => {
-  const { solanaWalletId, solanaWalletAddress, refreshAllWalletData } =
+  const navigate = useNavigate();
+  const { solanaWalletId, solanaWalletAddress, solanaUsdcBalance, stablesBalance, refreshAllWalletData } =
     useWallet();
+  const { state } = useAuth();
 
   const [step, setStep] = useState<Step>("checking_session");
-  const [email, setEmail] = useState(details.customerEmail || "");
   const [otp, setOtp] = useState("");
   const [orderData, setOrderData] = useState<
     OnRampOrderData | OffRampOrderData | null
@@ -91,14 +83,13 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
 
   const resetState = useCallback(() => {
     setStep("checking_session");
-    setEmail(details.customerEmail || "");
     setOtp("");
     setOrderData(null);
     setErrorMessage("");
     setCopiedField(null);
     setIsSubmitting(false);
     hasCheckedSession.current = false;
-  }, [details.customerEmail]);
+  }, []);
 
   useEffect(() => {
     if (!isOpen) {
@@ -156,7 +147,8 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
           setStep("error");
         }
       } else {
-        let bankCode = details.bankCode;
+        let bankCode = details.bankCode || state.user?.linked_account?.bank_code || "";
+        const accountNumber = details.bankAccountNumber || state.user?.linked_account?.account_number || "";
         if (!bankCode && details.bankName) {
           const resolved = await resolveBankCode(details.bankName);
           if (!resolved) {
@@ -169,7 +161,7 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
 
         const resp = await pajRampService.createOffRampOrder({
           bank: bankCode || "",
-          accountNumber: details.bankAccountNumber || "",
+          accountNumber,
           currency: details.fiatCurrency,
           amount: details.tokenAmount,
           fiatAmount: details.fiatAmount,
@@ -203,6 +195,7 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
     details.bankCode,
     details.bankName,
     details.bankAccountNumber,
+    state.user?.linked_account,
     genericFailureMessage,
   ]);
 
@@ -211,55 +204,27 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
     try {
       const resp = await pajRampService.getSessionStatus();
       if (resp.success && resp.data?.hasActiveSession) {
-        await createOrder();
-      } else if (details.customerEmail) {
-        const initResp = await pajRampService.initiateSession({
-          emailOrPhone: details.customerEmail,
-        });
-        if (initResp.success) {
-          setEmail(details.customerEmail);
-          setStep("auth_otp");
+        if (isBuy) {
+          await createOrder();
+        } else if (state.user?.linked_account?.bank_code && state.user?.linked_account?.account_number) {
+          await createOrder();
         } else {
-          setStep("auth_email");
+          setStep("no_bank");
         }
       } else {
-        setStep("auth_email");
+        await pajRampService.initiateSession();
+        setStep("auth_otp");
       }
     } catch {
-      setStep("auth_email");
+      setStep("auth_otp");
     }
-  }, [createOrder, details.customerEmail]);
+  }, [createOrder, isBuy, state.user?.linked_account]);
 
   useEffect(() => {
     if (!isOpen || hasCheckedSession.current) return;
     hasCheckedSession.current = true;
     checkSession();
   }, [isOpen, checkSession]);
-
-  const handleSendOtp = useCallback(async () => {
-    const trimmedEmail = email.trim();
-    if (!trimmedEmail) return;
-
-    setIsSubmitting(true);
-    setErrorMessage("");
-
-    try {
-      const resp = await pajRampService.initiateSession({
-        emailOrPhone: trimmedEmail,
-      });
-      if (resp.success) {
-        setStep("auth_otp");
-      } else {
-        setErrorMessage(
-          resp.error?.message || "Failed to send verification code.",
-        );
-      }
-    } catch {
-      setErrorMessage("Failed to send verification code.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, [email]);
 
   const handleVerifyOtp = useCallback(async () => {
     const trimmedOtp = otp.trim();
@@ -269,15 +234,18 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
     setErrorMessage("");
 
     try {
-      const device = getDeviceInfo();
       const resp = await pajRampService.verifySession({
-        emailOrPhone: email.trim(),
         otp: trimmedOtp,
-        device,
       });
 
       if (resp.success) {
-        await createOrder();
+        if (isBuy) {
+          await createOrder();
+        } else if (state.user?.linked_account?.bank_code && state.user?.linked_account?.account_number) {
+          await createOrder();
+        } else {
+          setStep("no_bank");
+        }
       } else {
         setErrorMessage(
           resp.error?.message || "Invalid verification code.",
@@ -288,7 +256,7 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
     } finally {
       setIsSubmitting(false);
     }
-  }, [email, otp, createOrder]);
+  }, [otp, createOrder, isBuy, state.user?.linked_account]);
 
   const handleStart = useCallback(async () => {
     if (isBuy) {
@@ -319,30 +287,48 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
         return;
       }
 
-      const burnResp = await perenaService.burn({
-        walletId: solanaWalletId,
-        walletAddress: solanaWalletAddress,
-        usdStarAmount: details.tokenAmount,
-      });
-      if (!burnResp.success) {
-        setErrorMessage(burnResp.error || genericFailureMessage);
-        setStep("error");
-        return;
-      }
+      const source = details.withdrawSource;
+      if (source === "stash") {
+        const sendResp = await walletService.sendSolana({
+          walletId: solanaWalletId,
+          fromAddress: solanaWalletAddress,
+          toAddress: offrampData.address,
+          token: "USDC",
+          amount: details.tokenAmount,
+        });
+        if (!sendResp.success) {
+          setErrorMessage(sendResp.error || genericFailureMessage);
+          setStep("error");
+          return;
+        }
+      } else {
+        const burnAmount = source === "combined"
+          ? Math.min(details.tokenAmount, stablesBalance ?? 0)
+          : details.tokenAmount;
 
-      const sendResp = await walletService.sendSolana({
-        walletId: solanaWalletId,
-        fromAddress: solanaWalletAddress,
-        toAddress: offrampData.address,
-        token: "USDC",
-        amount: details.tokenAmount,
-      });
-      if (!sendResp.success) {
-        setErrorMessage(
-          sendResp.error || genericFailureMessage,
-        );
-        setStep("error");
-        return;
+        const burnResp = await perenaService.burn({
+          walletId: solanaWalletId,
+          walletAddress: solanaWalletAddress,
+          usdStarAmount: burnAmount,
+        });
+        if (!burnResp.success) {
+          setErrorMessage(burnResp.error || genericFailureMessage);
+          setStep("error");
+          return;
+        }
+
+        const sendResp = await walletService.sendSolana({
+          walletId: solanaWalletId,
+          fromAddress: solanaWalletAddress,
+          toAddress: offrampData.address,
+          token: "USDC",
+          amount: details.tokenAmount,
+        });
+        if (!sendResp.success) {
+          setErrorMessage(sendResp.error || genericFailureMessage);
+          setStep("error");
+          return;
+        }
       }
 
       await refreshAllWalletData();
@@ -359,6 +345,8 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
     solanaWalletAddress,
     solanaWalletId,
     details.tokenAmount,
+    details.withdrawSource,
+    stablesBalance,
     genericFailureMessage,
     refreshAllWalletData,
   ]);
@@ -376,11 +364,7 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
 
   const handleRetry = () => {
     if (step !== "error") return;
-    if (errorMessage.includes("verification code")) {
-      setStep("auth_otp");
-    } else {
-      createOrder();
-    }
+    createOrder();
   };
 
   const truncatedAddress = (address: string) =>
@@ -407,59 +391,7 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
             </div>
             <div className="flex flex-col items-center px-4 py-12">
               <LoaderCircle className="mb-4 h-10 w-10 animate-spin text-[#C7EF6B]" />
-
-            </div>
-          </>
-        );
-
-      case "auth_email":
-        return (
-          <>
-            <div className="flex justify-end pt-2">
-              <button
-                onClick={onClose}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-[#151515] text-white transition-colors hover:bg-[#1a1f10]"
-              >
-                <X size={20} />
-              </button>
-            </div>
-            <div className="flex flex-col items-center px-4">
-              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#C7EF6B]/20">
-                <img
-                  src="/ramp.png"
-                  alt="Ramp"
-                  className="h-full w-full object-cover"
-                />
-              </div>
-              <h2 className="mb-2 text-lg font-medium text-white">
-                Verify your email
-              </h2>
-              <p className="mb-6 text-center text-sm text-white/60">
-                Please enter your email to begin
-              </p>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-                className="mb-1 w-full rounded-lg bg-[#151515] px-4 py-3 text-base text-white outline-none"
-              />
-              {errorMessage ? (
-                <p className="mb-4 w-full text-left text-xs text-amber-300">
-                  {errorMessage}
-                </p>
-              ) : null}
-              <button
-                onClick={handleSendOtp}
-                disabled={!email.trim() || isSubmitting}
-                className="flex h-12 w-full items-center justify-center rounded-full bg-[#C7EF6B] text-lg font-medium text-black transition-colors disabled:cursor-not-allowed disabled:opacity-70"
-              >
-                {isSubmitting ? (
-                  <LoaderCircle className="h-6 w-6 animate-spin text-black" />
-                ) : (
-                  "Send Code"
-                )}
-              </button>
+              <p className="text-sm text-white/60">Loading, please wait</p>
             </div>
           </>
         );
@@ -487,8 +419,7 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
                Confirm OTP
               </h2>
               <p className="mb-6 text-center text-sm text-white/60 px-4">
-                Please enter the OTP sent to{" "}
-                <span className="text-white">{email}</span> to proceed
+                Enter the OTP sent to your registered email or phone
               </p>
               <input
                 type="text"
@@ -507,7 +438,7 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
               <button
                 onClick={handleVerifyOtp}
                 disabled={otp.length < 4 || isSubmitting}
-                className="flex h-12 w-full items-center justify-center rounded-full bg-[#C7EF6B] text-lg font-medium text-black transition-colors disabled:cursor-not-allowed disabled:opacity-70"
+                className="flex h-12 mt-2 w-full items-center justify-center rounded-full bg-[#C7EF6B] text-lg font-medium text-black transition-colors disabled:cursor-not-allowed disabled:opacity-70"
               >
                 {isSubmitting ? (
                   <LoaderCircle className="h-6 w-6 animate-spin text-black" />
@@ -515,12 +446,7 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
                   "Verify"
                 )}
               </button>
-              <button
-                onClick={() => setStep("auth_email")}
-                className="mt-4 text-sm text-white/50 underline"
-              >
-                Change email
-              </button>
+
             </div>
           </>
         );
@@ -538,7 +464,7 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
             </div>
             <div className="flex flex-col items-center px-4 py-12">
               <LoaderCircle className="mb-4 h-10 w-10 animate-spin text-[#C7EF6B]" />
-              <p>Preparing deposit..</p>
+              <p className="text-sm text-white/60">Loading, please wait</p>
             </div>
           </>
         );
@@ -776,9 +702,7 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
             </div>
             <div className="flex flex-col items-center px-4 py-12">
               <LoaderCircle className="mb-4 h-10 w-10 animate-spin text-[#C7EF6B]" />
-              <p className="text-sm text-white/60">
-                Processing your withdrawal...
-              </p>
+              <p className="text-sm text-white/60">Loading, please wait</p>
             </div>
           </>
         );
@@ -843,6 +767,47 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
                   className="flex h-12 w-full items-center justify-center rounded-full bg-[#C7EF6B] text-lg font-medium text-black transition-colors hover:bg-[#B8E55A] disabled:cursor-not-allowed disabled:opacity-70"
                 >
                   Try again
+                </button>
+              </div>
+            </div>
+          </>
+        );
+
+      case "no_bank":
+        return (
+          <>
+            <div className="flex justify-end pt-2">
+              <button
+                onClick={onClose}
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-[#151515] text-white transition-colors hover:bg-[#1a1f10]"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="flex flex-col items-center px-4">
+              <div className="relative mb-4 mt-2 flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-gray-500/15">
+                <img
+                  src="/error.png"
+                  alt="Bank required"
+                  className="h-16 w-16 object-cover"
+                />
+              </div>
+              <h2 className="mb-2 text-center text-lg font-medium tracking-wide text-white">
+                Bank account required
+              </h2>
+              <p className="mb-6 max-w-[280px] text-center text-sm text-white/80">
+                You need to link a bank account before you can withdraw. Set it
+                up in your settings, then come back to try again.
+              </p>
+              <div className="w-full space-y-3 pb-4">
+                <button
+                  onClick={() => {
+                    onClose();
+                    navigate("/settings/recipients");
+                  }}
+                  className="flex h-12 w-full items-center justify-center rounded-full bg-[#C7EF6B] text-lg font-medium text-black"
+                >
+                  Set up bank account
                 </button>
               </div>
             </div>

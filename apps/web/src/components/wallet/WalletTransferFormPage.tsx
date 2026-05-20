@@ -9,6 +9,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
   Check,
+  ChevronDown,
   Copy,
   ClipboardPaste,
   LoaderCircle,
@@ -16,6 +17,7 @@ import {
 } from "lucide-react";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { ErrorDrawer } from "@/components/general/ErrorDrawer";
+import toast from "react-hot-toast";
 import { PajRampDrawer } from "@/components/general/PajRampDrawer";
 import type { PajRampTransactionDetails } from "@/components/general/PajRampDrawer";
 import { SuccessDrawer } from "@/components/general/SuccessDrawer";
@@ -23,31 +25,19 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useWallet } from "@/contexts/WalletContext";
 import { useWalletCard } from "@/contexts/WalletCardContext";
 import { usePrices } from "@/hooks/usePrices";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import QRCode from "qrcode";
 import { OnrampWebSDK } from "@onramp.money/onramp-web-sdk";
 import { getFiatType } from "@/lib/onramp";
 import { priceService } from "@/lib/priceService";
-import { virtualAccountService } from "@/services/virtual-account";
-import { pajRampService, perenaService, walletService } from "@/services";
-import type { RampBank } from "@/services/paj-ramp";
-import { WithdrawalConfirmationDrawer } from "@/components/general/FiatWithdrawalDrawer";
+import { perenaService, walletService } from "@/services";
 import { formatNumber, parseFormattedNumber } from "@/lib/formatters";
 
 type TransferMode = "deposit" | "withdraw";
 type TransferAsset = "naira" | "crypto";
-const MIN_WITHDRAWAL_NAIRA = 100;
-const MAX_WITHDRAWAL_NAIRA = 500000;
-const WITHDRAWAL_FEE_NAIRA = 50;
 
 type SupportedToken = "USDC" | "USDT" | "LPT";
 type SupportedNetwork = "Solana" | "Arbitrum";
+type WithdrawSource = "savings" | "stash" | "combined";
 
 const TOKEN_CONFIG: Record<
   SupportedToken,
@@ -83,6 +73,7 @@ export const WalletTransferFormPage: React.FC = () => {
   const {
     solanaWalletAddress,
     solanaWalletId,
+    solanaUsdcBalance,
     ethereumWalletAddress,
     stablesBalance,
     highyieldBalance,
@@ -99,16 +90,8 @@ export const WalletTransferFormPage: React.FC = () => {
   const isNairaWithdraw = safeMode === "withdraw" && safeAsset === "naira";
 
   const [amount, setAmount] = useState("");
-  const [bankCode, setBankCode] = useState("");
-  const [banks, setBanks] = useState<RampBank[]>([]);
-  const [accountNumber, setAccountNumber] = useState("");
-  const [accountName, setAccountName] = useState("");
-  const [lookupError, setLookupError] = useState("");
-  const [isLookingUpAccount, setIsLookingUpAccount] = useState(false);
-  const [isSubmittingWithdraw, setIsSubmittingWithdraw] = useState(false);
   const [isSubmittingCryptoWithdraw, setIsSubmittingCryptoWithdraw] =
     useState(false);
-  const [showWithdrawFlow, setShowWithdrawFlow] = useState(false);
   const [showCryptoWithdrawSuccess, setShowCryptoWithdrawSuccess] =
     useState(false);
   const [showCryptoWithdrawError, setShowCryptoWithdrawError] = useState(false);
@@ -117,10 +100,16 @@ export const WalletTransferFormPage: React.FC = () => {
   const [depositNairaErrorMessage, setDepositNairaErrorMessage] = useState("");
   const [depositNairaRampDetails, setDepositNairaRampDetails] =
     useState<PajRampTransactionDetails | null>(null);
+  const [showWithdrawNairaRampDrawer, setShowWithdrawNairaRampDrawer] =
+    useState(false);
+  const [withdrawNairaRampDetails, setWithdrawNairaRampDetails] =
+    useState<PajRampTransactionDetails | null>(null);
   const [cryptoWithdrawErrorMessage, setCryptoWithdrawErrorMessage] =
     useState("");
   const [walletAddress, setWalletAddress] = useState("");
   const [copied, setCopied] = useState(false);
+  const [withdrawSource, setWithdrawSource] = useState<WithdrawSource>("combined");
+  const [showSourcePicker, setShowSourcePicker] = useState(false);
   const [selectedToken, setSelectedToken] =
     useState<SupportedToken>(preferredToken);
   const [selectedNetwork, setSelectedNetwork] =
@@ -176,20 +165,6 @@ export const WalletTransferFormPage: React.FC = () => {
     return ngnPerUsd;
   }, [prices.lpt, prices.ngn, tokenSymbol]);
 
-  const loadBanks = useCallback(async () => {
-    if (!isNairaWithdraw) return;
-
-    const response = await pajRampService.getBanks();
-    if (response.success && response.data?.length) {
-      setBanks(response.data);
-      setBankCode((prev) => prev || response.data?.[0]?.code || "");
-      return;
-    }
-
-    setBanks([]);
-    setBankCode("");
-  }, [isNairaWithdraw]);
-
   // Clean up onramp instance when component unmounts
   useEffect(() => {
     return () => {
@@ -241,7 +216,7 @@ export const WalletTransferFormPage: React.FC = () => {
         cryptoAddress,
         customerEmail: state.user?.email || "",
         customerName: state.user?.full_name || "Lisar User",
-        mint: "",
+        mint: TOKEN_MINT[tokenSymbol],
         chain: TOKEN_CHAIN[tokenSymbol] || "solana",
       });
       setDepositNairaErrorMessage("");
@@ -320,6 +295,20 @@ export const WalletTransferFormPage: React.FC = () => {
     refreshAllWalletData,
   ]);
 
+  const walletTokenLabel = safeWalletType === "staking" ? "LPT" : "USDC";
+
+  const stashBalance = safeWalletType === "savings" ? (solanaUsdcBalance ?? 0) : 0;
+  const savingsBalance = safeWalletType === "savings" ? (stablesBalance ?? 0) : 0;
+  const combinedBalance = stashBalance + savingsBalance;
+
+  const activeBalance = safeWalletType === "staking"
+    ? (highyieldBalance ?? 0)
+    : (withdrawSource === "stash" ? stashBalance
+      : withdrawSource === "savings" ? savingsBalance
+      : combinedBalance);
+
+  const sourceFiatBalance = activeBalance * tokenRateInNgn;
+
   const handleCryptoWithdraw = useCallback(async () => {
     const parsedAmount = Number(amount.replace(/,/g, "").trim());
     const destinationAddress = walletAddress.trim();
@@ -339,8 +328,7 @@ export const WalletTransferFormPage: React.FC = () => {
     setIsSubmittingCryptoWithdraw(true);
     try {
       if (safeWalletType === "savings") {
-        const availableStableBalance = stablesBalance || 0;
-        if (parsedAmount > availableStableBalance) {
+        if (parsedAmount > activeBalance) {
           setCryptoWithdrawErrorMessage(
             "Amount exceeds available USDC balance.",
           );
@@ -355,32 +343,53 @@ export const WalletTransferFormPage: React.FC = () => {
           return;
         }
 
-        const burnResp = await perenaService.burn({
-          walletId: solanaWalletId,
-          walletAddress: solanaWalletAddress,
-          usdStarAmount: parsedAmount,
-        });
-        if (!burnResp.success) {
-          setCryptoWithdrawErrorMessage(
-            burnResp.error || "Unable to process withdrawal right now.",
-          );
-          setShowCryptoWithdrawError(true);
-          return;
-        }
+        if (withdrawSource === "stash") {
+          const sendResp = await walletService.sendSolana({
+            walletId: solanaWalletId,
+            fromAddress: solanaWalletAddress,
+            toAddress: destinationAddress,
+            token: "USDC",
+            amount: parsedAmount,
+          });
+          if (!sendResp.success) {
+            setCryptoWithdrawErrorMessage(
+              sendResp.error || "Unable to complete transfer right now.",
+            );
+            setShowCryptoWithdrawError(true);
+            return;
+          }
+        } else {
+          const burnAmount = withdrawSource === "combined"
+            ? Math.min(parsedAmount, savingsBalance)
+            : parsedAmount;
 
-        const sendResp = await walletService.sendSolana({
-          walletId: solanaWalletId,
-          fromAddress: solanaWalletAddress,
-          toAddress: destinationAddress,
-          token: "USDC",
-          amount: parsedAmount,
-        });
-        if (!sendResp.success) {
-          setCryptoWithdrawErrorMessage(
-            sendResp.error || "Unable to complete transfer right now.",
-          );
-          setShowCryptoWithdrawError(true);
-          return;
+          const burnResp = await perenaService.burn({
+            walletId: solanaWalletId,
+            walletAddress: solanaWalletAddress,
+            usdStarAmount: burnAmount,
+          });
+          if (!burnResp.success) {
+            setCryptoWithdrawErrorMessage(
+              burnResp.error || "Unable to process withdrawal right now.",
+            );
+            setShowCryptoWithdrawError(true);
+            return;
+          }
+
+          const sendResp = await walletService.sendSolana({
+            walletId: solanaWalletId,
+            fromAddress: solanaWalletAddress,
+            toAddress: destinationAddress,
+            token: "USDC",
+            amount: parsedAmount,
+          });
+          if (!sendResp.success) {
+            setCryptoWithdrawErrorMessage(
+              sendResp.error || "Unable to complete transfer right now.",
+            );
+            setShowCryptoWithdrawError(true);
+            return;
+          }
         }
       } else {
         const availableLptBalance = highyieldBalance || 0;
@@ -449,9 +458,14 @@ export const WalletTransferFormPage: React.FC = () => {
     solanaWalletAddress,
     solanaWalletId,
     stablesBalance,
+    solanaUsdcBalance,
     state.user?.wallet_address,
     state.user?.wallet_id,
     walletAddress,
+    withdrawSource,
+    activeBalance,
+    savingsBalance,
+    stashBalance,
   ]);
 
   const handleConfirm = useCallback(() => {
@@ -462,83 +476,94 @@ export const WalletTransferFormPage: React.FC = () => {
     if (!isNairaWithdraw) return;
 
     const parsedAmount = Number(amount.replace(/,/g, "").trim());
-    if (
-      !parsedAmount ||
-      parsedAmount < MIN_WITHDRAWAL_NAIRA ||
-      parsedAmount > MAX_WITHDRAWAL_NAIRA
-    ) {
-      return;
-    }
+    if (!parsedAmount || parsedAmount <= 0) return;
 
-    if (!bankCode || accountNumber.length !== 10 || !accountName.trim()) {
-      return;
+    if (safeWalletType === "savings") {
+      if (!tokenRateInNgn) return;
+      const tokenAmount = parsedAmount / tokenRateInNgn;
+      if (tokenAmount > activeBalance) {
+        toast.error("Amount exceeds available USDC balance.");
+        return;
+      }
+      setWithdrawNairaRampDetails({
+        type: "sell",
+        tokenAmount,
+        tokenName: tokenSymbol,
+        fiatAmount: parsedAmount,
+        fiatSymbol: "₦",
+        fiatCurrency: "NGN",
+        exchangeRate: tokenRateInNgn,
+        fee: 0,
+        cryptoAddress: solanaWalletAddress || null,
+        customerEmail: state.user?.email || "",
+        customerName: state.user?.full_name || "Lisar User",
+        mint: TOKEN_MINT[tokenSymbol],
+        chain: TOKEN_CHAIN[tokenSymbol] || "solana",
+        withdrawSource: safeWalletType === "savings" ? withdrawSource : undefined,
+      });
+      setShowWithdrawNairaRampDrawer(true);
+    } else {
+      const walletAddress =
+        ethereumWalletAddress || state.user?.wallet_address;
+      if (!walletAddress) return;
+
+      try {
+        const onramp = new OnrampWebSDK({
+          appId: import.meta.env.VITE_ONRAMP_APP_ID,
+          walletAddress,
+          flowType: 2,
+          coinCode: "lpt",
+          network: "arbitrum",
+          fiatAmount: parsedAmount,
+          fiatType: getFiatType("NGN"),
+          theme: {
+            lightMode: {
+              baseColor: "#C7EF6B",
+              inputRadius: "8px",
+              buttonRadius: "8px",
+            },
+            darkMode: {
+              baseColor: "#6A8F2A",
+              inputRadius: "8px",
+              buttonRadius: "8px",
+            },
+            default: "darkMode",
+          },
+          isRestricted: true,
+        });
+
+        onramp.on("WIDGET_EVENTS", async (event) => {
+          if (
+            event.type === "ONRAMP_WIDGET_CLOSE_REQUEST_CONFIRMED" ||
+            event.type === "ONRAMP_WIDGET_CLOSE"
+          ) {
+            await refreshAllWalletData();
+          }
+        });
+
+        onrampInstanceRef.current = onramp;
+        onramp.show();
+      } catch {
+        // OnrampWebSDK handles its own errors internally
+      }
     }
-    setShowWithdrawFlow(true);
   }, [
-    accountName,
-    accountNumber,
     amount,
-    bankCode,
     handleCryptoWithdraw,
     isNairaWithdraw,
     safeAsset,
+    safeWalletType,
+    tokenRateInNgn,
+    tokenSymbol,
+    solanaWalletAddress,
+    state.user?.email,
+    state.user?.full_name,
+    ethereumWalletAddress,
+    state.user?.wallet_address,
+    refreshAllWalletData,
+    activeBalance,
+    withdrawSource,
   ]);
-
-  const confirmWithdrawal = useCallback(
-    async (_pin: string) => {
-      if (!isNairaWithdraw) return { success: false, error: "Invalid state" };
-      const parsedAmount = Number(amount.replace(/,/g, "").trim());
-      if (
-        !parsedAmount ||
-        parsedAmount < MIN_WITHDRAWAL_NAIRA ||
-        parsedAmount > MAX_WITHDRAWAL_NAIRA
-      ) {
-        return { success: false, error: "Invalid amount" };
-      }
-
-      const withdrawalTotalAmount = Math.max(
-        parsedAmount + WITHDRAWAL_FEE_NAIRA,
-        0,
-      );
-      const idempotencyKey =
-        typeof crypto !== "undefined" && "randomUUID" in crypto
-          ? crypto.randomUUID()
-          : `wd-${Date.now()}-${Math.random().toString(36).slice(2)}-${accountNumber}`;
-
-      setIsSubmittingWithdraw(true);
-      try {
-        const response = await virtualAccountService.withdraw({
-          amount: withdrawalTotalAmount,
-          accountNumber,
-          accountName,
-          bankCode,
-          narration: "Lisar payout",
-          idempotencyKey,
-        });
-
-        if (!response.success) {
-          return {
-            success: false,
-            error: response.error?.message || "Withdrawal failed",
-          };
-        }
-        await refreshAllWalletData();
-        return { success: true };
-      } catch (error) {
-        return { success: false, error: "Withdrawal failed" };
-      } finally {
-        setIsSubmittingWithdraw(false);
-      }
-    },
-    [
-      accountName,
-      accountNumber,
-      amount,
-      bankCode,
-      isNairaWithdraw,
-      refreshAllWalletData,
-    ],
-  );
 
   const currentTokenConfig = TOKEN_CONFIG[selectedToken];
   const availableNetworks = currentTokenConfig.networks;
@@ -623,70 +648,6 @@ export const WalletTransferFormPage: React.FC = () => {
     });
   }, [safeMode, safeAsset, effectiveDepositAddress]);
 
-  useEffect(() => {
-    if (!isNairaWithdraw) return;
-    loadBanks();
-  }, [isNairaWithdraw, loadBanks]);
-
-  useEffect(() => {
-    if (!isNairaWithdraw) return;
-    if (!bankCode || accountNumber.length !== 10) {
-      setAccountName("");
-      setLookupError("");
-      return;
-    }
-
-    const selectedBank = banks.find((b) => b.code === bankCode);
-    if (!selectedBank) {
-      setAccountName("");
-      setLookupError("Account not found");
-      return;
-    }
-
-    let ignore = false;
-    const runLookup = async () => {
-      setIsLookingUpAccount(true);
-      setLookupError("");
-      try {
-        const response = await pajRampService.resolveBankAccount({
-          bankId: selectedBank.id,
-          accountNumber,
-        });
-
-        if (!ignore) {
-          if (response.success && response.data?.accountName) {
-            setAccountName(response.data.accountName);
-            setLookupError("");
-          } else {
-            setAccountName("");
-            setLookupError(
-              response.error?.message || "Account not found",
-            );
-          }
-        }
-      } catch (error) {
-        if (!ignore) {
-          setAccountName("");
-          setLookupError("Account not found");
-        }
-      } finally {
-        if (!ignore) {
-          setIsLookingUpAccount(false);
-        }
-      }
-    };
-
-    runLookup();
-
-    return () => {
-      ignore = true;
-    };
-  }, [accountNumber, bankCode, banks, isNairaWithdraw]);
-
-  const walletTokenLabel = safeWalletType === "staking" ? "LPT" : "USDC";
-  const cryptoAvailableBalance =
-    safeWalletType === "staking" ? highyieldBalance || 0 : stablesBalance || 0;
-
   const pageTitle = useMemo(() => {
     if (safeMode === "deposit" && safeAsset === "naira") return "Deposit Naira";
     if (safeMode === "deposit" && safeAsset === "crypto") {
@@ -698,26 +659,12 @@ export const WalletTransferFormPage: React.FC = () => {
 
   const isWithdraw = safeMode === "withdraw";
   const numericAmount = Number(amount.replace(/,/g, "").trim());
-  const selectedBankName =
-    banks.find((bank) => bank.code === bankCode)?.name || "Selected bank";
-  const hasValidWithdrawalAmount =
-    Number.isFinite(numericAmount) &&
-    numericAmount >= MIN_WITHDRAWAL_NAIRA &&
-    numericAmount <= MAX_WITHDRAWAL_NAIRA;
-  const amountWarning =
-    isNairaWithdraw && amount.trim()
-      ? numericAmount < MIN_WITHDRAWAL_NAIRA
-        ? `Minimum withdrawal is ₦${MIN_WITHDRAWAL_NAIRA.toLocaleString()}`
-        : numericAmount > MAX_WITHDRAWAL_NAIRA
-          ? `Maximum withdrawal is ₦${MAX_WITHDRAWAL_NAIRA.toLocaleString()}`
-          : ""
-      : "";
   const cryptoAmountWarning =
     isWithdraw &&
     safeAsset === "crypto" &&
     amount.trim() &&
     Number.isFinite(numericAmount) &&
-    numericAmount > cryptoAvailableBalance
+    numericAmount > activeBalance
       ? `Amount exceeds available ${walletTokenLabel} balance`
       : "";
   const isDisabled = isWithdraw
@@ -726,14 +673,9 @@ export const WalletTransferFormPage: React.FC = () => {
         ? !walletAddress.trim() ||
           !Number.isFinite(numericAmount) ||
           numericAmount <= 0 ||
-          numericAmount > cryptoAvailableBalance ||
+          numericAmount > activeBalance ||
           isSubmittingCryptoWithdraw
-        : !bankCode.trim() ||
-          accountNumber.length !== 10 ||
-          !accountName.trim() ||
-          !hasValidWithdrawalAmount ||
-          isLookingUpAccount ||
-          isSubmittingWithdraw)
+        : !Number.isFinite(numericAmount) || numericAmount <= 0)
     : false;
   const isDepositNairaFlow = safeMode === "deposit" && safeAsset === "naira";
   const isDepositNairaDisabled = numericAmount <= 0 || !tokenRateInNgn;
@@ -764,92 +706,137 @@ export const WalletTransferFormPage: React.FC = () => {
         <div className="px-6 pb-32">
           {isWithdraw ? (
             <div className="space-y-5 pt-4">
-              <div>
-                <label className="mb-2 block text-sm text-white/70">
-                  Amount {safeAsset === "naira" ? "(NGN)" : ""}
-                </label>
-                <input
-                  type="text"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  placeholder={safeAsset === "naira" ? "0" : "0"}
-                  className="w-full rounded-lg bg-[#151515] px-4 py-3.5 text-base text-white outline-none"
-                />
-                {amountWarning ? (
-                  <p className="mt-2 text-xs text-amber-300 ml-1">
-                    {amountWarning}
-                  </p>
-                ) : null}
-                {cryptoAmountWarning ? (
-                  <p className="mt-2 text-xs text-amber-300 ml-1">
-                    {cryptoAmountWarning}
-                  </p>
-                ) : null}
-              </div>
-
               {safeAsset === "naira" ? (
-                <>
-                  <div>
-                    <label className="mb-2 block text-sm text-white/70">
-                      Bank
-                    </label>
-                    <Select value={bankCode} onValueChange={setBankCode}>
-                      <SelectTrigger className="w-full bg-[#151515] text-white border-none py-6">
-                        <SelectValue placeholder="Select bank" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-[#151515] text-white border-none">
-                        {banks.map((bank) => (
-                          <SelectItem
-                            key={bank.code}
-                            value={bank.code}
-                            className="focus:bg-white/10 focus:text-white"
-                          >
-                            {bank.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <label className="mb-2 block text-sm text-white/70">
-                      Account number
-                    </label>
+                <div className="pt-4">
+                  <label className="mb-2 block text-sm text-white/70">
+                    Amount (NGN)
+                  </label>
+                  <div className="bg-[#151515] rounded-lg p-3 flex items-center gap-1 mt-2">
+                    <span className="text-white/50 text-lg font-medium">₦</span>
                     <input
                       type="text"
-                      value={accountNumber}
-                      onChange={(e) =>
-                        setAccountNumber(
-                          e.target.value.replace(/\D/g, "").slice(0, 10),
-                        )
-                      }
-                      placeholder="Enter account number"
-                      className="w-full rounded-lg bg-[#151515] px-4 py-3.5 text-base text-white outline-none"
+                      value={amount ? formatNumber(amount) : ""}
+                      onChange={(e) => {
+                        const rawValue = parseFormattedNumber(e.target.value);
+                        let numericValue = rawValue.replace(/[^₦0-9.]/g, "");
+                        numericValue = numericValue.replace(/₦/g, "");
+                        const parts = numericValue.split(".");
+                        if (parts.length > 2) {
+                          numericValue = `${parts[0]}.${parts.slice(1).join("")}`;
+                        }
+                        setAmount(numericValue);
+                      }}
+                      placeholder="0"
+                      className="flex-1 bg-transparent text-white text-lg font-medium focus:outline-none"
                     />
                   </div>
-                  <div>
-                    <label className="mb-2 block text-sm text-white/70">
-                      Account name
-                    </label>
-                    <input
-                      type="text"
-                      value={accountName}
-                      onChange={(e) => setAccountName(e.target.value)}
-                      placeholder={
-                        isLookingUpAccount
-                          ? "Fetching account..."
-                          : "Account name"
-                      }
-                      readOnly
-                      className="w-full rounded-lg bg-[#151515] px-4 py-3.5 text-base text-white outline-none"
-                    />
-                    {lookupError ? (
-                      <p className="mt-2 text-xs text-amber-300 ml-1">
-                        {lookupError}
-                      </p>
-                    ) : null}
+                  <div className="flex space-x-3 mt-4">
+                    {[25, 50, 75, 100].map((percent) => {
+                      const nextAmount = (sourceFiatBalance * (percent / 100)).toFixed(2);
+                      const isActive =
+                        numericAmount > 0 &&
+                        Math.abs(numericAmount / (sourceFiatBalance || 1) * 100 - percent) < 5;
+                      return (
+                        <button
+                          key={percent}
+                          onClick={() => {
+                            setAmount(nextAmount);
+                          }}
+                          className={`flex-1 py-2.5 px-2 rounded-full text-sm font-medium transition-colors ${
+                            isActive
+                              ? "bg-[#C7EF6B] text-black"
+                              : "bg-[#151515] text-white/80 hover:bg-[#1a1f10]"
+                          }`}
+                        >
+                          {percent}%
+                        </button>
+                      );
+                    })}
                   </div>
-                </>
+                  <div className="rounded-lg bg-[#151515] p-4 mt-4 relative">
+                    <button
+                      type="button"
+                      onClick={() => safeWalletType === "savings" && setShowSourcePicker((v) => !v)}
+                      className="w-full text-left"
+                    >
+                      <h3 className="text-sm text-white/60 mb-0.5 flex items-center gap-1.5">
+                        <WalletCards size={16} /> Available balance
+                      </h3>
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-100 text-sm font-medium">
+                          {displayFiatSymbol}{sourceFiatBalance.toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}
+                          {" • "}{activeBalance.toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 4,
+                          })} {walletTokenLabel}
+                        </span>
+                        {safeWalletType === "savings" && (
+                          <ChevronDown size={16} className="text-white/60" />
+                        )}
+                      </div>
+                    </button>
+                    {showSourcePicker && safeWalletType === "savings" && (
+                      <div className="mt-2 space-y-1 border-t border-white/10 pt-2">
+                        {(["combined", "savings", "stash"] as const).map((source) => {
+                          const bal = source === "combined" ? combinedBalance
+                            : source === "savings" ? savingsBalance
+                            : stashBalance;
+                          const label = source === "combined" ? "Combined"
+                            : source === "savings" ? "Savings"
+                            : "Stash";
+                          const sub = source === "combined" ? "Burn savings first, then stash"
+                            : source === "savings" ? "USDC earning yield"
+                            : "Idle USDC in wallet";
+                          return (
+                            <button
+                              key={source}
+                              type="button"
+                              onClick={() => { setWithdrawSource(source); setShowSourcePicker(false); }}
+                              className={`w-full flex items-center justify-between p-2 rounded-lg text-xs ${
+                                withdrawSource === source ? "bg-[#C7EF6B]/10 text-white" : "text-white/70 hover:bg-white/5"
+                              }`}
+                            >
+                              <div className="text-left">
+                                <span className="font-medium">{label}</span>
+                                <p className="text-[10px] text-white/50">{sub}</p>
+                              </div>
+                              <div className="text-right">
+                                <p>{bal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })} USDC</p>
+                                <p className="text-[10px] text-white/50">
+                                  ₦{(bal * tokenRateInNgn).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </p>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </div>
               ) : (
+                <div>
+                  <label className="mb-2 block text-sm text-white/70">
+                    Amount
+                  </label>
+                  <input
+                    type="text"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    placeholder="0"
+                    className="w-full rounded-lg bg-[#151515] px-4 py-3.5 text-base text-white outline-none"
+                  />
+                  {cryptoAmountWarning ? (
+                    <p className="mt-2 text-xs text-amber-300 ml-1">
+                      {cryptoAmountWarning}
+                    </p>
+                  ) : null}
+                </div>
+              )}
+
+              {safeAsset !== "naira" ? (
                 <div>
                   <label className="mb-2 block text-sm text-white/70">
                     Wallet address
@@ -877,28 +864,69 @@ export const WalletTransferFormPage: React.FC = () => {
                       <ClipboardPaste size={18} className="text-white/60" />
                     </button>
                   </div>
-                  {cryptoAvailableBalance > 0 && (
-                    <div className="rounded-lg bg-[#151515] p-4 mt-4">
-                      <h3 className="text-sm text-white/60 mb-0.5 flex items-center gap-1.5">
-                        <WalletCards size={16} /> Available balance
-                      </h3>
-                      <div className="bg-[#151515] rounded-lg border border-[#151515]">
-                        <div className="flex items-center space-x-3">
-                          <div className="flex-1">
-                            <span className="text-gray-100 text-sm font-medium">
-                              {cryptoAvailableBalance.toLocaleString(undefined, {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 4,
-                              })}{" "}
-                              {walletTokenLabel}
-                            </span>
-                          </div>
+                  {activeBalance > 0 && (
+                    <div className="rounded-lg bg-[#151515] p-4 mt-4 relative">
+                      <button
+                        type="button"
+                        onClick={() => safeWalletType === "savings" && setShowSourcePicker((v) => !v)}
+                        className="w-full text-left"
+                      >
+                        <h3 className="text-sm text-white/60 mb-0.5 flex items-center gap-1.5">
+                          <WalletCards size={16} /> Available balance
+                        </h3>
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-100 text-sm font-medium">
+                            {activeBalance.toLocaleString(undefined, {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 4,
+                            })}{" "}
+                            {walletTokenLabel}
+                          </span>
+                          {safeWalletType === "savings" && (
+                            <ChevronDown size={16} className="text-white/60" />
+                          )}
                         </div>
-                      </div>
+                      </button>
+                      {showSourcePicker && safeWalletType === "savings" && (
+                        <div className="mt-2 space-y-1 border-t border-white/10 pt-2">
+                          {(["combined", "savings", "stash"] as const).map((source) => {
+                            const bal = source === "combined" ? combinedBalance
+                              : source === "savings" ? savingsBalance
+                              : stashBalance;
+                            const label = source === "combined" ? "Combined"
+                              : source === "savings" ? "Savings"
+                              : "Stash";
+                            const sub = source === "combined" ? "Burn savings first, then stash"
+                              : source === "savings" ? "USDC earning yield"
+                              : "Idle USDC in wallet";
+                            return (
+                              <button
+                                key={source}
+                                type="button"
+                                onClick={() => { setWithdrawSource(source); setShowSourcePicker(false); }}
+                                className={`w-full flex items-center justify-between p-2 rounded-lg text-xs ${
+                                  withdrawSource === source ? "bg-[#C7EF6B]/10 text-white" : "text-white/70 hover:bg-white/5"
+                                }`}
+                              >
+                                <div className="text-left">
+                                  <span className="font-medium">{label}</span>
+                                  <p className="text-[10px] text-white/50">{sub}</p>
+                                </div>
+                                <div className="text-right">
+                                  <p>{bal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })} USDC</p>
+                                  <p className="text-[10px] text-white/50">
+                                    ₦{(bal * tokenRateInNgn).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                  </p>
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
-              )}
+              ) : null}
             </div>
           ) : safeAsset === "naira" ? (
             <div className="pt-4">
@@ -1074,7 +1102,7 @@ export const WalletTransferFormPage: React.FC = () => {
                 : "bg-[#c7ef6b] text-black"
             }`}
           >
-            {isLookingUpAccount || isSubmittingCryptoWithdraw ? (
+            {isSubmittingCryptoWithdraw ? (
               <span className="inline-flex items-center gap-2">
                 <LoaderCircle size={16} className="animate-spin" />
                 Loading...
@@ -1086,22 +1114,23 @@ export const WalletTransferFormPage: React.FC = () => {
         </div>
       )}
 
-      <WithdrawalConfirmationDrawer
-        isOpen={showWithdrawFlow}
-        onClose={() => setShowWithdrawFlow(false)}
-        bankName={selectedBankName}
-        accountNumber={accountNumber}
-        accountName={accountName}
-        amount={numericAmount}
-        fee={WITHDRAWAL_FEE_NAIRA}
-        onConfirmWithdrawal={confirmWithdrawal}
-      />
-
       {depositNairaRampDetails ? (
         <PajRampDrawer
           isOpen={showDepositNairaRampDrawer}
           onClose={() => setShowDepositNairaRampDrawer(false)}
           details={depositNairaRampDetails}
+          onConfirm={async () => {
+            await refreshAllWalletData();
+            navigate(`/wallet/${safeWalletType}`);
+          }}
+        />
+      ) : null}
+
+      {withdrawNairaRampDetails ? (
+        <PajRampDrawer
+          isOpen={showWithdrawNairaRampDrawer}
+          onClose={() => setShowWithdrawNairaRampDrawer(false)}
+          details={withdrawNairaRampDetails}
           onConfirm={async () => {
             await refreshAllWalletData();
             navigate(`/wallet/${safeWalletType}`);

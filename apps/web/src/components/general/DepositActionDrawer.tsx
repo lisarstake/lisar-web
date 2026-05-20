@@ -42,7 +42,7 @@ export const DepositActionDrawer: React.FC<DepositActionDrawerProps> = ({
               <div>
                 <p className="text-white text-sm font-medium">Naira Deposit</p>
                 <p className="text-xs text-white/60">
-                  Deposit to your Lisar wallet
+                  Deposit to your stash balance
                 </p>
               </div>
             </div>

@@ -42,10 +42,9 @@ export const AllWalletPage: React.FC = () => {
   const [showPromoDrawer, setShowPromoDrawer] = useState(false);
   const [activePromoIndex, setActivePromoIndex] = useState(0);
   const promoCarouselRef = useRef<HTMLDivElement | null>(null);
-  const PROMO_DISMISSED_KEY = "wallet_promo_drawer_dismissed";
 
   const handleDismissPromoDrawer = () => {
-    localStorage.setItem(PROMO_DISMISSED_KEY, "true");
+    localStorage.removeItem("referred_signup");
     setShowPromoDrawer(false);
   };
   const {
@@ -80,25 +79,23 @@ export const AllWalletPage: React.FC = () => {
   } = useWallet();
   const { isLoading: delegationLoading, delegatorStakeProfile } =
     useDelegation();
-  const { campaignStatus } = useCampaign();
   const { unreadCount } = useNotification();
   const { prices } = usePrices();
 
-  // Start tour for non-onboarded users
   // const shouldAutoStart = true
   const shouldAutoStart = useMemo(() => {
     return state.user?.is_onboarded === false && !state.isLoading;
   }, [state.user?.is_onboarded, state.isLoading]);
 
-  useEffect(() => {
+  {/* useEffect(() => {
     if (state.isLoading) return;
     if (!state.user?.is_onboarded) return;
-    if (localStorage.getItem(PROMO_DISMISSED_KEY) === "true") return;
+    if (localStorage.getItem("referred_signup") !== "true") return;
     const timer = setTimeout(() => {
       setShowPromoDrawer(true);
     }, 450);
     return () => clearTimeout(timer);
-  }, [state.user?.is_onboarded, state.isLoading]);
+  }, [state.user?.is_onboarded, state.isLoading]); */}
 
   const { } = useGuidedTour({
     tourId: ALL_WALLET_TOUR_ID,
@@ -166,7 +163,7 @@ export const AllWalletPage: React.FC = () => {
         balance: displayBalance,
         currencySymbol: displayFiatSymbol,
         type: "main",
-        gradient: "from-[#0f0f0f] to-[#151515]",
+        gradient: "from-zinc-700 to-neutral-800"
       },
     ],
     [displayBalance, displayFiatSymbol],
@@ -205,7 +202,7 @@ export const AllWalletPage: React.FC = () => {
       {
         id: "promo-card-2",
         image: "/card2.png",
-        title: "Get up to 15% off on purchases at CafeOne!",
+        title: "Enjoy perks and discounts as you save!",
       },
     ],
     [],
@@ -299,7 +296,7 @@ export const AllWalletPage: React.FC = () => {
                         handleDepositClick(card.type);
                       }
                     }}
-                    className={`bg-linear-to-br ${card.gradient} rounded-2xl py-5 min-h-[100px] relative overflow-hidden border border-[#151515] ${card.type !== "main"
+                    className={`bg-[#0f0f0f] rounded-2xl py-5 min-h-[140px] relative overflow-hidden border border-[#151515] ${card.type !== "main"
                       ? "cursor-pointer hover:opacity-95 transition-opacity"
                       : ""
                       }`}
@@ -307,13 +304,22 @@ export const AllWalletPage: React.FC = () => {
                       card.id === "main" ? "all-wallet-balance-card" : undefined
                     }
                   >
+                    {/* Background Image */}
+                    {card.id === "main" && (
+                      <img
+                        src="/walletbg-2.jpeg"
+                        alt=""
+                        className="absolute inset-0 w-full h-full object-cover opacity-10 pointer-events-none"
+                      />
+                    )}
+
                     {/* Lisar Lines Decoration */}
-                    <LisarLines
+                    {/* <LisarLines
                       position="top-right"
                       className="opacity-100"
                       width="130px"
                       height="130px"
-                    />
+                    /> */}
 
                     {/* Decorative elements */}
                     <div className="absolute top-0 right-0 w-32 h-32 bg-[#C7EF6B]/5 rounded-full blur-3xl"></div>
@@ -344,11 +350,7 @@ export const AllWalletPage: React.FC = () => {
                           delegationLoading ||
                           stablesLoading ||
                           highyieldLoading ? (
-                          <div className="flex items-baseline justify-center gap-2 mb-1">
-                            <span className="text-2xl font-bold text-white">
-                              ••••
-                            </span>
-                          </div>
+                          renderLoadingStars("text-sm mb-1")
                         ) : (
                           <div className="flex items-baseline justify-center gap-2 mb-1">
                             <span className="text-xl font-bold text-white/90">
@@ -511,7 +513,7 @@ export const AllWalletPage: React.FC = () => {
 
             <div data-tour="all-wallet-quick-deposit" className="mt-4">
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-white/70 text-sm font-medium">Live perks</h2>
+                <h2 className="text-white/70 text-sm font-medium">Explore perks</h2>
               </div>
               <div
                 ref={promoCarouselRef}
@@ -521,31 +523,31 @@ export const AllWalletPage: React.FC = () => {
                 {promoCards.map((card) => (
                   <div
                     key={card.id}
-                    className="min-w-full snap-start rounded-xl bg-[#d9e0fb] border border-[#7367f0]/30 overflow-hidden text-left relative"
+                    className="min-w-full snap-start rounded-xl bg-[#bbbbbb] border border-[#7367f0]/30 overflow-hidden text-left relative"
                   >
                     <div className="absolute inset-0">
                       <div className="absolute -top-5 -left-6 w-40 h-40 rounded-full border border-[#C7EF6B]/25" />
                       <div className="absolute top-6 left-28 w-28 h-28 rounded-full border border-[#86B3F7]/30" />
                       <div className="absolute -bottom-10 right-8 w-40 h-40 rounded-full border border-[#86B3F7]/25" />
-                      <div className="absolute top-0 right-0 w-24 h-24 bg-[#1e1b4b] rounded-bl-[32px] opacity-90" />
+                      <div className="absolute top-0 right-0 w-24 h-22 bg-[#1e1b4b] rounded-bl-[32px] opacity-90" />
                     </div>
                     <img
                       src={card.image}
                       alt={card.title}
-                      className="absolute inset-0 w-full h-full object-cover opacity-60"
+                      className="absolute inset-0 w-full h-full object-cover opacity-50 "
                     />
-                    <div className="relative z-10 px-5 py-4 flex items-center justify-between gap-3 min-h-[75px]">
-                      <p className="text-[#1e1b4b] text-base leading-tight font-semibold max-w-[60%]">
+                    <div className="relative z-10 px-5 py-4 flex items-center justify-between gap-3 min-h-[70px]">
+                      <p className="text-[#1e1b4b] text-base leading-tight font-semibold max-w-[70%]">
                         {card.title}
                       </p>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          navigate("/perks");
+                          navigate("/earn");
                         }}
                         className="shrink-0 bg-[#5f53d6] hover:bg-[#4f43c6] text-white rounded-full px-5 py-2.5 text-xs font-medium transition-colors"
                       >
-                        Unlock Now
+                        See perks
                       </button>
                     </div>
                   </div>
@@ -581,7 +583,7 @@ export const AllWalletPage: React.FC = () => {
               <div className={viewMode === "grid" ? "grid grid-cols-2 gap-3" : "space-y-4"}>
                 {/* Savings Card */}
                 <div
-                  className="bg-[#6da7fd] rounded-2xl p-5 border-2 border-[#86B3F7]/30 hover:border-[#86B3F7]/50 transition-colors relative overflow-hidden"
+                  className="bg-[#729edf] rounded-2xl p-5 border-2 border-[#86B3F7]/30 hover:border-[#86B3F7]/50 transition-colors relative overflow-hidden"
                   data-tour="all-wallet-stables-card"
                 >
                   <div className="flex items-start justify-between">
@@ -597,7 +599,7 @@ export const AllWalletPage: React.FC = () => {
 
                   <button
                     onClick={() => navigate("/wallet/yields/intro", { state: { walletType: "savings" } })}
-                    className="mt-4 px-6 py-2.5 bg-[#438af6] text-white rounded-full text-xs font-semibold hover:bg-[#96C3F7] transition-colors relative z-10"
+                    className="mt-4 px-6 py-2.5 bg-[#3882f3] text-white rounded-full text-xs font-semibold hover:bg-[#96C3F7] transition-colors relative z-10"
                   >
                     Start saving
                   </button>

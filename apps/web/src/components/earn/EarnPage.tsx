@@ -33,10 +33,10 @@ export const EarnPage: React.FC = () => {
   const earnCards: EarnCard[] = [
     {
       id: "1",
-      title: `Perks & Points`,
-      description: "Save on Lisar, accumulate points redeemable as discounts at different partner services.",
+      title: `Perks`,
+      description: "Save on Lisar, accumulate points redeemable as perks and discounts at different partners.",
       image: "/cafeone.jpeg",
-      buttonText: 'Redeem points',
+      buttonText: 'Redeem perks',
       isComingSoon: false,
     },
     // {
@@ -153,15 +153,7 @@ export const EarnPage: React.FC = () => {
                   <h3 className="text-white font-medium text-[17px]">
                     {card.title}
                   </h3>
-                  {card.id === "1" && (
-                    <span
-                      onClick={(e) => { e.stopPropagation(); setShowPerksPromoDrawer(true); }}
-                      className="text-[#86B3F7] text-xs inline-flex items-center gap-0.5 cursor-pointer shrink-0"
-                    >
-                      <Info size={12} />
-                      Learn more
-                    </span>
-                  )}
+                  
                 </div>
 
                 {/* Social Icons - Between Title and Description */}
@@ -220,6 +212,17 @@ export const EarnPage: React.FC = () => {
 
                 <p className="text-gray-400 text-sm leading-relaxed">
                   {card.description}
+                  {/* {card.id === "1" && (
+                    <>
+                      {" "}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setShowPerksPromoDrawer(true); }}
+                        className="text-[#86B3F7] underline underline-offset-2 inline hover:text-[#96C3F7]"
+                      >
+                        Learn more
+                      </button>
+                    </>
+                  )} */}
                 </p>
 
                 {/* Action Button */}

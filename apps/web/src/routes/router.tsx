@@ -30,6 +30,7 @@ const ValidatorDetailsPage = lazyRetry(
 );
 const RedeemPage = lazyRetry(() => import("@/screens/redeem-page"));
 const UnstakePage = lazyRetry(() => import("@/screens/unstake-page"));
+const MoveStakePage = lazyRetry(() => import("@/screens/move-stake-page"));
 const HistoryPage = lazyRetry(() => import("@/screens/history-page"));
 const LearnPage = lazyRetry(() => import("@/screens/learn-page"));
 const LearnDetailPage = lazyRetry(() => import("@/screens/learn-detail-page"));
@@ -56,9 +57,6 @@ const NotificationsPage = lazyRetry(
 const AccountsPage = lazyRetry(() => import("@/screens/accounts-page"));
 const WalletTransferFormPage = lazyRetry(
   () => import("@/screens/wallet-transfer-form-page"),
-);
-const WalletNairaConvertPage = lazyRetry(
-  () => import("@/screens/wallet-naira-convert-page"),
 );
 const WalletUnlockedWithdrawPage = lazyRetry(
   () => import("@/screens/wallet-unlocked-withdraw-page"),
@@ -123,7 +121,7 @@ export const router = createBrowserRouter([
       // Public routes
       { index: true, element: withSuspenseAndErrorBoundary(<HomePage />) },
       { path: "login", element: withSuspenseAndErrorBoundary(<LoginPage />) },
-      { path: "signup", element: withSuspenseAndErrorBoundary(<SignupPage />) },
+      { path: "signup/:referralCode?", element: withSuspenseAndErrorBoundary(<SignupPage />) },
 
       {
         path: "dashboard",
@@ -205,14 +203,6 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "wallet/convert/:mode/:walletType",
-        element: (
-          <ProtectedRoute>
-            {withSuspenseAndErrorBoundary(<WalletNairaConvertPage />)}
-          </ProtectedRoute>
-        ),
-      },
-      {
         path: "wallet/unlocked-withdraw/:walletType",
         element: (
           <ProtectedRoute>
@@ -257,6 +247,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             {withSuspenseAndErrorBoundary(<UnstakePage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "move-stake",
+        element: (
+          <ProtectedRoute>
+            {withSuspenseAndErrorBoundary(<MoveStakePage />)}
           </ProtectedRoute>
         ),
       },

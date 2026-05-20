@@ -1,4 +1,5 @@
 import React from "react";
+import toast from "react-hot-toast";
 import {
   Drawer,
   DrawerContent,
@@ -17,6 +18,7 @@ interface WithdrawActionDrawerProps {
   onSelectClaim?: () => void;
   disableRedeem?: boolean;
   disableClaim?: boolean;
+  claimAmount?: number;
 }
 
 export const WithdrawActionDrawer: React.FC<WithdrawActionDrawerProps> = ({
@@ -30,6 +32,7 @@ export const WithdrawActionDrawer: React.FC<WithdrawActionDrawerProps> = ({
   onSelectClaim,
   disableRedeem,
   disableClaim,
+  claimAmount,
 }) => {
   return (
     <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -44,36 +47,46 @@ export const WithdrawActionDrawer: React.FC<WithdrawActionDrawerProps> = ({
           {walletType === "staking" && (
             <>
               <p className="text-xs font-medium text-white/40 px-1 pt-1">
-                Internal withdrawal
+                Internal
               </p>
 
               <button
-                onClick={onSelectRedeem}
-                disabled={disableRedeem}
-                className={`w-full rounded-xl bg-[#151515] px-4 py-4 text-left ${disableRedeem ? "opacity-50 cursor-not-allowed" : ""}`}
+                onClick={() => {
+                  if (disableRedeem) {
+                    toast.error("Not enough LPT to unbond");
+                    return;
+                  }
+                  onSelectRedeem?.();
+                }}
+                className="w-full rounded-xl bg-[#151515] px-4 py-4 text-left"
               >
                 <div className="flex items-center gap-3">
                   <img src="/redeem.jpeg" alt="" className="h-10 w-10 rounded-full object-cover" />
                   <div>
                     <p className="text-white text-sm font-medium">Unbond Balance</p>
                     <p className="text-xs text-white/60">
-                      {disableRedeem ? "Not enough LPT to unbond" : "Unlock your LPT token"}
+                      Unlock your bonded balance
                     </p>
                   </div>
                 </div>
               </button>
 
               <button
-                onClick={onSelectClaim}
-                disabled={disableClaim}
-                className={`w-full rounded-xl bg-[#151515] px-4 py-4 text-left ${disableClaim ? "opacity-50 cursor-not-allowed" : ""}`}
+                onClick={() => {
+                  if (disableClaim) {
+                    toast.error("No unbonded LPT to claim");
+                    return;
+                  }
+                  onSelectClaim?.();
+                }}
+                className="w-full rounded-xl bg-[#151515] px-4 py-4 text-left"
               >
                 <div className="flex items-center gap-3">
                   <img src="/claim.jpeg" alt="" className="h-10 w-10 rounded-full object-cover" />
                   <div>
                     <p className="text-white text-sm font-medium">Withdraw Unbonded</p>
                     <p className="text-xs text-white/60">
-                      {disableClaim ? "No unbonded LPT to claim" : "Claim your unlocked LPT token"}
+                      {!disableClaim && claimAmount ? `Claim ${claimAmount.toLocaleString()} LPT` : "Claim your unlocked balance"}
                     </p>
                   </div>
                 </div>
@@ -82,7 +95,7 @@ export const WithdrawActionDrawer: React.FC<WithdrawActionDrawerProps> = ({
           )}
 
           {walletType === "staking" && <p className="text-xs font-medium text-white/40 px-1 pt-1">
-            External withdrawal
+            External 
           </p>}
 
           <button

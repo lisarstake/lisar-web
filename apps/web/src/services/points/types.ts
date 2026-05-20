@@ -33,6 +33,8 @@ export interface PointsHistoryEntry {
 
 export interface RedeemPointsRequest {
   partner_id: string;
+  points: number;
+  item_cost: number;
 }
 
 export interface PointsRedemptionRecord {
@@ -42,6 +44,10 @@ export interface PointsRedemptionRecord {
   deposit_points_used: number;
   coupon_code: string;
   discount_value_ngn: number;
+  item_cost: number;
+  amount_to_pay: number;
+  payout_status: string;
+  nomba_reference: string;
   status: string;
   expires_at: string;
   created_at: string;

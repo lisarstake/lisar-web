@@ -22,7 +22,6 @@ import {
   ResolveBankAccountRequest,
   SavedBankAccount,
   SessionInitiateData,
-  SessionInitiateRequest,
   SessionStatusData,
   SessionVerifyData,
   SessionVerifyRequest,
@@ -157,13 +156,10 @@ export class PajRampService implements IPajRampApiService {
     }
   }
 
-  async initiateSession(
-    request: SessionInitiateRequest,
-  ): Promise<PajRampApiResponse<SessionInitiateData>> {
+  async initiateSession(): Promise<PajRampApiResponse<SessionInitiateData>> {
     return this.request<SessionInitiateData>({
       url: "/ramp/session/initiate",
       method: "POST",
-      data: request,
       errorMessage: "Failed to initiate PAJ Ramp session",
       authRequired: false,
     });

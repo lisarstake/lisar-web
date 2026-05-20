@@ -132,7 +132,7 @@ export const YieldIntroPage: React.FC = () => {
         <img
           src={content.image}
           alt={content.title}
-          className="rounded-xl h-[380px] mx-auto"
+          className="rounded-xl h-[380px] mx-auto mt-6"
         />
 
         <h2 className="mt-4 text-lg font-medium text-white/90">

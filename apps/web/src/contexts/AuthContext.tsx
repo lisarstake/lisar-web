@@ -12,8 +12,7 @@ import React, {
 } from "react";
 import { User, Wallet, Session, AuthApiResponse } from "@/services/auth/types";
 import { authService } from "@/services/auth";
-import { walletService } from "@/services";
-import { env } from "@/lib/env";
+import { walletService, campaignService } from "@/services";
 import mixpanel from "mixpanel-browser";
 
 async function ensureSolanaWalletAfterSignup(): Promise<boolean> {
@@ -444,27 +443,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           const pendingCode = localStorage.getItem("pending_referral_code");
           if (pendingCode) {
             try {
-              const token =
-                localStorage.getItem("auth_token") ||
-                sessionStorage.getItem("auth_token");
-              const res = await fetch(`${env.VITE_API_BASE_URL}/referrals/apply`, {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  ...(token ? { Authorization: `Bearer ${token}` } : {}),
-                },
-                body: JSON.stringify({ code: pendingCode }),
+              const result = await campaignService.applyReferralCode({
+                code: pendingCode,
               });
-              const data = await res.json();
-              console.log(
-                "[Referral] Applied pending code:",
-                pendingCode,
-                "→",
-                res.ok ? "success" : "failed",
-                data,
-              );
+              if (result.success) {
+                window.dispatchEvent(new Event("points:refresh"));
+              }
             } catch (err) {
-              console.error("[Referral] Error applying pending code:", pendingCode, err);
             } finally {
               localStorage.removeItem("pending_referral_code");
             }
@@ -544,6 +529,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             });
 
             await ensureSolanaWalletAfterSignup();
+
+            // Apply pending referral code from signup (silent, never blocks)
+            const pendingCode = localStorage.getItem("pending_referral_code");
+            if (pendingCode) {
+              try {
+                const result = await campaignService.applyReferralCode({
+                  code: pendingCode,
+                });
+                if (result.success) {
+                  window.dispatchEvent(new Event("points:refresh"));
+                }
+              } catch (err) {
+              } finally {
+                localStorage.removeItem("pending_referral_code");
+              }
+            }
 
             // Identify user and track Sign In
             mixpanel.identify(userResponse.data.user_id);
@@ -673,27 +674,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const pendingCode = localStorage.getItem("pending_referral_code");
         if (pendingCode) {
           try {
-            const token =
-              localStorage.getItem("auth_token") ||
-              sessionStorage.getItem("auth_token");
-            const res = await fetch(`${env.VITE_API_BASE_URL}/referrals/apply`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                ...(token ? { Authorization: `Bearer ${token}` } : {}),
-              },
-              body: JSON.stringify({ code: pendingCode }),
+            const result = await campaignService.applyReferralCode({
+              code: pendingCode,
             });
-            const data = await res.json();
-            console.log(
-              "[Referral] Applied pending code:",
-              pendingCode,
-              "→",
-              res.ok ? "success" : "failed",
-              data,
-            );
+            if (result.success) {
+              window.dispatchEvent(new Event("points:refresh"));
+            }
           } catch (err) {
-            console.error("[Referral] Error applying pending code:", pendingCode, err);
           } finally {
             localStorage.removeItem("pending_referral_code");
           }

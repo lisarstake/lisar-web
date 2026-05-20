@@ -45,39 +45,57 @@ export const allWalletTourConfig: TourConfig = {
       position: "bottom",
       highlightPadding: 8,
     },
+    // {
+    //   id: "wallet-actions",
+    //   target: '[data-tour="all-wallet-quick-actions"]',
+    //   title: "Wallet Quick Actions",
+    //   description:
+    //     "Use these shortcuts to deposit, withdraw, and view your asset balances quickly.",
+    //   position: "bottom",
+    //   highlightPadding: 8,
+    // },
+    // {
+    //   id: "message-card",
+    //   target: '[data-tour="all-wallet-message-card"]',
+    //   title: "Messages & Announcements",
+    //   description:
+    //     "This card keeps you updated with announcements and important information.",
+    //   position: "bottom",
+    //   highlightPadding: 8,
+    // },
     {
-      id: "wallet-actions",
-      target: '[data-tour="all-wallet-quick-actions"]',
-      title: "Wallet Quick Actions",
+      id: "balance-card",
+      target: '[data-tour="all-wallet-balance-card"]',
+      title: "Your Wallet",
       description:
-        "Use these shortcuts to deposit, withdraw, and view your asset balances quickly.",
-      position: "bottom",
-      highlightPadding: 8,
-    },
-    {
-      id: "message-card",
-      target: '[data-tour="all-wallet-message-card"]',
-      title: "Messages & Announcements",
-      description:
-        "This card keeps you updated with announcements and important information.",
+        "This is your total wealth balance across all assets. Tap the eye icon to hide or show your balance.",
       position: "bottom",
       highlightPadding: 8,
     },
     {
       id: "quick-deposit",
       target: '[data-tour="all-wallet-quick-deposit"]',
-      title: "Quick Deposit",
+      title: "Live Perks",
       description:
-        "Add funds to your wallet quickly using preset deposit amounts.",
+        "Check out current promotions and exclusive offers available to you.",
       position: "bottom",
       highlightPadding: 8,
     },
     {
-      id: "yield-section",
-      target: '[data-tour="all-wallet-yield-section"]',
-      title: "Earn Daily Yields",
+      id: "stables-card",
+      target: '[data-tour="all-wallet-stables-card"]',
+      title: "Savings",
       description:
-        "Put your assets to work and grow your balance with daily yield opportunities.",
+        "Earn steady returns on Lisar savings. Ideal for emergency funds that need to stay liquid.",
+      position: "top",
+      highlightPadding: 8,
+    },
+    {
+      id: "high-yield-card",
+      target: '[data-tour="all-wallet-high-yield-card"]',
+      title: "Growth",
+      description:
+        "Earn higher returns on Lisar growth. Better for longer-term investment goals.",
       position: "top",
       highlightPadding: 8,
     },
@@ -90,15 +108,15 @@ export const allWalletTourConfig: TourConfig = {
       position: "top",
       highlightPadding: 8,
     },
-    {
-      id: "nav-yield",
-      target: '[data-tour="nav-yield"]',
-      title: "Yield",
-      description:
-        "Open Yield to create positions and keep your assets earning.",
-      position: "top",
-      highlightPadding: 8,
-    },
+    // {
+    //   id: "nav-yield",
+    //   target: '[data-tour="nav-yield"]',
+    //   title: "Yield",
+    //   description:
+    //     "Open Yield to create positions and keep your assets earning.",
+    //   position: "top",
+    //   highlightPadding: 8,
+    // },
     {
       id: "nav-activity",
       target: '[data-tour="nav-activity"]',

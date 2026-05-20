@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { ErrorDrawer } from "@/components/general/ErrorDrawer";
 import { EmailConfirmationDrawer } from "@/components/general/EmailConfirmationDrawer";
@@ -13,7 +13,6 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { campaignService } from "@/services";
-import toast from "react-hot-toast";
 
 interface SignupFormData {
   fullName: string;
@@ -24,6 +23,7 @@ interface SignupFormData {
 
 export const SignupForm: React.FC = () => {
   const navigate = useNavigate();
+  const { referralCode: urlReferralCode } = useParams();
   const { createWallet, signinWithGoogle, state } = useAuth();
 
   const [formData, setFormData] = useState<SignupFormData>({
@@ -103,6 +103,13 @@ export const SignupForm: React.FC = () => {
     return () => clearTimeout(timer);
   }, [formData.referralCode, validateReferralCode]);
 
+  // Auto-fill referral code from URL on mount
+  useEffect(() => {
+    if (urlReferralCode) {
+      setFormData((prev) => ({ ...prev, referralCode: urlReferralCode }));
+    }
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -122,6 +129,7 @@ export const SignupForm: React.FC = () => {
 
         if (formData.referralCode && referralValidation.isValid) {
           localStorage.setItem("pending_referral_code", formData.referralCode);
+          localStorage.setItem("referred_signup", "true");
         }
 
 
@@ -150,11 +158,9 @@ export const SignupForm: React.FC = () => {
   const handleGoogleSignup = () => {
     if (formData.referralCode && referralValidation.isValid) {
       localStorage.setItem("pending_referral_code", formData.referralCode);
-      signinWithGoogle();
-    } else {
-      setShowReferralCode(true);
-      toast("Do you have a referral code? Enter it to apply, otherwise click Continue with Google again.");
+      localStorage.setItem("referred_signup", "true");
     }
+    signinWithGoogle();
   };
 
   const handleEmailConfirmationClose = () => {
@@ -165,9 +171,7 @@ export const SignupForm: React.FC = () => {
   const isFormValid =
     formData.fullName &&
     formData.email &&
-    formData.password.length >= 8 &&
-
-    (!formData.referralCode || referralValidation.isValid === true);
+    formData.password.length >= 8;
 
   return (
     <div className="min-h-screen bg-black flex flex-col">
@@ -204,7 +208,7 @@ export const SignupForm: React.FC = () => {
               name="fullName"
               value={formData.fullName}
               onChange={handleInputChange}
-              placeholder="John Doe"
+              placeholder="Ore Jason"
               className="w-full px-4 py-3 bg-[#121212] border border-[#121212] rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-[#C7EF6B] transition-colors"
             />
           </div>
@@ -223,7 +227,7 @@ export const SignupForm: React.FC = () => {
               name="email"
               value={formData.email}
               onChange={handleInputChange}
-              placeholder="example@gmail.com"
+              placeholder="Enter email"
               className="w-full px-4 py-3 bg-[#121212] border border-[#121212] rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-[#C7EF6B] transition-colors"
             />
           </div>

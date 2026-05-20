@@ -1,7 +1,4 @@
-/**
- * Success Drawer Component
- * Shows success messages in a drawer similar to error screens
- */
+
 
 import React from 'react';
 import {
@@ -22,6 +19,7 @@ interface SuccessDrawerProps {
   details?: string;
   onAction?: () => void;
   actionText?: string;
+  image?: string;
 }
 
 export const SuccessDrawer: React.FC<SuccessDrawerProps> = ({
@@ -31,18 +29,19 @@ export const SuccessDrawer: React.FC<SuccessDrawerProps> = ({
   message,
   details,
   onAction,
-  actionText = "Continue"
+  actionText = "Continue",
+  image
 }) => {
   return (
     <Drawer open={isOpen} onOpenChange={onClose}>
       <DrawerContent className="bg-[#050505] border-[#505050]">
         <DrawerHeader className="text-center">
           <div className="flex justify-center mb-0">
-            <div className="w-20 h-20 bg-[#C7EF6B]/20 rounded-full my-3 flex items-center justify-center relative overflow-hidden">
+            <div className="rounded-full my-3 flex items-center justify-center relative overflow-hidden">
               <img
-                src="/fund.png"
-                alt="Error"
-                className="w-15 h-15 object-cover"
+                src={image || "/success.png"}
+                alt="Success"
+                className="w-20 h-20 object-cover rounded-full"
               />
             </div>
           </div>

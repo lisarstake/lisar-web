@@ -15,10 +15,6 @@ export interface PajRampApiResponse<T> {
   };
 }
 
-export interface SessionInitiateRequest {
-  emailOrPhone: string;
-}
-
 export interface SessionInitiateData {
   email: string;
   phone: string;
@@ -32,9 +28,7 @@ export interface DeviceInfo {
 }
 
 export interface SessionVerifyRequest {
-  emailOrPhone: string;
   otp: string;
-  device: DeviceInfo;
 }
 
 export interface SessionVerifyData {

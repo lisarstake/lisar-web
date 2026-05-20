@@ -38,11 +38,11 @@ export const ErrorDrawer: React.FC<ErrorDrawerProps> = ({
       <DrawerContent className="bg-[#050505] border-[#505050]">
         <DrawerHeader className="text-center">
           <div className="flex justify-center mb-0">
-            <div className="w-20 h-20 bg-[#C7EF6B]/20 rounded-full my-3 flex items-center justify-center relative overflow-hidden">
+            <div className="rounded-full my-3 flex items-center justify-center relative overflow-hidden">
               <img
-                src="/error.png"
+                src="/error1.png"
                 alt="Error"
-                className="w-11 h-11 object-cover"
+                className="w-20 h-20 object-cover"
               />
             </div>
           </div>
