@@ -9,8 +9,6 @@ import {
   LoaderCircle,
   CheckCircle2,
   XCircle,
-  ChevronDown,
-  ChevronUp,
 } from "lucide-react";
 import { campaignService } from "@/services";
 
@@ -42,7 +40,6 @@ export const SignupForm: React.FC = () => {
     details: "",
   });
   const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
-  const [showReferralCode, setShowReferralCode] = useState(false);
   const [isValidatingReferral, setIsValidatingReferral] = useState(false);
   const [referralValidation, setReferralValidation] = useState<{
     isValid: boolean | null;
@@ -282,64 +279,46 @@ export const SignupForm: React.FC = () => {
             )}
           </div>
 
-          {/* Referral Code (Optional) - Collapsible */}
+          {/* Referral Code (Optional) */}
           <div>
-            <button
-              type="button"
-              onClick={() => setShowReferralCode(!showReferralCode)}
-              className="w-full flex items-center justify-between  text-white"
-            >
-              <span className="text-white text-sm font-medium">
-                Referral code{" "}
-                <span className="text-gray-400">(Optional)</span>
-              </span>
-              {showReferralCode ? (
-                <ChevronUp className="w-5 h-5 text-gray-400" />
-              ) : (
-                <ChevronDown className="w-5 h-5 text-gray-400" />
-              )}
-            </button>
-
-            {showReferralCode && (
-              <div className="mt-3 space-y-2">
-                <div className="relative">
-                  <input
-                    type="text"
-                    id="referralCode"
-                    name="referralCode"
-                    value={formData.referralCode}
-                    onChange={handleInputChange}
-                    placeholder="Enter referral code"
-                    className="w-full px-4 py-3 bg-[#121212] border border-[#121212] rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-[#C7EF6B] transition-colors pr-12"
-                  />
-                  {formData.referralCode && (
-                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                      {isValidatingReferral ? (
-                        <LoaderCircle className="w-5 h-5 text-gray-400 animate-spin" />
-                      ) : referralValidation.isValid === true ? (
-                        <CheckCircle2 className="w-5 h-5 text-[#C7EF6B]" />
-                      ) : referralValidation.isValid === false ? (
-                        <XCircle className="w-5 h-5 text-red-400" />
-                      ) : null}
-                    </div>
-                  )}
+            <span className="block text-white text-sm font-medium mb-2">
+              Referral code{" "}
+              <span className="text-gray-400">(Optional)</span>
+            </span>
+            <div className="relative">
+              <input
+                type="text"
+                id="referralCode"
+                name="referralCode"
+                value={formData.referralCode}
+                onChange={handleInputChange}
+                placeholder="Enter referral code"
+                className="w-full px-4 py-3 bg-[#121212] border border-[#121212] rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-[#C7EF6B] transition-colors pr-12"
+              />
+              {formData.referralCode && (
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  {isValidatingReferral ? (
+                    <LoaderCircle className="w-5 h-5 text-gray-400 animate-spin" />
+                  ) : referralValidation.isValid === true ? (
+                    <CheckCircle2 className="w-5 h-5 text-[#C7EF6B]" />
+                  ) : referralValidation.isValid === false ? (
+                    <XCircle className="w-5 h-5 text-red-400" />
+                  ) : null}
                 </div>
-
-                {/* Referral Code Validation */}
-                {formData.referralCode &&
-                  !isValidatingReferral &&
-                  referralValidation.message && (
-                    <div
-                      className={`flex items-center text-sm ${referralValidation.isValid
-                        ? "text-[#C7EF6B]"
-                        : "text-red-400"
-                        }`}
-                    >
-                      {referralValidation.message}
-                    </div>
-                  )}
-              </div>
-            )}
+              )}
+            </div>
+            {formData.referralCode &&
+              !isValidatingReferral &&
+              referralValidation.message && (
+                <div
+                  className={`flex items-center mt-2 text-sm ${referralValidation.isValid
+                    ? "text-[#C7EF6B]"
+                    : "text-red-400"
+                    }`}
+                >
+                  {referralValidation.message}
+                </div>
+              )}
           </div>
 
           {/* Create Account Button */}

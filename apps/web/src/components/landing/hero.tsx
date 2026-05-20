@@ -78,7 +78,7 @@ const Hero = () => {
               <div className="mt-8 flex flex-wrap gap-3">
                 <button
                   type="button"
-                  onClick={() => navigate("/login")}
+                  onClick={() => navigate("/signup")}
                   className="rounded-full border-2 border-black bg-[#C7EF6B] px-4 py-3 md:px-8 text-lg font-medium text-black transition hover:bg-[#C7EF6B] cursor-pointer"
                 >
                   Create an account

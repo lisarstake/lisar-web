@@ -143,7 +143,7 @@ export const MoveStakePage: React.FC = () => {
           <ArrowLeft className="text-white" size={22} />
         </button>
 
-        <h1 className="text-lg font-medium text-white mb-6">Move Balance</h1>
+        <h1 className="text-lg font-medium text-white">Move Balance</h1>
 
         <div className="w-8 h-8" />
       </div>

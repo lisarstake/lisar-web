@@ -100,7 +100,7 @@ export const WalletUnlockedWithdrawPage: React.FC = () => {
         >
           <ArrowLeft className="text-white" size={22} />
         </button>
-        <h1 className="text-lg font-medium">Claim </h1>
+        <h1 className="text-lg font-medium">Claim</h1>
         <div className="w-10" />
       </div>
 

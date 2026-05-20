@@ -269,9 +269,9 @@ export const ProfilePage: React.FC = () => {
             className="bg-[#151515] rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-[#171717] transition"
           >
             <div>
-              <p className="text-white font-medium">Linked Account</p>
+              <p className="text-white font-medium">Link Account</p>
               <p className="text-gray-400 text-sm">
-                linked bank account for withdrawal
+                link bank account for withdrawal
               </p>
             </div>
             <ChevronLeft className="rotate-180 " size={18} />

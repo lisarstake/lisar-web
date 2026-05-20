@@ -112,15 +112,15 @@ export const PerksPage: React.FC = () => {
 
   const mergedHistory = useMemo(() => {
     const earned = pointsHistory
-    .filter((item) => item.points > 0)
-    .map((item) => ({
-      id: `earned-${item.id}`,
-      createdAt: item.created_at,
-      points: `+${item.points}`,
-      subtitle: formatHistoryTitle(item),
-      title: "Perks Points Earned",
-      isEarned: true,
-    }));
+      .filter((item) => item.points > 0)
+      .map((item) => ({
+        id: `earned-${item.id}`,
+        createdAt: item.created_at,
+        points: `+${item.points}`,
+        subtitle: formatHistoryTitle(item),
+        title: "Perks Points Earned",
+        isEarned: true,
+      }));
 
     const redeemed = pointsRedemptions.map((item) => ({
       id: `redeemed-${item.id}`,
@@ -273,21 +273,21 @@ export const PerksPage: React.FC = () => {
                   </CardContent>
                 </Card>
 
-                <div className="mt-3 rounded-lg border border-[#2b2b2b] bg-[#151515] px-3 py-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-2">
-                      <img src='/gift.png' className="w-7 h-7 mb-0.5" />
-                      <div>
-                        <p className="text-[12px] font-semibold text-white/90">Convert points to rewards</p>
-                        <p className="text-[12px] mt-0.5 text-white/65">
-                          Minimum redeemable: 100 points
-                        </p>
+                <div className="mt-3 rounded-lg border border-[#2b2b2b] bg-[#151515] px-3 py-2">
+                  <div className="flex items-center gap-3">
+                    <img src='/gift.png' className="w-8 h-8 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13px] font-semibold text-white/90">Convert points to rewards  </p>
+                      <div className="mt-1 h-1.5 w-full rounded-full bg-[#2b2b2b]">
+                        <div
+                          className="h-1.5 rounded-full bg-[#C7EF6B] transition-all duration-300"
+                          style={{ width: `${Math.min((totalPoints / 100) * 100, 100)}%` }}
+                        />
                       </div>
-
+                      <p className="text-[12px] text-white/65 mt-1">
+                        Minimum: 100 ({totalPoints < 100 ? `${100 - totalPoints} points left` : "Eligible"})
+                      </p>
                     </div>
-                    <span className="text-[11px] text-white/70">
-                      {totalPoints < 100 ? `${100 - totalPoints} left` : "Eligible"}
-                    </span>
                   </div>
                 </div>
 
@@ -297,7 +297,7 @@ export const PerksPage: React.FC = () => {
                   disabled={totalPoints < 100}
                   className="mt-5 h-12 w-full rounded-full bg-[#C7EF6B] text-black text-base font-medium hover:bg-[#B8E55A] disabled:opacity-60"
                 >
-                  Redeem Points
+                  Convert points
                 </Button>
 
                 <div className="mt-5">
@@ -490,7 +490,7 @@ export const PerksPage: React.FC = () => {
                           <span className="text-white/60">Points Used</span>
                           <span className="font-medium text-white/90">{pointsToRedeem}</span>
                         </div>
-                       
+
                         <div className="flex items-center justify-between">
                           <span className="text-white/60">Bank</span>
                           <span className="font-medium text-white/90">Sterling Bank</span>
@@ -521,7 +521,7 @@ export const PerksPage: React.FC = () => {
                           <span className="text-white/60">Amount to Pay</span>
                           <span className="font-medium text-white/90">₦{successRecord?.amount_to_pay?.toLocaleString()}</span>
                         </div>
-                       
+
                         <div className="flex items-center justify-between">
                           <span className="text-white/60">Date</span>
                           <span className="font-medium text-white/90">

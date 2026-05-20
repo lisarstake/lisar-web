@@ -172,7 +172,7 @@ export const WalletTransferFormPage: React.FC = () => {
         try {
           onrampInstanceRef.current.close();
           refreshAllWalletData();
-        } catch {}
+        } catch { }
       }
     };
   }, [refreshAllWalletData]);
@@ -214,7 +214,7 @@ export const WalletTransferFormPage: React.FC = () => {
         exchangeRate: tokenRateInNgn,
         fee: 0,
         cryptoAddress,
-        customerEmail: state.user?.email || "",
+        // customerEmail: state.user?.email || "",
         customerName: state.user?.full_name || "Lisar User",
         mint: TOKEN_MINT[tokenSymbol],
         chain: TOKEN_CHAIN[tokenSymbol] || "solana",
@@ -305,9 +305,13 @@ export const WalletTransferFormPage: React.FC = () => {
     ? (highyieldBalance ?? 0)
     : (withdrawSource === "stash" ? stashBalance
       : withdrawSource === "savings" ? savingsBalance
-      : combinedBalance);
+        : combinedBalance);
 
   const sourceFiatBalance = activeBalance * tokenRateInNgn;
+
+  const sourceLabel = withdrawSource === "combined" ? "Total bal"
+    : withdrawSource === "savings" ? "Savings"
+      : "Stash";
 
   const handleCryptoWithdraw = useCallback(async () => {
     const parsedAmount = Number(amount.replace(/,/g, "").trim());
@@ -495,7 +499,7 @@ export const WalletTransferFormPage: React.FC = () => {
         exchangeRate: tokenRateInNgn,
         fee: 0,
         cryptoAddress: solanaWalletAddress || null,
-        customerEmail: state.user?.email || "",
+        // customerEmail: state.user?.email || "",
         customerName: state.user?.full_name || "Lisar User",
         mint: TOKEN_MINT[tokenSymbol],
         chain: TOKEN_CHAIN[tokenSymbol] || "solana",
@@ -653,29 +657,29 @@ export const WalletTransferFormPage: React.FC = () => {
     if (safeMode === "deposit" && safeAsset === "crypto") {
       return `Deposit ${walletTokenLabel}`;
     }
-    if (safeMode === "withdraw" && safeAsset === "naira") return "Send Naira";
-    return `Send ${walletTokenLabel}`;
+    if (safeMode === "withdraw" && safeAsset === "naira") return "Withdraw Naira";
+    return `Withdraw ${walletTokenLabel}`;
   }, [safeAsset, safeMode, walletTokenLabel]);
 
   const isWithdraw = safeMode === "withdraw";
   const numericAmount = Number(amount.replace(/,/g, "").trim());
   const cryptoAmountWarning =
     isWithdraw &&
-    safeAsset === "crypto" &&
-    amount.trim() &&
-    Number.isFinite(numericAmount) &&
-    numericAmount > activeBalance
+      safeAsset === "crypto" &&
+      amount.trim() &&
+      Number.isFinite(numericAmount) &&
+      numericAmount > activeBalance
       ? `Amount exceeds available ${walletTokenLabel} balance`
       : "";
   const isDisabled = isWithdraw
     ? !amount.trim() ||
-      (safeAsset === "crypto"
-        ? !walletAddress.trim() ||
-          !Number.isFinite(numericAmount) ||
-          numericAmount <= 0 ||
-          numericAmount > activeBalance ||
-          isSubmittingCryptoWithdraw
-        : !Number.isFinite(numericAmount) || numericAmount <= 0)
+    (safeAsset === "crypto"
+      ? !walletAddress.trim() ||
+      !Number.isFinite(numericAmount) ||
+      numericAmount <= 0 ||
+      numericAmount > activeBalance ||
+      isSubmittingCryptoWithdraw
+      : !Number.isFinite(numericAmount) || numericAmount <= 0)
     : false;
   const isDepositNairaFlow = safeMode === "deposit" && safeAsset === "naira";
   const isDepositNairaDisabled = numericAmount <= 0 || !tokenRateInNgn;
@@ -705,7 +709,7 @@ export const WalletTransferFormPage: React.FC = () => {
 
         <div className="px-6 pb-32">
           {isWithdraw ? (
-            <div className="space-y-5 pt-4">
+            <div className="space-y-5">
               {safeAsset === "naira" ? (
                 <div className="pt-4">
                   <label className="mb-2 block text-sm text-white/70">
@@ -729,7 +733,12 @@ export const WalletTransferFormPage: React.FC = () => {
                       placeholder="0"
                       className="flex-1 bg-transparent text-white text-lg font-medium focus:outline-none"
                     />
+
                   </div>
+                  {/* <p className="text-xs text-white/50 mt-1">{" ~ "}{activeBalance.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 4,
+                  })} {walletTokenLabel}</p> */}
                   <div className="flex space-x-3 mt-4">
                     {[25, 50, 75, 100].map((percent) => {
                       const nextAmount = (sourceFiatBalance * (percent / 100)).toFixed(2);
@@ -742,11 +751,10 @@ export const WalletTransferFormPage: React.FC = () => {
                           onClick={() => {
                             setAmount(nextAmount);
                           }}
-                          className={`flex-1 py-2.5 px-2 rounded-full text-sm font-medium transition-colors ${
-                            isActive
-                              ? "bg-[#C7EF6B] text-black"
-                              : "bg-[#151515] text-white/80 hover:bg-[#1a1f10]"
-                          }`}
+                          className={`flex-1 py-2.5 px-2 rounded-full text-sm font-medium transition-colors ${isActive
+                            ? "bg-[#C7EF6B] text-black"
+                            : "bg-[#151515] text-white/80 hover:bg-[#1a1f10]"
+                            }`}
                         >
                           {percent}%
                         </button>
@@ -760,18 +768,15 @@ export const WalletTransferFormPage: React.FC = () => {
                       className="w-full text-left"
                     >
                       <h3 className="text-sm text-white/60 mb-0.5 flex items-center gap-1.5">
-                        <WalletCards size={16} /> Available balance
+                        <WalletCards size={16} /> Withdraw from ({sourceLabel})
                       </h3>
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between mt-2">
                         <span className="text-gray-100 text-sm font-medium">
                           {displayFiatSymbol}{sourceFiatBalance.toLocaleString(undefined, {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2,
                           })}
-                          {" • "}{activeBalance.toLocaleString(undefined, {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 4,
-                          })} {walletTokenLabel}
+
                         </span>
                         {safeWalletType === "savings" && (
                           <ChevronDown size={16} className="text-white/60" />
@@ -783,31 +788,27 @@ export const WalletTransferFormPage: React.FC = () => {
                         {(["combined", "savings", "stash"] as const).map((source) => {
                           const bal = source === "combined" ? combinedBalance
                             : source === "savings" ? savingsBalance
-                            : stashBalance;
-                          const label = source === "combined" ? "Combined"
+                              : stashBalance;
+                          const label = source === "combined" ? "Total bal"
                             : source === "savings" ? "Savings"
-                            : "Stash";
+                              : "Stash";
                           const sub = source === "combined" ? "Burn savings first, then stash"
-                            : source === "savings" ? "USDC earning yield"
-                            : "Idle USDC in wallet";
+                            : source === "savings" ? "balance earning yield"
+                              : "Idle balance in wallet";
                           return (
                             <button
                               key={source}
                               type="button"
                               onClick={() => { setWithdrawSource(source); setShowSourcePicker(false); }}
-                              className={`w-full flex items-center justify-between p-2 rounded-lg text-xs ${
-                                withdrawSource === source ? "bg-[#C7EF6B]/10 text-white" : "text-white/70 hover:bg-white/5"
-                              }`}
+                              className={`w-full flex items-center justify-between p-2 rounded-lg text-sm ${withdrawSource === source ? "border-[#C7EF6B] border rounded-sm text-white" : "text-white/80 hover:bg-white/5"
+                                }`}
                             >
                               <div className="text-left">
-                                <span className="font-medium">{label}</span>
-                                <p className="text-[10px] text-white/50">{sub}</p>
+                                <span className="font-medium text-white/80">{label}</span>
+                                {/* <p className="text-[10px] text-white/50">{sub}</p> */}
                               </div>
                               <div className="text-right">
-                                <p>{bal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })} USDC</p>
-                                <p className="text-[10px] text-white/50">
-                                  ₦{(bal * tokenRateInNgn).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                </p>
+                                <p>₦{(bal * tokenRateInNgn).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                               </div>
                             </button>
                           );
@@ -872,7 +873,7 @@ export const WalletTransferFormPage: React.FC = () => {
                         className="w-full text-left"
                       >
                         <h3 className="text-sm text-white/60 mb-0.5 flex items-center gap-1.5">
-                          <WalletCards size={16} /> Available balance
+                          <WalletCards size={16} /> Withdraw from {sourceLabel}
                         </h3>
                         <div className="flex items-center justify-between">
                           <span className="text-gray-100 text-sm font-medium">
@@ -892,21 +893,20 @@ export const WalletTransferFormPage: React.FC = () => {
                           {(["combined", "savings", "stash"] as const).map((source) => {
                             const bal = source === "combined" ? combinedBalance
                               : source === "savings" ? savingsBalance
-                              : stashBalance;
+                                : stashBalance;
                             const label = source === "combined" ? "Combined"
                               : source === "savings" ? "Savings"
-                              : "Stash";
+                                : "Stash";
                             const sub = source === "combined" ? "Burn savings first, then stash"
                               : source === "savings" ? "USDC earning yield"
-                              : "Idle USDC in wallet";
+                                : "Idle USDC in wallet";
                             return (
                               <button
                                 key={source}
                                 type="button"
                                 onClick={() => { setWithdrawSource(source); setShowSourcePicker(false); }}
-                                className={`w-full flex items-center justify-between p-2 rounded-lg text-xs ${
-                                  withdrawSource === source ? "bg-[#C7EF6B]/10 text-white" : "text-white/70 hover:bg-white/5"
-                                }`}
+                                className={`w-full flex items-center justify-between p-2 rounded-lg text-xs ${withdrawSource === source ? "bg-[#C7EF6B]/10 text-white" : "text-white/70 hover:bg-white/5"
+                                  }`}
                               >
                                 <div className="text-left">
                                   <span className="font-medium">{label}</span>
@@ -959,11 +959,10 @@ export const WalletTransferFormPage: React.FC = () => {
                           setAmount(String(preset));
                           setDepositNairaErrorMessage("");
                         }}
-                        className={`flex-1 py-2.5 px-2 rounded-full text-sm font-medium transition-colors ${
-                          isActive
-                            ? "bg-[#C7EF6B] text-black"
-                            : "bg-[#151515] text-white/80 hover:bg-[#1a1f10]"
-                        }`}
+                        className={`flex-1 py-2.5 px-2 rounded-full text-sm font-medium transition-colors ${isActive
+                          ? "bg-[#C7EF6B] text-black"
+                          : "bg-[#151515] text-white/80 hover:bg-[#1a1f10]"
+                          }`}
                       >
                         ₦{preset >= 1_000_000 ? "1M" : `${preset / 1000}K`}
                       </button>
@@ -1096,11 +1095,10 @@ export const WalletTransferFormPage: React.FC = () => {
               isDepositNairaFlow ? handleDepositNairaContinue : handleConfirm
             }
             disabled={isPrimaryActionDisabled}
-            className={`h-12 w-full rounded-full text-base font-semibold transition-colors ${
-              isPrimaryActionDisabled
-                ? "bg-[#505050] text-white/40"
-                : "bg-[#c7ef6b] text-black"
-            }`}
+            className={`h-12 w-full rounded-full text-base font-semibold transition-colors ${isPrimaryActionDisabled
+              ? "bg-[#505050] text-white/40"
+              : "bg-[#c7ef6b] text-black"
+              }`}
           >
             {isSubmittingCryptoWithdraw ? (
               <span className="inline-flex items-center gap-2">
