@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, CircleQuestionMark, Info, Tag } from "lucide-react";
+import { ArrowRight, ChevronRight, ChevronRightCircle, CircleQuestionMark, Info, Tag } from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { PerksDrawer } from "@/components/general/PerksDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
@@ -34,7 +34,7 @@ export const EarnPage: React.FC = () => {
     {
       id: "1",
       title: `Lisar points`,
-      description: "Save on Lisar, accumulate points redeemable as perks and discounts at different partners.",
+      description: "Save on Lisar, accumulate points redeemable as discounts at different partners.",
       image: "/cafeone.jpeg",
       buttonText: 'Cash out points',
       isComingSoon: false,
@@ -146,19 +146,10 @@ export const EarnPage: React.FC = () => {
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-white font-medium text-[17px]">
                     {card.title}
-                    {card.id === "1" && <Tag size={16} className="inline-block ml-1.5 text-gray-300 mb-0.5" />}
+                    {!card.isSocialCard && (
+                      <ChevronRight size={18} className="inline-block ml-1 text-[#C7EF6B]" />
+                    )}
                   </h3>
-                  {!card.isSocialCard && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleCardClick(card);
-                      }}
-                      className="text-[#C7EF6B] hover:text-[#d9f58d] transition-colors"
-                    >
-                      <ArrowRight size={20} />
-                    </button>
-                  )}
                 </div>
 
                 {/* Social Icons - Between Title and Description */}
