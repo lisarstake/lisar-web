@@ -154,7 +154,7 @@ export const EarnPage: React.FC = () => {
                         e.stopPropagation();
                         handleCardClick(card);
                       }}
-                      className="text-[#F8F31B] hover:text-[#fff87a] transition-colors"
+                      className="text-[#C7EF6B] hover:text-[#d9f58d] transition-colors"
                     >
                       <ArrowRight size={20} />
                     </button>
