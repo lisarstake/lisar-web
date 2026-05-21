@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { CircleQuestionMark, Info } from "lucide-react";
+import { CircleQuestionMark, Info, Tag } from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { PerksDrawer } from "@/components/general/PerksDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
@@ -33,10 +33,10 @@ export const EarnPage: React.FC = () => {
   const earnCards: EarnCard[] = [
     {
       id: "1",
-      title: `Perks`,
+      title: `Lisar points`,
       description: "Save on Lisar, accumulate points redeemable as perks and discounts at different partners.",
       image: "/cafeone.jpeg",
-      buttonText: 'Redeem perks',
+      buttonText: 'Convert points',
       isComingSoon: false,
     },
     // {
@@ -137,13 +137,7 @@ export const EarnPage: React.FC = () => {
                     </div>
                   </div>
                 ) : (
-                  <div className="w-full h-36 relative">
-                    <img
-                      src={card.image}
-                      alt={card.title}
-                      className="w-full h-full object-cover object-top"
-                    />
-                  </div>
+                null
                 )
               )}
 
@@ -151,6 +145,7 @@ export const EarnPage: React.FC = () => {
               <div className="p-4">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-white font-medium text-[17px]">
+                    {card.id === "1" && <Tag size={16} className="inline-block mr-1.5 text-[#C7EF6B]" />}
                     {card.title}
                   </h3>
                   
