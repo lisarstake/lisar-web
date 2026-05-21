@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { CircleQuestionMark, Info, Tag } from "lucide-react";
+import { ArrowRight, CircleQuestionMark, Info, Tag } from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { PerksDrawer } from "@/components/general/PerksDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
@@ -36,7 +36,7 @@ export const EarnPage: React.FC = () => {
       title: `Lisar points`,
       description: "Save on Lisar, accumulate points redeemable as perks and discounts at different partners.",
       image: "/cafeone.jpeg",
-      buttonText: 'Convert points',
+      buttonText: 'Cash out points',
       isComingSoon: false,
     },
     // {
@@ -146,9 +146,19 @@ export const EarnPage: React.FC = () => {
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-white font-medium text-[17px]">
                     {card.title}
-                    {card.id === "1" && <Tag size={16} className="inline-block ml-1.5 text-[#C7EF6B]" />}
+                    {card.id === "1" && <Tag size={16} className="inline-block ml-1.5 text-gray-300 mb-0.5" />}
                   </h3>
-                  
+                  {!card.isSocialCard && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCardClick(card);
+                      }}
+                      className="text-[#F8F31B] hover:text-[#fff87a] transition-colors"
+                    >
+                      <ArrowRight size={20} />
+                    </button>
+                  )}
                 </div>
 
                 {/* Social Icons - Between Title and Description */}
@@ -221,7 +231,7 @@ export const EarnPage: React.FC = () => {
                 </p>
 
                 {/* Action Button */}
-                 {!card.isSocialCard && (
+                 {/* {!card.isSocialCard && (
                    <button
                      onClick={(e) => {
                        e.stopPropagation();
@@ -234,7 +244,7 @@ export const EarnPage: React.FC = () => {
                    >
                      {card.buttonText}
                    </button>
-                 )}
+                 )} */}
               </div>
             </div>
           ))}
