@@ -38,11 +38,11 @@ export const PerksDrawer: React.FC<PerksDrawerProps> = ({
               </p>
             </div>
 
-            <div className="relative mt-4 h-[145px]">
+            <div className="relative mt-4 h-[250px]">
               {/* Card 1 - popup2 */}
               <div
                 className="absolute top-0 left-1/2 -translate-x-1/2 w-[86%] rounded-2xl border border-white/10 overflow-hidden shadow-[0_16px_28px_rgba(30,64,175,0.35)]"
-                style={{ backgroundImage: "url(/popup2.png)", backgroundSize: "cover", backgroundPosition: "center" }}
+                style={{ backgroundImage: "url(/popup1.jpg)", backgroundSize: "cover", backgroundPosition: "center" }}
               >
                 <div className="absolute inset-0 bg-black/35" />
                 <div className="relative px-4 py-3">
@@ -64,7 +64,6 @@ export const PerksDrawer: React.FC<PerksDrawerProps> = ({
                   <span className="absolute top-1 right-1 bg-[#F8F31B] text-black rounded-full px-1.5 py-0.5 text-[8px] font-bold flex items-center gap-0.5">
                     <Tag size={10} /> 20% off
                   </span>
-                  <p className="text-[8px] uppercase tracking-[0.12em] text-white/75">Placeholder</p>
                   <p className="text-[12px] font-semibold text-white">Icon Block</p>
                 </div>
               </div>
@@ -78,7 +77,6 @@ export const PerksDrawer: React.FC<PerksDrawerProps> = ({
                   <span className="absolute top-1 right-1 bg-[#F8F31B] text-black rounded-full px-1.5 py-0.5 text-[8px] font-bold flex items-center gap-0.5">
                     <Tag size={10} /> 10% off
                   </span>
-                  <p className="text-[8px] uppercase tracking-[0.12em] text-white/75">Placeholder</p>
                   <p className="text-[12px] font-semibold text-white">Illustration</p>
                 </div>
               </div>
