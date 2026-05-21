@@ -109,11 +109,11 @@ export const PointsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   // Refresh points data when referral code is applied
   useEffect(() => {
     const handleRefresh = () => {
-      loadPointsData();
+      void Promise.all([loadPointsData(), loadHistoryData()]);
     };
     window.addEventListener("points:refresh", handleRefresh);
     return () => window.removeEventListener("points:refresh", handleRefresh);
-  }, [loadPointsData]);
+  }, [loadPointsData, loadHistoryData]);
 
   return (
     <PointsContext.Provider

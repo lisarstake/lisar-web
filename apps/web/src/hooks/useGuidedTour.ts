@@ -24,13 +24,18 @@ export const useGuidedTour = (options: UseGuidedTourOptions) => {
   const isCompleted = isTourCompleted(tourId);
   const autoStartTriggeredRef = useRef(false);
 
-  // Auto-start: only trigger once per mount
+  // Auto-start when the condition becomes true (e.g. auth finishes loading)
   useEffect(() => {
-    if (autoStart && !autoStartTriggeredRef.current && !isCompleted) {
+    if (
+      autoStart &&
+      !autoStartTriggeredRef.current &&
+      !isCompleted &&
+      !tourState.isActive
+    ) {
       autoStartTriggeredRef.current = true;
       startTour(tourId);
     }
-  }, []);
+  }, [autoStart, isCompleted, tourState.isActive, startTour, tourId]);
 
   useEffect(() => {
     if (onComplete && !tourState.isActive && isCompleted) {

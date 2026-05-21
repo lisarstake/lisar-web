@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, ChevronRight, ChevronRightCircle, CircleQuestionMark, Info, Tag } from "lucide-react";
+import { ArrowRight, ArrowRightCircle, ChevronRightCircle } from "lucide-react";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { PerksDrawer } from "@/components/general/PerksDrawer";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
@@ -147,7 +147,7 @@ export const EarnPage: React.FC = () => {
                   <h3 className="text-white font-medium text-[17px]">
                     {card.title}
                     {!card.isSocialCard && (
-                      <ChevronRight size={18} className="inline-block ml-1 text-[#C7EF6B]" />
+                      <ArrowRightCircle size={18} className="inline-block ml-1.5 mb-0.5 text-[#C7EF6B]/90" />
                     )}
                   </h3>
                 </div>
@@ -206,7 +206,7 @@ export const EarnPage: React.FC = () => {
                   </div>
                 )}
 
-                <p className="text-gray-400 text-sm leading-relaxed">
+                <p className="text-zinc-400 text-sm leading-relaxed">
                   {card.description}
                   {/* {card.id === "1" && (
                     <>

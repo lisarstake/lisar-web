@@ -82,12 +82,12 @@ export const AllWalletPage: React.FC = () => {
   const { unreadCount } = useNotification();
   const { prices } = usePrices();
 
-  // const shouldAutoStart = true
+  //  const shouldAutoStart = true
   const shouldAutoStart = useMemo(() => {
     return state.user?.is_onboarded === false && !state.isLoading;
   }, [state.user?.is_onboarded, state.isLoading]);
 
-  {/* useEffect(() => {
+   useEffect(() => {
     if (state.isLoading) return;
     if (!state.user?.is_onboarded) return;
     if (localStorage.getItem("referred_signup") !== "true") return;
@@ -95,7 +95,7 @@ export const AllWalletPage: React.FC = () => {
       setShowPromoDrawer(true);
     }, 450);
     return () => clearTimeout(timer);
-  }, [state.user?.is_onboarded, state.isLoading]); */}
+  }, [state.user?.is_onboarded, state.isLoading]);
 
   const { } = useGuidedTour({
     tourId: ALL_WALLET_TOUR_ID,
@@ -198,11 +198,13 @@ export const AllWalletPage: React.FC = () => {
       //   id: "promo-card-1",
       //   image: "/card1.png",
       //   title: "Get 20% off on CafeOne Espresso drink!",
+      //   subtitle: "Redeem Lisar points for coffee and rewards at Cafe One!",
       // },
       {
         id: "promo-card-2",
-        image: "/card2.png",
-        title: "Enjoy perks and discounts as you save!",
+        image: "/card1.png",
+        title: "Claim a special offer",
+        subtitle: "Redeem Lisar points for coffee and rewards at Cafe One!",
       },
     ],
     [],
@@ -513,7 +515,7 @@ export const AllWalletPage: React.FC = () => {
 
             <div data-tour="all-wallet-quick-deposit" className="mt-4">
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-white/70 text-sm font-medium">Explore perks</h2>
+                <h2 className="text-white/70 text-sm font-medium">Special offers</h2>
               </div>
               <div
                 ref={promoCarouselRef}
@@ -523,32 +525,33 @@ export const AllWalletPage: React.FC = () => {
                 {promoCards.map((card) => (
                   <div
                     key={card.id}
-                    className="min-w-full snap-start rounded-xl bg-[#bbbbbb] border border-[#7367f0]/30 overflow-hidden text-left relative"
+                    className="min-w-full snap-start rounded-xl bg-[#dbd8d8] border border-[#8B6914]/30 overflow-hidden text-left relative"
                   >
-                    <div className="absolute inset-0">
-                      <div className="absolute -top-5 -left-6 w-40 h-40 rounded-full border border-[#C7EF6B]/25" />
-                      <div className="absolute top-6 left-28 w-28 h-28 rounded-full border border-[#86B3F7]/30" />
-                      <div className="absolute -bottom-10 right-8 w-40 h-40 rounded-full border border-[#86B3F7]/25" />
-                      <div className="absolute top-0 right-0 w-24 h-22 bg-[#1e1b4b] rounded-bl-[32px] opacity-90" />
-                    </div>
-                    <img
-                      src={card.image}
-                      alt={card.title}
-                      className="absolute inset-0 w-full h-full object-cover opacity-50 "
-                    />
-                    <div className="relative z-10 px-5 py-4 flex items-center justify-between gap-3 min-h-[70px]">
-                      <p className="text-[#1e1b4b] text-base leading-tight font-semibold max-w-[70%]">
-                        {card.title}
-                      </p>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate("/earn");
-                        }}
-                        className="shrink-0 bg-[#5f53d6] hover:bg-[#4f43c6] text-white rounded-full px-5 py-2.5 text-xs font-medium transition-colors"
-                      >
-                        See perks
-                      </button>
+                   
+                    
+                    <div className="relative z-10 px-3 py-2 flex flex-row items-center gap-3">
+                      <div className="flex flex-col items-start gap-1 flex-1">
+                        <p className="text-[#2e2100] text-base leading-tight font-semibold">
+                          {card.title}
+                        </p>
+                        <p className="text-[#2e2100] text-[13px] leading-tight">
+                          {card.subtitle}
+                        </p>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate("/perks");
+                          }}
+                          className="mt-1 shrink-0 bg-[#2e2100] hover:bg-[#4f4328] text-white rounded-full px-3 py-2 text-xs font-medium transition-colors"
+                        >
+                          Redeem now 
+                        </button>
+                      </div>
+                      <img
+                        src={card.image}
+                        alt=""
+                        className="w-20 h-20 object-cover rounded-lg shrink-0"
+                      />
                     </div>
                   </div>
 
@@ -752,7 +755,7 @@ export const AllWalletPage: React.FC = () => {
       <PerksDrawer
         isOpen={showPromoDrawer}
         onClose={handleDismissPromoDrawer}
-        onExplore={() => navigate("/earn")}
+        onExplore={() => navigate("/perks")}
       />
     </div>
   );

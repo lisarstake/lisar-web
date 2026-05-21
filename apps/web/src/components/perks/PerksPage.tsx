@@ -196,7 +196,7 @@ export const PerksPage: React.FC = () => {
 
   const headerTitle =
     step === "overview"
-      ? "Perks"
+      ? "Lisar points"
       : step === "convert"
         ? "Convert Points"
         : step === "transfer"
@@ -297,7 +297,7 @@ export const PerksPage: React.FC = () => {
                   disabled={totalPoints < 100}
                   className="mt-5 h-12 w-full rounded-full bg-[#C7EF6B] text-black text-base font-medium hover:bg-[#B8E55A] disabled:opacity-60"
                 >
-                  Convert points
+                  Redeem points
                 </Button>
 
                 <div className="mt-5">
@@ -346,7 +346,7 @@ export const PerksPage: React.FC = () => {
             {step === "convert" && (
               <div className="space-y-3">
                 <div className="rounded-2xl border border-[#2b2b2b] bg-[#151515] p-3">
-                  <p className="text-[14px] font-semibold text-white/95">Convert Points</p>
+                  <p className="text-[14px] font-semibold text-white/95">Redeem Points</p>
                   <p className="mt-1 text-[13px] text-white/65 leading-[1.45]">
                     Convert your accumulated points into partner rewards!
                   </p>
@@ -630,7 +630,7 @@ export const PerksPage: React.FC = () => {
       {step === "convert" && selectedRedemptionOption?.id === "cafeone" && (
         <div className="fixed left-4 right-4 bottom-40 rounded-xl border border-[#ffe7b8] bg-[#fff8e9] px-3 py-2 text-[12px] text-[#7a5b22] flex items-start gap-2 z-30">
           <Info size={13} className="mt-0.5 shrink-0" />
-          <span>This service is currently available for CafeOne Port Harcourt. Other areas are coming soon.</span>
+          <span>This service is currently available for CafeOne Port Harcourt. Other areas are coming soon!</span>
         </div>
       )}
 
