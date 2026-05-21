@@ -145,8 +145,8 @@ export const EarnPage: React.FC = () => {
               <div className="p-4">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-white font-medium text-[17px]">
-                    {card.id === "1" && <Tag size={16} className="inline-block mr-1.5 text-[#C7EF6B]" />}
                     {card.title}
+                    {card.id === "1" && <Tag size={16} className="inline-block ml-1.5 text-[#C7EF6B]" />}
                   </h3>
                   
                 </div>
