@@ -219,6 +219,7 @@
     min-height: 0;
     overflow-x: hidden;
     overflow-y: auto;
+    background-color: #050505;
   }
 
   /* Pages with bottom navigation */
