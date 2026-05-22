@@ -23,7 +23,7 @@ export const PerksDrawer: React.FC<PerksDrawerProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogOverlay className="bg-black/40 backdrop-blur-[1px]" />
+      <DialogOverlay className="bg-black/50 backdrop-blur-[1px]" />
       <DialogContent className="w-[min(88vw,360px)] max-h-[82vh] overflow-y-auto mt-10 border-0 bg-transparent p-0 shadow-none">
         <div className="px-3 pb-4 text-center">
           <div className="relative mt-2 rounded-[28px] overflow-hidden">

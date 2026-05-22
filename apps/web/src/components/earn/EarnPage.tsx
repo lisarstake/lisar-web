@@ -163,9 +163,9 @@ export const EarnPage: React.FC = () => {
                       className="hover:opacity-80 transition-opacity"
                     >
                       <svg
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
+                        width="20"
+                        height="20"
+                        viewBox="0 0 20 20"
                         fill="none"
                         xmlns="http://www.w3.org/2000/svg"
                       >
@@ -186,7 +186,7 @@ export const EarnPage: React.FC = () => {
                       <img
                         src="/telegram.png"
                         alt="Telegram"
-                        className="w-7 h-7"
+                        className="w-5 h-5"
                       />
                     </a>
 
@@ -200,7 +200,7 @@ export const EarnPage: React.FC = () => {
                       <img
                         src="/youtube.png"
                         alt="Telegram"
-                        className="w-8 h-8"
+                        className="w-6 h-6"
                       />
                     </a>
                   </div>
