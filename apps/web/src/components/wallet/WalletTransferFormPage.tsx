@@ -114,6 +114,8 @@ export const WalletTransferFormPage: React.FC = () => {
     useState<SupportedToken>(preferredToken);
   const [selectedNetwork, setSelectedNetwork] =
     useState<SupportedNetwork>("Solana");
+  const [creatingWallet, setCreatingWallet] = useState(false);
+  const walletCreationAttempted = useRef(false);
 
   const onrampInstanceRef = useRef<OnrampWebSDK | null>(null);
   const userCurrency = state.user?.fiat_type || "NGN";
@@ -592,6 +594,29 @@ export const WalletTransferFormPage: React.FC = () => {
     state.user?.wallet_address,
   ]);
 
+  useEffect(() => {
+    const needsSolana =
+      safeMode === "deposit" &&
+      safeAsset === "crypto" &&
+      selectedNetwork === "Solana" &&
+      !solanaWalletAddress;
+
+    if (!needsSolana || walletCreationAttempted.current) return;
+
+    walletCreationAttempted.current = true;
+    setCreatingWallet(true);
+
+    walletService
+      .createSolanaWallet({ make_primary: true })
+      .then((res) => {
+        if (res.success) {
+          window.dispatchEvent(new Event("solana-wallet-created"));
+        }
+      })
+      .catch(() => {})
+      .finally(() => setCreatingWallet(false));
+  }, [safeMode, safeAsset, selectedNetwork, solanaWalletAddress]);
+
   /*
   const generateOfframpAddress = (network: SupportedNetwork) => {
     if (network === "Solana") {
@@ -619,6 +644,9 @@ export const WalletTransferFormPage: React.FC = () => {
   */
 
   const effectiveDepositAddress = cryptoDepositAddress;
+
+  const hasDepositAddress =
+    effectiveDepositAddress && effectiveDepositAddress !== "No wallet address";
 
   const truncatedCryptoAddress = useMemo(() => {
     if (
@@ -980,7 +1008,7 @@ export const WalletTransferFormPage: React.FC = () => {
           ) : (
             <div className="pt-4 space-y-5">
               <div className="rounded-lg bg-[#151515] p-3">
-                <p className="text-sm text-white/60">Cryptocurrency</p>
+                <p className="text-sm text-white/60">Token</p>
                 <div className="mt-2 flex items-center gap-2 px-1">
                   <img
                     src={currentTokenConfig.icon}
@@ -1046,18 +1074,22 @@ export const WalletTransferFormPage: React.FC = () => {
                 <div className="rounded-lg bg-[#151515] p-4">
                   <div className="flex items-center justify-between gap-3">
                     <p className="text-base text-white/80 break-all">
-                      {truncatedCryptoAddress}
+                      {creatingWallet ? "\u00A0" : hasDepositAddress ? truncatedCryptoAddress : "No wallet address"}
                     </p>
-                    <button
-                      onClick={() => handleCopy(effectiveDepositAddress)}
-                      className="shrink-0"
-                    >
-                      {copied ? (
-                        <Check size={16} className="text-[#c7ef6b]" />
-                      ) : (
-                        <Copy size={16} className="text-white/70" />
-                      )}
-                    </button>
+                    {creatingWallet ? (
+                      <LoaderCircle size={16} className="animate-spin text-white/70 shrink-0" />
+                    ) : hasDepositAddress ? (
+                      <button
+                        onClick={() => handleCopy(effectiveDepositAddress)}
+                        className="shrink-0"
+                      >
+                        {copied ? (
+                          <Check size={16} className="text-[#c7ef6b]" />
+                        ) : (
+                          <Copy size={16} className="text-white/70" />
+                        )}
+                      </button>
+                    ) : null}
                   </div>
                 </div>
               </div>
