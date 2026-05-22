@@ -202,7 +202,7 @@ export const AllWalletPage: React.FC = () => {
       // },
       {
         id: "promo-card-2",
-        image: "/card1.png",
+        image: "/gcof.svg",
         title: "Claim a special offer",
         subtitle: "Redeem Lisar points for coffee and rewards at Cafe One!",
       },
@@ -525,16 +525,16 @@ export const AllWalletPage: React.FC = () => {
                 {promoCards.map((card) => (
                   <div
                     key={card.id}
-                    className="min-w-full snap-start rounded-xl bg-[#dbd8d8] border border-[#8B6914]/30 overflow-hidden text-left relative"
+                    className="min-w-full snap-start rounded-xl bg-[#C7EF6B] border border-[#8B6914]/30 overflow-hidden text-left relative"
                   >
                    
                     
                     <div className="relative z-10 px-3 py-2 flex flex-row items-center gap-3">
                       <div className="flex flex-col items-start gap-1 flex-1">
-                        <p className="text-[#2e2100] text-base leading-tight font-semibold">
+                        <p className="text-[#235538] text-base leading-tight font-semibold">
                           {card.title}
                         </p>
-                        <p className="text-[#2e2100] text-[13px] leading-tight">
+                        <p className="text-[#235538] text-[13px] leading-tight">
                           {card.subtitle}
                         </p>
                         <button
@@ -542,7 +542,7 @@ export const AllWalletPage: React.FC = () => {
                             e.stopPropagation();
                             navigate("/perks");
                           }}
-                          className="mt-1 shrink-0 bg-[#2e2100] hover:bg-[#4f4328] text-white rounded-full px-3 py-2 text-xs font-medium transition-colors"
+                          className="mt-1 shrink-0 bg-[#235538] hover:bg-[#235538] text-white rounded-full px-3 py-2 text-xs font-medium transition-colors"
                         >
                           Redeem now 
                         </button>

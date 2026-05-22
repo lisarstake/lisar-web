@@ -139,6 +139,10 @@ export const PerksPage: React.FC = () => {
   const pointsShortfall = Math.max(pointsToRedeem - totalPoints, 0);
 
   const onRedeemStart = () => {
+    if (totalPoints < 100) {
+      toast.error("Not enough points to redeem. Accumulate more points to be able to redeem.");
+      return;
+    }
     setError(null);
     setStep("convert");
   };
@@ -285,7 +289,7 @@ export const PerksPage: React.FC = () => {
                         />
                       </div>
                       <p className="text-[12px] text-white/65 mt-1">
-                        Minimum: 100 ({totalPoints < 100 ? `${100 - totalPoints} points left` : "Eligible"})
+                        Minimum 100 ({totalPoints < 100 ? `${100 - totalPoints} points left` : "Eligible"})
                       </p>
                     </div>
                   </div>
@@ -294,7 +298,6 @@ export const PerksPage: React.FC = () => {
                 <Button
                   type="button"
                   onClick={onRedeemStart}
-                  disabled={totalPoints < 100}
                   className="mt-5 h-12 w-full rounded-full bg-[#C7EF6B] text-black text-base font-medium hover:bg-[#B8E55A] disabled:opacity-60"
                 >
                   Redeem points
@@ -596,6 +599,7 @@ export const PerksPage: React.FC = () => {
         title="Perks Guide"
         content={[
           "Convert points to cash rewards. 1 point = ₦10 and minimum redeemable balance is 100 points.",
+          "Points are earned on your first deposit and subquently on your wealth balance.",
         ]}
       />
 
