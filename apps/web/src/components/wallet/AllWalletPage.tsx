@@ -79,7 +79,7 @@ export const AllWalletPage: React.FC = () => {
   const { isLoading: delegationLoading, delegatorStakeProfile } =
     useDelegation();
   const { unreadCount } = useNotification();
-  const { kycStatus } = useKyc();
+  const { kycStatus, isLoading } = useKyc();
   const { prices } = usePrices();
 
   //  const shouldAutoStart = true
@@ -193,8 +193,8 @@ export const AllWalletPage: React.FC = () => {
   };
 
   const showKycCta = useMemo(() => {
-    return true;
-  }, []);
+    return !isLoading && !!kycStatus;
+  }, [kycStatus, isLoading]);
 
   const kycCardContent = useMemo(() => {
     if (!kycStatus) {

@@ -820,20 +820,22 @@ export const WalletTransferFormPage: React.FC = () => {
                           const label = source === "combined" ? "Total bal"
                             : source === "savings" ? "Savings"
                               : "Stash";
-                          const sub = source === "combined" ? "Burn savings first, then stash"
-                            : source === "savings" ? "balance earning yield"
-                              : "Idle balance in wallet";
                           return (
                             <button
                               key={source}
                               type="button"
                               onClick={() => { setWithdrawSource(source); setShowSourcePicker(false); }}
-                              className={`w-full flex items-center justify-between p-2 rounded-lg text-sm ${withdrawSource === source ? "border-[#C7EF6B] border rounded-sm text-white" : "text-white/80 hover:bg-white/5"
-                                }`}
+                              className="w-full flex items-center justify-between p-2 rounded-lg text-sm hover:bg-white/5"
                             >
-                              <div className="text-left">
+                              <div className="flex items-center gap-2">
+                                <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                                  withdrawSource === source ? "border-[#C7EF6B]" : "border-white/30"
+                                }`}>
+                                  {withdrawSource === source && (
+                                    <div className="w-2 h-2 rounded-full bg-[#C7EF6B]" />
+                                  )}
+                                </div>
                                 <span className="font-medium text-white/80">{label}</span>
-                                {/* <p className="text-[10px] text-white/50">{sub}</p> */}
                               </div>
                               <div className="text-right">
                                 <p>₦{(bal * tokenRateInNgn).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
@@ -933,12 +935,20 @@ export const WalletTransferFormPage: React.FC = () => {
                                 key={source}
                                 type="button"
                                 onClick={() => { setWithdrawSource(source); setShowSourcePicker(false); }}
-                                className={`w-full flex items-center justify-between p-2 rounded-lg text-xs ${withdrawSource === source ? "bg-[#C7EF6B]/10 text-white" : "text-white/70 hover:bg-white/5"
-                                  }`}
+                                className="w-full flex items-center justify-between p-2 rounded-lg text-xs hover:bg-white/5"
                               >
-                                <div className="text-left">
-                                  <span className="font-medium">{label}</span>
-                                  <p className="text-[10px] text-white/50">{sub}</p>
+                                <div className="flex items-center gap-2">
+                                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                                    withdrawSource === source ? "border-[#C7EF6B]" : "border-white/30"
+                                  }`}>
+                                    {withdrawSource === source && (
+                                      <div className="w-2 h-2 rounded-full bg-[#C7EF6B]" />
+                                    )}
+                                  </div>
+                                  <div className="text-left">
+                                    <span className="font-medium">{label}</span>
+                                    <p className="text-[10px] text-white/50">{sub}</p>
+                                  </div>
                                 </div>
                                 <div className="text-right">
                                   <p>{bal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })} USDC</p>

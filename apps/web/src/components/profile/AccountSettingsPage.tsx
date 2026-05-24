@@ -15,6 +15,8 @@ export const AccountSettingsPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [showExportDrawer, setShowExportDrawer] = useState(false);
 
+  console.log(state.user)
+
   useEffect(() => {
     const loadUserData = async () => {
       try {

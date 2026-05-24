@@ -15,6 +15,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { useWallet } from "@/contexts/WalletContext";
 import { useDelegation } from "@/contexts/DelegationContext";
 import { useOrchestrators } from "@/contexts/OrchestratorContext";
@@ -430,7 +431,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
   }, [isStakingWallet, hasCompletedUnbonding, hasPendingUnbonding, zeroBalance]);
 
   const recentTransactions = useMemo(() => {
-    const savingsTxTypes = ["mint", "burn"];
+    const savingsTxTypes = ["mint", "burn", "deposit", "withdrawal"];
     const stakingTxTypes = ["delegation", "undelegation"];
 
     return transactions
@@ -835,7 +836,9 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
       >
         <DrawerContent className="bg-[#050505] border-t border-[#1b1b1b]">
           <DrawerHeader>
-            <DrawerTitle className="text-base font-medium text-white text-left"></DrawerTitle>
+            <DrawerTitle className="text-base font-medium text-white text-left">
+              <VisuallyHidden>Empty wallet</VisuallyHidden>
+            </DrawerTitle>
           </DrawerHeader>
           <div className="space-y-4 py-2">
             <div className="flex justify-center mb-4">

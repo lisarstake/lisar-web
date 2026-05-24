@@ -6,7 +6,6 @@ import {
   Camera,
   ChevronDown,
   ChevronUp,
-  Clock,
   Fingerprint,
   Landmark,
   LoaderCircle,
@@ -57,9 +56,9 @@ const uploadSelfie = async (base64: string): Promise<string> => {
 
 const STATUS_CFG: Record<KycStatus, { label: string }> = {
   not_started: { label: "Not started" },
-  pending: { label: "Pending" },
   approved: { label: "Verified" },
   rejected: { label: "Rejected" },
+  pending: { label: "Pending" },
   expired: { label: "Expired" },
 };
 
@@ -435,9 +434,9 @@ export const KycPage: React.FC = () => {
           <div className="flex items-center gap-3 p-4 rounded-xl bg-[#1a1a1a] border border-[#505050]">
             <ShieldCheck size={22} className="text-[#C7EF6B] shrink-0" />
             <div>
-              <p className="text-sm font-medium text-white">Verification submitted</p>
+              <p className="text-sm font-medium text-white">Verification successful</p>
               <p className="text-xs text-white/50 mt-0.5">
-                Your KYC details are being reviewed.
+                Your identity has been verified.
               </p>
             </div>
           </div>
@@ -488,19 +487,6 @@ export const KycPage: React.FC = () => {
                   <p className="text-sm text-white/70 mt-1">
                     {kycStatus.rejectionReason}
                   </p>
-                </div>
-              ) : tier1Status === "expired" ? (
-                <div className="p-3 rounded-lg bg-[#1a1a1a] border border-[#505050]">
-                  <p className="text-sm text-white/70">
-                    Your previous verification has expired. Please verify again.
-                  </p>
-                </div>
-              ) : tier1Status === "pending" ? (
-                <div className="flex items-center gap-2 text-white/70 py-2">
-                  <Clock size={18} />
-                  <span className="text-sm">
-                    Verification is being reviewed. Please check back later.
-                  </span>
                 </div>
               ) : (
                 <>
@@ -568,9 +554,7 @@ export const KycPage: React.FC = () => {
                 <StatusBadge status={tier2Status} isLoading={isLoading} />
               </div>
             </div>
-            {tier2Locked && (
-              <span className="text-xs text-white/40">Complete Tier 1 first</span>
-            )}
+
             {!tier2Locked &&
               (expandedTier === "tier_2" ? (
                 <ChevronUp size={18} className="text-white/60" />
@@ -592,19 +576,6 @@ export const KycPage: React.FC = () => {
                   <p className="text-sm text-white/70 mt-1">
                     {kycStatus.rejectionReason}
                   </p>
-                </div>
-              ) : tier2Status === "expired" ? (
-                <div className="p-3 rounded-lg bg-[#1a1a1a] border border-[#505050]">
-                  <p className="text-sm text-white/70">
-                    Your previous verification has expired. Please verify again.
-                  </p>
-                </div>
-              ) : tier2Status === "pending" ? (
-                <div className="flex items-center gap-2 text-white/70 py-2">
-                  <Clock size={18} />
-                  <span className="text-sm">
-                    Verification is being reviewed. Please check back later.
-                  </span>
                 </div>
               ) : (
                 <>

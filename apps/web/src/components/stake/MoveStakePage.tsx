@@ -19,6 +19,7 @@ import {
   DrawerFooter,
   DrawerDescription,
 } from "@/components/ui/drawer";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDelegation } from "@/contexts/DelegationContext";
 import { useOrchestrators } from "@/contexts/OrchestratorContext";
@@ -237,7 +238,9 @@ export const MoveStakePage: React.FC = () => {
       >
         <DrawerContent className="bg-[#050505] border-t border-[#505050]">
           <DrawerHeader className="text-center">
-            <DrawerTitle className="text-base font-medium text-white text-center"></DrawerTitle>
+            <DrawerTitle className="text-base font-medium text-white text-center">
+              <VisuallyHidden>Confirm move stake</VisuallyHidden>
+            </DrawerTitle>
             <div className="flex justify-center mb-2">
               <div className="w-24 h-24 rounded-full my-3 flex items-center justify-center relative overflow-hidden">
                 <img

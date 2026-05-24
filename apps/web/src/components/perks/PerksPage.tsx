@@ -147,53 +147,25 @@ export const PerksPage: React.FC = () => {
     const isPreview = false;
 
     if (isPreview || totalPoints < 100) {
-      toast.custom(
-        (t) => (
-          <div
-            className={`bg-[#1a1a1a] border border-[#505050] rounded-xl px-4 py-3 shadow-lg flex items-start gap-3 max-w-[90vw] ${
-              t.visible ? "animate-in fade-in slide-in-from-bottom-2" : "animate-out fade-out"
-            }`}
-          >
-            <AlertCircle size={20} className="text-[#C7EF6B] shrink-0 mt-0.5" />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-white">Insufficient Points</p>
-              <p className="text-xs text-white/60 mt-0.5">
-                You need at least 100 points to redeem. You have{" "}
-                <span className="text-white/80 font-medium">{totalPoints}</span> points.
-              </p>
-            </div>
-            <button
-              onClick={() => toast.dismiss(t.id)}
-              className="text-white/40 hover:text-white/80 shrink-0"
-            >
-              <X size={16} />
-            </button>
-          </div>
-        ),
-        { duration: 4000 },
-      );
+      toast.error("You need at least 100 points to redeem.", { duration: 4000 });
       if (!isPreview) return;
     }
 
     if (isPreview || !kycStatus || kycStatus.tier === null || kycStatus.status !== "approved") {
       const toastId = toast.custom(
         (t) => (
-          <div
-            className={`bg-[#1a1a1a] border border-[#505050] rounded-xl px-4 py-3 shadow-lg max-w-[90vw] ${
-              t.visible ? "animate-in fade-in slide-in-from-bottom-2" : "animate-out fade-out"
-            }`}
-          >
+          <div className="bg-white rounded-xl px-4 py-3 shadow-lg max-w-[90vw]">
             <div className="flex items-start gap-3">
-              <Fingerprint size={20} className="text-[#C7EF6B] shrink-0 mt-0.5" />
+              <Fingerprint size={20} className="text-gray-700 shrink-0 mt-0.5" />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white">KYC Verification Required</p>
-                <p className="text-xs text-white/60 mt-0.5">
+                <p className="text-sm font-medium text-gray-900">KYC Verification Required</p>
+                <p className="text-xs text-gray-500 mt-0.5">
                   Complete your identity verification to unlock point redemption.
                 </p>
               </div>
               <button
                 onClick={() => toast.dismiss(t.id)}
-                className="text-white/40 hover:text-white/80 shrink-0"
+                className="text-gray-400 hover:text-gray-600 shrink-0"
               >
                 <X size={16} />
               </button>
@@ -203,7 +175,7 @@ export const PerksPage: React.FC = () => {
                 toast.dismiss(t.id);
                 navigate("/settings/kyc");
               }}
-              className="mt-3 w-full py-2.5 rounded-full bg-[#C7EF6B] text-black text-xs font-medium hover:bg-[#B8E55A] transition-colors"
+              className="mt-3 w-full py-2.5 rounded-full bg-[#C7EF6B] text-gray-900 text-xs font-medium hover:bg-[#B8E55A] transition-colors"
             >
               Complete KYC
             </button>
