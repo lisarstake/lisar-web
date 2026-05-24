@@ -13,7 +13,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useWallet } from "@/contexts/WalletContext";
 import { useDelegation } from "@/contexts/DelegationContext";
 import { useWalletCard } from "@/contexts/WalletCardContext";
-import { useCampaign } from "@/contexts/CampaignContext";
 import { useNotification } from "@/contexts/NotificationContext";
 import { useGuidedTour } from "@/hooks/useGuidedTour";
 import { usePrices } from "@/hooks/usePrices";
@@ -27,7 +26,7 @@ import {
   List,
   X,
 } from "lucide-react";
-import { LisarLines } from "@/components/landing/lisar-lines";
+import { useKyc } from "@/contexts/KycContext";
 
 const NAIRA_OPTION_ENABLED = false;
 
@@ -80,6 +79,7 @@ export const AllWalletPage: React.FC = () => {
   const { isLoading: delegationLoading, delegatorStakeProfile } =
     useDelegation();
   const { unreadCount } = useNotification();
+  const { kycStatus } = useKyc();
   const { prices } = usePrices();
 
   //  const shouldAutoStart = true
@@ -87,7 +87,7 @@ export const AllWalletPage: React.FC = () => {
     return state.user?.is_onboarded === false && !state.isLoading;
   }, [state.user?.is_onboarded, state.isLoading]);
 
-   useEffect(() => {
+  useEffect(() => {
     if (state.isLoading) return;
     if (!state.user?.is_onboarded) return;
     if (localStorage.getItem("referred_signup") !== "true") return;
@@ -192,22 +192,64 @@ export const AllWalletPage: React.FC = () => {
     navigate(`/wallet/${mode}/${asset}`);
   };
 
+  const showKycCta = useMemo(() => {
+    return true;
+  }, []);
+
+  const kycCardContent = useMemo(() => {
+    if (!kycStatus) {
+      return { title: "Complete your KYC", subtitle: "Verify your identity to unlock all features" };
+    }
+
+    const { tier, status } = kycStatus;
+
+    if (tier === null && status === "not_started") {
+      return {
+        title: "Complete your KYC",
+        subtitle: "Verify your identity to unlock all features.",
+      };
+    }
+    if (tier === "tier_1" && status === "approved") {
+      return {
+        title: "Upgrade KYC to Tier 2",
+        subtitle: "One more step to complete your identity verification.",
+      };
+    }
+
+    return {
+      title: "Complete your KYC",
+      subtitle: "Verify your identity to unlock all features.",
+    };
+  }, [kycStatus]);
+
   const promoCards = useMemo(
-    () => [
-      // {
-      //   id: "promo-card-1",
-      //   image: "/card1.png",
-      //   title: "Get 20% off on CafeOne Espresso drink!",
-      //   subtitle: "Redeem Lisar points for coffee and rewards at Cafe One!",
-      // },
-      {
+    () => {
+      const cards: Array<{
+        id: string;
+        isKyc?: boolean;
+        image?: string;
+        title: string;
+        subtitle: string;
+      }> = [];
+
+      if (showKycCta) {
+        cards.push({
+          id: "promo-card-kyc",
+          isKyc: true,
+          ...kycCardContent,
+        });
+      }
+
+      cards.push({
         id: "promo-card-2",
         image: "/gcof.svg",
         title: "Claim a special offer",
         subtitle: "Redeem Lisar points for coffee and rewards at Cafe One!",
-      },
-    ],
-    [],
+      });
+
+      return cards;
+    },
+    [showKycCta, kycCardContent],
   );
 
   useEffect(() => {
@@ -514,9 +556,6 @@ export const AllWalletPage: React.FC = () => {
             */}
 
             <div data-tour="all-wallet-quick-deposit" className="mt-4">
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-white/70 text-sm font-medium">Special offers</h2>
-              </div>
               <div
                 ref={promoCarouselRef}
                 onScroll={handlePromoScroll}
@@ -527,8 +566,6 @@ export const AllWalletPage: React.FC = () => {
                     key={card.id}
                     className="min-w-full snap-start rounded-xl bg-[#C7EF6B] border border-[#8B6914]/30 overflow-hidden text-left relative"
                   >
-                   
-                    
                     <div className="relative z-10 px-3 py-2 flex flex-row items-center gap-3">
                       <div className="flex flex-col items-start gap-1 flex-1">
                         <p className="text-[#235538] text-base leading-tight font-semibold">
@@ -540,21 +577,32 @@ export const AllWalletPage: React.FC = () => {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            navigate("/perks");
+                            if (card.isKyc) {
+                              navigate("/settings/kyc");
+                            } else {
+                              navigate("/perks");
+                            }
                           }}
-                          className="mt-1 shrink-0 bg-[#235538] hover:bg-[#235538] text-white rounded-full px-3 py-2 text-xs font-medium transition-colors"
+                          className="mt-1 shrink-0 bg-[#235538] text-white rounded-full px-3 py-2 text-xs font-medium transition-colors"
                         >
-                          Redeem now 
+                          {card.isKyc ? "Verify now" : "Redeem now"}
                         </button>
                       </div>
-                      <img
-                        src={card.image}
-                        alt=""
-                        className="w-20 h-20 object-cover rounded-lg shrink-0"
-                      />
+                      {card.isKyc ? (
+                        <img
+                          src="/kyc.png"
+                          alt="KYC"
+                          className="w-20 h-20 object-cover rounded-lg shrink-0"
+                        />
+                      ) : (
+                        <img
+                          src={card.image}
+                          alt=""
+                          className="w-20 h-20 object-cover rounded-lg shrink-0"
+                        />
+                      )}
                     </div>
                   </div>
-
                 ))}
               </div>
             </div>
@@ -595,7 +643,7 @@ export const AllWalletPage: React.FC = () => {
                         Savings
                       </h3>
                       <p className="text-white/90 text-sm">
-                        Earn steady returns on Lisar savings. Ideal for emergency funds that needs to be liquid.
+                        Earn steady returns on Lisar savings.
                       </p>
                     </div>
                   </div>
@@ -655,7 +703,7 @@ export const AllWalletPage: React.FC = () => {
                         Growth
                       </h3>
                       <p className="text-white/60 text-sm">
-                        Earn higher returns on Lisar growth. Better for longer-term investment goals.
+                        Earn higher returns on Lisar growth.
                       </p>
                     </div>
                   </div>

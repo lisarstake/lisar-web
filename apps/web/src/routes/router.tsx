@@ -76,6 +76,9 @@ const SecuritySettingsPage = lazyRetry(
 const RecipientSettingsPage = lazyRetry(
   () => import("@/screens/recipient-settings-page"),
 );
+const KycPage = lazyRetry(
+  () => import("@/screens/kyc-page"),
+);
 const InviteFriendsPage = lazyRetry(
   () => import("@/screens/invite-friends-page"),
 );
@@ -423,6 +426,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             {withSuspenseAndErrorBoundary(<SecuritySettingsPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "settings/kyc",
+        element: (
+          <ProtectedRoute>
+            {withSuspenseAndErrorBoundary(<KycPage />)}
           </ProtectedRoute>
         ),
       },

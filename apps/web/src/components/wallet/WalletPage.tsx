@@ -100,8 +100,9 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
     new URLSearchParams(location.search).get("open") === "deposit"
   );
   const [showWithdrawDrawer, setShowWithdrawDrawer] = useState(false);
-  const [showGrowthDrawer, setShowGrowthDrawer] = useState(false);
   const [showWithdrawEmptyDrawer, setShowWithdrawEmptyDrawer] = useState(false);
+  const [showGrowthDrawer, setShowGrowthDrawer] = useState(false);
+
   const [showEarningsDrawer, setShowEarningsDrawer] = useState(false);
   const [showTokenInfoDrawer, setShowTokenInfoDrawer] = useState(false);
   const [showUnlockSuccessDrawer, setShowUnlockSuccessDrawer] = useState(false);
@@ -447,8 +448,6 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
   }, [transactions, walletType]);
 
   const handleBackClick = () => {
-    // Navigate to main wallet page and replace history
-    // Prevents yield intro pages from showing again when going back
     navigate("/wallet", { replace: true });
   };
 
@@ -854,11 +853,11 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
             <button
               onClick={() => {
                 setShowWithdrawEmptyDrawer(false);
-                navigate(`/wallet/deposit/naira?walletType=${currentWalletType}`);
+                setShowDepositDrawer(true);
               }}
-              className="w-full h-12 rounded-full bg-[#C7EF6B] text-black text-base font-semibold"
+              className="w-full h-11 rounded-full bg-[#C7EF6B] text-black text-base font-semibold"
             >
-              Top up
+              Deposit
             </button>
           </div>
         </DrawerContent>

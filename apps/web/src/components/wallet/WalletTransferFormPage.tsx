@@ -488,7 +488,7 @@ export const WalletTransferFormPage: React.FC = () => {
       if (!tokenRateInNgn) return;
       const tokenAmount = parsedAmount / tokenRateInNgn;
       if (tokenAmount > activeBalance) {
-        toast.error("Amount exceeds available USDC balance.");
+        toast.error("Amount exceeds available USD balance.");
         return;
       }
       setWithdrawNairaRampDetails({

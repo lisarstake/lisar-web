@@ -85,6 +85,7 @@ interface AuthContextType {
       account_number: string;
       bank_code: string;
       bank_name: string;
+      bank_id?: string;
     } | null;
   }) => Promise<AuthApiResponse<User>>;
   clearError: () => void;
@@ -806,6 +807,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       account_number: string;
       bank_code: string;
       bank_name: string;
+      bank_id?: string;
     } | null;
   }): Promise<AuthApiResponse<User>> => {
     try {

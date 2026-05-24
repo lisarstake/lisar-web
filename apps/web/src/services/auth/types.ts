@@ -101,6 +101,7 @@ export interface LinkedAccount {
   account_number: string;
   bank_code: string;
   bank_name: string;
+  bank_id?: string;
 }
 
 export interface User {

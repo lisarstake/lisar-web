@@ -258,7 +258,7 @@ export const ProfilePage: React.FC = () => {
             <div>
               <p className="text-white font-medium">Account</p>
               <p className="text-gray-400 text-sm">
-                Personal details, invite friends
+                Personal details, kyc, invite friends
               </p>
             </div>
             <ChevronLeft className="rotate-180 " size={18} />
@@ -269,7 +269,7 @@ export const ProfilePage: React.FC = () => {
             className="bg-[#151515] rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-[#171717] transition"
           >
             <div>
-              <p className="text-white font-medium">Link Account</p>
+              <p className="text-white font-medium">Withdrawal account</p>
               <p className="text-gray-400 text-sm">
                 link bank account for withdrawal
               </p>
