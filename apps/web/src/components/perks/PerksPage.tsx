@@ -30,7 +30,7 @@ import toast from "react-hot-toast";
 
 const POINTS_TO_NGN_RATE = 10;
 
-type FlowStep = "overview" | "convert" | "transfer" | "success";
+type FlowStep = "overview" | "convert" | "transfer" | "success" | "failed";
 
 type RedemptionOption = {
   id: string;
@@ -205,7 +205,12 @@ export const PerksPage: React.FC = () => {
 
     setSuccessRecord(response.data);
     await Promise.all([refetch(), loadHistoryData()]);
-    setStep("success");
+
+    if (response.data.status === "refunded" || response.data.payout_status === "failed") {
+      setStep("failed");
+    } else {
+      setStep("success");
+    }
   };
 
   const headerTitle =
@@ -215,7 +220,9 @@ export const PerksPage: React.FC = () => {
         ? "Convert Points"
         : step === "transfer"
           ? "Convert Details"
-          : "Completed";
+          : step === "failed"
+            ? "Conversion Failed"
+            : "Completed";
 
   return (
     <div className="min-h-full bg-[#050505] text-white flex flex-col">
@@ -227,7 +234,7 @@ export const PerksPage: React.FC = () => {
               navigate("/earn");
               return;
             }
-            if (step === "convert") {
+            if (step === "convert" || step === "failed") {
               setStep("overview");
               return;
             }
@@ -530,9 +537,10 @@ export const PerksPage: React.FC = () => {
                           <span className="text-white/60">Discount</span>
                           <span className="font-medium text-white/90">-₦{successRecord?.discount_value_ngn?.toLocaleString()}</span>
                         </div>
+                        <div className="my-3 border-t border-dashed border-white/15" />
                         <div className="flex items-center justify-between">
-                          <span className="text-white/60">Amount to Pay</span>
-                          <span className="font-medium text-white/90">₦{successRecord?.amount_to_pay?.toLocaleString()}</span>
+                          <span className="text-sm font-semibold text-white">Amount to Pay</span>
+                          <span className="text-base font-bold text-white">₦{successRecord?.amount_to_pay?.toLocaleString()}</span>
                         </div>
 
                         <div className="flex items-center justify-between">
@@ -545,6 +553,68 @@ export const PerksPage: React.FC = () => {
                             })}
                           </span>
                         </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {step === "failed" && (
+              <div className="min-h-[calc(100vh-260px)] flex items-center">
+                <div className="relative rounded-3xl border border-[#2b2b2b] bg-[#111111] text-white overflow-hidden w-full">
+                  <div className="absolute -top-14 -right-10 h-44 w-44 rounded-full bg-[#d24f4f]/10 blur-3xl" />
+                  <div className="absolute -bottom-16 -left-10 h-40 w-40 rounded-full bg-[#d24f4f]/10 blur-3xl" />
+
+                  <div className="relative px-5 pt-6 pb-5">
+                    <div className="flex items-center justify-between">
+                      <p className="text-[11px] uppercase tracking-[0.2em] text-white/55">Conversion Receipt</p>
+                      <div className="inline-flex items-center gap-1 rounded-full border border-[#3d1f1f] bg-[#221212] px-2.5 py-1 text-[12px] text-[#d24f4f]">
+                        <X size={12} />
+                        Failed
+                      </div>
+                    </div>
+
+                    <div className="mt-4 rounded-2xl border border-[#2a2a2a] bg-[#171717] p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#2b2b2b]">
+                          <img src="/gift.png" alt="Gift" className="h-7 w-7 object-contain" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-white/60">Points conversion failed</p>
+                          <p className="text-sm text-white/80">Your points have been refunded</p>
+                        </div>
+                      </div>
+
+                      <div className="my-4 border-t border-dashed border-white/15" />
+
+                      <div className="space-y-2 text-[12px]">
+                        <div className="flex items-center justify-between">
+                          <span className="text-white/60">Partner</span>
+                          <span className="font-medium text-white/90">{selectedRedemptionOption?.label ?? "CafeOne"}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-white/60">Points Used</span>
+                          <span className="font-medium text-white/90">{pointsToRedeem}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-white/60">Bank</span>
+                          <span className="font-medium text-white/90">Sterling Bank</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-white/60">Account Number</span>
+                          <span className="font-medium text-white/90">8681187112</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-white/60">Account Name</span>
+                          <span className="font-medium text-white/90 text-right">Cafe One Coffee Port Harcourt</span>
+                        </div>
+                        {successRecord?.coupon_code && (
+                          <div className="flex items-center justify-between">
+                            <span className="text-white/60">Coupon</span>
+                            <span className="font-medium text-white/90">{successRecord.coupon_code}</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -598,6 +668,19 @@ export const PerksPage: React.FC = () => {
               className="h-12 w-full rounded-full bg-[#C7EF6B] text-black hover:bg-[#B8E55A] text-base font-medium"
             >
               Back to points
+            </Button>
+          )}
+
+          {step === "failed" && (
+            <Button
+              type="button"
+              onClick={() => {
+                setStep("convert");
+                setSuccessRecord(null);
+              }}
+              className="h-12 w-full rounded-full bg-[#C7EF6B] text-black hover:bg-[#B8E55A] text-base font-medium"
+            >
+              Try again
             </Button>
           )}
         </div>

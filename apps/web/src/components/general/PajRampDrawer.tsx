@@ -272,8 +272,9 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
   const handleStart = useCallback(async () => {
     if (isBuy) {
       setStep("confirming");
-      await Promise.all([refreshAllWalletData(), refetchTransactions()]);
+      await refreshAllWalletData();
       toast.success("Deposit submitted. Your savings will reflect once confirmed.");
+      refetchTransactions();
       setTimeout(() => handleDone(), 3000);
       return;
     }
@@ -349,7 +350,6 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
         onConfirm();
         onClose();
         toast.success("Payout processed successfully! Your account will be credited shortly.");
-        navigate("/wallet");
       }, 4000);
     } catch {
       setErrorMessage(genericFailureMessage);
@@ -368,7 +368,6 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
     genericFailureMessage,
     refreshAllWalletData,
     refetchTransactions,
-    navigate,
     onConfirm,
     onClose,
   ]);
