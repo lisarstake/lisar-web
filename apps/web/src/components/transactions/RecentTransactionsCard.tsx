@@ -42,7 +42,7 @@ export const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
   ) => {
     switch (type) {
       case "deposit":
-        return "Save";
+        return "Deposit";
       case "withdrawal":
         return "Withdraw";
       case "delegation":

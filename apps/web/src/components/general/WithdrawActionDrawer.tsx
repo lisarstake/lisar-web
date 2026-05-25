@@ -46,10 +46,6 @@ export const WithdrawActionDrawer: React.FC<WithdrawActionDrawerProps> = ({
         <div className="pb-2 space-y-3">
           {walletType === "staking" && (
             <>
-              <p className="text-xs font-medium text-white/40 px-1 pt-1">
-                Internal
-              </p>
-
               <button
                 onClick={() => {
                   if (disableRedeem) {
@@ -71,32 +67,34 @@ export const WithdrawActionDrawer: React.FC<WithdrawActionDrawerProps> = ({
                 </div>
               </button>
 
-              <button
-                onClick={() => {
-                  if (disableClaim) {
-                    toast.error("No unbonded LPT to claim");
-                    return;
-                  }
-                  onSelectClaim?.();
-                }}
-                className="w-full rounded-xl bg-[#151515] px-4 py-4 text-left"
-              >
-                <div className="flex items-center gap-3">
-                  <img src="/claim.jpeg" alt="" className="h-10 w-10 rounded-full object-cover" />
-                  <div>
-                    <p className="text-white text-sm font-medium">Withdraw Unbonded</p>
-                    <p className="text-xs text-white/60">
-                      {!disableClaim && claimAmount ? `Claim ${claimAmount.toLocaleString()} LPT` : "Claim your unlocked balance"}
-                    </p>
+              {claimAmount != null && claimAmount > 0 && (
+                <button
+                  onClick={() => {
+                    if (disableClaim) {
+                      toast.error("No unbonded LPT to claim");
+                      return;
+                    }
+                    onSelectClaim?.();
+                  }}
+                  className="w-full rounded-xl bg-[#151515] px-4 py-4 text-left"
+                >
+                  <div className="flex items-center gap-3">
+                    <img src="/claim.jpeg" alt="" className="h-10 w-10 rounded-full object-cover" />
+                    <div>
+                      <p className="text-white text-sm font-medium">Withdraw Unbonded</p>
+                      <p className="text-xs text-white/60">
+                        {!disableClaim && claimAmount ? `Claim ${claimAmount.toLocaleString()} LPT` : "Claim your unlocked balance"}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              </button>
+                </button>
+              )}
+
+              <p className="text-xs font-medium text-white/40 px-1 pt-1">
+                External
+              </p>
             </>
           )}
-
-          {walletType === "staking" && <p className="text-xs font-medium text-white/40 px-1 pt-1">
-            External 
-          </p>}
 
           <button
             onClick={onSelectNaira}

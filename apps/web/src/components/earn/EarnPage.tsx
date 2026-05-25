@@ -34,7 +34,7 @@ export const EarnPage: React.FC = () => {
     {
       id: "1",
       title: `Lisar points`,
-      description: "Save on Lisar, accumulate points redeemable as discounts at different partners.",
+      description: "Save on Lisar, accumulate points, cashout as discounts.",
       image: "/cafeone.jpeg",
       buttonText: 'Cash out points',
       isComingSoon: false,
@@ -142,15 +142,13 @@ export const EarnPage: React.FC = () => {
               )}
 
               {/* Card Content */}
-              <div className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-white font-medium text-[17px]">
-                    {card.title}
-                    {!card.isSocialCard && (
-                      <ArrowRightCircle size={18} className="inline-block ml-1.5 mb-0.5 text-[#C7EF6B]/90" />
-                    )}
-                  </h3>
-                </div>
+              <div className="p-4 flex items-center gap-4">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-1">
+                    <h3 className="text-white font-medium text-[17px]">
+                      {card.title}
+                    </h3>
+                  </div>
 
                 {/* Social Icons - Between Title and Description */}
                 {card.isSocialCard && (
@@ -235,7 +233,12 @@ export const EarnPage: React.FC = () => {
                    >
                      {card.buttonText}
                    </button>
-                 )} */}
+                  )} */}
+                </div>
+
+                {!card.isSocialCard && (
+                  <ArrowRightCircle size={30} className="text-[#C7EF6B]/90 shrink-0" />
+                )}
               </div>
             </div>
           ))}

@@ -1,12 +1,14 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Drawer } from "vaul";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Check, Copy, LoaderCircle, X } from "lucide-react";
 import toast from "react-hot-toast";
 import { formatNumber } from "@/lib/formatters";
 import { pajRampService, perenaService, walletService } from "@/services";
 import { useWallet } from "@/contexts/WalletContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTransactions } from "@/contexts/TransactionContext";
 import type {
   OffRampOrderData,
   OnRampOrderData,
@@ -47,9 +49,9 @@ type Step =
   | "creating_order"
   | "order_ready"
   | "processing"
-  | "success"
   | "error"
-  | "no_bank";
+  | "no_bank"
+  | "confirming";
 
 export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
   isOpen,
@@ -61,6 +63,7 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
   const navigate = useNavigate();
   const { solanaWalletId, solanaWalletAddress, solanaUsdcBalance, stablesBalance, refreshAllWalletData } =
     useWallet();
+  const { refetch: refetchTransactions } = useTransactions();
   const { state } = useAuth();
 
   const [step, setStep] = useState<Step>("checking_session");
@@ -71,15 +74,14 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
   const [errorMessage, setErrorMessage] = useState("");
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasSent, setHasSent] = useState(false);
   const hasCheckedSession = useRef(false);
 
   const isBuy = details.type === "buy";
   const genericFailureMessage = isBuy
     ? "Sorry your deposit couldn't be completed at the moment, please try again."
     : "Sorry your withdrawal couldn't be completed at the moment, please try again.";
-  const defaultSuccessMessage = isBuy
-    ? `Great, the bank account details below have been assigned for your deposit of ${details.fiatSymbol}${formatNumber(details.fiatAmount || 0, 2)}.`
-    : `Great, you've successfully withdrawn ${formatNumber(details.tokenAmount || 0, 4)} ${details.tokenName}.`;
+  const displayTokenName = details.tokenName === "USDC" ? "USD" : details.tokenName;
 
   const resetState = useCallback(() => {
     setStep("checking_session");
@@ -88,6 +90,7 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
     setErrorMessage("");
     setCopiedField(null);
     setIsSubmitting(false);
+    setHasSent(false);
     hasCheckedSession.current = false;
   }, []);
 
@@ -98,22 +101,32 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
     }
   }, [isOpen, resetState]);
 
-  const resolveBankCode = useCallback(async (bankName: string): Promise<string | null> => {
+  const findRampBankId = useCallback(async (code?: string, name?: string): Promise<string | null> => {
+    if (!code && !name) return null;
     const response = await pajRampService.getBanks();
     if (!response.success || !response.data?.length) return null;
 
     const normalize = (value: string) =>
       value.toLowerCase().replace(/[^a-z0-9]/g, "");
-    const target = normalize(bankName);
 
-    const exact = response.data.find((bank: RampBank) => normalize(bank.name) === target);
-    if (exact) return exact.code;
+    if (code) {
+      const byCode = response.data.find((bank: RampBank) => bank.code === code);
+      if (byCode) return byCode.id;
+    }
 
-    const fuzzy = response.data.find((bank: RampBank) => {
-      const candidate = normalize(bank.name);
-      return candidate.includes(target) || target.includes(candidate);
-    });
-    return fuzzy?.code || null;
+    if (name) {
+      const target = normalize(name);
+      const exact = response.data.find((bank: RampBank) => normalize(bank.name) === target);
+      if (exact) return exact.id;
+
+      const fuzzy = response.data.find((bank: RampBank) => {
+        const candidate = normalize(bank.name);
+        return candidate.includes(target) || target.includes(candidate);
+      });
+      if (fuzzy) return fuzzy.id;
+    }
+
+    return null;
   }, []);
 
   const createOrder = useCallback(async () => {
@@ -147,23 +160,20 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
           setStep("error");
         }
       } else {
-        let bankCode = details.bankCode || state.user?.linked_account?.bank_code || "";
+        const bankCode = details.bankCode || state.user?.linked_account?.bank_code || "";
         const accountNumber = details.bankAccountNumber || state.user?.linked_account?.account_number || "";
-        if (!bankCode && details.bankName) {
-          const resolved = await resolveBankCode(details.bankName);
-          if (!resolved) {
-            setErrorMessage("Could not resolve your bank code. Please try again.");
-            setStep("error");
-            return;
-          }
-          bankCode = resolved;
+        const bankId = await findRampBankId(bankCode, details.bankName);
+
+        if (!bankId) {
+          setErrorMessage("Could not resolve your bank. Please try again.");
+          setStep("error");
+          return;
         }
 
         const resp = await pajRampService.createOffRampOrder({
-          bank: bankCode || "",
+          bank: bankId,
           accountNumber,
           currency: details.fiatCurrency,
-          amount: details.tokenAmount,
           fiatAmount: details.fiatAmount,
           mint: details.mint,
           chain: details.chain,
@@ -185,7 +195,7 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
     }
   }, [
     isBuy,
-    resolveBankCode,
+    findRampBankId,
     details.cryptoAddress,
     details.fiatAmount,
     details.fiatCurrency,
@@ -203,10 +213,10 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
     setStep("checking_session");
     try {
       const resp = await pajRampService.getSessionStatus();
-      if (resp.success && resp.data?.hasActiveSession) {
+      if (resp.success) {
         if (isBuy) {
           await createOrder();
-        } else if (state.user?.linked_account?.bank_code && state.user?.linked_account?.account_number) {
+        } else if ((state.user?.linked_account?.bank_code || state.user?.linked_account?.bank_id) && state.user?.linked_account?.account_number) {
           await createOrder();
         } else {
           setStep("no_bank");
@@ -241,7 +251,7 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
       if (resp.success) {
         if (isBuy) {
           await createOrder();
-        } else if (state.user?.linked_account?.bank_code && state.user?.linked_account?.account_number) {
+        } else if ((state.user?.linked_account?.bank_code || state.user?.linked_account?.bank_id) && state.user?.linked_account?.account_number) {
           await createOrder();
         } else {
           setStep("no_bank");
@@ -260,10 +270,10 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
 
   const handleStart = useCallback(async () => {
     if (isBuy) {
-      toast.success(
-        "Confirming transaction. Your stash wallet will be credited accordingly.",
-      );
-      handleDone();
+      setStep("confirming");
+      await Promise.all([refreshAllWalletData(), refetchTransactions()]);
+      toast.success("Deposit submitted. Your savings will reflect once confirmed.");
+      setTimeout(() => handleDone(), 3000);
       return;
     }
 
@@ -288,13 +298,15 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
       }
 
       const source = details.withdrawSource;
+      const tokenAmt = offrampData?.amount ?? details.tokenAmount;
+      const sendAmount = Number(tokenAmt.toFixed(3));
       if (source === "stash") {
         const sendResp = await walletService.sendSolana({
           walletId: solanaWalletId,
           fromAddress: solanaWalletAddress,
           toAddress: offrampData.address,
           token: "USDC",
-          amount: details.tokenAmount,
+          amount: sendAmount,
         });
         if (!sendResp.success) {
           setErrorMessage(sendResp.error || genericFailureMessage);
@@ -303,8 +315,8 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
         }
       } else {
         const burnAmount = source === "combined"
-          ? Math.min(details.tokenAmount, stablesBalance ?? 0)
-          : details.tokenAmount;
+          ? Math.min(tokenAmt, stablesBalance ?? 0)
+          : tokenAmt;
 
         const burnResp = await perenaService.burn({
           walletId: solanaWalletId,
@@ -322,7 +334,7 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
           fromAddress: solanaWalletAddress,
           toAddress: offrampData.address,
           token: "USDC",
-          amount: details.tokenAmount,
+          amount: sendAmount,
         });
         if (!sendResp.success) {
           setErrorMessage(sendResp.error || genericFailureMessage);
@@ -331,8 +343,13 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
         }
       }
 
-      await refreshAllWalletData();
-      setStep("success");
+      await Promise.all([refreshAllWalletData(), refetchTransactions()]);
+      setTimeout(() => {
+        onConfirm();
+        onClose();
+        toast.success("Withdrawal successful! Your account has been credited.");
+        navigate("/wallet");
+      }, 4000);
     } catch {
       setErrorMessage(genericFailureMessage);
       setStep("error");
@@ -349,6 +366,10 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
     stablesBalance,
     genericFailureMessage,
     refreshAllWalletData,
+    refetchTransactions,
+    navigate,
+    onConfirm,
+    onClose,
   ]);
 
   const handleDone = () => {
@@ -361,20 +382,6 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
     setCopiedField(field);
     setTimeout(() => setCopiedField(null), 1800);
   };
-
-  const handleRetry = () => {
-    if (step !== "error") return;
-    createOrder();
-  };
-
-  const truncatedAddress = (address: string) =>
-    `${address.slice(0, 10)}...${address.slice(-8)}`;
-
-  const LoadingValue = () => (
-    <span className="inline-flex items-center">
-      <LoaderCircle className="h-4 w-4 animate-spin text-white/70" />
-    </span>
-  );
 
   const renderContent = () => {
     switch (step) {
@@ -438,7 +445,7 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
               <button
                 onClick={handleVerifyOtp}
                 disabled={otp.length < 4 || isSubmitting}
-                className="flex h-12 mt-2 w-full items-center justify-center rounded-full bg-[#C7EF6B] text-lg font-medium text-black transition-colors disabled:cursor-not-allowed disabled:opacity-70"
+                className="flex h-11 mt-2 w-full items-center justify-center rounded-full bg-[#C7EF6B] text-lg font-medium text-black transition-colors disabled:cursor-not-allowed disabled:opacity-70"
               >
                 {isSubmitting ? (
                   <LoaderCircle className="h-6 w-6 animate-spin text-black" />
@@ -516,7 +523,7 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
                 </p>
                 <h2 className="mb-4 flex min-h-9 items-center text-center text-xl font-medium text-[#C7EF6B]">
                   {orderData
-                    ? `${formatNumber(details.tokenAmount || 0, 4)} ${details.tokenName}`
+                    ? `${formatNumber(details.tokenAmount || 0, 4)} ${displayTokenName}`
                     : null}
                 </h2>
 
@@ -557,32 +564,23 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
                   ))}
                 </div>
 
-                <div className="mb-5 w-full rounded-lg bg-[#151515] p-4">
-                  <p className="text-sm font-medium text-[#c7ef6b]">
-                    How to complete your deposit
-                  </p>
-                  <ol className="mt-2 list-inside list-decimal space-y-1 text-xs text-white/75">
-                    <li>
-                      Send{" "}
-                      <span className="font-medium text-white">
-                        exactly {details.fiatSymbol}
-                        {formatNumber(displayFiat || 0, 2)}
-                      </span>{" "}
-                      from your bank account to the account details
-                      above.
-                    </li>
-                    <li>
-                      Your deposit will be processed automatically
-                      once the transfer is confirmed.
-                    </li>
-                  </ol>
-                </div>
+                <label className="mb-5 flex w-full cursor-pointer items-center gap-2 rounded-lg bg-[#151515] p-4">
+                  <input
+                    type="checkbox"
+                    checked={hasSent}
+                    onChange={(e) => setHasSent(e.target.checked)}
+                    className="h-3.5 w-3.5 rounded border-white/30 bg-[#050505] text-[#C7EF6B] accent-[#C7EF6B]"
+                  />
+                  <span className="text-[13px] text-white/80">
+                    I have sent the amount 
+                  </span>
+                </label>
 
                 <div className="w-full pb-3">
                   <button
                     onClick={handleStart}
-                    disabled={externalLoading}
-                    className="flex h-12 w-full items-center justify-center rounded-full bg-[#C7EF6B] text-lg font-medium text-black transition-colors hover:bg-[#B8E55A] disabled:cursor-not-allowed disabled:opacity-70"
+                    disabled={!hasSent || externalLoading}
+                    className="flex h-11 w-full items-center justify-center rounded-full bg-[#C7EF6B] text-lg font-medium text-black transition-colors hover:bg-[#B8E55A] disabled:cursor-not-allowed disabled:opacity-70"
                   >
                     Done
                   </button>
@@ -615,7 +613,7 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
               <p className="mb-1 text-center text-sm text-gray-400">
                 You are about to withdraw{" "}
                 {formatNumber(details.tokenAmount || 0, 4)}{" "}
-                {details.tokenName} for
+                {displayTokenName} for
               </p>
               <h2 className="mb-4 flex min-h-[2.25rem] items-center text-center text-2xl font-medium text-[#C7EF6B]">
                 {orderData
@@ -628,7 +626,7 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
                   <p className="text-sm text-white/60">Sending</p>
                   <p className="text-sm font-medium text-white">
                     {orderData
-                      ? `${formatNumber(offrampData?.amount || details.tokenAmount, 4)} ${details.tokenName}`
+                      ? `${formatNumber(offrampData?.amount || details.tokenAmount, 4)} ${displayTokenName}`
                       : null}
                   </p>
                 </div>
@@ -638,6 +636,29 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
                     {orderData
                       ? `${details.fiatSymbol}${formatNumber(offrampData?.fiatAmount || details.fiatAmount, 2)}`
                       : null}
+                  </p>
+                </div>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-white/60">Bank</p>
+                  <p className="text-sm font-medium text-white">
+                    {state.user?.linked_account?.bank_name || "—"}
+                  </p>
+                </div>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-white/60">Account number</p>
+                  <p className="text-sm font-medium text-white">
+                    {state.user?.linked_account?.account_number || "—"}
+                  </p>
+                </div>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-white/60">Account name</p>
+                  <p className="text-sm font-medium text-white">
+                    {(() => {
+                      const name = details.customerName || state.user?.full_name || "";
+                      if (!name) return "—";
+                      const parts = name.trim().split(/\s+/);
+                      return parts.length === 3 ? `${parts[0]} ${parts[2]}` : name;
+                    })()}
                   </p>
                 </div>
                 <div className="flex items-center justify-between">
@@ -652,17 +673,7 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
                   <p className="text-sm text-white/60">Fee</p>
                   <p className="text-sm font-medium text-white">
                     {orderData
-                      ? `${details.fiatSymbol}${formatNumber(offrampData?.fee ?? details.fee, 2)}`
-                      : null}
-                  </p>
-                </div>
-                <div className="flex items-center justify-between">
-                  <p className="text-sm text-white/60">
-                    Destination address
-                  </p>
-                  <p className="max-w-[180px] truncate text-sm font-medium text-white">
-                    {orderData
-                      ? truncatedAddress(offrampData?.address || "")
+                      ? `${details.fiatSymbol}${formatNumber(offrampData?.fee ?? 0, 2)}`
                       : null}
                   </p>
                 </div>
@@ -674,7 +685,7 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
                   disabled={
                     isSubmitting || externalLoading
                   }
-                  className="flex h-12 w-full items-center justify-center rounded-full bg-[#C7EF6B] text-lg font-medium text-black transition-colors hover:bg-[#B8E55A] disabled:cursor-not-allowed disabled:opacity-70"
+                  className="flex h-11 w-full items-center justify-center rounded-full bg-[#C7EF6B] text-lg font-medium text-black transition-colors hover:bg-[#B8E55A] disabled:cursor-not-allowed disabled:opacity-70"
                 >
                   {isSubmitting ? (
                     <LoaderCircle className="h-6 w-6 animate-spin text-black" />
@@ -702,37 +713,18 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
             </div>
             <div className="flex flex-col items-center px-4 py-12">
               <LoaderCircle className="mb-4 h-10 w-10 animate-spin text-[#C7EF6B]" />
-              <p className="text-sm text-white/60">Loading, please wait</p>
+              <p className="text-sm text-white/60">Processing withdrawal...</p>
             </div>
           </>
         );
 
-      case "success":
+      case "confirming":
         return (
-          <div className="flex flex-col items-center px-4">
-            <div className="mb-4 mt-4 flex h-20 w-20 items-center justify-center rounded-full bg-[#C7EF6B]/20">
-              <img
-                src="/fund.png"
-                alt="Success"
-                className="h-18 w-18 object-cover"
-              />
-            </div>
-            <h2 className="mb-2 text-center text-lg font-medium tracking-wide text-white">
-              {isBuy
-                ? "Deposit initiated"
-                : "Withdrawal successful"}
-            </h2>
-            <p className="mb-4 text-center text-sm text-white/80">
-              {defaultSuccessMessage}
+          <div className="flex flex-col items-center px-4 py-12">
+            <LoaderCircle className="mb-4 h-10 w-10 animate-spin text-[#C7EF6B]" />
+            <p className="text-sm text-white/60">
+              {isBuy ? "Confirming deposit..." : "Confirming withdrawal..."}
             </p>
-            <div className="mb-4 mt-2 w-full pb-4">
-              <button
-                onClick={handleDone}
-                className="flex h-12 w-full items-center justify-center rounded-full bg-[#C7EF6B] text-lg font-medium text-black transition-colors hover:bg-[#B8E55A]"
-              >
-                Done
-              </button>
-            </div>
           </div>
         );
 
@@ -750,7 +742,7 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
             <div className="flex flex-col items-center px-4">
               <div className="relative mb-4 mt-2 flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-gray-500/15">
                 <img
-                  src="/error.png"
+                  src="/error1.png"
                   alt="Error"
                   className="h-16 w-16 object-cover"
                 />
@@ -761,14 +753,6 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
               <p className="mb-4 max-w-[280px] text-center text-sm text-white/80">
                 {errorMessage}
               </p>
-              <div className="w-full space-y-3 pb-4">
-                <button
-                  onClick={handleRetry}
-                  className="flex h-12 w-full items-center justify-center rounded-full bg-[#C7EF6B] text-lg font-medium text-black transition-colors hover:bg-[#B8E55A] disabled:cursor-not-allowed disabled:opacity-70"
-                >
-                  Try again
-                </button>
-              </div>
             </div>
           </>
         );
@@ -787,7 +771,7 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
             <div className="flex flex-col items-center px-4">
               <div className="relative mb-4 mt-2 flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-gray-500/15">
                 <img
-                  src="/error.png"
+                  src="/error1.png"
                   alt="Bank required"
                   className="h-16 w-16 object-cover"
                 />
@@ -805,7 +789,7 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
                     onClose();
                     navigate("/settings/recipients");
                   }}
-                  className="flex h-12 w-full items-center justify-center rounded-full bg-[#C7EF6B] text-lg font-medium text-black"
+                  className="flex h-11 w-full items-center justify-center rounded-full bg-[#C7EF6B] text-lg font-medium text-black"
                 >
                   Set up bank account
                 </button>
@@ -824,6 +808,9 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm" />
         <Drawer.Content className="fixed bottom-0 left-0 right-0 z-50 flex h-auto max-h-[90vh] flex-col rounded-t-4xl border-t border-[#505050] bg-[#050505]">
+          <VisuallyHidden>
+            <Drawer.Title>Ramp transaction</Drawer.Title>
+          </VisuallyHidden>
           <div className="scrollbar-hide flex-1 overflow-y-auto rounded-t-4xl bg-[#050505] p-4">
             {renderContent()}
           </div>

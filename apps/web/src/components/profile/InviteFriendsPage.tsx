@@ -69,8 +69,7 @@ export const InviteFriendsPage: React.FC = () => {
         </h2>
 
         <p className="mt-3 text-sm leading-relaxed text-[#c4cdc9] max-w-xs">
-          Spread the love ❤️ about Lisar and earn coins as rewards! Join the
-          early savers campiagn to begin
+          Spread the love ❤️ about Lisar and earn points as rewards! 
         </p>
 
         <div className="mt-8 rounded-lg border border-white/10 p-3 w-full max-w-sm">

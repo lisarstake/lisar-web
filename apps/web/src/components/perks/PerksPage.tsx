@@ -7,8 +7,10 @@ import {
   CircleQuestionMark,
   Eye,
   EyeOff,
+  Fingerprint,
   Info,
   LoaderCircle,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,6 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { HelpDrawer } from "@/components/general/HelpDrawer";
 import { usePointsContext } from "@/contexts/PointsContext";
+import { useKyc } from "@/contexts/KycContext";
 import { pointsService } from "@/services/points";
 import type {
   PointsHistoryEntry,
@@ -98,6 +101,8 @@ export const PerksPage: React.FC = () => {
     loadHistoryData,
   } = usePointsContext();
 
+  const { kycStatus } = useKyc();
+
   const totalPoints = balance?.total_points ?? 0;
   const pointsToRedeem = Number(pointsInput) || 0;
   const itemCost = Number(itemCostInput) || 0;
@@ -139,10 +144,50 @@ export const PerksPage: React.FC = () => {
   const pointsShortfall = Math.max(pointsToRedeem - totalPoints, 0);
 
   const onRedeemStart = () => {
-    if (totalPoints < 100) {
-      toast.error("Not enough points to redeem. Accumulate more points to be able to redeem.");
-      return;
+    const isPreview = false;
+
+    if (isPreview || totalPoints < 100) {
+      toast.error("You need at least 100 points to redeem.", { duration: 4000 });
+      if (!isPreview) return;
     }
+
+    if (isPreview || !kycStatus || kycStatus.tier === null || kycStatus.status !== "approved") {
+      const toastId = toast.custom(
+        (t) => (
+          <div className="bg-white rounded-xl px-4 py-3 shadow-lg max-w-[90vw]">
+            <div className="flex items-start gap-3">
+              <Fingerprint size={20} className="text-gray-700 shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900">KYC Verification Required</p>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Complete your identity verification to unlock point redemption.
+                </p>
+              </div>
+              <button
+                onClick={() => toast.dismiss(t.id)}
+                className="text-gray-400 hover:text-gray-600 shrink-0"
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <button
+              onClick={() => {
+                toast.dismiss(t.id);
+                navigate("/settings/kyc");
+              }}
+              className="mt-3 w-full py-2.5 rounded-full bg-[#C7EF6B] text-gray-900 text-xs font-medium hover:bg-[#B8E55A] transition-colors"
+            >
+              Complete KYC
+            </button>
+          </div>
+        ),
+        { duration: Infinity },
+      );
+      if (!isPreview) return;
+    }
+
+    if (isPreview) return;
+
     setError(null);
     setStep("convert");
   };

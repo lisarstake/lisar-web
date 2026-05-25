@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, FileText, Star, UserRound } from "lucide-react";
+import { ArrowLeft, FileText, ShieldCheck, Star, UserRound } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { LoadingSpinner } from "../general/LoadingSpinner";
 import { BottomNavigation } from "../general/BottomNavigation";
@@ -14,6 +14,8 @@ export const AccountSettingsPage: React.FC = () => {
   const { state, refreshUser } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [showExportDrawer, setShowExportDrawer] = useState(false);
+
+  console.log(state.user)
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -72,6 +74,19 @@ export const AccountSettingsPage: React.FC = () => {
             <p className="text-base font-medium">Personal details</p>
             <p className="text-sm text-[#c4cdc9]">
               Review and update your personal info
+            </p>
+          </div>
+        </button>
+
+        <button
+          className={rowClass}
+          onClick={() => navigate("/settings/kyc")}
+        >
+          <ShieldCheck size={20} className="text-[#C7EF6B]" strokeWidth={2.1} />
+          <div className="ml-4">
+            <p className="text-base font-medium">KYC Verification</p>
+            <p className="text-sm text-[#c4cdc9]">
+              Verify your identity (NIN/BVN)
             </p>
           </div>
         </button>

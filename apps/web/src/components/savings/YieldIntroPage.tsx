@@ -39,7 +39,7 @@ const YIELD_CONTENT: Record<string, YieldContent> = {
     rate: "40",
     rateSuffix: "% APY",
     description:
-      "Grow your money by investing in digital assets. Higher returns, but keep your money for longer.",
+      "Grow your money by investing in digital assets. Higher returns, but keeps your money for longer.",
     benefits: [
       "Higher returns up to 40%",
       "Best for long-term goals",
@@ -102,6 +102,7 @@ export const YieldIntroPage: React.FC = () => {
   }, [hasSavings, hasStaking, navigate, walletTypeFromState]);
 
   const handleExploreClick = () => {
+    sessionStorage.setItem("yield_intro_dismissed", "true");
     if (walletTypeFromState === "savings") {
       navigate("/wallet/savings", { replace: true });
     } else if (walletTypeFromState === "growth") {

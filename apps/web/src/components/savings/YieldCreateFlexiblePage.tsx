@@ -28,6 +28,7 @@ import {
   DrawerFooter,
   DrawerDescription,
 } from "@/components/ui/drawer";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
 export const YieldCreateFlexiblePage: React.FC = () => {
   const navigate = useNavigate();
@@ -103,18 +104,6 @@ export const YieldCreateFlexiblePage: React.FC = () => {
     if (displayCurrency === "NGN") return usdValue * (prices.ngn || 0);
     return usdValue;
   }, [stashBalance, mode, displayCurrency, prices.ngn, prices.lpt]);
-
-  const fiatEquivalent = useMemo(() => {
-    const numericAmount = Number(amount) || 0;
-    if (numericAmount <= 0) return 0;
-    if (mode === "savings") {
-      if (displayCurrency === "NGN") return numericAmount * (prices.ngn || 0);
-      return numericAmount;
-    }
-    const usdValue = numericAmount * (prices.lpt || 0);
-    if (displayCurrency === "NGN") return usdValue * (prices.ngn || 0);
-    return usdValue;
-  }, [amount, mode, displayCurrency, prices.ngn, prices.lpt]);
 
   const currentOrchestrator = selectedOrchestrator || "";
   const selectedOrchestratorData = stakingOrchestratorOptions.find(
@@ -289,15 +278,6 @@ export const YieldCreateFlexiblePage: React.FC = () => {
               {/* <span className="text-base text-white">{sourceMeta.label}</span> */}
             </div>
           </div>
-          {Number(amount) > 0 && (
-            <p className="text-gray-400 text-xs mt-2 pl-1">
-              ≈ {displayFiatSymbol}
-              {fiatEquivalent.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
-            </p>
-          )}
         </div>
 
         {mode === "staking" && (
@@ -353,17 +333,19 @@ export const YieldCreateFlexiblePage: React.FC = () => {
             <h3 className="text-sm text-white/60 mb-0.5 flex items-center gap-1.5">
               <WalletCards size={16} /> Stash balance
             </h3>
-            <div className="bg-[#151515] rounded-lg border border-[#151515]">
-              <div className="flex items-center space-x-3">
-                <div className="flex-1">
-                  <span className="text-gray-100 text-sm font-medium">
-                    {displayFiatSymbol}{stashFiatValue.toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
-                  </span>
-                </div>
-              </div>
+            <div className="flex items-center gap-2">
+              <span className="text-gray-100 text-sm font-medium">
+                {stashBalance.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 4,
+                })} {sourceMeta.label}
+              </span>
+              <span className="text-xs text-white/60">
+                ({displayFiatSymbol}{stashFiatValue.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })})
+              </span>
             </div>
           </div>
         )}
@@ -415,7 +397,9 @@ export const YieldCreateFlexiblePage: React.FC = () => {
       >
         <DrawerContent className="bg-[#050505] border-t border-[#505050]">
           <DrawerHeader className="text-center">
-            <DrawerTitle className="text-base font-medium text-white text-center"></DrawerTitle>
+            <DrawerTitle className="text-base font-medium text-white text-center">
+              <VisuallyHidden>Confirm deposit</VisuallyHidden>
+            </DrawerTitle>
             <div className="flex justify-center mb-2">
               <div className="w-24 h-24 bg-[#C7EF6B]/20 rounded-full my-3 flex items-center justify-center relative overflow-hidden">
                 <img

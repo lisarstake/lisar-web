@@ -16,6 +16,7 @@ import { GuidedTourProvider } from "@/contexts/GuidedTourContext";
 import { PortfolioProvider } from "@/contexts/PortfolioContext";
 import { WalletCardProvider } from "@/contexts/WalletCardContext";
 import { CampaignProvider } from "@/contexts/CampaignContext";
+import { KycProvider } from "@/contexts/KycContext";
 import { PointsProvider } from "@/contexts/PointsContext";
 import { GuidedTour } from "@/components/general/GuidedTour";
 
@@ -83,6 +84,7 @@ export default function App() {
                               <ErrorBoundary>
                                 <WalletCardProvider>
                                 <PortfolioProvider>
+                                  <KycProvider>
                                   <ErrorBoundary>
                                     <LeaderboardProvider>
                                       <ErrorBoundary>
@@ -130,6 +132,7 @@ export default function App() {
                                       </ErrorBoundary>
                                     </LeaderboardProvider>
                                   </ErrorBoundary>
+                                  </KycProvider>
                                 </PortfolioProvider>
                                 </WalletCardProvider>
                               </ErrorBoundary>
