@@ -366,7 +366,7 @@ export const PerksPage: React.FC = () => {
                         No activity yet.
                       </div>
                     ) : (
-                      mergedHistory.slice(0, 8).map((item) => (
+                      mergedHistory.slice(0, 6).map((item) => (
                         <div
                           key={item.id}
                           className="rounded-lg border border-[#2b2b2b] bg-[#151515] px-3 py-4 flex items-center justify-between"
