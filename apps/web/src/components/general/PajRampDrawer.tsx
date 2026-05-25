@@ -5,6 +5,7 @@ import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Check, Copy, LoaderCircle, X } from "lucide-react";
 import toast from "react-hot-toast";
 import { formatNumber } from "@/lib/formatters";
+import { BANKS } from "@/lib/banks";
 import { pajRampService, perenaService, walletService } from "@/services";
 import { useWallet } from "@/contexts/WalletContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -12,7 +13,6 @@ import { useTransactions } from "@/contexts/TransactionContext";
 import type {
   OffRampOrderData,
   OnRampOrderData,
-  RampBank,
 } from "@/services/paj-ramp";
 
 export interface PajRampTransactionDetails {
@@ -101,25 +101,26 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
     }
   }, [isOpen, resetState]);
 
-  const findRampBankId = useCallback(async (code?: string, name?: string): Promise<string | null> => {
+  const findRampBankId = useCallback((code?: string, name?: string): string | null => {
     if (!code && !name) return null;
-    const response = await pajRampService.getBanks();
-    if (!response.success || !response.data?.length) return null;
 
     const normalize = (value: string) =>
       value.toLowerCase().replace(/[^a-z0-9]/g, "");
 
     if (code) {
-      const byCode = response.data.find((bank: RampBank) => bank.code === code);
+      const byId = BANKS.find((bank) => bank.id === code);
+      if (byId) return byId.id;
+
+      const byCode = BANKS.find((bank) => bank.code === code);
       if (byCode) return byCode.id;
     }
 
     if (name) {
       const target = normalize(name);
-      const exact = response.data.find((bank: RampBank) => normalize(bank.name) === target);
+      const exact = BANKS.find((bank) => normalize(bank.name) === target);
       if (exact) return exact.id;
 
-      const fuzzy = response.data.find((bank: RampBank) => {
+      const fuzzy = BANKS.find((bank) => {
         const candidate = normalize(bank.name);
         return candidate.includes(target) || target.includes(candidate);
       });
@@ -347,7 +348,7 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
       setTimeout(() => {
         onConfirm();
         onClose();
-        toast.success("Withdrawal successful! Your account has been credited.");
+        toast.success("Payout processed successfully! Your account will be credited shortly.");
         navigate("/wallet");
       }, 4000);
     } catch {
@@ -415,11 +416,11 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
               </button>
             </div>
             <div className="flex flex-col items-center px-4">
-              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#C7EF6B]/20">
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#C7EF6B]">
                 <img
-                  src="/ramp.png"
+                  src="/wallet.png"
                   alt="Ramp"
-                  className="h-full w-full object-cover"
+                  className="h-15 w-15 object-cover"
                 />
               </div>
               <h2 className="mb-2 text-lg font-medium text-white">
@@ -509,11 +510,11 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
                 </button>
               </div>
               <div className="flex flex-col items-center px-4">
-                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#C7EF6B]/20">
+                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#C7EF6B]">
                   <img
-                    src="/ramp.png"
+                    src="/wallet.png"
                     alt="Ramp"
-                    className="h-full w-full object-cover"
+                    className="h-15 w-15 object-cover"
                   />
                 </div>
                 <p className="mb-1 text-center text-sm text-gray-400">
@@ -603,11 +604,11 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
               </button>
             </div>
             <div className="flex flex-col items-center px-4">
-              <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-[#C7EF6B]/20">
+              <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-[#C7EF6B]">
                 <img
-                  src="/ramp.png"
+                  src="/wallet.png"
                   alt="Ramp"
-                  className="h-full w-full object-cover"
+                  className="h-15 w-15 object-cover"
                 />
               </div>
               <p className="mb-1 text-center text-sm text-gray-400">
@@ -615,7 +616,7 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
                 {formatNumber(details.tokenAmount || 0, 4)}{" "}
                 {displayTokenName} for
               </p>
-              <h2 className="mb-4 flex min-h-[2.25rem] items-center text-center text-2xl font-medium text-[#C7EF6B]">
+              <h2 className="mb-4 flex min-h-9 items-center text-center text-2xl font-medium text-[#C7EF6B]">
                 {orderData
                   ? `${details.fiatSymbol}${formatNumber(displayFiat || 0, 2)}`
                   : null}
@@ -713,7 +714,7 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
             </div>
             <div className="flex flex-col items-center px-4 py-12">
               <LoaderCircle className="mb-4 h-10 w-10 animate-spin text-[#C7EF6B]" />
-              <p className="text-sm text-white/60">Processing withdrawal...</p>
+              <p className="text-sm text-white/60">Processing payout...</p>
             </div>
           </>
         );
@@ -723,7 +724,7 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
           <div className="flex flex-col items-center px-4 py-12">
             <LoaderCircle className="mb-4 h-10 w-10 animate-spin text-[#C7EF6B]" />
             <p className="text-sm text-white/60">
-              {isBuy ? "Confirming deposit..." : "Confirming withdrawal..."}
+              {isBuy ? "Processing deposit..." : "Processing payout..."}
             </p>
           </div>
         );
@@ -777,11 +778,10 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
                 />
               </div>
               <h2 className="mb-2 text-center text-lg font-medium tracking-wide text-white">
-                Bank account required
+                Withdrawal bank required
               </h2>
               <p className="mb-6 max-w-[280px] text-center text-sm text-white/80">
-                You need to link a bank account before you can withdraw. Set it
-                up in your settings, then come back to try again.
+                You need to link a bank account before you can withdraw. 
               </p>
               <div className="w-full space-y-3 pb-4">
                 <button
@@ -791,7 +791,7 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
                   }}
                   className="flex h-11 w-full items-center justify-center rounded-full bg-[#C7EF6B] text-lg font-medium text-black"
                 >
-                  Set up bank account
+                  Set up withdrawal bank 
                 </button>
               </div>
             </div>
