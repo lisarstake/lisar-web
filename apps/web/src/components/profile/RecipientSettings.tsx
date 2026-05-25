@@ -1,36 +1,35 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, LoaderCircle, Pencil, SquarePen } from "lucide-react";
+import { ArrowLeft, LoaderCircle, Pencil, Search, SquarePen } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { LoadingSpinner } from "@/components/general/LoadingSpinner";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { ErrorDrawer } from "@/components/general/ErrorDrawer";
 import { SettingsSuccessDrawer } from "@/components/general/SettingsSuccessDrawer";
+import { BANKS } from "@/lib/banks";
 import { pajRampService } from "@/services";
-import type { RampBank } from "@/services/paj-ramp";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 
 export const RecipientSettingsPage: React.FC = () => {
   const navigate = useNavigate();
   const { state, refreshUser, updateProfile } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [banksLoading, setBanksLoading] = useState(false);
   const [lookupLoading, setLookupLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [banks, setBanks] = useState<RampBank[]>([]);
   const [accountNumber, setAccountNumber] = useState("");
   const [selectedBankId, setSelectedBankId] = useState("");
   const [accountName, setAccountName] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [showErrorDrawer, setShowErrorDrawer] = useState(false);
   const [showSuccessDrawer, setShowSuccessDrawer] = useState(false);
+  const [showBankDrawer, setShowBankDrawer] = useState(false);
+  const [bankSearchQuery, setBankSearchQuery] = useState("");
 
   const hasLinkedAccount = !!state.user?.linked_account;
   const showReadOnly = hasLinkedAccount && !isEditing;
@@ -68,37 +67,9 @@ export const RecipientSettingsPage: React.FC = () => {
     navigate,
   ]);
 
-  useEffect(() => {
-    if (!isEditing) {
-      setBanksLoading(false);
-      return;
-    }
-
-    const fetchBanks = async () => {
-      setBanksLoading(true);
-      try {
-        const response = await pajRampService.getBanks();
-        if (response.success && response.data) {
-          setBanks(response.data);
-          return;
-        }
-        throw new Error(response.error?.message || "Failed to fetch banks");
-      } catch (error) {
-        setErrorMessage(
-          error instanceof Error ? error.message : "Failed to fetch banks",
-        );
-        setShowErrorDrawer(true);
-      } finally {
-        setBanksLoading(false);
-      }
-    };
-
-    fetchBanks();
-  }, [isEditing]);
-
   const selectedBank = useMemo(
     () =>
-      banks.find((bank) => bank.id === selectedBankId) ||
+      BANKS.find((bank) => bank.id === selectedBankId) ||
       (showReadOnly
         ? {
             id: selectedBankId,
@@ -108,15 +79,25 @@ export const RecipientSettingsPage: React.FC = () => {
             country: "",
           }
         : null),
-    [banks, selectedBankId, showReadOnly, state.user?.linked_account],
+    [selectedBankId, showReadOnly, state.user?.linked_account],
+  );
+
+  const filteredBanks = useMemo(
+    () =>
+      bankSearchQuery
+        ? BANKS.filter((bank) =>
+            bank.name.toLowerCase().includes(bankSearchQuery.toLowerCase()),
+          )
+        : BANKS,
+    [bankSearchQuery],
   );
 
   const lookupAccountName = async () => {
     if (accountNumber.length !== 10 || !selectedBankId) return;
     setLookupLoading(true);
     try {
-      const selected = banks.find((b) => b.id === selectedBankId);
-      if (!selected) throw new Error("Selected bank not found");
+      const selected = BANKS.find((b) => b.id === selectedBankId);
+      if (!selected) return;
       const response = await pajRampService.resolveBankAccount({
         bankId: selected.id,
         accountNumber,
@@ -142,7 +123,7 @@ export const RecipientSettingsPage: React.FC = () => {
   };
 
   useEffect(() => {
-    if (showReadOnly) {
+    if (isLoading || showReadOnly) {
       return;
     }
 
@@ -156,7 +137,7 @@ export const RecipientSettingsPage: React.FC = () => {
     }, 350);
 
     return () => clearTimeout(timer);
-  }, [accountNumber, selectedBankId, showReadOnly]);
+  }, [accountNumber, selectedBankId, showReadOnly, isLoading]);
 
   const handleSave = async () => {
     if (accountNumber.length !== 10) {
@@ -236,7 +217,7 @@ export const RecipientSettingsPage: React.FC = () => {
           <button
             onClick={() => {
               setIsEditing(true);
-              setSelectedBankCode("");
+              setSelectedBankId("");
               setAccountName("");
             }}
             className="h-10 w-10 rounded-full bg-[#151515] flex items-center justify-center"
@@ -277,29 +258,67 @@ export const RecipientSettingsPage: React.FC = () => {
               {state.user?.linked_account?.bank_name}
             </div>
           ) : (
-            <Select
-              key={isEditing ? "editing" : "viewing"}
-              value={selectedBankId}
-              onValueChange={(val) => {
-                setSelectedBankId(val);
-                setAccountName("");
-              }}
-            >
-              <SelectTrigger className="w-full rounded-lg bg-[#151515] border-none py-6 text-white">
-                <SelectValue placeholder={"Select bank"} />
-              </SelectTrigger>
-              <SelectContent className="bg-[#151515] text-white border-none">
-                {banks.map((bank) => (
-                  <SelectItem
-                    key={bank.id}
-                    value={bank.id}
-                    className="focus:bg-white/10 focus:text-white"
-                  >
-                    {bank.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <>
+              <button
+                type="button"
+                onClick={() => setShowBankDrawer(true)}
+                className="w-full rounded-lg bg-[#151515] px-4 py-3 text-base text-left outline-none"
+              >
+                {selectedBank ? (
+                  <span className="text-white/90">{selectedBank.name}</span>
+                ) : (
+                  <span className="text-white/40">Select bank</span>
+                )}
+              </button>
+              <Drawer open={showBankDrawer} onOpenChange={setShowBankDrawer}>
+                <DrawerContent className="bg-[#050505] border-t border-[#1b1b1b] max-h-[70vh]">
+                  <DrawerHeader className="pb-2">
+                    <DrawerTitle className="text-white text-base font-medium">
+                      Select bank
+                    </DrawerTitle>
+                  </DrawerHeader>
+                  <div className="pb-4">
+                    <div className="relative mb-3">
+                      <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
+                      <input
+                        type="text"
+                        value={bankSearchQuery}
+                        onChange={(e) => setBankSearchQuery(e.target.value)}
+                        placeholder="Search banks..."
+                        className="w-full rounded-lg bg-[#151515] pl-9 pr-4 py-2.5 text-sm text-white outline-none"
+                        autoFocus
+                      />
+                    </div>
+                    <div className="max-h-[50vh] overflow-y-auto space-y-0.5">
+                      {filteredBanks.map((bank) => (
+                        <button
+                          key={bank.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedBankId(bank.id);
+                            setAccountName("");
+                            setShowBankDrawer(false);
+                            setBankSearchQuery("");
+                          }}
+                          className={`w-full text-left px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                            selectedBankId === bank.id
+                              ? "bg-white/10 text-white"
+                              : "text-white/70 hover:bg-white/5 hover:text-white"
+                          }`}
+                        >
+                          {bank.name}
+                        </button>
+                      ))}
+                      {filteredBanks.length === 0 && (
+                        <p className="text-sm text-white/40 text-center py-4">
+                          No banks found
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </DrawerContent>
+              </Drawer>
+            </>
           )}
         </div>
 
