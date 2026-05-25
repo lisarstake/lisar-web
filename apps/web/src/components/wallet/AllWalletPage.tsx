@@ -649,7 +649,13 @@ export const AllWalletPage: React.FC = () => {
                   </div>
 
                   <button
-                    onClick={() => navigate("/wallet/yields/intro", { state: { walletType: "savings" } })}
+                    onClick={() => {
+                      if (sessionStorage.getItem("yield_intro_dismissed") === "true") {
+                        navigate("/wallet/savings");
+                      } else {
+                        navigate("/wallet/yields/intro", { state: { walletType: "savings" } });
+                      }
+                    }}
                     className="mt-4 px-6 py-2.5 bg-[#3882f3] text-white rounded-full text-xs font-semibold hover:bg-[#96C3F7] transition-colors relative z-10"
                   >
                     Start saving

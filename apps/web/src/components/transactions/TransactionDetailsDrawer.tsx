@@ -6,7 +6,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import { getArbitrumScanUrl } from "@/lib/utils";
+import { getArbitrumScanUrl, getSolscanUrl } from "@/lib/utils";
 import { TransactionData, TransactionType } from "@/services/transactions/types";
 
 interface TransactionDetailsDrawerProps {
@@ -109,7 +109,9 @@ export const TransactionDetailsDrawer: React.FC<TransactionDetailsDrawerProps> =
                 </span>
                 {!isNairaTransaction ? (
                   <a
-                    href={getArbitrumScanUrl(transaction.transaction_hash)}
+                    href={transaction.token_symbol?.toUpperCase() === "LPT"
+                      ? getArbitrumScanUrl(transaction.transaction_hash)
+                      : getSolscanUrl(transaction.transaction_hash)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-white/80 hover:text-white"

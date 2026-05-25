@@ -9,7 +9,6 @@ import { pajRampService, perenaService, walletService } from "@/services";
 import { useWallet } from "@/contexts/WalletContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTransactions } from "@/contexts/TransactionContext";
-import { useWalletCard } from "@/contexts/WalletCardContext";
 import type {
   OffRampOrderData,
   OnRampOrderData,
@@ -65,7 +64,6 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
   const { solanaWalletId, solanaWalletAddress, solanaUsdcBalance, stablesBalance, refreshAllWalletData } =
     useWallet();
   const { refetch: refetchTransactions } = useTransactions();
-  const { displayCurrency } = useWalletCard();
   const { state } = useAuth();
 
   const [step, setStep] = useState<Step>("checking_session");
@@ -176,9 +174,7 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
           bank: bankId,
           accountNumber,
           currency: details.fiatCurrency,
-          ...(displayCurrency === "NGN"
-            ? { fiatAmount: details.fiatAmount }
-            : { amount: details.tokenAmount }),
+          fiatAmount: details.fiatAmount,
           mint: details.mint,
           chain: details.chain,
         });
@@ -302,7 +298,8 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
       }
 
       const source = details.withdrawSource;
-      const sendAmount = Number(details.tokenAmount.toFixed(3));
+      const tokenAmt = offrampData?.amount ?? details.tokenAmount;
+      const sendAmount = Number(tokenAmt.toFixed(3));
       if (source === "stash") {
         const sendResp = await walletService.sendSolana({
           walletId: solanaWalletId,
@@ -318,8 +315,8 @@ export const PajRampDrawer: React.FC<PajRampDrawerProps> = ({
         }
       } else {
         const burnAmount = source === "combined"
-          ? Math.min(details.tokenAmount, stablesBalance ?? 0)
-          : details.tokenAmount;
+          ? Math.min(tokenAmt, stablesBalance ?? 0)
+          : tokenAmt;
 
         const burnResp = await perenaService.burn({
           walletId: solanaWalletId,

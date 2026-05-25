@@ -44,6 +44,10 @@ export const getArbitrumScanUrl = (hash: string): string => {
   return `https://arbiscan.io/tx/${hash}`;
 };
 
+export const getSolscanUrl = (hash: string): string => {
+  return `https://solscan.io/tx/${hash}`;
+};
+
 /**
  * Extract first 6 letters from email (avoiding @, gmail, and numbers)
  */
