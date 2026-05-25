@@ -1,3 +1,5 @@
+import { pajRampService } from "@/services/paj-ramp";
+
 export interface PriceData {
   sol: number;
   lpt: number;
@@ -111,8 +113,13 @@ class PriceService {
       throw new Error("LPT price not found in API response");
     }
 
-    // Add markup to the NGN rate to match onramper (temporary till we fix our onramp)
-    const ngnRate = (fiatData.rates?.NGN || FALLBACK_PRICES.ngn) + 100;
+    let ngnRate = (fiatData.rates?.NGN || FALLBACK_PRICES.ngn) + 100;
+    try {
+      const rampRates = await pajRampService.getRates();
+      if (rampRates.success && rampRates.data?.offRampRate?.rate) {
+        ngnRate = rampRates.data.offRampRate.rate;
+      }
+    } catch { /* fall back to exchange rate API + 100 */ }
 
     return {
       sol: cryptoData.solana?.usd || FALLBACK_PRICES.sol,

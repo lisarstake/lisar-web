@@ -6,8 +6,8 @@ import { LoadingSpinner } from "@/components/general/LoadingSpinner";
 import { BottomNavigation } from "@/components/general/BottomNavigation";
 import { ErrorDrawer } from "@/components/general/ErrorDrawer";
 import { SettingsSuccessDrawer } from "@/components/general/SettingsSuccessDrawer";
-import { rampService } from "@/services/ramp";
-import { BankInfo } from "@/services/ramp/types";
+import { pajRampService } from "@/services";
+import type { RampBank } from "@/services/paj-ramp";
 import {
   Select,
   SelectContent,
@@ -24,9 +24,9 @@ export const RecipientSettingsPage: React.FC = () => {
   const [banksLoading, setBanksLoading] = useState(false);
   const [lookupLoading, setLookupLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [banks, setBanks] = useState<BankInfo[]>([]);
+  const [banks, setBanks] = useState<RampBank[]>([]);
   const [accountNumber, setAccountNumber] = useState("");
-  const [selectedBankCode, setSelectedBankCode] = useState("");
+  const [selectedBankId, setSelectedBankId] = useState("");
   const [accountName, setAccountName] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [showErrorDrawer, setShowErrorDrawer] = useState(false);
@@ -51,7 +51,7 @@ export const RecipientSettingsPage: React.FC = () => {
         const linked = state.user?.linked_account;
         if (linked) {
           setAccountNumber(linked.account_number || "");
-          setSelectedBankCode(linked.bank_code || "");
+          setSelectedBankId(linked.bank_id || linked.bank_code || "");
           setAccountName(state.user?.full_name || "");
         }
       } finally {
@@ -77,7 +77,7 @@ export const RecipientSettingsPage: React.FC = () => {
     const fetchBanks = async () => {
       setBanksLoading(true);
       try {
-        const response = await rampService.getBanks();
+        const response = await pajRampService.getBanks();
         if (response.success && response.data) {
           setBanks(response.data);
           return;
@@ -98,23 +98,28 @@ export const RecipientSettingsPage: React.FC = () => {
 
   const selectedBank = useMemo(
     () =>
-      banks.find((bank) => bank.code === selectedBankCode) ||
+      banks.find((bank) => bank.id === selectedBankId) ||
       (showReadOnly
         ? {
-            code: selectedBankCode,
+            id: selectedBankId,
+            code: "",
             name: state.user?.linked_account?.bank_name || "",
+            logo: "",
+            country: "",
           }
         : null),
-    [banks, selectedBankCode, showReadOnly, state.user?.linked_account],
+    [banks, selectedBankId, showReadOnly, state.user?.linked_account],
   );
 
   const lookupAccountName = async () => {
-    if (accountNumber.length !== 10 || !selectedBankCode) return;
+    if (accountNumber.length !== 10 || !selectedBankId) return;
     setLookupLoading(true);
     try {
-      const response = await rampService.lookupAccount({
+      const selected = banks.find((b) => b.id === selectedBankId);
+      if (!selected) throw new Error("Selected bank not found");
+      const response = await pajRampService.resolveBankAccount({
+        bankId: selected.id,
         accountNumber,
-        bankCode: selectedBankCode,
       });
 
       if (response.success && response.data?.accountName) {
@@ -141,7 +146,7 @@ export const RecipientSettingsPage: React.FC = () => {
       return;
     }
 
-    if (!selectedBankCode || !accountNumber || accountNumber.length !== 10) {
+    if (!selectedBankId || !accountNumber || accountNumber.length !== 10) {
       setAccountName("");
       return;
     }
@@ -151,7 +156,7 @@ export const RecipientSettingsPage: React.FC = () => {
     }, 350);
 
     return () => clearTimeout(timer);
-  }, [accountNumber, selectedBankCode, showReadOnly]);
+  }, [accountNumber, selectedBankId, showReadOnly]);
 
   const handleSave = async () => {
     if (accountNumber.length !== 10) {
@@ -159,7 +164,7 @@ export const RecipientSettingsPage: React.FC = () => {
       setShowErrorDrawer(true);
       return;
     }
-    if (!selectedBankCode || !selectedBank) {
+    if (!selectedBankId || !selectedBank) {
       setErrorMessage("Select a bank to continue.");
       setShowErrorDrawer(true);
       return;
@@ -168,7 +173,7 @@ export const RecipientSettingsPage: React.FC = () => {
     const isNewAccount =
       hasLinkedAccount &&
       (state.user?.linked_account?.account_number !== accountNumber ||
-        state.user?.linked_account?.bank_code !== selectedBankCode);
+        state.user?.linked_account?.bank_code !== selectedBankId);
 
     if (isNewAccount && !accountName) {
       setErrorMessage("Lookup account name before saving.");
@@ -178,12 +183,18 @@ export const RecipientSettingsPage: React.FC = () => {
 
     setIsSaving(true);
     try {
+      await pajRampService.addBankAccount({
+        bankId: selectedBank.id,
+        accountNumber,
+      });
+
       const response = await updateProfile({
         full_name: accountName,
         linked_account: {
           account_number: accountNumber,
-          bank_code: selectedBank.code,
+          bank_code: selectedBank.id,
           bank_name: selectedBank.name,
+          bank_id: selectedBank.id,
         },
       });
 
@@ -268,9 +279,9 @@ export const RecipientSettingsPage: React.FC = () => {
           ) : (
             <Select
               key={isEditing ? "editing" : "viewing"}
-              value={selectedBankCode}
+              value={selectedBankId}
               onValueChange={(val) => {
-                setSelectedBankCode(val);
+                setSelectedBankId(val);
                 setAccountName("");
               }}
             >
@@ -280,8 +291,8 @@ export const RecipientSettingsPage: React.FC = () => {
               <SelectContent className="bg-[#151515] text-white border-none">
                 {banks.map((bank) => (
                   <SelectItem
-                    key={bank.code}
-                    value={bank.code}
+                    key={bank.id}
+                    value={bank.id}
                     className="focus:bg-white/10 focus:text-white"
                   >
                     {bank.name}

@@ -6,7 +6,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import { getArbitrumScanUrl } from "@/lib/utils";
+import { getArbitrumScanUrl, getSolscanUrl } from "@/lib/utils";
 import { TransactionData, TransactionType } from "@/services/transactions/types";
 
 interface TransactionDetailsDrawerProps {
@@ -91,40 +91,46 @@ export const TransactionDetailsDrawer: React.FC<TransactionDetailsDrawerProps> =
             <span className="text-sm text-white">{formatDate(transaction.created_at)}</span>
           </div>
 
-          <div className="flex items-center justify-between gap-4">
-            <span className="text-base text-white/60">Status</span>
-            <span className="text-sm text-white capitalize">{transaction.status || "-"}</span>
-          </div>
-
-          <div className="flex items-center justify-between gap-4">
-            <span className="text-base text-white/60">
-              {isNairaTransaction ? "Reference" : "Hash"}
-            </span>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-white">
-                {truncateMiddle(transaction.transaction_hash)}
-              </span>
-              {transaction.transaction_hash && !isNairaTransaction ? (
-                <a
-                  href={getArbitrumScanUrl(transaction.transaction_hash)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-white/80 hover:text-white"
-                >
-                  <ExternalLink size={14} />
-                </a>
-              ) : null}
+          {transaction.status ? (
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-base text-white/60">Status</span>
+              <span className="text-sm text-white capitalize">{transaction.status}</span>
             </div>
-          </div>
+          ) : null}
 
-          {!isNairaTransaction && <div className="flex items-center justify-between gap-4">
-            <span className="text-base text-white/60">
-              {"Wallet"}
-            </span>
-            <span className="text-sm text-white">
-              {truncateMiddle(transaction.wallet_address)}
-            </span>
-          </div>}
+          {transaction.transaction_hash ? (
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-base text-white/60">
+                {isNairaTransaction ? "Reference" : "Hash"}
+              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-white">
+                  {truncateMiddle(transaction.transaction_hash)}
+                </span>
+                {!isNairaTransaction ? (
+                  <a
+                    href={transaction.token_symbol?.toUpperCase() === "LPT"
+                      ? getArbitrumScanUrl(transaction.transaction_hash)
+                      : getSolscanUrl(transaction.transaction_hash)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-white/80 hover:text-white"
+                  >
+                    <ExternalLink size={14} />
+                  </a>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
+
+          {!isNairaTransaction && transaction.wallet_address ? (
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-base text-white/60">Wallet</span>
+              <span className="text-sm text-white">
+                {truncateMiddle(transaction.wallet_address)}
+              </span>
+            </div>
+          ) : null}
 
           {transaction.source === "ramp" && transaction.fiatAmount !== undefined && (
             <div className="flex items-center justify-between gap-4">

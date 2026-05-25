@@ -15,6 +15,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { useWallet } from "@/contexts/WalletContext";
 import { useDelegation } from "@/contexts/DelegationContext";
 import { useOrchestrators } from "@/contexts/OrchestratorContext";
@@ -100,8 +101,9 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
     new URLSearchParams(location.search).get("open") === "deposit"
   );
   const [showWithdrawDrawer, setShowWithdrawDrawer] = useState(false);
-  const [showGrowthDrawer, setShowGrowthDrawer] = useState(false);
   const [showWithdrawEmptyDrawer, setShowWithdrawEmptyDrawer] = useState(false);
+  const [showGrowthDrawer, setShowGrowthDrawer] = useState(false);
+
   const [showEarningsDrawer, setShowEarningsDrawer] = useState(false);
   const [showTokenInfoDrawer, setShowTokenInfoDrawer] = useState(false);
   const [showUnlockSuccessDrawer, setShowUnlockSuccessDrawer] = useState(false);
@@ -429,7 +431,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
   }, [isStakingWallet, hasCompletedUnbonding, hasPendingUnbonding, zeroBalance]);
 
   const recentTransactions = useMemo(() => {
-    const savingsTxTypes = ["mint", "burn"];
+    const savingsTxTypes = ["mint", "burn", "deposit", "withdrawal"];
     const stakingTxTypes = ["delegation", "undelegation"];
 
     return transactions
@@ -447,8 +449,6 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
   }, [transactions, walletType]);
 
   const handleBackClick = () => {
-    // Navigate to main wallet page and replace history
-    // Prevents yield intro pages from showing again when going back
     navigate("/wallet", { replace: true });
   };
 
@@ -836,7 +836,9 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
       >
         <DrawerContent className="bg-[#050505] border-t border-[#1b1b1b]">
           <DrawerHeader>
-            <DrawerTitle className="text-base font-medium text-white text-left"></DrawerTitle>
+            <DrawerTitle className="text-base font-medium text-white text-left">
+              <VisuallyHidden>Empty wallet</VisuallyHidden>
+            </DrawerTitle>
           </DrawerHeader>
           <div className="space-y-4 py-2">
             <div className="flex justify-center mb-4">
@@ -854,11 +856,11 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletType: propWalletTy
             <button
               onClick={() => {
                 setShowWithdrawEmptyDrawer(false);
-                navigate(`/wallet/deposit/naira?walletType=${currentWalletType}`);
+                setShowDepositDrawer(true);
               }}
-              className="w-full h-12 rounded-full bg-[#C7EF6B] text-black text-base font-semibold"
+              className="w-full h-11 rounded-full bg-[#C7EF6B] text-black text-base font-semibold"
             >
-              Top up
+              Deposit
             </button>
           </div>
         </DrawerContent>

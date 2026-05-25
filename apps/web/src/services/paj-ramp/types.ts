@@ -118,8 +118,8 @@ export interface CreateOffRampOrderRequest {
   bank: string;
   accountNumber: string;
   currency: string;
-  amount: number;
-  fiatAmount: number;
+  amount?: number;
+  fiatAmount?: number;
   mint: string;
   chain: string;
 }
