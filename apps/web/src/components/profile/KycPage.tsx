@@ -10,14 +10,14 @@ import {
   Landmark,
   LoaderCircle,
   Lock,
-  ShieldCheck,
+  Timer,
   X,
-  XCircle,
 } from "lucide-react";
 import { kycService } from "@/services";
 import type { KycStatus, KycStatusData, KycVerifyType } from "@/services";
 import { useKyc } from "@/contexts/KycContext";
 import { Drawer, DrawerContent } from "@/components/ui/drawer";
+import toast from "react-hot-toast";
 
 type SelfieStep = "idle" | "uploading" | "done";
 
@@ -209,8 +209,6 @@ export const KycPage: React.FC = () => {
   const navigate = useNavigate();
   const { kycStatus, isLoading, refreshKycStatus } = useKyc();
   const [expandedTier, setExpandedTier] = useState<"tier_1" | "tier_2" | null>(null);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [showSuccess, setShowSuccess] = useState(false);
   const [ninValue, setNinValue] = useState("");
   const [bvnValue, setBvnValue] = useState("");
   const [tier1Selfie, setTier1Selfie] = useState<SelfieState>(INITIAL_SELFIE);
@@ -225,8 +223,6 @@ export const KycPage: React.FC = () => {
 
   const handleExpand = (tier: "tier_1" | "tier_2") => {
     setExpandedTier((prev) => (prev === tier ? null : tier));
-    setErrorMessage("");
-    setShowSuccess(false);
   };
 
   const openCamera = () => {
@@ -290,22 +286,21 @@ export const KycPage: React.FC = () => {
     const selfieState = isTier1 ? tier1Selfie : tier2Selfie;
 
     if (!selfieState.selfieUrl) {
-      setErrorMessage("Please take and upload a selfie first.");
+      toast.error("Please take and upload a selfie first.");
       return;
     }
 
     const idValue = (isTier1 ? ninValue : bvnValue).trim();
     if (!idValue) {
-      setErrorMessage(isTier1 ? "Please enter your NIN." : "Please enter your BVN.");
+      toast.error(isTier1 ? "Please enter your NIN." : "Please enter your BVN.");
       return;
     }
     if (idValue.length < 10) {
-      setErrorMessage(isTier1 ? "NIN must be 11 digits." : "BVN must be 10 digits.");
+      toast.error(isTier1 ? "NIN must be 11 digits." : "BVN must be 10 digits.");
       return;
     }
 
     setIsSubmitting(true);
-    setErrorMessage("");
 
     try {
       const payload = isTier1
@@ -327,7 +322,7 @@ export const KycPage: React.FC = () => {
       const response = await kycService.verify(payload);
 
       if (response.success) {
-        setShowSuccess(true);
+        toast.success("Verification successful. Your identity has been verified.");
         if (isTier1) {
           setTier1Selfie(INITIAL_SELFIE);
           setNinValue("");
@@ -338,10 +333,10 @@ export const KycPage: React.FC = () => {
         setExpandedTier(null);
         await refreshKycStatus();
       } else {
-        setErrorMessage(response.error?.message || "Verification failed. Please try again.");
+        toast.error(response.error?.message || "Verification failed. Please try again.");
       }
     } catch {
-      setErrorMessage("Something went wrong. Please try again.");
+      toast.error("Something went wrong. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -430,27 +425,6 @@ export const KycPage: React.FC = () => {
       </div>
 
       <div className="flex-1 px-6 pb-24 space-y-4 scrollbar-hide">
-        {showSuccess && (
-          <div className="flex items-center gap-3 p-4 rounded-xl bg-[#1a1a1a] border border-[#505050]">
-            <ShieldCheck size={22} className="text-[#C7EF6B] shrink-0" />
-            <div>
-              <p className="text-sm font-medium text-white">Verification successful</p>
-              <p className="text-xs text-white/50 mt-0.5">
-                Your identity has been verified.
-              </p>
-            </div>
-          </div>
-        )}
-
-        {errorMessage && (
-          <div className="p-3 rounded-xl bg-[#1a1a1a] border border-[#505050]">
-            <div className="flex items-center gap-2">
-              <XCircle size={16} className="text-red-400 shrink-0" />
-              <p className="text-sm text-white/70">{errorMessage}</p>
-            </div>
-          </div>
-        )}
-
         {/* Tier 1: NIN */}
         <div className="rounded-xl bg-[#151515] overflow-hidden">
           <button
@@ -525,6 +499,12 @@ export const KycPage: React.FC = () => {
                       "Verify NIN"
                     )}
                   </button>
+                  {tier1Status === "not_started" && (
+                    <div className="flex gap-1 items-center justify-center">
+                      <Timer className="text-gray-400" size={16} />
+                      <p className="text-[11px] text-white/40 text-center mt-0.5">Takes less than 2 minutes</p>
+                    </div>
+                  )}
                 </>
               )}
             </div>
@@ -614,6 +594,12 @@ export const KycPage: React.FC = () => {
                       "Verify BVN"
                     )}
                   </button>
+                  {tier2Status === "not_started" && (
+                    <div className="flex gap-1 items-center justify-center">
+                      <Timer className="text-gray-400" size={16} />
+                      <p className="text-[11px] text-white/40 text-center mt-0.5">Takes less than 2 minutes</p>
+                    </div>
+                  )}
                 </>
               )}
             </div>
