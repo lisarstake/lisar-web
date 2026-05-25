@@ -25,7 +25,7 @@ async function ensureSolanaWalletAfterSignup(): Promise<boolean> {
         return true;
       }
     }
-  } catch {}
+  } catch { }
   return false;
 }
 
@@ -43,9 +43,9 @@ interface AuthState {
 type AuthAction =
   | { type: "AUTH_START" }
   | {
-      type: "AUTH_SUCCESS";
-      payload: { user: User; wallet: Wallet; session: Session };
-    }
+    type: "AUTH_SUCCESS";
+    payload: { user: User; wallet: Wallet; session: Session };
+  }
   | { type: "AUTH_FAILURE"; payload: string }
   | { type: "AUTH_LOGOUT" }
   | { type: "AUTH_CLEAR_ERROR" }
@@ -85,6 +85,7 @@ interface AuthContextType {
       account_number: string;
       bank_code: string;
       bank_name: string;
+      bank_id?: string;
     } | null;
   }) => Promise<AuthApiResponse<User>>;
   clearError: () => void;
@@ -326,7 +327,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             }
           }
         } catch (error) {
-          // Proactive token refresh failed - will retry on next interval
+
         }
       }
     };
@@ -690,7 +691,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const isNewUser =
           data.user.created_at &&
           new Date().getTime() - new Date(data.user.created_at).getTime() <
-            60000; // Within last minute
+          60000; // Within last minute
 
         // Identify user
         mixpanel.identify(user.user_id);
@@ -806,6 +807,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       account_number: string;
       bank_code: string;
       bank_name: string;
+      bank_id?: string;
     } | null;
   }): Promise<AuthApiResponse<User>> => {
     try {

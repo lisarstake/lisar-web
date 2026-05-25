@@ -29,7 +29,7 @@ import QRCode from "qrcode";
 import { OnrampWebSDK } from "@onramp.money/onramp-web-sdk";
 import { getFiatType } from "@/lib/onramp";
 import { priceService } from "@/lib/priceService";
-import { perenaService, walletService } from "@/services";
+import { pajRampService, perenaService, walletService } from "@/services";
 import { formatNumber, parseFormattedNumber } from "@/lib/formatters";
 
 type TransferMode = "deposit" | "withdraw";
@@ -205,7 +205,14 @@ export const WalletTransferFormPage: React.FC = () => {
         return;
       }
 
-      const tokenAmount = parsedAmount / tokenRateInNgn;
+      let effectiveRate = tokenRateInNgn;
+      try {
+        const ratesResp = await pajRampService.getRates();
+        if (ratesResp.success && ratesResp.data?.onRampRate?.rate) {
+          effectiveRate = ratesResp.data.onRampRate.rate;
+        }
+      } catch { /* fall back to app rate */ }
+      const tokenAmount = parsedAmount / effectiveRate;
       setDepositNairaRampDetails({
         type: "buy",
         tokenAmount,
@@ -213,7 +220,7 @@ export const WalletTransferFormPage: React.FC = () => {
         fiatAmount: parsedAmount,
         fiatSymbol: "₦",
         fiatCurrency: "NGN",
-        exchangeRate: tokenRateInNgn,
+        exchangeRate: effectiveRate,
         fee: 0,
         cryptoAddress,
         // customerEmail: state.user?.email || "",
@@ -488,7 +495,7 @@ export const WalletTransferFormPage: React.FC = () => {
       if (!tokenRateInNgn) return;
       const tokenAmount = parsedAmount / tokenRateInNgn;
       if (tokenAmount > activeBalance) {
-        toast.error("Amount exceeds available USDC balance.");
+        toast.error("Amount exceeds available USD balance.");
         return;
       }
       setWithdrawNairaRampDetails({
@@ -763,10 +770,14 @@ export const WalletTransferFormPage: React.FC = () => {
                     />
 
                   </div>
-                  {/* <p className="text-xs text-white/50 mt-1">{" ~ "}{activeBalance.toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 4,
-                  })} {walletTokenLabel}</p> */}
+                  {numericAmount > 0 && tokenRateInNgn > 0 && (
+                    <p className="text-xs text-white/50 mt-1 ml-1">
+                      ≈ ${(numericAmount / tokenRateInNgn).toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </p>
+                  )}
                   <div className="flex space-x-3 mt-4">
                     {[25, 50, 75, 100].map((percent) => {
                       const nextAmount = (sourceFiatBalance * (percent / 100)).toFixed(2);
@@ -800,7 +811,7 @@ export const WalletTransferFormPage: React.FC = () => {
                       </h3>
                       <div className="flex items-center justify-between mt-2">
                         <span className="text-gray-100 text-sm font-medium">
-                          {displayFiatSymbol}{sourceFiatBalance.toLocaleString(undefined, {
+                          ₦{sourceFiatBalance.toLocaleString(undefined, {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2,
                           })}
@@ -820,20 +831,22 @@ export const WalletTransferFormPage: React.FC = () => {
                           const label = source === "combined" ? "Total bal"
                             : source === "savings" ? "Savings"
                               : "Stash";
-                          const sub = source === "combined" ? "Burn savings first, then stash"
-                            : source === "savings" ? "balance earning yield"
-                              : "Idle balance in wallet";
                           return (
                             <button
                               key={source}
                               type="button"
                               onClick={() => { setWithdrawSource(source); setShowSourcePicker(false); }}
-                              className={`w-full flex items-center justify-between p-2 rounded-lg text-sm ${withdrawSource === source ? "border-[#C7EF6B] border rounded-sm text-white" : "text-white/80 hover:bg-white/5"
-                                }`}
+                              className="w-full flex items-center justify-between p-2 rounded-lg text-sm hover:bg-white/5"
                             >
-                              <div className="text-left">
+                              <div className="flex items-center gap-2">
+                                <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                                  withdrawSource === source ? "border-[#C7EF6B]" : "border-white/30"
+                                }`}>
+                                  {withdrawSource === source && (
+                                    <div className="w-2 h-2 rounded-full bg-[#C7EF6B]" />
+                                  )}
+                                </div>
                                 <span className="font-medium text-white/80">{label}</span>
-                                {/* <p className="text-[10px] text-white/50">{sub}</p> */}
                               </div>
                               <div className="text-right">
                                 <p>₦{(bal * tokenRateInNgn).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
@@ -901,9 +914,9 @@ export const WalletTransferFormPage: React.FC = () => {
                         className="w-full text-left"
                       >
                         <h3 className="text-sm text-white/60 mb-0.5 flex items-center gap-1.5">
-                          <WalletCards size={16} /> Withdraw from {sourceLabel}
+                          <WalletCards size={16} /> Withdraw from ({sourceLabel})
                         </h3>
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between mt-2">
                           <span className="text-gray-100 text-sm font-medium">
                             {activeBalance.toLocaleString(undefined, {
                               minimumFractionDigits: 2,
@@ -922,29 +935,31 @@ export const WalletTransferFormPage: React.FC = () => {
                             const bal = source === "combined" ? combinedBalance
                               : source === "savings" ? savingsBalance
                                 : stashBalance;
-                            const label = source === "combined" ? "Combined"
+                            const label = source === "combined" ? "Total bal"
                               : source === "savings" ? "Savings"
                                 : "Stash";
-                            const sub = source === "combined" ? "Burn savings first, then stash"
-                              : source === "savings" ? "USDC earning yield"
-                                : "Idle USDC in wallet";
                             return (
                               <button
                                 key={source}
                                 type="button"
                                 onClick={() => { setWithdrawSource(source); setShowSourcePicker(false); }}
-                                className={`w-full flex items-center justify-between p-2 rounded-lg text-xs ${withdrawSource === source ? "bg-[#C7EF6B]/10 text-white" : "text-white/70 hover:bg-white/5"
-                                  }`}
+                                className="w-full flex items-center justify-between p-2 rounded-lg text-sm hover:bg-white/5"
                               >
-                                <div className="text-left">
-                                  <span className="font-medium">{label}</span>
-                                  <p className="text-[10px] text-white/50">{sub}</p>
+                                <div className="flex items-center gap-2">
+                                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                                    withdrawSource === source ? "border-[#C7EF6B]" : "border-white/30"
+                                  }`}>
+                                    {withdrawSource === source && (
+                                      <div className="w-2 h-2 rounded-full bg-[#C7EF6B]" />
+                                    )}
+                                  </div>
+                                  <span className="font-medium text-white/80">{label}</span>
                                 </div>
                                 <div className="text-right">
-                                  <p>{bal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })} USDC</p>
-                                  <p className="text-[10px] text-white/50">
-                                    ₦{(bal * tokenRateInNgn).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                  </p>
+                                  <p>{bal.toLocaleString(undefined, {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 4,
+                                  })} {walletTokenLabel}</p>
                                 </div>
                               </button>
                             );
