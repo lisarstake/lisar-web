@@ -1,11 +1,16 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, LoaderCircle, CheckCircle2, XCircle } from "lucide-react";
+import { ArrowLeft, LoaderCircle, CheckCircle2, XCircle, CameraIcon } from "lucide-react";
 import toast from "react-hot-toast";
+import { Scanner } from "@yudiel/react-qr-scanner";
 import { useAuth } from "@/contexts/AuthContext";
 import { campaignService } from "@/services";
 import { COUNTRIES } from "@/lib/countries";
 import { ErrorDrawer } from "@/components/general/ErrorDrawer";
+import {
+  Drawer,
+  DrawerContent,
+} from "@/components/ui/drawer";
 import {
   Select,
   SelectContent,
@@ -48,6 +53,14 @@ export const WelcomePage: React.FC = () => {
     isOpen: false,
     message: "",
   });
+  const [showQrScanner, setShowQrScanner] = useState(false);
+
+  const extractCodeFromQr = (data: string): string | null => {
+    const match = data.match(/https:\/\/lisarstake\.com\/signup\/([A-Za-z0-9]+)/);
+    if (match) return match[1].slice(0, 6);
+    if (/^[A-Za-z0-9]{1,6}$/.test(data)) return data.slice(0, 6);
+    return null;
+  };
 
   const validateReferralCode = useCallback(async (code: string) => {
     if (!code) {
@@ -231,19 +244,27 @@ export const WelcomePage: React.FC = () => {
                 onChange={(e) => setReferralCode(e.target.value.slice(0, 6))}
                 maxLength={6}
                 className="w-full rounded-lg bg-[#151515] px-4 py-3 text-base text-white outline-none pr-12"
-                placeholder="Enter referral code"
+                placeholder="Scan QR or enter code"
               />
-              {referralCode && (
-                <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                  {isValidatingReferral ? (
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                {referralCode ? (
+                  isValidatingReferral ? (
                     <LoaderCircle className="w-5 h-5 text-gray-400 animate-spin" />
                   ) : referralValidation.isValid === true ? (
                     <CheckCircle2 className="w-5 h-5 text-[#C7EF6B]" />
                   ) : referralValidation.isValid === false ? (
                     <XCircle className="w-5 h-5 text-red-400" />
-                  ) : null}
-                </div>
-              )}
+                  ) : null
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setShowQrScanner(true)}
+                    className="text-white/70 mt-1 hover:text-white transition-colors"
+                  >
+                    <CameraIcon size={18} />
+                  </button>
+                )}
+              </div>
             </div>
             {referralCode &&
               !isValidatingReferral &&
@@ -292,6 +313,52 @@ export const WelcomePage: React.FC = () => {
           )}
         </button>
       </div>
+
+      <Drawer open={showQrScanner} onOpenChange={(open) => { if (!open) setShowQrScanner(false); }}>
+        <DrawerContent className="inset-0 h-dvh max-h-dvh rounded-none p-0 border-0 bg-black">
+          <div className="relative w-full h-full">
+            <Scanner
+              formats={["qr_code"]}
+              constraints={{ facingMode: "environment", width: 640, height: 480 }}
+              components={{ finder: false }}
+              onScan={(detectedCodes) => {
+                const raw = detectedCodes[0]?.rawValue;
+                if (!raw) return;
+                const code = extractCodeFromQr(raw);
+                if (code) {
+                  setReferralCode(code);
+                  setShowQrScanner(false);
+                } else {
+                  toast.error("Invalid QR code, please try again or type the code.");
+                }
+              }}
+              onError={(error) => {
+                console.error("QR scanner error:", error);
+                setShowQrScanner(false);
+                toast.error("Camera error. Please try again or type the code.");
+              }}
+            >
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="relative w-64 h-64">
+                  <div className="absolute w-8 h-8 border-t-4 border-l-4 border-[#C7EF6B] rounded-tl-lg top-0 left-0" />
+                  <div className="absolute w-8 h-8 border-t-4 border-r-4 border-[#C7EF6B] rounded-tr-lg top-0 right-0" />
+                  <div className="absolute w-8 h-8 border-b-4 border-l-4 border-[#C7EF6B] rounded-bl-lg bottom-0 left-0" />
+                  <div className="absolute w-8 h-8 border-b-4 border-r-4 border-[#C7EF6B] rounded-br-lg bottom-0 right-0" />
+                </div>
+              </div>
+            </Scanner>
+            <button
+              onClick={() => setShowQrScanner(false)}
+              className="absolute top-8 left-4 z-10 h-10 w-10 rounded-full bg-black/50 flex items-center justify-center"
+            >
+              <ArrowLeft className="text-white" size={22} />
+            </button>
+            <p className="absolute bottom-12 left-0 right-0 text-center text-white/70 text-sm">
+              Align QR code within the frame
+            </p>
+          </div>
+        </DrawerContent>
+      </Drawer>
 
       <ErrorDrawer
         isOpen={errorDrawer.isOpen}
