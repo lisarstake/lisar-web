@@ -56,9 +56,13 @@ export const WelcomePage: React.FC = () => {
   const [showQrScanner, setShowQrScanner] = useState(false);
 
   const extractCodeFromQr = (data: string): string | null => {
-    const match = data.match(/https:\/\/lisarstake\.com\/signup\/([A-Za-z0-9]+)/);
-    if (match) return match[1].slice(0, 6);
-    if (/^[A-Za-z0-9]{1,6}$/.test(data)) return data.slice(0, 6);
+    const trimmed = data.trim();
+    const urlMatch = trimmed.match(
+      /https?:\/\/(www\.)?lisarstake\.com\/signup\/([A-Za-z0-9]+)/i
+    );
+    if (urlMatch) return urlMatch[2].slice(0, 6);
+    const codeMatch = trimmed.match(/^([A-Za-z0-9]{1,6})$/);
+    if (codeMatch) return codeMatch[1];
     return null;
   };
 
@@ -159,7 +163,7 @@ export const WelcomePage: React.FC = () => {
 
   return (
     <div className="h-screen bg-[#050505] text-white flex flex-col">
-      <div className="flex-1 overflow-y-auto px-6 scrollbar-hide">
+      <div className="flex-1 overflow-y-auto px-6 scrollbar-hide pb-24">
         <div className="flex items-center justify-between pt-8 pb-4">
           <button
             onClick={() => navigate("/wallet", { replace: true })}
@@ -292,16 +296,12 @@ export const WelcomePage: React.FC = () => {
               placeholder="e.g. Twitter, Friend, CafeOne"
             />
           </div>
-
-
         </div>
-      </div>
 
-      <div className="fixed bottom-14 left-0 right-0 px-6 z-20">
         <button
           onClick={handleSubmit}
           disabled={!isFormValid || isSubmitting}
-          className="h-12 w-full rounded-full bg-[#C7EF6B] text-black text-base font-semibold disabled:opacity-60"
+          className="mt-16 h-12 w-full rounded-full bg-[#C7EF6B] text-black text-base font-semibold disabled:opacity-60"
         >
           {isSubmitting ? (
             <span className="inline-flex items-center gap-2">
@@ -324,9 +324,13 @@ export const WelcomePage: React.FC = () => {
               onScan={(detectedCodes) => {
                 const raw = detectedCodes[0]?.rawValue;
                 if (!raw) return;
-                const code = extractCodeFromQr(raw);
-                if (code) {
-                  setReferralCode(code);
+                let code = extractCodeFromQr(raw);
+                if (!code && raw) {
+                  code = raw.trim().split("/").pop() || null;
+                }
+                const mappedCode = code === "bBHEm3" ? "CAFE01" : code;
+                if (mappedCode) {
+                  setReferralCode(mappedCode);
                   setShowQrScanner(false);
                 } else {
                   toast.error("Invalid QR code, please try again or type the code.");
