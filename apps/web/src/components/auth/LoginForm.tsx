@@ -37,14 +37,19 @@ export const LoginForm: React.FC = () => {
     message: "",
     details: "",
   });
+  const [googleJustSignedUp, setGoogleJustSignedUp] = useState(false);
 
   const fromSignup = location.state?.fromSignup;
 
   useEffect(() => {
-    if (!state.isLoading && state.isAuthenticated && !fromSignup) {
-      navigate("/wallet", { replace: true });
+    if (!state.isLoading && state.isAuthenticated) {
+      if (googleJustSignedUp) {
+        navigate(state.user?.is_onboarded === false ? "/welcome" : "/wallet", { replace: true });
+      } else if (!fromSignup) {
+        navigate("/wallet", { replace: true });
+      }
     }
-  }, [state.isLoading, state.isAuthenticated, navigate, location.state]);
+  }, [state.isLoading, state.isAuthenticated, navigate, location.state, googleJustSignedUp, state.user?.is_onboarded]);
 
   useEffect(() => {
     const tokens = extractTokensFromHash();
@@ -88,7 +93,7 @@ export const LoginForm: React.FC = () => {
           details: "",
         });
 
-        navigate("/wallet", { replace: true });
+        setGoogleJustSignedUp(true);
       } else {
         throw new Error(response.message || "Google sign-in failed");
       }
@@ -128,7 +133,7 @@ export const LoginForm: React.FC = () => {
 
       if (response.success) {
         setTimeout(() => {
-          navigate("/wallet", { replace: true });
+          navigate(fromSignup ? "/welcome" : "/wallet", { replace: true });
         }, 100);
       } else {
         setErrorDrawer({

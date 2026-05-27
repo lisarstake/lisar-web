@@ -96,6 +96,7 @@ const PrivacyPolicyPage = lazyRetry(
 );
 const TermsOfUsePage = lazyRetry(() => import("@/screens/terms-of-use-page"));
 const FlexCardPage = lazyRetry(() => import("@/screens/flex-card-page"));
+const WelcomePage = lazyRetry(() => import("@/screens/welcome-page"));
 const NotFoundPage = lazyRetry(() => import("@/screens/NotFoundPage"));
 
 const withSuspense = (element: ReactNode) => (
@@ -218,6 +219,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             {withSuspenseAndErrorBoundary(<WalletPage />)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "welcome",
+        element: (
+          <ProtectedRoute>
+            {withSuspenseAndErrorBoundary(<WelcomePage />)}
           </ProtectedRoute>
         ),
       },

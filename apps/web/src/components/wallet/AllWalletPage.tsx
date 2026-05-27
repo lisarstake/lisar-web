@@ -38,9 +38,9 @@ export const AllWalletPage: React.FC = () => {
   const [transferDrawer, setTransferDrawer] = useState<
     "deposit" | "withdraw" | null
   >(null);
-  const [showPromoDrawer, setShowPromoDrawer] = useState(false);
   const [activePromoIndex, setActivePromoIndex] = useState(0);
   const promoCarouselRef = useRef<HTMLDivElement | null>(null);
+  const [showPromoDrawer, setShowPromoDrawer] = useState(false);
 
   const handleDismissPromoDrawer = () => {
     localStorage.removeItem("referred_signup");
@@ -87,19 +87,14 @@ export const AllWalletPage: React.FC = () => {
     return state.user?.is_onboarded === false && !state.isLoading;
   }, [state.user?.is_onboarded, state.isLoading]);
 
-  useEffect(() => {
-    if (state.isLoading) return;
-    if (!state.user?.is_onboarded) return;
-    if (localStorage.getItem("referred_signup") !== "true") return;
-    const timer = setTimeout(() => {
-      setShowPromoDrawer(true);
-    }, 450);
-    return () => clearTimeout(timer);
-  }, [state.user?.is_onboarded, state.isLoading]);
-
   const { } = useGuidedTour({
     tourId: ALL_WALLET_TOUR_ID,
     autoStart: shouldAutoStart,
+    onComplete: () => {
+      if (localStorage.getItem("referred_signup") === "true") {
+        setShowPromoDrawer(true);
+      }
+    },
   });
 
   const highyieldBalance = contextHighyieldBalance || 0;

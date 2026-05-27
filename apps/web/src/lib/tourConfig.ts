@@ -77,7 +77,7 @@ export const allWalletTourConfig: TourConfig = {
       target: '[data-tour="all-wallet-quick-deposit"]',
       title: "Live Perks",
       description:
-        "Check out current promotions and exclusive offers available to you.",
+        "Check out current informations and necessary actions to complete.",
       position: "bottom",
       highlightPadding: 8,
     },

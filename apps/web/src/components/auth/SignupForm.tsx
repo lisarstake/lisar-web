@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { ErrorDrawer } from "@/components/general/ErrorDrawer";
 import { EmailConfirmationDrawer } from "@/components/general/EmailConfirmationDrawer";
@@ -7,28 +7,22 @@ import {
   EyeClosed,
   EyeIcon,
   LoaderCircle,
-  CheckCircle2,
-  XCircle,
 } from "lucide-react";
-import { campaignService } from "@/services";
 
 interface SignupFormData {
   fullName: string;
   email: string;
   password: string;
-  referralCode: string;
 }
 
 export const SignupForm: React.FC = () => {
   const navigate = useNavigate();
-  const { referralCode: urlReferralCode } = useParams();
   const { createWallet, signinWithGoogle, state } = useAuth();
 
   const [formData, setFormData] = useState<SignupFormData>({
     fullName: "",
     email: "",
     password: "",
-    referralCode: "",
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -40,11 +34,6 @@ export const SignupForm: React.FC = () => {
     details: "",
   });
   const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
-  const [isValidatingReferral, setIsValidatingReferral] = useState(false);
-  const [referralValidation, setReferralValidation] = useState<{
-    isValid: boolean | null;
-    message: string;
-  }>({ isValid: null, message: "" });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -53,59 +42,6 @@ export const SignupForm: React.FC = () => {
       [name]: value,
     }));
   };
-
-  // Validate referral code with debouncing
-  const validateReferralCode = useCallback(async (code: string) => {
-    if (!code) {
-      setReferralValidation({ isValid: null, message: "" });
-      return;
-    }
-
-    setIsValidatingReferral(true);
-    try {
-      const response = await campaignService.validateReferralCode(code);
-      if (response.success && response.data) {
-        setReferralValidation({
-          isValid: response.data.valid,
-          message: response.data.valid
-            ? "Valid referral code"
-            : "Invalid referral code",
-        });
-      } else {
-        setReferralValidation({
-          isValid: false,
-          message: "Invalid referral code",
-        });
-      }
-    } catch (error) {
-      setReferralValidation({
-        isValid: false,
-        message: "Failed to validate code",
-      });
-    } finally {
-      setIsValidatingReferral(false);
-    }
-  }, []);
-
-  // Debounce referral code validation
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (formData.referralCode) {
-        validateReferralCode(formData.referralCode);
-      } else {
-        setReferralValidation({ isValid: null, message: "" });
-      }
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [formData.referralCode, validateReferralCode]);
-
-  // Auto-fill referral code from URL on mount
-  useEffect(() => {
-    if (urlReferralCode) {
-      setFormData((prev) => ({ ...prev, referralCode: urlReferralCode }));
-    }
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -123,13 +59,6 @@ export const SignupForm: React.FC = () => {
       );
 
       if (walletResponse.success && walletResponse.data) {
-
-        if (formData.referralCode && referralValidation.isValid) {
-          localStorage.setItem("pending_referral_code", formData.referralCode);
-          localStorage.setItem("referred_signup", "true");
-        }
-
-
         setShowEmailConfirmation(true);
       } else {
         setErrorDrawer({
@@ -153,10 +82,6 @@ export const SignupForm: React.FC = () => {
   };
 
   const handleGoogleSignup = () => {
-    if (formData.referralCode && referralValidation.isValid) {
-      localStorage.setItem("pending_referral_code", formData.referralCode);
-      localStorage.setItem("referred_signup", "true");
-    }
     signinWithGoogle();
   };
 
@@ -277,48 +202,6 @@ export const SignupForm: React.FC = () => {
                 Must be at least 8 characters
               </div>
             )}
-          </div>
-
-          {/* Referral Code (Optional) */}
-          <div>
-            <span className="block text-white text-sm font-medium mb-2">
-              Referral code{" "}
-              <span className="text-gray-400">(Optional)</span>
-            </span>
-            <div className="relative">
-              <input
-                type="text"
-                id="referralCode"
-                name="referralCode"
-                value={formData.referralCode}
-                onChange={handleInputChange}
-                placeholder="Enter referral code"
-                className="w-full px-4 py-3 bg-[#121212] border border-[#121212] rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-[#C7EF6B] transition-colors pr-12"
-              />
-              {formData.referralCode && (
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                  {isValidatingReferral ? (
-                    <LoaderCircle className="w-5 h-5 text-gray-400 animate-spin" />
-                  ) : referralValidation.isValid === true ? (
-                    <CheckCircle2 className="w-5 h-5 text-[#C7EF6B]" />
-                  ) : referralValidation.isValid === false ? (
-                    <XCircle className="w-5 h-5 text-red-400" />
-                  ) : null}
-                </div>
-              )}
-            </div>
-            {formData.referralCode &&
-              !isValidatingReferral &&
-              referralValidation.message && (
-                <div
-                  className={`flex items-center mt-2 text-sm ${referralValidation.isValid
-                    ? "text-[#C7EF6B]"
-                    : "text-red-400"
-                    }`}
-                >
-                  {referralValidation.message}
-                </div>
-              )}
           </div>
 
           {/* Create Account Button */}

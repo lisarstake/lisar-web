@@ -1,0 +1,297 @@
+import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft, LoaderCircle, CheckCircle2, XCircle } from "lucide-react";
+import toast from "react-hot-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { campaignService } from "@/services";
+import { COUNTRIES } from "@/lib/countries";
+import { ErrorDrawer } from "@/components/general/ErrorDrawer";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+export const WelcomePage: React.FC = () => {
+  const navigate = useNavigate();
+  const { state, updateProfile, refreshUser } = useAuth();
+
+  const formatDob = (value: string) => {
+    const digits = value.replace(/\D/g, "").slice(0, 8);
+    if (digits.length <= 4) return digits;
+    if (digits.length <= 6) return `${digits.slice(0, 4)}-${digits.slice(4)}`;
+    return `${digits.slice(0, 4)}-${digits.slice(4, 6)}-${digits.slice(6)}`;
+  };
+
+  const [address, setAddress] = useState("");
+  const [nationality, setNationality] = useState("");
+  const [dob, setDob] = useState("");
+  const [howDidYouHear, setHowDidYouHear] = useState("");
+  const [referralCode, setReferralCode] = useState("");
+
+  const [isValidatingReferral, setIsValidatingReferral] = useState(false);
+  const [referralValidation, setReferralValidation] = useState<{
+    isValid: boolean | null;
+    message: string;
+  }>({ isValid: null, message: "" });
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<{
+    address?: string;
+    nationality?: string;
+    dob?: string;
+  }>({});
+  const [errorDrawer, setErrorDrawer] = useState({
+    isOpen: false,
+    message: "",
+  });
+
+  const validateReferralCode = useCallback(async (code: string) => {
+    if (!code) {
+      setReferralValidation({ isValid: null, message: "" });
+      return;
+    }
+
+    setIsValidatingReferral(true);
+    try {
+      const response = await campaignService.validateReferralCode(code);
+      if (response.success && response.data) {
+        setReferralValidation({
+          isValid: response.data.valid,
+          message: response.data.valid
+            ? "Valid referral code"
+            : "Invalid referral code",
+        });
+      } else {
+        setReferralValidation({
+          isValid: false,
+          message: "Invalid referral code",
+        });
+      }
+    } catch {
+      setReferralValidation({
+        isValid: false,
+        message: "Failed to validate code",
+      });
+    } finally {
+      setIsValidatingReferral(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (referralCode.length === 6) {
+      const timer = setTimeout(() => validateReferralCode(referralCode), 500);
+      return () => clearTimeout(timer);
+    } else {
+      setReferralValidation({ isValid: null, message: "" });
+    }
+  }, [referralCode, validateReferralCode]);
+
+  const isFormValid = address.trim() && nationality.trim() && dob.trim();
+
+  const handleSubmit = async () => {
+    const errors: { address?: string; nationality?: string; dob?: string } = {};
+    if (!address.trim()) errors.address = "Address is required";
+    if (!nationality.trim()) errors.nationality = "Nationality is required";
+    if (!dob.trim()) errors.dob = "Date of birth is required";
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+
+    setIsSubmitting(true);
+    try {
+      if (referralCode && referralValidation.isValid) {
+        const result = await campaignService.applyReferralCode({
+          code: referralCode,
+        });
+        if (result.success) {
+          toast.success("Referral code applied! You've earned some points.");
+          window.dispatchEvent(new Event("points:refresh"));
+          localStorage.setItem("referred_signup", "true");
+        } else {
+          toast.error(result.message || "Failed to apply referral code");
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
+      const profileResponse = await updateProfile({
+        state: address.trim() || undefined,
+        country: nationality.trim() || undefined,
+        DOB: dob.trim() || undefined,
+      });
+
+      if (!profileResponse.success) {
+        throw new Error(profileResponse.message || "Failed to save details");
+      }
+
+      await refreshUser();
+      navigate("/wallet", { replace: true });
+    } catch (error) {
+      setErrorDrawer({
+        isOpen: true,
+        message:
+          error instanceof Error ? error.message : "Something went wrong",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="h-screen bg-[#050505] text-white flex flex-col">
+      <div className="flex-1 overflow-y-auto px-6 scrollbar-hide">
+        <div className="flex items-center justify-between pt-8 pb-6">
+          <button
+            onClick={() => navigate("/wallet", { replace: true })}
+            className="h-10 w-10 rounded-full bg-[#151515] flex items-center justify-center"
+            aria-label="Back"
+          >
+            <ArrowLeft className="text-white" size={22} />
+          </button>
+          <div className="flex-1 text-center">
+            <h1 className="text-lg font-medium text-white">
+              Complete onboarding
+            </h1>
+          </div>
+          <div className="w-10" />
+        </div>
+
+        <div className="space-y-5">
+          <div>
+            <label className="mb-2 block text-sm text-white/70">
+              Address
+            </label>
+            <input
+              value={address}
+              onChange={(e) => { setAddress(e.target.value); setFieldErrors((prev) => ({ ...prev, address: undefined })); }}
+              className={`w-full rounded-lg bg-[#151515] px-4 py-3 text-base text-white outline-none ${fieldErrors.address ? "ring-1 ring-red-400" : ""}`}
+              placeholder="Enter your address"
+            />
+            {fieldErrors.address && (
+              <p className="mt-1 text-sm text-red-400">{fieldErrors.address}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm text-white/70">
+              Nationality
+            </label>
+            <Select value={nationality} onValueChange={(v) => { setNationality(v); setFieldErrors((prev) => ({ ...prev, nationality: undefined })); }}>
+              <SelectTrigger className={`w-full rounded-lg bg-[#151515] border-none py-6 text-white ${fieldErrors.nationality ? "ring-1 ring-red-400" : ""}`}>
+                <SelectValue placeholder="Select country" />
+              </SelectTrigger>
+              <SelectContent className="bg-[#151515] text-white border-none max-h-80">
+                {COUNTRIES.map((c) => (
+                  <SelectItem
+                    key={c.code}
+                    value={c.name}
+                    className="focus:bg-white/10 focus:text-white"
+                  >
+                    {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {fieldErrors.nationality && (
+              <p className="mt-1 text-sm text-red-400">{fieldErrors.nationality}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm text-white/70">
+              Date of Birth
+            </label>
+            <input
+              value={dob}
+              onChange={(e) => { setDob(formatDob(e.target.value)); setFieldErrors((prev) => ({ ...prev, dob: undefined })); }}
+              className={`w-full rounded-lg bg-[#151515] px-4 py-3 text-base text-white outline-none ${fieldErrors.dob ? "ring-1 ring-red-400" : ""}`}
+              placeholder="YYYY-MM-DD"
+            />
+            {fieldErrors.dob && (
+              <p className="mt-1 text-sm text-red-400">{fieldErrors.dob}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm text-white/70">
+              Referral code{" "}
+              <span className="text-white/50">(Optional)</span>
+            </label>
+            <div className="relative">
+              <input
+                value={referralCode}
+                onChange={(e) => setReferralCode(e.target.value.slice(0, 6))}
+                maxLength={6}
+                className="w-full rounded-lg bg-[#151515] px-4 py-3 text-base text-white outline-none pr-12"
+                placeholder="Enter referral code"
+              />
+              {referralCode && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  {isValidatingReferral ? (
+                    <LoaderCircle className="w-5 h-5 text-gray-400 animate-spin" />
+                  ) : referralValidation.isValid === true ? (
+                    <CheckCircle2 className="w-5 h-5 text-[#C7EF6B]" />
+                  ) : referralValidation.isValid === false ? (
+                    <XCircle className="w-5 h-5 text-red-400" />
+                  ) : null}
+                </div>
+              )}
+            </div>
+            {referralCode &&
+              !isValidatingReferral &&
+              referralValidation.message && (
+                <div
+                  className={`flex items-center mt-2 text-sm ${referralValidation.isValid
+                    ? "text-[#C7EF6B]"
+                    : "text-red-400"
+                    }`}
+                >
+                  {referralValidation.message}
+                </div>
+              )}
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm text-white/70">
+              How did you hear about us?{" "}
+              <span className="text-white/50">(Optional)</span>
+            </label>
+            <input
+              value={howDidYouHear}
+              onChange={(e) => setHowDidYouHear(e.target.value)}
+              className="w-full rounded-lg bg-[#151515] px-4 py-3 text-base text-white outline-none"
+              placeholder="e.g. Twitter, Friend, CafeOne"
+            />
+          </div>
+
+
+        </div>
+      </div>
+
+      <div className="fixed bottom-20 left-0 right-0 px-6 z-20">
+        <button
+          onClick={handleSubmit}
+          disabled={!isFormValid || isSubmitting}
+          className="h-12 w-full rounded-full bg-[#C7EF6B] text-black text-base font-semibold disabled:opacity-60"
+        >
+          {isSubmitting ? (
+            <span className="inline-flex items-center gap-2">
+              <LoaderCircle size={18} className="animate-spin" />
+              Saving..
+            </span>
+          ) : (
+            "Save"
+          )}
+        </button>
+      </div>
+
+      <ErrorDrawer
+        isOpen={errorDrawer.isOpen}
+        onClose={() => setErrorDrawer({ ...errorDrawer, isOpen: false })}
+        message={errorDrawer.message}
+      />
+    </div>
+  );
+};

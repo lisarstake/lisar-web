@@ -12,7 +12,7 @@ import React, {
 } from "react";
 import { User, Wallet, Session, AuthApiResponse } from "@/services/auth/types";
 import { authService } from "@/services/auth";
-import { walletService, campaignService } from "@/services";
+import { walletService } from "@/services";
 import mixpanel from "mixpanel-browser";
 
 async function ensureSolanaWalletAfterSignup(): Promise<boolean> {
@@ -440,22 +440,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
           await ensureSolanaWalletAfterSignup();
 
-          // Apply pending referral code from signup (silent, never blocks)
-          const pendingCode = localStorage.getItem("pending_referral_code");
-          if (pendingCode) {
-            try {
-              const result = await campaignService.applyReferralCode({
-                code: pendingCode,
-              });
-              if (result.success) {
-                window.dispatchEvent(new Event("points:refresh"));
-              }
-            } catch (err) {
-            } finally {
-              localStorage.removeItem("pending_referral_code");
-            }
-          }
-
           // Identify user and track Sign In
           mixpanel.identify(userResponse.data.user_id);
           mixpanel.people.set({
@@ -530,22 +514,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             });
 
             await ensureSolanaWalletAfterSignup();
-
-            // Apply pending referral code from signup (silent, never blocks)
-            const pendingCode = localStorage.getItem("pending_referral_code");
-            if (pendingCode) {
-              try {
-                const result = await campaignService.applyReferralCode({
-                  code: pendingCode,
-                });
-                if (result.success) {
-                  window.dispatchEvent(new Event("points:refresh"));
-                }
-              } catch (err) {
-              } finally {
-                localStorage.removeItem("pending_referral_code");
-              }
-            }
 
             // Identify user and track Sign In
             mixpanel.identify(userResponse.data.user_id);
@@ -670,22 +638,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         });
 
         await ensureSolanaWalletAfterSignup();
-
-        // Apply pending referral code from signup (silent, never blocks)
-        const pendingCode = localStorage.getItem("pending_referral_code");
-        if (pendingCode) {
-          try {
-            const result = await campaignService.applyReferralCode({
-              code: pendingCode,
-            });
-            if (result.success) {
-              window.dispatchEvent(new Event("points:refresh"));
-            }
-          } catch (err) {
-          } finally {
-            localStorage.removeItem("pending_referral_code");
-          }
-        }
 
         // Check if this is a new user (sign up) or existing user (sign in)
         const isNewUser =
