@@ -33,7 +33,7 @@ export const EmailConfirmationDrawer: React.FC<
               <CheckCircle className="w-5 h-5 text-[#C7EF6B] absolute -top-1 -right-1 bg-[#121212] rounded-full" />
             </div>
           </div>
-          <DrawerTitle className="text-xl font-bold text-white">
+          <DrawerTitle className="text-lg font-bold text-white">
             Check Your Email
           </DrawerTitle>
           <DrawerDescription className="text-gray-400 text-base mt-2">
@@ -44,7 +44,7 @@ export const EmailConfirmationDrawer: React.FC<
         <DrawerFooter className="space-y-3">
           <button
             onClick={onClose}
-            className="w-full h-12 rounded-full bg-[#C7EF6B] text-black text-base font-semibold"
+            className="w-full h-11 rounded-full bg-[#C7EF6B] text-black text-base font-semibold"
           >
             Got it
           </button>

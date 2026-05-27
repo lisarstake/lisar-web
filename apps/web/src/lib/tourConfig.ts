@@ -30,7 +30,7 @@ export const allWalletTourConfig: TourConfig = {
     {
       id: "profile-settings",
       target: '[data-tour="all-wallet-profile-icon"]',
-      title: "Profile & Settings",
+      title: "Welcome to Lisar 🎉",
       description:
         "Tap here to open your settings, edit personal details, and export your wallet.",
       position: "bottom",
@@ -75,9 +75,9 @@ export const allWalletTourConfig: TourConfig = {
     {
       id: "quick-deposit",
       target: '[data-tour="all-wallet-quick-deposit"]',
-      title: "Live Perks",
+      title: "Messaging Tab",
       description:
-        "Check out current informations and necessary actions to complete.",
+        "See latest updates from Lisar and other important informations.",
       position: "bottom",
       highlightPadding: 8,
     },
@@ -86,7 +86,7 @@ export const allWalletTourConfig: TourConfig = {
       target: '[data-tour="all-wallet-stables-card"]',
       title: "Savings",
       description:
-        "Earn steady returns on Lisar savings. Ideal for emergency funds that need to stay liquid.",
+        "Explore Lisar savings. Ideal for emergency funds that need to stay accessible at all times.",
       position: "top",
       highlightPadding: 8,
     },
@@ -95,7 +95,7 @@ export const allWalletTourConfig: TourConfig = {
       target: '[data-tour="all-wallet-high-yield-card"]',
       title: "Growth",
       description:
-        "Earn higher returns on Lisar growth. Better for longer-term investment goals.",
+        "Explore Lisar growth. Better for longer-term investment goals with high returns expectation.",
       position: "top",
       highlightPadding: 8,
     },
@@ -104,7 +104,7 @@ export const allWalletTourConfig: TourConfig = {
       target: '[data-tour="nav-wallet"]',
       title: "Home",
       description:
-        "Home brings you back to your wallet dashboard and quick actions.",
+        "Home brings you back to your wallet dashboard quickly from any screen.",
       position: "top",
       highlightPadding: 8,
     },
@@ -122,7 +122,7 @@ export const allWalletTourConfig: TourConfig = {
       target: '[data-tour="nav-activity"]',
       title: "Activity",
       description:
-        "Track your transaction history and all recent wallet activity.",
+        "Track your transaction history and all recent activity.",
       position: "top",
       highlightPadding: 8,
     },
@@ -131,7 +131,7 @@ export const allWalletTourConfig: TourConfig = {
       target: '[data-tour="nav-explore"]',
       title: "Explore",
       description:
-        "Discover new opportunities, campaigns, and updates from Lisar.",
+        "Discover new earning opportunities, campaigns, and updates from Lisar.",
       position: "top",
       highlightPadding: 8,
     },

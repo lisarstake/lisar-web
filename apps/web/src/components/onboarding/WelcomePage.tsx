@@ -38,6 +38,7 @@ export const WelcomePage: React.FC = () => {
   }>({ isValid: null, message: "" });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitPhase, setSubmitPhase] = useState<"referral" | "saving" | null>(null);
   const [fieldErrors, setFieldErrors] = useState<{
     address?: string;
     nationality?: string;
@@ -89,7 +90,8 @@ export const WelcomePage: React.FC = () => {
     }
   }, [referralCode, validateReferralCode]);
 
-  const isFormValid = address.trim() && nationality.trim() && dob.trim();
+  const isFormValid = !!(address.trim() && nationality.trim() && dob.trim()) &&
+    (!referralCode || referralValidation.isValid === true);
 
   const handleSubmit = async () => {
     const errors: { address?: string; nationality?: string; dob?: string } = {};
@@ -102,6 +104,7 @@ export const WelcomePage: React.FC = () => {
     setIsSubmitting(true);
     try {
       if (referralCode && referralValidation.isValid) {
+        setSubmitPhase("referral");
         const result = await campaignService.applyReferralCode({
           code: referralCode,
         });
@@ -116,6 +119,7 @@ export const WelcomePage: React.FC = () => {
         }
       }
 
+      setSubmitPhase("saving");
       const profileResponse = await updateProfile({
         state: address.trim() || undefined,
         country: nationality.trim() || undefined,
@@ -136,13 +140,14 @@ export const WelcomePage: React.FC = () => {
       });
     } finally {
       setIsSubmitting(false);
+      setSubmitPhase(null);
     }
   };
 
   return (
     <div className="h-screen bg-[#050505] text-white flex flex-col">
       <div className="flex-1 overflow-y-auto px-6 scrollbar-hide">
-        <div className="flex items-center justify-between pt-8 pb-6">
+        <div className="flex items-center justify-between pt-8 pb-4">
           <button
             onClick={() => navigate("/wallet", { replace: true })}
             className="h-10 w-10 rounded-full bg-[#151515] flex items-center justify-center"
@@ -152,16 +157,17 @@ export const WelcomePage: React.FC = () => {
           </button>
           <div className="flex-1 text-center">
             <h1 className="text-lg font-medium text-white">
-              Complete onboarding
+              Welcome onboard 🎉
             </h1>
           </div>
           <div className="w-10" />
         </div>
 
+        <p className="text-sm text-gray-400 mb-5">Welcome onboard! Please provide the following information to complete onboarding.</p>
         <div className="space-y-5">
           <div>
             <label className="mb-2 block text-sm text-white/70">
-              Address
+              Address <span className="text-red-400">*</span>
             </label>
             <input
               value={address}
@@ -176,7 +182,7 @@ export const WelcomePage: React.FC = () => {
 
           <div>
             <label className="mb-2 block text-sm text-white/70">
-              Nationality
+              Nationality <span className="text-red-400">*</span>
             </label>
             <Select value={nationality} onValueChange={(v) => { setNationality(v); setFieldErrors((prev) => ({ ...prev, nationality: undefined })); }}>
               <SelectTrigger className={`w-full rounded-lg bg-[#151515] border-none py-6 text-white ${fieldErrors.nationality ? "ring-1 ring-red-400" : ""}`}>
@@ -201,7 +207,7 @@ export const WelcomePage: React.FC = () => {
 
           <div>
             <label className="mb-2 block text-sm text-white/70">
-              Date of Birth
+              Date of Birth <span className="text-red-400">*</span>
             </label>
             <input
               value={dob}
@@ -270,7 +276,7 @@ export const WelcomePage: React.FC = () => {
         </div>
       </div>
 
-      <div className="fixed bottom-20 left-0 right-0 px-6 z-20">
+      <div className="fixed bottom-14 left-0 right-0 px-6 z-20">
         <button
           onClick={handleSubmit}
           disabled={!isFormValid || isSubmitting}
@@ -279,7 +285,7 @@ export const WelcomePage: React.FC = () => {
           {isSubmitting ? (
             <span className="inline-flex items-center gap-2">
               <LoaderCircle size={18} className="animate-spin" />
-              Saving..
+              {submitPhase === "referral" ? "Applying referral..." : "Saving..."}
             </span>
           ) : (
             "Save"

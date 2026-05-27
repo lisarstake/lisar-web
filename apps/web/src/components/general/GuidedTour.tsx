@@ -73,6 +73,7 @@ export const GuidedTour: React.FC = () => {
   const [currentStep, setCurrentStep] = useState<TourStep | null>(null);
   const [showSkipConfirmation, setShowSkipConfirmation] = useState(false);
   const [isSkipping, setIsSkipping] = useState(false);
+  const [isFinishing, setIsFinishing] = useState(false);
   const rafIdRef = useRef<number | null>(null);
   const scrollContainersRef = useRef<Element[]>([]);
 
@@ -412,12 +413,17 @@ export const GuidedTour: React.FC = () => {
     }
 
     if (isLastStep) {
-      if (tourState.tourId === ALL_WALLET_TOUR_ID) {
-        await markUserOnboarded();
-      }
-      completeTour();
-      if (tourState.tourId !== ALL_WALLET_TOUR_ID) {
-        navigate("/learn");
+      setIsFinishing(true);
+      try {
+        if (tourState.tourId === ALL_WALLET_TOUR_ID) {
+          await markUserOnboarded();
+        }
+        completeTour();
+        if (tourState.tourId !== ALL_WALLET_TOUR_ID) {
+          navigate("/learn");
+        }
+      } finally {
+        setIsFinishing(false);
       }
     } else {
       nextStep();
@@ -544,7 +550,7 @@ export const GuidedTour: React.FC = () => {
           )}
           <button
             type="button"
-            disabled={isSkipping}
+            disabled={isSkipping || isFinishing}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -555,13 +561,13 @@ export const GuidedTour: React.FC = () => {
               }
             }}
             className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-colors flex items-center gap-2 ${
-              isSkipping
+              isSkipping || isFinishing
                 ? "bg-[#636363] text-white cursor-not-allowed"
                 : "bg-[#C7EF6B] text-black hover:bg-[#d4f57b]"
             }`}
           >
-            {isSkipping && <LoaderCircle className="animate-spin h-4 w-4" />}
-            {isSkipping ? "Skip" : primaryActionLabel}
+            {(isSkipping || isFinishing) && <LoaderCircle className="animate-spin h-4 w-4" />}
+            {isSkipping ? "Skip" : isFinishing ? "Finish" : primaryActionLabel}
           </button>
         </div>
       </div>

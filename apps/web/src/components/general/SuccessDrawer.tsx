@@ -57,7 +57,7 @@ export const SuccessDrawer: React.FC<SuccessDrawerProps> = ({
         <DrawerFooter className="space-y-3">
           <button
             onClick={onClose}
-            className="w-full h-12 rounded-full bg-[#C7EF6B] text-black text-base font-semibold"
+            className="w-full h-11 rounded-full bg-[#C7EF6B] text-black text-base font-semibold"
           >
             Close
           </button>
