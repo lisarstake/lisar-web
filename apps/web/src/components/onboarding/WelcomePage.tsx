@@ -164,23 +164,13 @@ export const WelcomePage: React.FC = () => {
   return (
     <div className="h-screen bg-[#050505] text-white flex flex-col">
       <div className="flex-1 overflow-y-auto px-6 scrollbar-hide pb-24">
-        <div className="flex items-center justify-between pt-8 pb-4">
-          <button
-            onClick={() => navigate("/wallet", { replace: true })}
-            className="h-10 w-10 rounded-full bg-[#151515] flex items-center justify-center"
-            aria-label="Back"
-          >
-            <ArrowLeft className="text-white" size={22} />
-          </button>
-          <div className="flex-1 text-center">
-            <h1 className="text-lg font-medium text-white">
-              Welcome onboard 🎉
-            </h1>
-          </div>
-          <div className="w-10" />
+        <div className="flex items-start justify-start pt-8 pb-1">
+          <h1 className="text-lg font-medium text-white">
+            Welcome onboard 🎉
+          </h1>
         </div>
 
-        <p className="text-sm text-gray-400 mb-5">Welcome onboard! Please provide the following information to complete onboarding.</p>
+        <p className="text-sm text-gray-400 mb-8">Welcome to Lisar! Please provide the following information to complete onboarding.</p>
         <div className="space-y-5">
           <div>
             <label className="mb-2 block text-sm text-white/70">

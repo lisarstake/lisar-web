@@ -42,14 +42,15 @@ export const LoginForm: React.FC = () => {
   const fromSignup = location.state?.fromSignup;
 
   useEffect(() => {
-    if (!state.isLoading && state.isAuthenticated) {
+    console.log('[LoginForm] useEffect check:', { isLoading: state.isLoading, isAuthenticated: state.isAuthenticated, isSubmitting, googleJustSignedUp, fromSignup, is_onboarded: state.user?.is_onboarded });
+    if (!state.isLoading && state.isAuthenticated && !isSubmitting) {
       if (googleJustSignedUp) {
         navigate(state.user?.is_onboarded === false ? "/welcome" : "/wallet", { replace: true });
       } else if (!fromSignup) {
-        navigate("/wallet", { replace: true });
+        navigate(state.user?.is_onboarded === false ? "/welcome" : "/wallet", { replace: true });
       }
     }
-  }, [state.isLoading, state.isAuthenticated, navigate, location.state, googleJustSignedUp, state.user?.is_onboarded]);
+  }, [state.isLoading, state.isAuthenticated, navigate, location.state, googleJustSignedUp, state.user?.is_onboarded, isSubmitting]);
 
   useEffect(() => {
     const tokens = extractTokensFromHash();
@@ -79,6 +80,8 @@ export const LoginForm: React.FC = () => {
     try {
       setIsSubmitting(true);
 
+      setGoogleJustSignedUp(true);
+
       const response = await handleGoogleCallback(rememberMe);
 
       clearHashFromURL();
@@ -92,13 +95,12 @@ export const LoginForm: React.FC = () => {
           message: "You have successfully signed in with Google.",
           details: "",
         });
-
-        setGoogleJustSignedUp(true);
       } else {
+        setGoogleJustSignedUp(false);
         throw new Error(response.message || "Google sign-in failed");
       }
     } catch (error) {
-      // Show error drawer
+      setGoogleJustSignedUp(false);
       setErrorDrawer({
         isOpen: true,
         title: "Something went wrong",
@@ -132,9 +134,7 @@ export const LoginForm: React.FC = () => {
       );
 
       if (response.success) {
-        setTimeout(() => {
-          navigate(fromSignup ? "/welcome" : "/wallet", { replace: true });
-        }, 100);
+        console.log('[LoginForm] handleSubmit after signin:', { fromSignup, is_onboarded: state.user?.is_onboarded });
       } else {
         setErrorDrawer({
           isOpen: true,
