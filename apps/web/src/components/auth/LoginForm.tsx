@@ -42,7 +42,6 @@ export const LoginForm: React.FC = () => {
   const fromSignup = location.state?.fromSignup;
 
   useEffect(() => {
-    console.log('[LoginForm] useEffect check:', { isLoading: state.isLoading, isAuthenticated: state.isAuthenticated, isSubmitting, googleJustSignedUp, fromSignup, is_onboarded: state.user?.is_onboarded });
     if (!state.isLoading && state.isAuthenticated && !isSubmitting) {
       if (googleJustSignedUp) {
         navigate(state.user?.is_onboarded === false ? "/welcome" : "/wallet", { replace: true });
@@ -134,7 +133,6 @@ export const LoginForm: React.FC = () => {
       );
 
       if (response.success) {
-        console.log('[LoginForm] handleSubmit after signin:', { fromSignup, is_onboarded: state.user?.is_onboarded });
       } else {
         setErrorDrawer({
           isOpen: true,

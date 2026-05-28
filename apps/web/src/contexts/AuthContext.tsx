@@ -602,7 +602,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           "";
 
         // Convert Google OAuth user to our User format
-        console.log('[Google OAuth] Server response data:', JSON.stringify(data, null, 2));
         const user: User = {
           user_id: data.user.id,
           email: data.user.email,
@@ -623,8 +622,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           is_totp_enabled: false,
           is_onboarded: data.user?.is_onboarded ?? data.user?.user_metadata?.is_onboarded,
         };
-        console.log('[Google OAuth] Constructed user:', user);
-
         const wallet: Wallet = {
           id: data.wallet.wallet_id,
           address: data.wallet.wallet_address,
