@@ -24,7 +24,7 @@ export const MetricsCards: React.FC<MetricsCardsProps> = ({
   summary,
   isLoading,
   error,
-  activeTab = "lpt",
+  activeTab = "stablecoin",
   stablecoinMetrics,
 }) => {
   const [fiatValue, setFiatValue] = useState<number | null>(null);

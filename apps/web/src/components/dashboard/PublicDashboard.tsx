@@ -22,7 +22,7 @@ const TRANSACTIONS_PER_PAGE = 8;
 
 export const PublicDashboard: React.FC = () => {
   const { summary, transactions: lptTransactions, isLoading: isLptLoading, error: lptError, refetch: refetchLpt } = useDashboard();
-  const [activeTab, setActiveTab] = useState<"lpt" | "stablecoin">("lpt");
+  const [activeTab, setActiveTab] = useState<"lpt" | "stablecoin">("stablecoin");
   const [stablecoinTransactions, setStablecoinTransactions] = useState<DashboardTransaction[]>([]);
   const [stablecoinMetrics, setStablecoinMetrics] = useState<StablecoinMetrics | null>(null);
   const [isStablecoinLoading, setIsStablecoinLoading] = useState(false);
@@ -127,17 +127,6 @@ export const PublicDashboard: React.FC = () => {
             <div className="flex items-center bg-[#141414] border border-[#333333] p-1 rounded-xl self-start sm:self-auto shrink-0">
               <button
                 type="button"
-                onClick={() => handleTabChange("lpt")}
-                className={`px-3 py-1.5 md:px-4 md:py-2 rounded-lg text-xs md:text-sm font-semibold transition-all ${
-                  activeTab === "lpt"
-                    ? "bg-[#C7EF6B] text-black shadow-md"
-                    : "text-gray-400 hover:text-white"
-                }`}
-              >
-                LPT Transactions
-              </button>
-              <button
-                type="button"
                 onClick={() => handleTabChange("stablecoin")}
                 className={`px-3 py-1.5 md:px-4 md:py-2 rounded-lg text-xs md:text-sm font-semibold transition-all ${
                   activeTab === "stablecoin"
@@ -146,6 +135,17 @@ export const PublicDashboard: React.FC = () => {
                 }`}
               >
                 Stablecoin Transactions
+              </button>
+              <button
+                type="button"
+                onClick={() => handleTabChange("lpt")}
+                className={`px-3 py-1.5 md:px-4 md:py-2 rounded-lg text-xs md:text-sm font-semibold transition-all ${
+                  activeTab === "lpt"
+                    ? "bg-[#C7EF6B] text-black shadow-md"
+                    : "text-gray-400 hover:text-white"
+                }`}
+              >
+                LPT Transactions
               </button>
             </div>
           </div>
@@ -174,7 +174,7 @@ export const PublicDashboard: React.FC = () => {
 
           {activeTab === "stablecoin" && (
             <div className="mb-4 flex flex-wrap items-center gap-2 text-xs text-gray-400 bg-[#121212] border border-[#2b2b2b] px-4 py-2.5 rounded-lg">
-              <span>Arbiscan Tracked Address:</span>
+              <span>Vault:</span>
               <a
                 href={`https://arbiscan.io/address/${STABLECOIN_VAULT_ADDRESS}`}
                 target="_blank"
