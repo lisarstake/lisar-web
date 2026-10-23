@@ -26,18 +26,24 @@ export class ErrorBoundary extends Component<
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error("ErrorBoundary caught an error:", error, errorInfo);
+
     const isChunkError =
       error.message?.includes("Failed to fetch dynamically imported module") ||
       error.message?.includes("Importing a module script failed") ||
       error.message?.includes("error loading dynamically imported module") ||
       error.name === "ChunkLoadError";
 
-    // Track error in Mixpanel
-    trackError(
-      isChunkError ? 'chunk_load_error' : 'runtime_error',
-      error.message || 'Unknown error',
-      error.name
-    );
+    // Track error in Mixpanel safely
+    try {
+      trackError(
+        isChunkError ? 'chunk_load_error' : 'runtime_error',
+        error.message || 'Unknown error',
+        error.name
+      );
+    } catch (trackErr) {
+      console.warn("Failed to report error to Mixpanel:", trackErr);
+    }
 
     if (isChunkError) {
       const hasReloaded = sessionStorage.getItem(

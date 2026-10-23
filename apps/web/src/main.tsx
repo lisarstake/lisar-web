@@ -9,14 +9,24 @@ import "./styles/index.css";
 import mixpanel from "mixpanel-browser";
 
 // Mixpanel
-mixpanel.init(import.meta.env.VITE_MIXPANEL_TOKEN || "", {
-  debug: false,
-  api_host: "https://nginx-proxy-mctg.onrender.com",
-  track_pageview: true,
-  persistence: "localStorage",
-  autocapture: true,
-  record_sessions_percent: 100,
-});
+const mixpanelToken = import.meta.env.VITE_MIXPANEL_TOKEN;
+if (mixpanelToken) {
+  mixpanel.init(mixpanelToken, {
+    debug: false,
+    api_host: "https://nginx-proxy-mctg.onrender.com",
+    track_pageview: true,
+    persistence: "localStorage",
+    autocapture: true,
+    record_sessions_percent: 100,
+  });
+} else {
+  mixpanel.init("development-placeholder", {
+    debug: false,
+    track_pageview: false,
+    autocapture: false,
+    opt_out_tracking_by_default: true,
+  });
+}
 
 // Handle chunk loading errors
 window.addEventListener("error", (event) => {

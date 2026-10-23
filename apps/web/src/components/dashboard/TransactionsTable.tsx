@@ -11,7 +11,8 @@ import { formatRelativeDate, shortenHash, getArbitrumScanUrl } from "@/lib/utils
 /**
  * Highlight amounts in description text
  */
-const highlightAmounts = (description: string): React.ReactNode => {
+const highlightAmounts = (description?: string): React.ReactNode => {
+  if (!description) return null;
   const words = description.split(" ");
   return words.map((word, index, array) => {
     if (/\d/.test(word)) {
@@ -78,56 +79,64 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
 
       {/* Table Body */}
       <div className="divide-y divide-[#505050]">
-        {transactions.map((transaction, index) => (
-          <div
-            key={`${transaction.transaction_hash}-${index}`}
-            className="px-6 py-4 hover:bg-[#505050]/50 transition-colors"
-          >
-            <div className="grid grid-cols-12 gap-4 items-center">
-              {/* Account */}
-              <div className="col-span-5 md:col-span-3 min-w-0">
-                <span className="bg-[#C7EF6B] text-black px-3 py-1 rounded-full text-xs font-medium inline-block truncate max-w-full">
-                  {transaction.address.length > 20
-                    ? shortenHash(transaction.address)
-                    : transaction.address}
-                </span>
-              </div>
-
-              {/* Event */}
-              <div className="col-span-3 md:col-span-2 text-white text-sm truncate">
-                {transaction.event}
-              </div>
-
-              {/* Description - Hidden on mobile */}
-              <div className="hidden md:block col-span-3 text-white text-sm truncate">
-                {highlightAmounts(transaction.description)}
-              </div>
-
-              {/* Date */}
-              <div className="col-span-4 md:col-span-2 text-white text-sm truncate">
-                {formatRelativeDate(transaction.date)}
-              </div>
-
-              {/* Transaction - Clickable - Hidden on mobile */}
-              <div className="hidden md:flex col-span-2 items-center min-w-0">
-                <a
-                  href={getArbitrumScanUrl(transaction.transaction_hash)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center group min-w-0"
-                >
-                  <span className="bg-[#C7EF6B] text-black px-2 py-1 rounded-full text-xs font-medium group-hover:bg-[#B8E55A] transition-colors cursor-pointer truncate max-w-full">
-                    {shortenHash(transaction.transaction_hash)}
+        {transactions.map((transaction, index) => {
+          const address = transaction.address || "";
+          const hash = transaction.transaction_hash || "";
+          return (
+            <div
+              key={`${hash}-${index}`}
+              className="px-6 py-4 hover:bg-[#505050]/50 transition-colors"
+            >
+              <div className="grid grid-cols-12 gap-4 items-center">
+                {/* Account */}
+                <div className="col-span-5 md:col-span-3 min-w-0">
+                  <span className="bg-[#C7EF6B] text-black px-3 py-1 rounded-full text-xs font-medium inline-block truncate max-w-full">
+                    {address.length > 20
+                      ? shortenHash(address)
+                      : address || "-"}
                   </span>
-                  <ArrowUpRight
-                    size={20}
-                    className="text-[#C7EF6B] group-hover:text-[#B8E55A] transition-colors ml-1 flex-shrink-0"
-                  />
-                </a>
+                </div>
+
+                {/* Event */}
+                <div className="col-span-3 md:col-span-2 text-white text-sm truncate">
+                  {transaction.event || "-"}
+                </div>
+
+                {/* Description - Hidden on mobile */}
+                <div className="hidden md:block col-span-3 text-white text-sm truncate">
+                  {highlightAmounts(transaction.description)}
+                </div>
+
+                {/* Date */}
+                <div className="col-span-4 md:col-span-2 text-white text-sm truncate">
+                  {transaction.date ? formatRelativeDate(transaction.date) : "-"}
+                </div>
+
+                {/* Transaction - Clickable - Hidden on mobile */}
+                <div className="hidden md:flex col-span-2 items-center min-w-0">
+                  {hash ? (
+                    <a
+                      href={getArbitrumScanUrl(hash)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center group min-w-0"
+                    >
+                      <span className="bg-[#C7EF6B] text-black px-2 py-1 rounded-full text-xs font-medium group-hover:bg-[#B8E55A] transition-colors cursor-pointer truncate max-w-full">
+                        {shortenHash(hash)}
+                      </span>
+                      <ArrowUpRight
+                        size={20}
+                        className="text-[#C7EF6B] group-hover:text-[#B8E55A] transition-colors ml-1 flex-shrink-0"
+                      />
+                    </a>
+                  ) : (
+                    <span className="text-gray-500 text-xs">-</span>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

@@ -5,32 +5,50 @@
 
 import mixpanel from 'mixpanel-browser';
 
+const isEnabled = () => Boolean(import.meta.env.VITE_MIXPANEL_TOKEN);
+
+const safeTrack = (fn: () => void) => {
+  try {
+    if (isEnabled()) {
+      fn();
+    }
+  } catch (error) {
+    console.warn('[Mixpanel] Tracking error ignored:', error);
+  }
+};
+
 // Track page view
 export const trackPageView = (pageName: string, properties?: Record<string, any>) => {
-  mixpanel.track('Page View', {
-    page_title: pageName,
-    page_url: window.location.href,
-    ...properties,
+  safeTrack(() => {
+    mixpanel.track('Page View', {
+      page_title: pageName,
+      page_url: window.location.href,
+      ...properties,
+    });
   });
 };
 
 // Track blog article read
 export const trackBlogRead = (articleId: string, articleTitle: string, category: string, readingTime: number) => {
-  mixpanel.track('Blog Article Read', {
-    article_id: articleId,
-    article_title: articleTitle,
-    category: category,
-    reading_time: readingTime,
-    page_url: window.location.href,
+  safeTrack(() => {
+    mixpanel.track('Blog Article Read', {
+      article_id: articleId,
+      article_title: articleTitle,
+      category: category,
+      reading_time: readingTime,
+      page_url: window.location.href,
+    });
   });
 };
 
 // Track search
 export const trackSearch = (query: string, resultsCount?: number) => {
-  mixpanel.track('Search', {
-    search_query: query,
-    results_count: resultsCount,
-    page_url: window.location.href,
+  safeTrack(() => {
+    mixpanel.track('Search', {
+      search_query: query,
+      results_count: resultsCount,
+      page_url: window.location.href,
+    });
   });
 };
 
@@ -40,11 +58,13 @@ export const trackError = (
   errorMessage: string,
   errorCode?: string
 ) => {
-  mixpanel.track('Error', {
-    error_type: errorType,
-    error_message: errorMessage,
-    error_code: errorCode,
-    page_url: window.location.href,
+  safeTrack(() => {
+    mixpanel.track('Error', {
+      error_type: errorType,
+      error_message: errorMessage,
+      error_code: errorCode,
+      page_url: window.location.href,
+    });
   });
 };
 
@@ -54,10 +74,12 @@ export const trackConversion = (
   conversionValue?: number,
   properties?: Record<string, any>
 ) => {
-  mixpanel.track('Conversion', {
-    'Conversion Type': conversionType,
-    'Conversion Value': conversionValue,
-    ...properties,
+  safeTrack(() => {
+    mixpanel.track('Conversion', {
+      'Conversion Type': conversionType,
+      'Conversion Value': conversionValue,
+      ...properties,
+    });
   });
 };
 
@@ -68,12 +90,14 @@ export const trackPurchase = (
   currency: string,
   properties?: Record<string, any>
 ) => {
-  mixpanel.track('Purchase', {
-    user_id: mixpanel.get_distinct_id(),
-    transaction_id: transactionId,
-    revenue: amount,
-    currency: currency,
-    ...properties,
+  safeTrack(() => {
+    mixpanel.track('Purchase', {
+      user_id: mixpanel.get_distinct_id?.(),
+      transaction_id: transactionId,
+      revenue: amount,
+      currency: currency,
+      ...properties,
+    });
   });
 };
 
@@ -84,11 +108,13 @@ export const trackStake = (
   currency: string,
   validatorId?: string
 ) => {
-  mixpanel.track('Stake Action', {
-    action: action,
-    amount: amount,
-    currency: currency,
-    validator_id: validatorId,
+  safeTrack(() => {
+    mixpanel.track('Stake Action', {
+      action: action,
+      amount: amount,
+      currency: currency,
+      validator_id: validatorId,
+    });
   });
 
   // Also track as conversion
@@ -100,19 +126,23 @@ export const trackStake = (
 
 // Track button clicks
 export const trackButtonClick = (buttonName: string, location: string) => {
-  mixpanel.track('Button Click', {
-    button_name: buttonName,
-    location: location,
-    page_url: window.location.href,
+  safeTrack(() => {
+    mixpanel.track('Button Click', {
+      button_name: buttonName,
+      location: location,
+      page_url: window.location.href,
+    });
   });
 };
 
 // Track form submission
 export const trackFormSubmit = (formName: string, success: boolean) => {
-  mixpanel.track('Form Submit', {
-    form_name: formName,
-    success: success,
-    page_url: window.location.href,
+  safeTrack(() => {
+    mixpanel.track('Form Submit', {
+      form_name: formName,
+      success: success,
+      page_url: window.location.href,
+    });
   });
 };
 

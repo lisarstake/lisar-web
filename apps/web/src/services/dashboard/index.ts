@@ -11,6 +11,7 @@ export * from './api';
 
 // Export service implementation
 export { DashboardService } from './dashboardService';
+export * from './arbiscanService';
 
 // Create and export service instance
 import { DashboardService } from './dashboardService';
