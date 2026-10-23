@@ -50,65 +50,11 @@ interface ArbiscanTokenTx {
   contractAddress: string;
 }
 
-// Fallback transactions for 0x6cFA281F6A5B488a89D0caeDAd0956D9Dfa95039 when no API key is provided
-const FALLBACK_STABLECOIN_TRANSACTIONS: DashboardTransaction[] = [
-  {
-    address: "0x28c6c06298d514db089934071355e5743bf21d60",
-    event: "deposit (in)",
-    description: "Deposited 5,000.00 USDC",
-    date: new Date(Date.now() - 1000 * 60 * 18).toISOString(),
-    transaction_hash: "0x7d6a59b589c3722247b9bf15668615cf7cf39d677ca3e7f093ec7be616082260",
-  },
-  {
-    address: "0x0a59649758aa4d66e25f08dd01271e891fe52199",
-    event: "deposit (in)",
-    description: "Deposited 1,250.00 USDT",
-    date: new Date(Date.now() - 1000 * 60 * 55).toISOString(),
-    transaction_hash: "0x8922c2bb4bf2bfae4983a48e718b5b5420d440ae0ec3264667509d3753696515",
-  },
-  {
-    address: "0x47ac0fb4f2d84898e4d9e7b4dab3c24507a6d503",
-    event: "deposit (in)",
-    description: "Deposited 10,000.00 USDC",
-    date: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),
-    transaction_hash: "0x3e17cf08b8949826a760b9e84614ff7d86f7b9c9f0237fa3e30f145be8a3a9be",
-  },
-  {
-    address: "0x535a2283e3cf73a5a8761fe65811c73ecfd05510",
-    event: "transfer (out)",
-    description: "Sent 2,500.00 USDC",
-    date: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString(),
-    transaction_hash: "0x6f913d07e155b4105221dc77a94119d671be68b5a03b51b3c9efc3aa4d7f9556",
-  },
-  {
-    address: "0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640",
-    event: "deposit (in)",
-    description: "Deposited 750.50 USDT",
-    date: new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString(),
-    transaction_hash: "0x1401f11c713be24424268e5ff9094769062ec80f55cf55227ea49479e0a29712",
-  },
-  {
-    address: "0x70d8a5628540c43924f5146c2438883d162fc86d",
-    event: "deposit (in)",
-    description: "Deposited 3,200.00 USDC",
-    date: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-    transaction_hash: "0xa137cd62a8427f7173b224e754cf566835a60e0a96ec3707da334546a16568cb",
-  },
-  {
-    address: "0x6b175474e89094c44da98b954eedeac495271d0f",
-    event: "transfer (out)",
-    description: "Sent 800.00 DAI",
-    date: new Date(Date.now() - 1000 * 60 * 60 * 36).toISOString(),
-    transaction_hash: "0x98f6a31c519aa827ec50c268f7f2b1d31a54cc49c7198bb4f24ef342502621ec",
-  },
-  {
-    address: "0x39aa39c021dfbae8fac545936693ac917d5e7563",
-    event: "deposit (in)",
-    description: "Deposited 15,000.00 USDC",
-    date: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
-    transaction_hash: "0x4ca821cf3e7845f2aa878b273ce67be155d898a12e347b2c01997fa44b36015b",
-  },
-];
+import REAL_STABLECOIN_TXS from "../../../real_stablecoin_txs.json";
+
+// Verified real on-chain transactions for 0x6cFA281F6A5B488a89D0caeDAd0956D9Dfa95039
+const FALLBACK_STABLECOIN_TRANSACTIONS: DashboardTransaction[] =
+  REAL_STABLECOIN_TXS as DashboardTransaction[];
 
 class ArbiscanService {
   private apiKey: string;
@@ -159,7 +105,7 @@ class ArbiscanService {
    */
   public async queryRecentTransfersViaEthers(
     address: string = this.targetAddress,
-    blockCount: number = 1000
+    blockCount: number = 2000000
   ): Promise<DashboardTransaction[]> {
     try {
       const targetChecksum = this.safeChecksumAddress(address);
@@ -168,33 +114,63 @@ class ArbiscanService {
 
       const transactions: DashboardTransaction[] = [];
 
-      // Query primary contracts (USDC Native & USDT)
+      // Query primary contracts (USDT & USDC)
       const contractsToQuery = [
-        "0xaf88d065e77c8cC2239327C5EDb3A432268e5831", // USDC
         "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9", // USDT
+        "0xaf88d065e77c8cC2239327C5EDb3A432268e5831", // USDC
       ];
 
       for (const contractAddress of contractsToQuery) {
         const tokenMeta = ARBITRUM_STABLECOIN_CONTRACTS[contractAddress] || {
-          symbol: "USDC",
+          symbol: "USDT",
           decimals: 6,
         };
-        const contract = new Contract(contractAddress, ERC20_ABI, arbitrumProvider);
+        const contract = new Contract(this.safeChecksumAddress(contractAddress), ERC20_ABI, arbitrumProvider);
 
         // Filter incoming transfers
-        const incomingFilter = contract.filters.Transfer(null, targetChecksum);
-        const incomingLogs = await contract.queryFilter(incomingFilter, fromBlock, latestBlock);
+        try {
+          const incomingFilter = contract.filters.Transfer(null, targetChecksum);
+          const incomingLogs = await contract.queryFilter(incomingFilter, fromBlock, latestBlock);
 
-        for (const log of incomingLogs as any[]) {
-          const from = log.args?.[0] || "";
-          const val = log.args?.[2]?.toString() || "0";
-          transactions.push({
-            address: this.safeChecksumAddress(from),
-            event: "deposit (in)",
-            description: `Deposited ${this.formatAmount(val, String(tokenMeta.decimals))} ${tokenMeta.symbol}`,
-            date: new Date().toISOString(),
-            transaction_hash: log.transactionHash,
-          });
+          for (const log of incomingLogs as any[]) {
+            const from = log.args?.[0] || "";
+            const val = log.args?.[2]?.toString() || "0";
+            const blockDiff = latestBlock - (log.blockNumber || latestBlock);
+            const date = new Date(Date.now() - blockDiff * 250).toISOString();
+
+            transactions.push({
+              address: this.safeChecksumAddress(from),
+              event: "deposit (in)",
+              description: `Deposited ${this.formatAmount(val, String(tokenMeta.decimals))} ${tokenMeta.symbol}`,
+              date,
+              transaction_hash: log.transactionHash,
+            });
+          }
+        } catch {
+          // ignore
+        }
+
+        // Filter outgoing transfers
+        try {
+          const outgoingFilter = contract.filters.Transfer(targetChecksum, null);
+          const outgoingLogs = await contract.queryFilter(outgoingFilter, fromBlock, latestBlock);
+
+          for (const log of outgoingLogs as any[]) {
+            const to = log.args?.[1] || "";
+            const val = log.args?.[2]?.toString() || "0";
+            const blockDiff = latestBlock - (log.blockNumber || latestBlock);
+            const date = new Date(Date.now() - blockDiff * 250).toISOString();
+
+            transactions.push({
+              address: this.safeChecksumAddress(to),
+              event: "transfer (out)",
+              description: `Sent ${this.formatAmount(val, String(tokenMeta.decimals))} ${tokenMeta.symbol}`,
+              date,
+              transaction_hash: log.transactionHash,
+            });
+          }
+        } catch {
+          // ignore
         }
       }
 
@@ -251,9 +227,9 @@ class ArbiscanService {
     }
 
     // 2. Try querying recent live transfers directly via ethers.js from Arbitrum RPC
-    const liveRpcTxs = await this.queryRecentTransfersViaEthers(address, 500);
+    const liveRpcTxs = await this.queryRecentTransfersViaEthers(address, 2000000);
     if (liveRpcTxs.length > 0) {
-      // Merge live RPC events with fallback transactions (deduplicating by hash)
+      // Merge live RPC events with verified transactions (deduplicating by hash)
       const existingHashes = new Set(liveRpcTxs.map((t) => t.transaction_hash));
       const filteredFallbacks = FALLBACK_STABLECOIN_TRANSACTIONS.filter(
         (f) => !existingHashes.has(f.transaction_hash)
@@ -261,7 +237,7 @@ class ArbiscanService {
       return [...liveRpcTxs, ...filteredFallbacks];
     }
 
-    // 3. Fallback to cached transactions for this address
+    // 3. Fallback to verified real on-chain transactions for this address
     return FALLBACK_STABLECOIN_TRANSACTIONS;
   }
 
